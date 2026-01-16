@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { summarizeText } from '../services/geminiService';
-import { ExternalLink, Sparkles, Loader } from 'lucide-react';
+import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
 
 const NewsCard = ({ item, apiKey }) => {
   const [summary, setSummary] = useState(null);
@@ -9,66 +9,76 @@ const NewsCard = ({ item, apiKey }) => {
 
   const handleSummarize = async () => {
     if (!apiKey) {
-      setError("Please add your Gemini API Key in settings.");
+      setError("Por favor adicione sua chave de API Gemini nas configurações.");
       return;
     }
 
     setLoading(true);
     setError(null);
     try {
-      // Use description or content if available, fallback to title
       const textToSummarize = item.content || item.description || item.title;
       const result = await summarizeText(textToSummarize, apiKey);
       setSummary(result);
-    } catch (err) {
-      setError("Failed to generate summary. Check your API key or try again.");
+    } catch (error) {
+      console.error(error);
+      setError("Falha ao gerar resumo. Verifique sua chave de API.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Extract an image if available in description or enclosures
   const getImage = () => {
     if (item.enclosure && item.enclosure.link) return item.enclosure.link;
     if (item.thumbnail) return item.thumbnail;
-    // Simple regex to find img tag in description
     const imgMatch = item.description?.match(/<img[^>]+src="([^">]+)"/);
     if (imgMatch) return imgMatch[1];
-    return null; // Placeholder could be added
+    return null;
   };
 
   const imageUrl = getImage();
+  // Remove HTML tags for clean description preview
   const cleanDescription = item.description?.replace(/<[^>]+>/g, '').substring(0, 150) + '...';
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full border border-gray-100 group">
       {imageUrl && (
-        <div className="h-48 overflow-hidden">
-          <img src={imageUrl} alt={item.title} className="w-full h-full object-cover" />
+        <div className="h-48 overflow-hidden relative">
+          <img
+            src={imageUrl}
+            alt={item.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          {item.category && (
+            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
+                {item.category}
+            </div>
+          )}
         </div>
       )}
       <div className="p-5 flex flex-col flex-grow">
-        <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+        <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-blue-600 uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded-full">
               {item.source}
             </span>
-            <span className="text-xs text-gray-400">
-                {new Date(item.pubDate).toLocaleDateString()}
-            </span>
+            <div className="flex items-center text-xs text-gray-400">
+                <Calendar size={12} className="mr-1" />
+                {new Date(item.pubDate).toLocaleDateString('pt-BR')}
+            </div>
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2 leading-tight">
+
+        <h3 className="text-lg font-bold text-gray-900 mb-3 leading-snug">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">
             {item.title}
           </a>
         </h3>
 
         {/* Content Area */}
-        <div className="flex-grow text-gray-600 text-sm mb-4">
+        <div className="flex-grow text-gray-600 text-sm mb-4 leading-relaxed">
           {summary ? (
-            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <div className="flex items-center gap-2 mb-1 text-blue-700 font-medium text-xs">
-                    <Sparkles size={14} />
-                    <span>AI Summary</span>
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2 mb-2 text-blue-700 font-bold text-xs uppercase tracking-wide">
+                    <Sparkles size={14} className="text-blue-500" />
+                    <span>Resumo IA</span>
                 </div>
                 <p className="text-gray-800 italic">{summary}</p>
             </div>
@@ -82,28 +92,28 @@ const NewsCard = ({ item, apiKey }) => {
              <button
                 onClick={handleSummarize}
                 disabled={loading || summary}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all shadow-sm ${
                     summary
-                    ? 'text-gray-400 cursor-default'
-                    : 'text-purple-600 bg-purple-50 hover:bg-purple-100'
+                    ? 'text-gray-400 bg-gray-100 cursor-default shadow-none'
+                    : 'text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-md active:scale-95'
                 }`}
              >
                 {loading ? <Loader size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                {loading ? 'Summarizing...' : (summary ? 'Summarized' : 'Summarize')}
+                {loading ? 'Resumindo...' : (summary ? 'Resumido' : 'Resumir')}
              </button>
 
              <a
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-gray-500 hover:text-blue-600 text-xs font-medium"
+                className="flex items-center gap-1 text-gray-500 hover:text-blue-600 text-xs font-semibold transition-colors"
              >
-                Read more <ExternalLink size={14} />
+                Ler mais <ExternalLink size={14} />
              </a>
         </div>
 
         {error && (
-            <p className="text-red-500 text-xs mt-2">{error}</p>
+            <p className="text-red-500 text-xs mt-3 bg-red-50 p-2 rounded border border-red-100">{error}</p>
         )}
       </div>
     </div>
