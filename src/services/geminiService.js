@@ -9,7 +9,7 @@ export const summarizeText = async (text, apiKey) => {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const prompt = `Summarize the following news article in 2-3 sentences. Keep it concise and informative:\n\n${text}`;
+  const prompt = `Resuma a seguinte notícia em português em 2 ou 3 frases. Mantenha o resumo informativo e conciso:\n\n${text}`;
 
   try {
     const result = await model.generateContent(prompt);
