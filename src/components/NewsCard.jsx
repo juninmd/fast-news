@@ -39,8 +39,18 @@ const NewsCard = ({ item, apiKey }) => {
   // Remove HTML tags for clean description preview
   const cleanDescription = item.description?.replace(/<[^>]+>/g, '').substring(0, 150) + '...';
 
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date)) return '';
+      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch {
+      return '';
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full border border-gray-100 group">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 group">
       {imageUrl && (
         <div className="h-48 overflow-hidden relative">
           <img
@@ -62,7 +72,7 @@ const NewsCard = ({ item, apiKey }) => {
             </span>
             <div className="flex items-center text-xs text-gray-400">
                 <Calendar size={12} className="mr-1" />
-                {new Date(item.pubDate).toLocaleDateString('pt-BR')}
+                {formatDate(item.pubDate)}
             </div>
         </div>
 

@@ -1,7 +1,7 @@
 
 const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
-const FEED_SOURCES = [
+export const FEED_SOURCES = [
     // Tecnologia
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml', category: 'Tecnologia' },
     { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', category: 'Tecnologia' },
@@ -9,6 +9,10 @@ const FEED_SOURCES = [
     { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia' },
     { url: 'https://rss.tecmundo.com.br/feed', category: 'Tecnologia' },
     { url: 'https://gizmodo.uol.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://canaltech.com.br/rss/', category: 'Tecnologia' },
+    { url: 'https://www.wired.com/feed/rss', category: 'Tecnologia' },
+    { url: 'https://arstechnica.com/feed/', category: 'Tecnologia' },
+    { url: 'https://olhardigital.com.br/rss', category: 'Tecnologia' },
 
     // Brasil
     { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Brasil' },
@@ -16,43 +20,55 @@ const FEED_SOURCES = [
     { url: 'https://feeds.folha.uol.com.br/emcimadahora/rss091.xml', category: 'Brasil' },
     { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
     { url: 'https://jovempan.com.br/feed', category: 'Brasil' },
+    { url: 'https://noticias.r7.com/feed.xml', category: 'Brasil' },
+    { url: 'https://www.estadao.com.br/rss/ultimas', category: 'Brasil' },
 
     // Mundo
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },
+    { url: 'https://rss.dw.com/rdf/rss-br-all', category: 'Mundo' },
+    { url: 'https://feeds.reuters.com/reuters/worldNews', category: 'Mundo' },
 
     // Negócios
     { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negócios' },
     { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html', category: 'Negócios' },
     { url: 'https://epocanegocios.globo.com/rss/ultimas/feed.xml', category: 'Negócios' },
+    { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
+    { url: 'https://exame.com/feed/', category: 'Negócios' },
 
     // Ciência
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml', category: 'Ciência' },
     { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', category: 'Ciência' },
+    { url: 'https://www.sciencedaily.com/rss/all.xml', category: 'Ciência' },
+    { url: 'https://revistagalileu.globo.com/rss/ultimas/feed.xml', category: 'Ciência' },
 
     // Esportes
     { url: 'https://www.espn.com.br/rss/news', category: 'Esportes' },
     { url: 'https://ge.globo.com/rss/ge/', category: 'Esportes' },
+    { url: 'https://www.lance.com.br/rss', category: 'Esportes' },
 
-    // Entretenimento
+    // Entretenimento / Games
     { url: 'https://www.omelete.com.br/rss/rss.aspx', category: 'Entretenimento' },
     { url: 'https://rollingstone.uol.com.br/feed/', category: 'Entretenimento' },
+    { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
+    { url: 'https://br.ign.com/feed.xml', category: 'Games' },
+    { url: 'https://www.theenemy.com.br/rss', category: 'Games' },
+    { url: 'https://anmtv.com.br/feed/', category: 'Entretenimento' },
 
     // Saúde
     { url: 'https://www.metropoles.com/saude/feed', category: 'Saúde' },
     { url: 'https://drauziovarella.uol.com.br/feed/', category: 'Saúde' }
 ];
 
-export const fetchNews = async () => {
-    // We shuffle the feeds slightly or just fetch them all.
-    // To avoid hitting rate limits effectively if we had massive amounts, we might batch.
-    // For ~20-25 feeds, simple Promise.all is okay, but let's be careful.
+export const fetchNews = async (sources = FEED_SOURCES) => {
+    // Determine the sources to fetch.
+    // To respect API limits, the caller should slice FEED_SOURCES.
 
-    const promises = FEED_SOURCES.map(source =>
+    const promises = sources.map(source =>
         fetch(`${RSS2JSON_API}${encodeURIComponent(source.url)}`)
             .then(res => res.json())
-            .then(data => ({ ...data, category: source.category })) // Attach category to the result
+            .then(data => ({ ...data, category: source.category }))
             .catch(err => {
                 console.error(`Error fetching ${source.url}:`, err);
                 return null;
@@ -61,7 +77,6 @@ export const fetchNews = async () => {
 
     const results = await Promise.all(promises);
 
-    // Flatten and clean data
     let allNews = [];
     results.forEach(result => {
         if (result && result.status === 'ok') {
@@ -77,7 +92,7 @@ export const fetchNews = async () => {
         }
     });
 
-    // Sort by date (newest first) with safety check
+    // Sort by date (newest first)
     allNews.sort((a, b) => {
         const dateA = new Date(a.pubDate);
         const dateB = new Date(b.pubDate);
