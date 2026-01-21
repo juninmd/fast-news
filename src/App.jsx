@@ -12,28 +12,28 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 selection:bg-blue-100 selection:text-blue-900">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-100 transition-all">
+      <header className="bg-white/90 backdrop-blur-lg shadow-sm sticky top-0 z-40 border-b border-gray-200/50 transition-all supports-[backdrop-filter]:bg-white/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-xl text-white shadow-md">
-                <Newspaper size={24} />
+            <div className="flex items-center gap-3 group cursor-pointer">
+              <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+                <Newspaper size={24} strokeWidth={2.5} />
               </div>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                News<span className="text-blue-600">AI</span>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                News<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">AI</span>
               </h1>
             </div>
 
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative"
+              className="p-2.5 text-gray-500 hover:bg-white hover:text-blue-600 hover:shadow-md rounded-full transition-all duration-300 relative border border-transparent hover:border-gray-100"
               title="Configurações"
             >
-              <SettingsIcon size={24} />
+              <SettingsIcon size={22} strokeWidth={2} />
               {!apiKey && (
-                 <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
+                 <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
               )}
             </button>
           </div>
