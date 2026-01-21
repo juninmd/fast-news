@@ -23,10 +23,11 @@ const Settings = ({ isOpen, onClose, onSave }) => {
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 mb-2">
             Token da API Gemini
           </label>
           <input
+            id="api-key-input"
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
