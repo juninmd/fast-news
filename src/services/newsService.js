@@ -17,10 +17,20 @@ export const FEED_SOURCES = [
     { url: 'https://www.macrumors.com/macrumors.xml', category: 'Tecnologia' },
     { url: 'https://9to5mac.com/feed/', category: 'Tecnologia' },
     { url: 'https://www.androidpolice.com/feed/', category: 'Tecnologia' },
+    { url: 'https://tecnoblog.net/feed/', category: 'Tecnologia' },
+    { url: 'https://meiobit.com/feed/', category: 'Tecnologia' },
+    { url: 'https://www.adrenaline.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://mundoconectado.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://www.tudocelular.com/rss/', category: 'Tecnologia' },
+    { url: 'https://macmagazine.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://www.b9.com.br/feed/', category: 'Tecnologia' },
 
-    // Brasil
+    // Brasil / Política / Geral
     { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Brasil' },
+    { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
+    { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Brasil' },
     { url: 'https://rss.uol.com.br/feed/noticias.xml', category: 'Brasil' },
+    { url: 'https://rss.uol.com.br/feed/economia.xml', category: 'Brasil' },
     { url: 'https://feeds.folha.uol.com.br/emcimadahora/rss091.xml', category: 'Brasil' },
     { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
     { url: 'https://jovempan.com.br/feed', category: 'Brasil' },
@@ -29,6 +39,8 @@ export const FEED_SOURCES = [
     { url: 'https://www.poder360.com.br/feed', category: 'Brasil' },
     { url: 'https://www.cartacapital.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.bbc.com/portuguese/index.xml', category: 'Brasil' },
+    { url: 'https://veja.abril.com.br/feed/', category: 'Brasil' },
+    { url: 'https://odia.ig.com.br/_conteudo/noticias/rss.xml', category: 'Brasil' },
 
     // Mundo
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
@@ -38,6 +50,9 @@ export const FEED_SOURCES = [
     { url: 'https://feeds.reuters.com/reuters/worldNews', category: 'Mundo' },
     { url: 'https://www.theguardian.com/world/rss', category: 'Mundo' },
     { url: 'https://feeds.washingtonpost.com/rss/world', category: 'Mundo' },
+    { url: 'https://g1.globo.com/rss/g1/mundo/', category: 'Mundo' },
+    { url: 'https://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
+    { url: 'https://feeds.npr.org/1001/rss.xml', category: 'Mundo' },
 
     // Negócios
     { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negócios' },
@@ -53,6 +68,8 @@ export const FEED_SOURCES = [
     { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', category: 'Ciência' },
     { url: 'https://www.sciencedaily.com/rss/all.xml', category: 'Ciência' },
     { url: 'https://revistagalileu.globo.com/rss/ultimas/feed.xml', category: 'Ciência' },
+    { url: 'https://hypescience.com/feed/', category: 'Ciência' },
+    { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/', category: 'Ciência' },
 
     // Esportes
     { url: 'https://www.espn.com.br/rss/news', category: 'Esportes' },
@@ -65,10 +82,13 @@ export const FEED_SOURCES = [
     { url: 'https://rollingstone.uol.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://anmtv.com.br/feed/', category: 'Entretenimento' },
+    { url: 'https://rss.uol.com.br/feed/cinema.xml', category: 'Entretenimento' },
     { url: 'https://br.ign.com/feed.xml', category: 'Games' },
     { url: 'https://www.theenemy.com.br/rss', category: 'Games' },
     { url: 'https://www.eurogamer.net/?format=rss', category: 'Games' },
     { url: 'https://kotaku.com/rss', category: 'Games' },
+    { url: 'https://www.arkade.com.br/feed/', category: 'Games' },
+    { url: 'https://voxel.com.br/rss', category: 'Games' },
 
     // Saúde
     { url: 'https://www.metropoles.com/saude/feed', category: 'Saúde' },
