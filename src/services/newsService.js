@@ -41,6 +41,15 @@ export const FEED_SOURCES = [
     { url: 'https://www.bbc.com/portuguese/index.xml', category: 'Brasil' },
     { url: 'https://veja.abril.com.br/feed/', category: 'Brasil' },
     { url: 'https://odia.ig.com.br/_conteudo/noticias/rss.xml', category: 'Brasil' },
+    { url: 'https://www.terra.com.br/rss/noticias', category: 'Brasil' },
+    { url: 'https://www.correiobraziliense.com.br/rss/noticia/brasil/rss.xml', category: 'Brasil' },
+    { url: 'https://www.gazetadopovo.com.br/feed/rss/republica.xml', category: 'Brasil' },
+    { url: 'https://diariodonordeste.verdesmares.com.br/rss', category: 'Brasil' },
+    { url: 'https://www.em.com.br/rss/noticia/nacional/rss.xml', category: 'Brasil' },
+    { url: 'https://www.brasil247.com/feed', category: 'Brasil' },
+    { url: 'https://www.diariodocentrodomundo.com.br/feed/', category: 'Brasil' },
+    { url: 'https://revistaforum.com.br/feed', category: 'Brasil' },
+    { url: 'https://catracalivre.com.br/feed/', category: 'Brasil' },
 
     // Mundo
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
@@ -136,4 +145,25 @@ export const fetchNews = async (sources = FEED_SOURCES) => {
     });
 
     return allNews;
+};
+
+export const fetchTrendingTopics = async () => {
+    // Using Google News Top Stories as a proxy for "Trending" since Google Trends RSS is often blocked or rate-limited via rss2json
+    const TRENDS_URL = 'https://news.google.com/rss?hl=pt-BR&gl=BR&ceid=BR:pt-419';
+    try {
+        const res = await fetch(`${RSS2JSON_API}${encodeURIComponent(TRENDS_URL)}`);
+        const data = await res.json();
+        if (data.status === 'ok') {
+            return data.items.map(item => ({
+                title: item.title, // In Google News, title often includes source "Title - Source"
+                link: item.link,
+                pubDate: item.pubDate,
+                description: item.description
+            })).slice(0, 10); // Take top 10
+        }
+        return [];
+    } catch (err) {
+        console.error('Error fetching trending topics:', err);
+        return [];
+    }
 };
