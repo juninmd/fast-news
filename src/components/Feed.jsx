@@ -91,7 +91,7 @@ const Feed = ({ apiKey }) => {
     <div>
       {/* Category Filter */}
       {categories.length > 1 && (
-          <div className="flex overflow-x-auto pb-4 mb-6 gap-2 no-scrollbar px-1 sticky top-16 z-30 bg-gray-50/95 backdrop-blur py-2">
+          <div className="flex overflow-x-auto pb-4 mb-6 gap-2 no-scrollbar px-1 sticky top-16 z-30 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur py-2">
             {categories.map(cat => (
                 <button
                     key={cat}
@@ -99,7 +99,7 @@ const Feed = ({ apiKey }) => {
                     className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                         selectedCategory === cat
                         ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
                     }`}
                 >
                     {cat}
@@ -118,11 +118,11 @@ const Feed = ({ apiKey }) => {
       {/* Empty State */}
       {!loading && filteredNews.length === 0 && (
         <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                <AlertCircle className="text-gray-400" size={32} />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                <AlertCircle className="text-gray-400 dark:text-gray-500" size={32} />
             </div>
-            <p className="text-gray-500 text-lg">Nenhuma notícia encontrada.</p>
-            <p className="text-gray-400 text-sm mt-2">Tente carregar mais fontes ou verificar sua conexão.</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">Nenhuma notícia encontrada.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Tente carregar mais fontes ou verificar sua conexão.</p>
         </div>
       )}
 
@@ -131,7 +131,7 @@ const Feed = ({ apiKey }) => {
         {loading ? (
              <div className="flex flex-col items-center justify-center">
                 <RefreshCw className="animate-spin text-blue-600 mb-2" size={32} />
-                <p className="text-gray-500 text-sm">Carregando mais notícias...</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Carregando mais notícias...</p>
              </div>
         ) : hasMore ? (
             <button
@@ -142,7 +142,7 @@ const Feed = ({ apiKey }) => {
                 Carregar mais fontes
             </button>
         ) : (
-            <p className="text-gray-400 text-sm">Todas as fontes foram carregadas.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm">Todas as fontes foram carregadas.</p>
         )}
       </div>
     </div>
