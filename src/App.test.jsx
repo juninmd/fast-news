@@ -27,8 +27,7 @@ describe('App', () => {
 
     it('renders header and feed', () => {
         render(<App />);
-        expect(screen.getByText('News')).toBeInTheDocument();
-        expect(screen.getByText('AI')).toBeInTheDocument();
+        expect(screen.getByText('NewsAI')).toBeInTheDocument();
         expect(screen.getByTestId('feed')).toBeInTheDocument();
     });
 
