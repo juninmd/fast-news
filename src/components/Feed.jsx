@@ -5,7 +5,7 @@ import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const BATCH_SIZE = 6; // Load 6 sources at a time to be safe with rate limits
 
-const Feed = ({ apiKey }) => {
+const Feed = ({ apiKey, customFeeds = [] }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shuffledSources, setShuffledSources] = useState([]);
@@ -14,17 +14,20 @@ const Feed = ({ apiKey }) => {
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [init, setInit] = useState(false);
 
-  // Shuffle sources on mount
+  // Shuffle sources on mount or when customFeeds change
   useEffect(() => {
-    const sources = [...FEED_SOURCES];
+    const sources = [...FEED_SOURCES, ...customFeeds];
     // Fisher-Yates shuffle
     for (let i = sources.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [sources[i], sources[j]] = [sources[j], sources[i]];
     }
     setShuffledSources(sources);
+    setNews([]);
+    setNextBatchIndex(0);
+    setHasMore(true);
     setInit(true);
-  }, []);
+  }, [customFeeds]);
 
   const loadMoreNews = async () => {
     if (loading || !hasMore || !init) return;
@@ -70,13 +73,13 @@ const Feed = ({ apiKey }) => {
     }
   };
 
-  // Initial load
+  // Initial load / Reload when sources change
   useEffect(() => {
-    if (init && news.length === 0) {
+    if (shuffledSources.length > 0 && news.length === 0) {
         loadMoreNews();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [init]);
+  }, [shuffledSources]);
 
   const categories = useMemo(() => {
     const cats = ['Todas', ...new Set(news.map(item => item.category).filter(Boolean))];

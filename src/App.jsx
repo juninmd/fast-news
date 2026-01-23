@@ -13,6 +13,15 @@ function App() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
+  const [customFeeds, setCustomFeeds] = useState(() => {
+    try {
+      const stored = localStorage.getItem('custom_feeds');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Error parsing custom_feeds", e);
+      return [];
+    }
+  });
 
   useEffect(() => {
     if (darkMode) {
@@ -26,8 +35,9 @@ function App() {
     setDarkMode(!darkMode);
   };
 
-  const handleSaveSettings = (newKey) => {
+  const handleSaveSettings = (newKey, newCustomFeeds) => {
     setApiKey(newKey);
+    setCustomFeeds(newCustomFeeds);
   };
 
   return (
@@ -89,13 +99,14 @@ function App() {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Feed apiKey={apiKey} />
+        <Feed apiKey={apiKey} customFeeds={customFeeds} />
       </main>
 
       <Settings
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onSave={handleSaveSettings}
+        initialCustomFeeds={customFeeds}
       />
     </div>
   );
