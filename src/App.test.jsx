@@ -4,7 +4,11 @@ import App from './App';
 
 // Mock child components
 vi.mock('./components/Feed', () => ({
-    default: ({ apiKey }) => <div data-testid="feed">Feed Component (Key: {apiKey})</div>
+    default: ({ apiKey, customFeeds }) => (
+        <div data-testid="feed">
+            Feed Component (Key: {apiKey}, Feeds: {customFeeds?.length || 0})
+        </div>
+    )
 }));
 
 vi.mock('./components/Settings', () => ({
@@ -12,7 +16,7 @@ vi.mock('./components/Settings', () => ({
         isOpen ? (
             <div data-testid="settings-modal">
                 Settings Modal
-                <button onClick={() => { onSave('new-api-key'); onClose(); }}>Save</button>
+                <button onClick={() => { onSave('new-api-key', [{ url: 'test', category: 'test' }]); onClose(); }}>Save</button>
                 <button onClick={onClose}>Close</button>
             </div>
         ) : null
@@ -59,7 +63,7 @@ describe('App', () => {
         expect(screen.getByTestId('settings-modal')).toBeInTheDocument();
     });
 
-    it('updates api key and closes modal on save', async () => {
+    it('updates api key and custom feeds, then closes modal on save', async () => {
         render(<App />);
 
         // Open modal
@@ -72,8 +76,8 @@ describe('App', () => {
         // Check if modal is closed
         expect(screen.queryByTestId('settings-modal')).not.toBeInTheDocument();
 
-        // Check if api key was updated in Feed
-        expect(screen.getByTestId('feed')).toHaveTextContent('Feed Component (Key: new-api-key)');
+        // Check if api key and custom feeds were updated in Feed
+        expect(screen.getByTestId('feed')).toHaveTextContent('Feed Component (Key: new-api-key, Feeds: 1)');
 
         // Notification should disappear
         expect(screen.queryByText(/Por favor configure sua Chave de API Gemini/)).not.toBeInTheDocument();

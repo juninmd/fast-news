@@ -1,13 +1,41 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2 } from 'lucide-react';
 
-const Settings = ({ isOpen, onClose, onSave }) => {
+const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [localCustomFeeds, setLocalCustomFeeds] = useState(initialCustomFeeds);
+  const [newFeedUrl, setNewFeedUrl] = useState('');
+  const [newFeedCategory, setNewFeedCategory] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setLocalCustomFeeds(initialCustomFeeds);
+    }
+  }, [isOpen, initialCustomFeeds]);
 
   const handleSave = () => {
     localStorage.setItem('gemini_api_key', apiKey);
-    onSave(apiKey);
+    localStorage.setItem('custom_feeds', JSON.stringify(localCustomFeeds));
+    onSave(apiKey, localCustomFeeds);
     onClose();
+  };
+
+  const handleAddFeed = () => {
+    if (!newFeedUrl) return;
+    const category = newFeedCategory.trim() || 'Personalizado';
+    const newFeed = { url: newFeedUrl.trim(), category };
+
+    if (localCustomFeeds.some(f => f.url === newFeed.url)) {
+      return;
+    }
+
+    setLocalCustomFeeds([...localCustomFeeds, newFeed]);
+    setNewFeedUrl('');
+    setNewFeedCategory('');
+  };
+
+  const handleRemoveFeed = (url) => {
+    setLocalCustomFeeds(localCustomFeeds.filter(feed => feed.url !== url));
   };
 
   if (!isOpen) return null;
@@ -37,6 +65,65 @@ const Settings = ({ isOpen, onClose, onSave }) => {
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             Sua chave é armazenada localmente no seu navegador.
           </p>
+        </div>
+
+        <div className="mb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Gerenciar Fontes</h3>
+
+          <div className="space-y-3 mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">URL do RSS Feed</label>
+              <input
+                type="url"
+                value={newFeedUrl}
+                onChange={(e) => setNewFeedUrl(e.target.value)}
+                placeholder="https://exemplo.com/rss"
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-grow">
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Categoria (Opcional)</label>
+                <input
+                  type="text"
+                  value={newFeedCategory}
+                  onChange={(e) => setNewFeedCategory(e.target.value)}
+                  placeholder="Ex: Tecnologia"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={handleAddFeed}
+                  disabled={!newFeedUrl}
+                  data-testid="add-feed-btn"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {localCustomFeeds.length > 0 && (
+            <div className="max-h-40 overflow-y-auto pr-1 space-y-2 no-scrollbar">
+              {localCustomFeeds.map((feed, index) => (
+                <div key={`${feed.url}-${index}`} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <div className="overflow-hidden">
+                    <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{feed.url}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">{feed.category}</p>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveFeed(feed.url)}
+                    data-testid={`remove-feed-btn-${index}`}
+                    className="text-gray-400 hover:text-red-500 p-1 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end space-x-3 pt-2">
