@@ -27,6 +27,9 @@ export const FEED_SOURCES = [
     { url: 'https://rss.slashdot.org/Slashdot/slashdot', category: 'Tecnologia' },
 
     // Brasil / Política / Geral
+    { url: 'https://www.campograndenews.com.br/rss/rss.xml', category: 'Brasil' },
+    { url: 'https://feeds.feedburner.com/pragmatismopolitico', category: 'Brasil' },
+    { url: 'https://www.metropoles.com/feed', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Brasil' },
@@ -69,6 +72,8 @@ export const FEED_SOURCES = [
     { url: 'https://agenciabrasil.ebc.com.br/rss/internacional/feed.xml', category: 'Mundo' },
 
     // Negócios
+    { url: 'https://neofeed.com.br/feed/', category: 'Negócios' },
+    { url: 'https://braziljournal.com/feed/', category: 'Negócios' },
     { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negócios' },
     { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html', category: 'Negócios' },
     { url: 'https://epocanegocios.globo.com/rss/ultimas/feed.xml', category: 'Negócios' },
@@ -88,6 +93,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.space.com/feeds/all', category: 'Ciência' },
 
     // Esportes
+    { url: 'https://trivela.com.br/feed/', category: 'Esportes' },
     { url: 'https://www.espn.com.br/rss/news', category: 'Esportes' },
     { url: 'https://ge.globo.com/rss/ge/', category: 'Esportes' },
     { url: 'https://www.lance.com.br/rss', category: 'Esportes' },
@@ -95,6 +101,8 @@ export const FEED_SOURCES = [
     { url: 'https://agenciabrasil.ebc.com.br/rss/esportes/feed.xml', category: 'Esportes' },
 
     // Entretenimento / Games
+    { url: 'https://www.papelpop.com/feed/', category: 'Entretenimento' },
+    { url: 'https://hugogloss.uol.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://www.omelete.com.br/rss/rss.aspx', category: 'Entretenimento' },
     { url: 'https://rollingstone.uol.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
