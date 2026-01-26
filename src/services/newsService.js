@@ -74,6 +74,8 @@ export const FEED_SOURCES = [
     // Negócios
     { url: 'https://neofeed.com.br/feed/', category: 'Negócios' },
     { url: 'https://braziljournal.com/feed/', category: 'Negócios' },
+    { url: 'https://www.suno.com.br/feed/', category: 'Negócios' },
+    { url: 'https://www.cnnbrasil.com.br/economia/feed/', category: 'Negócios' },
     { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negócios' },
     { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html', category: 'Negócios' },
     { url: 'https://epocanegocios.globo.com/rss/ultimas/feed.xml', category: 'Negócios' },
