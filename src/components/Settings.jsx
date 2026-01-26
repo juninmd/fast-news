@@ -11,7 +11,8 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     if (isOpen) {
       setLocalCustomFeeds(initialCustomFeeds);
     }
-  }, [isOpen, initialCustomFeeds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSave = () => {
     localStorage.setItem('gemini_api_key', apiKey);
