@@ -4,8 +4,9 @@ import NewsCard from './NewsCard';
 import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const BATCH_SIZE = 6; // Load 6 sources at a time to be safe with rate limits
+const DEFAULT_FEEDS = [];
 
-const Feed = ({ apiKey, customFeeds = [] }) => {
+const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shuffledSources, setShuffledSources] = useState([]);
@@ -25,7 +26,7 @@ const Feed = ({ apiKey, customFeeds = [] }) => {
     setShuffledSources(sources);
     setNews([]);
     setNextBatchIndex(0);
-    setHasMore(true);
+    setHasMore(sources.length > 0);
     setInit(true);
   }, [customFeeds]);
 
