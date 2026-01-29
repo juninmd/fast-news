@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { summarizeText } from '../services/geminiService';
-import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
+import { ExternalLink, Sparkles, Loader, Calendar, Newspaper } from 'lucide-react';
 
 const NewsCard = ({ item, apiKey }) => {
   const [summary, setSummary] = useState(null);
@@ -51,7 +51,7 @@ const NewsCard = ({ item, apiKey }) => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
-      {imageUrl && (
+      {imageUrl ? (
         <div className="h-52 overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <img
@@ -64,6 +64,15 @@ const NewsCard = ({ item, apiKey }) => {
                 {item.category}
             </div>
           )}
+        </div>
+      ) : (
+        <div className="h-52 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center relative">
+             <Newspaper className="text-gray-300 dark:text-gray-600 w-16 h-16" />
+             {item.category && (
+                <div className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-md text-gray-900 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm tracking-wide uppercase">
+                    {item.category}
+                </div>
+              )}
         </div>
       )}
       <div className="p-5 flex flex-col flex-grow">

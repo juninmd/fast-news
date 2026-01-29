@@ -189,4 +189,15 @@ describe('newsService', () => {
         expect(news[0].title).toBe('News 2');
         expect(news[1].title).toBe('News 1');
     });
+
+    it('should have a valid list of FEED_SOURCES', () => {
+        expect(FEED_SOURCES.length).toBeGreaterThan(50);
+        FEED_SOURCES.forEach(source => {
+            expect(source).toHaveProperty('url');
+            expect(source).toHaveProperty('category');
+            expect(typeof source.url).toBe('string');
+            expect(typeof source.category).toBe('string');
+            expect(source.url.startsWith('http')).toBe(true);
+        });
+    });
 });
