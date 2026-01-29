@@ -25,6 +25,10 @@ export const FEED_SOURCES = [
     { url: 'https://macmagazine.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://www.b9.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://rss.slashdot.org/Slashdot/slashdot', category: 'Tecnologia' },
+    { url: 'https://manualdousuario.net/feed/', category: 'Tecnologia' },
+    { url: 'https://computerworld.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://itforum.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://imasters.com.br/feed', category: 'Tecnologia' },
 
     // Brasil / Política / Geral
     { url: 'https://www.campograndenews.com.br/rss/rss.xml', category: 'Brasil' },
@@ -57,6 +61,10 @@ export const FEED_SOURCES = [
     { url: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', category: 'Brasil' },
     { url: 'https://agenciabrasil.ebc.com.br/rss/politica/feed.xml', category: 'Brasil' },
     { url: 'https://agenciabrasil.ebc.com.br/rss/economia/feed.xml', category: 'Brasil' },
+    { url: 'https://istoe.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.jb.com.br/rss.xml', category: 'Brasil' },
+    { url: 'https://congressoemfoco.uol.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.conjur.com.br/rss.xml', category: 'Brasil' },
 
     // Mundo
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
@@ -84,6 +92,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.forbes.com/business/feed/', category: 'Negócios' },
     { url: 'https://www.economist.com/business/rss.xml', category: 'Negócios' },
     { url: 'https://www.valor.com.br/rss', category: 'Negócios' },
+    { url: 'https://investnews.com.br/feed/', category: 'Negócios' },
 
     // Ciência
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml', category: 'Ciência' },
@@ -93,6 +102,7 @@ export const FEED_SOURCES = [
     { url: 'https://hypescience.com/feed/', category: 'Ciência' },
     { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/', category: 'Ciência' },
     { url: 'https://www.space.com/feeds/all', category: 'Ciência' },
+    { url: 'https://super.abril.com.br/feed/', category: 'Ciência' },
 
     // Esportes
     { url: 'https://trivela.com.br/feed/', category: 'Esportes' },
@@ -101,6 +111,13 @@ export const FEED_SOURCES = [
     { url: 'https://www.lance.com.br/rss', category: 'Esportes' },
     { url: 'https://rss.uol.com.br/feed/esporte.xml', category: 'Esportes' },
     { url: 'https://agenciabrasil.ebc.com.br/rss/esportes/feed.xml', category: 'Esportes' },
+    { url: 'https://motorsport.uol.com.br/rss/f1/news/', category: 'Esportes' },
+    { url: 'https://www.grandepremio.com.br/feed/', category: 'Esportes' },
+
+    // Automóveis
+    { url: 'https://quatrorodas.abril.com.br/feed/', category: 'Automóveis' },
+    { url: 'https://autoesporte.globo.com/rss/autoesporte/', category: 'Automóveis' },
+    { url: 'https://motor1.uol.com.br/rss/news/all/', category: 'Automóveis' },
 
     // Entretenimento / Games
     { url: 'https://www.papelpop.com/feed/', category: 'Entretenimento' },
@@ -110,17 +127,21 @@ export const FEED_SOURCES = [
     { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://anmtv.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://rss.uol.com.br/feed/cinema.xml', category: 'Entretenimento' },
+    { url: 'https://rss.uol.com.br/feed/filmes-e-series.xml', category: 'Entretenimento' },
+    { url: 'https://observatoriodocinema.uol.com.br/feed', category: 'Entretenimento' },
     { url: 'https://br.ign.com/feed.xml', category: 'Games' },
     { url: 'https://www.theenemy.com.br/rss', category: 'Games' },
     { url: 'https://www.eurogamer.net/?format=rss', category: 'Games' },
     { url: 'https://kotaku.com/rss', category: 'Games' },
     { url: 'https://www.arkade.com.br/feed/', category: 'Games' },
     { url: 'https://voxel.com.br/rss', category: 'Games' },
+    { url: 'https://www.gamevicio.com/rss/', category: 'Games' },
     { url: 'https://agenciabrasil.ebc.com.br/rss/cultura/feed.xml', category: 'Entretenimento' },
 
     // Saúde
     { url: 'https://www.metropoles.com/saude/feed', category: 'Saúde' },
-    { url: 'https://drauziovarella.uol.com.br/feed/', category: 'Saúde' }
+    { url: 'https://drauziovarella.uol.com.br/feed/', category: 'Saúde' },
+    { url: 'https://vidadebebe.globo.com/rss/vidadebebe/', category: 'Saúde' }
 ];
 
 export const fetchNews = async (sources = FEED_SOURCES) => {
