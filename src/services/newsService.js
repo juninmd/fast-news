@@ -141,7 +141,20 @@ export const FEED_SOURCES = [
     // Saúde
     { url: 'https://www.metropoles.com/saude/feed', category: 'Saúde' },
     { url: 'https://drauziovarella.uol.com.br/feed/', category: 'Saúde' },
-    { url: 'https://vidadebebe.globo.com/rss/vidadebebe/', category: 'Saúde' }
+    { url: 'https://vidadebebe.globo.com/rss/vidadebebe/', category: 'Saúde' },
+
+    // Cripto & Finanças
+    { url: 'https://br.cointelegraph.com/rss', category: 'Cripto' },
+    { url: 'https://portaldobitcoin.uol.com.br/feed/', category: 'Cripto' },
+    { url: 'https://www.criptofacil.com/feed/', category: 'Cripto' },
+
+    // Marketing & Mídia
+    { url: 'https://www.meioemensagem.com.br/feed', category: 'Marketing' },
+    { url: 'https://propmark.com.br/feed/', category: 'Marketing' },
+
+    // Moda & Lifestyle
+    { url: 'https://vogue.globo.com/rss/ultimas/feed.xml', category: 'Moda' },
+    { url: 'https://gq.globo.com/rss/ultimas/feed.xml', category: 'Moda' }
 ];
 
 export const fetchNews = async (sources = FEED_SOURCES) => {
