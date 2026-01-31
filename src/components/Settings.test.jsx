@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Settings from './Settings';
+import * as geminiService from '../services/geminiService';
+
+vi.mock('../services/geminiService', () => ({
+    summarizeText: vi.fn(),
+}));
 
 describe('Settings', () => {
     beforeEach(() => {
@@ -125,5 +130,35 @@ describe('Settings', () => {
             expect.objectContaining({ url: 'https://initial.com' }),
             expect.objectContaining({ url: 'https://new.com/rss' })
         ]));
+    });
+
+    it('shows success message when api key test passes', async () => {
+        geminiService.summarizeText.mockResolvedValue('Summary');
+        render(<Settings isOpen={true} />);
+
+        const input = screen.getByLabelText('Token da API Gemini');
+        fireEvent.change(input, { target: { value: 'valid-key' } });
+
+        const testButton = screen.getByTitle('Testar Conexão');
+        fireEvent.click(testButton);
+
+        await waitFor(() => {
+            expect(screen.getByText('Conexão bem-sucedida!')).toBeInTheDocument();
+        });
+    });
+
+    it('shows error message when api key test fails', async () => {
+        geminiService.summarizeText.mockRejectedValue(new Error('Invalid key'));
+        render(<Settings isOpen={true} />);
+
+        const input = screen.getByLabelText('Token da API Gemini');
+        fireEvent.change(input, { target: { value: 'invalid-key' } });
+
+        const testButton = screen.getByTitle('Testar Conexão');
+        fireEvent.click(testButton);
+
+        await waitFor(() => {
+            expect(screen.getByText('Falha na conexão. Verifique sua chave.')).toBeInTheDocument();
+        });
     });
 });
