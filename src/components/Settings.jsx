@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Check, AlertCircle, Loader } from 'lucide-react';
+import { summarizeText } from '../services/geminiService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [localCustomFeeds, setLocalCustomFeeds] = useState(initialCustomFeeds);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedCategory, setNewFeedCategory] = useState('');
+  const [testStatus, setTestStatus] = useState('idle'); // idle, testing, success, error
+  const [testMessage, setTestMessage] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setLocalCustomFeeds(initialCustomFeeds);
+      setTestStatus('idle');
+      setTestMessage('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -19,6 +24,27 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     localStorage.setItem('custom_feeds', JSON.stringify(localCustomFeeds));
     onSave(apiKey, localCustomFeeds);
     onClose();
+  };
+
+  const handleTestKey = async () => {
+    if (!apiKey) {
+      setTestStatus('error');
+      setTestMessage('Por favor, insira uma chave de API.');
+      return;
+    }
+
+    setTestStatus('testing');
+    setTestMessage('');
+
+    try {
+      await summarizeText("Esta é uma mensagem de teste para verificar a conexão com a API Gemini.", apiKey);
+      setTestStatus('success');
+      setTestMessage('Conexão bem-sucedida!');
+    } catch (error) {
+      console.error(error);
+      setTestStatus('error');
+      setTestMessage('Falha na conexão. Verifique sua chave.');
+    }
   };
 
   const handleAddFeed = () => {
@@ -55,14 +81,50 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
           <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Token da API Gemini
           </label>
-          <input
-            id="api-key-input"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
-            placeholder="Cole sua chave de API aqui"
-          />
+          <div className="flex gap-2">
+            <input
+              id="api-key-input"
+              type="password"
+              value={apiKey}
+              onChange={(e) => {
+                setApiKey(e.target.value);
+                setTestStatus('idle');
+                setTestMessage('');
+              }}
+              className="flex-grow px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
+              placeholder="Cole sua chave de API aqui"
+            />
+            <button
+              onClick={handleTestKey}
+              disabled={testStatus === 'testing' || !apiKey}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center min-w-[100px] ${
+                testStatus === 'success'
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  : testStatus === 'error'
+                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+              }`}
+              title="Testar Conexão"
+            >
+              {testStatus === 'testing' ? (
+                <Loader size={18} className="animate-spin" />
+              ) : testStatus === 'success' ? (
+                <Check size={18} />
+              ) : testStatus === 'error' ? (
+                <AlertCircle size={18} />
+              ) : (
+                'Testar'
+              )}
+            </button>
+          </div>
+          {testMessage && (
+            <p className={`text-xs mt-2 ${
+                testStatus === 'success' ? 'text-green-600 dark:text-green-400' :
+                testStatus === 'error' ? 'text-red-600 dark:text-red-400' : 'text-gray-500'
+            }`}>
+                {testMessage}
+            </p>
+          )}
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             Sua chave é armazenada localmente no seu navegador.
           </p>
