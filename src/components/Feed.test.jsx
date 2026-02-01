@@ -21,6 +21,10 @@ vi.mock('./NewsCard', () => ({
     default: ({ item }) => <div data-testid="news-card">{item.title} - {item.category}</div>
 }));
 
+vi.mock('./SkeletonCard', () => ({
+    default: () => <div data-testid="skeleton-card">Skeleton</div>
+}));
+
 describe('Feed', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -35,7 +39,8 @@ describe('Feed', () => {
 
         render(<Feed apiKey="test-key" />);
 
-        expect(screen.getByText('Carregando mais notícias...')).toBeInTheDocument();
+        expect(screen.getAllByTestId('skeleton-card')).toHaveLength(6);
+        expect(screen.queryByText('Carregando mais notícias...')).not.toBeInTheDocument();
 
         await waitFor(() => {
             expect(screen.getByText('News 1 - Tech')).toBeInTheDocument();
@@ -152,7 +157,7 @@ describe('Feed', () => {
 
         // Wait for loading to finish (even if error)
         await waitFor(() => {
-             expect(screen.queryByText('Carregando mais notícias...')).not.toBeInTheDocument();
+             expect(screen.queryByTestId('skeleton-card')).not.toBeInTheDocument();
         });
 
         expect(consoleSpy).toHaveBeenCalledWith("Error loading news batch", expect.any(Error));
@@ -214,12 +219,10 @@ describe('Feed', () => {
          render(<Feed apiKey="test-key" />);
 
          // Initial load is running.
-         // Try to click load more if it was visible? But it's not visible during loading.
-         // So we can only test the "!init" or "!hasMore" or concurrency if we could trigger it.
-         // The button is disabled or removed when loading.
-         // So "loading" guard is implicitly tested by UI state (loading spinner vs button).
+         // Expect skeletons
+         expect(screen.getAllByTestId('skeleton-card')).toHaveLength(6);
 
-         expect(screen.getByText('Carregando mais notícias...')).toBeInTheDocument();
+         // Button should not be visible
          expect(screen.queryByRole('button', { name: 'Carregar mais fontes' })).not.toBeInTheDocument();
     });
 

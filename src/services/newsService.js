@@ -29,6 +29,7 @@ export const FEED_SOURCES = [
     { url: 'https://computerworld.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://itforum.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://imasters.com.br/feed', category: 'Tecnologia' },
+    { url: 'https://news.ycombinator.com/rss', category: 'Tecnologia' },
 
     // Brasil / Política / Geral
     { url: 'https://www.campograndenews.com.br/rss/rss.xml', category: 'Brasil' },

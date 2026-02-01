@@ -57,6 +57,7 @@ const NewsCard = ({ item, apiKey }) => {
           <img
             src={imageUrl}
             alt={item.title}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           {item.category && (
