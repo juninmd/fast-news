@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { fetchNews, FEED_SOURCES } from '../services/newsService';
 import NewsCard from './NewsCard';
+import SkeletonCard from './SkeletonCard';
 import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const BATCH_SIZE = 6; // Load 6 sources at a time to be safe with rate limits
@@ -91,10 +92,12 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS }) => {
     ? news
     : news.filter(item => item.category === selectedCategory);
 
+  const isLoadingInitial = loading && news.length === 0;
+
   return (
     <div>
       {/* Category Filter */}
-      {categories.length > 1 && (
+      {!isLoadingInitial && categories.length > 1 && (
           <div className="flex overflow-x-auto pb-4 mb-6 gap-2 no-scrollbar px-1 sticky top-16 z-30 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur py-2">
             {categories.map(cat => (
                 <button
@@ -114,13 +117,16 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS }) => {
 
       {/* News Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredNews.map((item, index) => (
-            <NewsCard key={`${item.id}-${index}`} item={item} apiKey={apiKey} />
-        ))}
+        {isLoadingInitial
+          ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+          : filteredNews.map((item, index) => (
+              <NewsCard key={`${item.id}-${index}`} item={item} apiKey={apiKey} />
+            ))
+        }
       </div>
 
       {/* Empty State */}
-      {!loading && filteredNews.length === 0 && (
+      {!loading && !isLoadingInitial && filteredNews.length === 0 && (
         <div className="text-center py-20">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
                 <AlertCircle className="text-gray-400 dark:text-gray-500" size={32} />
@@ -132,12 +138,12 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS }) => {
 
       {/* Load More / Loading State */}
       <div className="mt-12 text-center pb-8">
-        {loading ? (
+        {loading && !isLoadingInitial ? (
              <div className="flex flex-col items-center justify-center">
                 <RefreshCw className="animate-spin text-blue-600 mb-2" size={32} />
                 <p className="text-gray-500 dark:text-gray-400 text-sm">Carregando mais notícias...</p>
              </div>
-        ) : hasMore ? (
+        ) : hasMore && !isLoadingInitial ? (
             <button
                 onClick={loadMoreNews}
                 className="group relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"

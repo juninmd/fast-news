@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Check, AlertCircle, Loader } from 'lucide-react';
+import { X, Plus, Trash2, Check, AlertCircle, Loader, ExternalLink } from 'lucide-react';
 import { summarizeText } from '../services/geminiService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
@@ -125,9 +125,20 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                 {testMessage}
             </p>
           )}
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            Sua chave é armazenada localmente no seu navegador.
-          </p>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Sua chave é armazenada localmente no seu navegador.
+            </p>
+            <a
+              href="https://aistudio.google.com/app/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+            >
+              Obter chave de API
+              <ExternalLink size={10} />
+            </a>
+          </div>
         </div>
 
         <div className="mb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
