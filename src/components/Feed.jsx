@@ -4,10 +4,9 @@ import NewsCard from './NewsCard';
 import SkeletonCard from './SkeletonCard';
 import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
-const BATCH_SIZE = 6; // Load 6 sources at a time to be safe with rate limits
 const DEFAULT_FEEDS = [];
 
-const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS }) => {
+const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shuffledSources, setShuffledSources] = useState([]);
@@ -35,15 +34,18 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS }) => {
     if (loading || !hasMore || !init) return;
     setLoading(true);
 
+    // If API key is present, we can increase batch size. Even without key, 9 is fine with throttling implemented in fetchNews
+    const batchSize = rss2jsonApiKey ? 12 : 9;
+
     try {
-        const nextSources = shuffledSources.slice(nextBatchIndex, nextBatchIndex + BATCH_SIZE);
+        const nextSources = shuffledSources.slice(nextBatchIndex, nextBatchIndex + batchSize);
         if (nextSources.length === 0) {
             setHasMore(false);
             setLoading(false);
             return;
         }
 
-        const newNews = await fetchNews(nextSources);
+        const newNews = await fetchNews(nextSources, rss2jsonApiKey);
 
         setNews(prev => {
             const combined = [...prev, ...newNews];
@@ -64,8 +66,8 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS }) => {
             return unique;
         });
 
-        setNextBatchIndex(prev => prev + BATCH_SIZE);
-        if (nextBatchIndex + BATCH_SIZE >= shuffledSources.length) {
+        setNextBatchIndex(prev => prev + batchSize);
+        if (nextBatchIndex + batchSize >= shuffledSources.length) {
             setHasMore(false);
         }
     } catch (err) {
