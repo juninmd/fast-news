@@ -121,7 +121,7 @@ export const FEED_SOURCES = [
     { url: 'https://motor1.uol.com.br/rss/news/all/', category: 'Automóveis' },
 
     // Entretenimento / Games
-    { url: 'https://www.papelpop.com/feed/', category: 'Entretenimento' },
+    { url: 'https://www.papelpop.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://hugogloss.uol.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://www.omelete.com.br/rss/rss.aspx', category: 'Entretenimento' },
     { url: 'https://rollingstone.uol.com.br/feed/', category: 'Entretenimento' },
@@ -158,21 +158,42 @@ export const FEED_SOURCES = [
     { url: 'https://gq.globo.com/rss/ultimas/feed.xml', category: 'Moda' }
 ];
 
-export const fetchNews = async (sources = FEED_SOURCES) => {
-    // Determine the sources to fetch.
-    // To respect API limits, the caller should slice FEED_SOURCES.
+const fetchWithConcurrency = async (sources, apiKey) => {
+    // If API key is present, we can be more aggressive, but let's stick to safe limits.
+    // Without API key, rate limit is 1 req/sec (approx).
+    // With API key, it's higher.
+    const BATCH_LIMIT = apiKey ? 5 : 2;
+    const DELAY = 500; // ms delay between batches
 
-    const promises = sources.map(source =>
-        fetch(`${RSS2JSON_API}${encodeURIComponent(source.url)}`)
-            .then(res => res.json())
-            .then(data => ({ ...data, category: source.category }))
-            .catch(err => {
-                console.error(`Error fetching ${source.url}:`, err);
-                return null;
-            })
-    );
+    let results = [];
+    for (let i = 0; i < sources.length; i += BATCH_LIMIT) {
+        const chunk = sources.slice(i, i + BATCH_LIMIT);
+        const promises = chunk.map(source => {
+            let url = `${RSS2JSON_API}${encodeURIComponent(source.url)}`;
+            if (apiKey) url += `&api_key=${apiKey}`;
 
-    const results = await Promise.all(promises);
+            return fetch(url)
+                .then(res => res.json())
+                .then(data => ({ ...data, category: source.category }))
+                .catch(err => {
+                    console.error(`Error fetching ${source.url}:`, err);
+                    return null;
+                });
+        });
+
+        const chunkResults = await Promise.all(promises);
+        results = [...results, ...chunkResults];
+
+        // Add delay if there are more items to process
+        if (i + BATCH_LIMIT < sources.length) {
+            await new Promise(resolve => setTimeout(resolve, DELAY));
+        }
+    }
+    return results;
+};
+
+export const fetchNews = async (sources = FEED_SOURCES, apiKey = null) => {
+    const results = await fetchWithConcurrency(sources, apiKey);
 
     let allNews = [];
     results.forEach(result => {
@@ -201,11 +222,14 @@ export const fetchNews = async (sources = FEED_SOURCES) => {
     return allNews;
 };
 
-export const fetchTrendingTopics = async () => {
+export const fetchTrendingTopics = async (apiKey = null) => {
     // Using Google News Top Stories as a proxy for "Trending" since Google Trends RSS is often blocked or rate-limited via rss2json
     const TRENDS_URL = 'https://news.google.com/rss?hl=pt-BR&gl=BR&ceid=BR:pt-419';
     try {
-        const res = await fetch(`${RSS2JSON_API}${encodeURIComponent(TRENDS_URL)}`);
+        let url = `${RSS2JSON_API}${encodeURIComponent(TRENDS_URL)}`;
+        if (apiKey) url += `&api_key=${apiKey}`;
+
+        const res = await fetch(url);
         const data = await res.json();
         if (data.status === 'ok') {
             return data.items.map(item => ({

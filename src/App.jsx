@@ -13,6 +13,7 @@ function App() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
+  const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key'));
   const [customFeeds, setCustomFeeds] = useState(() => {
     try {
       const stored = localStorage.getItem('custom_feeds');
@@ -35,9 +36,10 @@ function App() {
     setDarkMode(!darkMode);
   };
 
-  const handleSaveSettings = (newKey, newCustomFeeds) => {
+  const handleSaveSettings = (newKey, newCustomFeeds, newRssKey) => {
     setApiKey(newKey);
     setCustomFeeds(newCustomFeeds);
+    setRss2jsonApiKey(newRssKey);
   };
 
   return (
@@ -99,7 +101,7 @@ function App() {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Feed apiKey={apiKey} customFeeds={customFeeds} />
+        <Feed apiKey={apiKey} customFeeds={customFeeds} rss2jsonApiKey={rss2jsonApiKey} />
       </main>
 
       <Settings

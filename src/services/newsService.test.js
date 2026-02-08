@@ -8,6 +8,7 @@ global.fetch = vi.fn();
 describe('newsService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.useRealTimers();
     });
 
     it('should fetch news from multiple sources and aggregate them', async () => {
@@ -158,13 +159,36 @@ describe('newsService', () => {
     });
 
     it('should use default FEED_SOURCES if no sources provided', async () => {
+        vi.useFakeTimers();
         // We will mock fetch to return empty json to avoid real network calls
         fetch.mockResolvedValue({
              json: () => Promise.resolve({ status: 'ok', feed: {}, items: [] }),
         });
 
-        await fetchNews();
+        const promise = fetchNews();
+
+        // Fast-forward time to complete all delayed batches
+        await vi.runAllTimersAsync();
+
+        await promise;
         expect(fetch).toHaveBeenCalledTimes(FEED_SOURCES.length);
+        vi.useRealTimers();
+    });
+
+    it('should append rss2jsonApiKey to fetch URL if provided', async () => {
+        const mockSources = [
+            { url: 'http://source1.com/rss', category: 'Tech' },
+        ];
+        const apiKey = 'test-api-key';
+
+        fetch.mockResolvedValue({
+            json: () => Promise.resolve({ status: 'ok', feed: { title: 'S1' }, items: [] }),
+        });
+
+        await fetchNews(mockSources, apiKey);
+
+        const expectedUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(mockSources[0].url)}&api_key=${apiKey}`;
+        expect(fetch).toHaveBeenCalledWith(expectedUrl);
     });
 
     it('should handle sorting when dateB is invalid', async () => {
