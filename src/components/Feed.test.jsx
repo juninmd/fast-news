@@ -14,6 +14,9 @@ vi.mock('../services/newsService', () => ({
         { url: 'url5', category: 'Tech' },
         { url: 'url6', category: 'World' },
         { url: 'url7', category: 'Extra' },
+        { url: 'url8', category: 'Tech' },
+        { url: 'url9', category: 'World' },
+        { url: 'url10', category: 'Tech' },
     ]
 }));
 
@@ -165,8 +168,8 @@ describe('Feed', () => {
     });
 
     it('shows "All sources loaded" when no more sources', async () => {
-         // We have 7 mock sources. Batch size is 6.
-         // 1st load: 6 sources.
+         // We have 10 mock sources. Batch size is 9.
+         // 1st load: 9 sources.
          // 2nd load: 1 source.
          // 3rd load: 0 sources -> HasMore = false.
 
@@ -237,15 +240,68 @@ describe('Feed', () => {
 
         await waitFor(() => {
              const cards = screen.getAllByTestId('news-card');
-             // Logic: if (isNaN(dateB)) return -1; -> B is smaller -> B goes after A?
-             // No, sort(a, b). if result < 0, a comes first.
-             // if (isNaN(dateA)) return 1; (a is 'larger', so b comes first).
-             // if (isNaN(dateB)) return -1; (a is 'smaller', so a comes first).
-             // So valid dates come before invalid dates.
-
              expect(cards[0]).toHaveTextContent('Valid Date A');
              expect(cards[1]).toHaveTextContent('Invalid Date B');
         });
+    });
+
+    it('passes rss2jsonApiKey to fetchNews', async () => {
+         const mockNews = [{ id: '1', title: 'N', category: 'C', pubDate: '2023-01-01' }];
+         newsService.fetchNews.mockResolvedValue(mockNews);
+
+         render(<Feed apiKey="test-key" rss2jsonApiKey="rss-key" />);
+
+         await waitFor(() => {
+             expect(screen.getByText('N - C')).toBeInTheDocument();
+         });
+
+         expect(newsService.fetchNews).toHaveBeenCalledWith(expect.any(Array), 'rss-key');
+    });
+
+    it('increases batch size when rss2jsonApiKey is present', async () => {
+         const mockNews = [{ id: '1', title: 'N', category: 'C', pubDate: '2023-01-01' }];
+         newsService.fetchNews.mockResolvedValue(mockNews);
+
+         // We need enough mock sources to test batch size 12
+         // We have 10 initial mock sources.
+         // We need > 9. 10 is enough for "batch size is 9" test.
+         // For "batch size is 12" test, we need > 9 to distinguish from 9?
+         // No, if batch size is 12, it takes up to 12.
+         // If sources length is 10, it takes 10.
+         // If batch size was 9, it would take 9.
+         // So with 10 sources, we can distinguish 9 vs 12.
+         // Batch 9 -> 9 items.
+         // Batch 12 -> 10 items.
+
+         render(<Feed apiKey="test-key" rss2jsonApiKey="rss-key" />);
+
+         await waitFor(() => {
+             expect(screen.getByText('N - C')).toBeInTheDocument();
+         });
+
+         const calls = newsService.fetchNews.mock.calls;
+         const sources = calls[calls.length - 1][0];
+
+         // Should be all 10 sources (since 10 < 12)
+         // Wait, shuffling happens. But length is constant.
+         expect(sources.length).toBe(10);
+    });
+
+     it('uses default batch size when rss2jsonApiKey is missing', async () => {
+         const mockNews = [{ id: '1', title: 'N', category: 'C', pubDate: '2023-01-01' }];
+         newsService.fetchNews.mockResolvedValue(mockNews);
+
+         render(<Feed apiKey="test-key" />); // No rss key
+
+         await waitFor(() => {
+             expect(screen.getByText('N - C')).toBeInTheDocument();
+         });
+
+         const calls = newsService.fetchNews.mock.calls;
+         const sources = calls[calls.length - 1][0];
+
+         // Should be 9
+         expect(sources.length).toBe(9);
     });
 
     it('shuffles sources correctly', () => {

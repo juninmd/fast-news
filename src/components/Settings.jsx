@@ -4,6 +4,7 @@ import { summarizeText } from '../services/geminiService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [localCustomFeeds, setLocalCustomFeeds] = useState(initialCustomFeeds);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedCategory, setNewFeedCategory] = useState('');
@@ -13,6 +14,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   useEffect(() => {
     if (isOpen) {
       setLocalCustomFeeds(initialCustomFeeds);
+      setRss2jsonApiKey(localStorage.getItem('rss2json_api_key') || '');
       setTestStatus('idle');
       setTestMessage('');
     }
@@ -21,8 +23,9 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
   const handleSave = () => {
     localStorage.setItem('gemini_api_key', apiKey);
+    localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
     localStorage.setItem('custom_feeds', JSON.stringify(localCustomFeeds));
-    onSave(apiKey, localCustomFeeds);
+    onSave(apiKey, localCustomFeeds, rss2jsonApiKey);
     onClose();
   };
 
@@ -138,6 +141,34 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
               Obter chave de API
               <ExternalLink size={10} />
             </a>
+          </div>
+
+          <label htmlFor="rss-api-key-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 mt-4">
+            Chave da API RSS2JSON (Opcional)
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="rss-api-key-input"
+              type="password"
+              value={rss2jsonApiKey}
+              onChange={(e) => setRss2jsonApiKey(e.target.value)}
+              className="flex-grow px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
+              placeholder="Para maiores limites de requisição"
+            />
+          </div>
+          <div className="flex justify-between items-center mt-2">
+             <p className="text-xs text-gray-500 dark:text-gray-400">
+               Aumenta a velocidade e limites de feeds.
+             </p>
+             <a
+               href="https://rss2json.com/plans"
+               target="_blank"
+               rel="noopener noreferrer"
+               className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+             >
+               Obter chave
+               <ExternalLink size={10} />
+             </a>
           </div>
         </div>
 
