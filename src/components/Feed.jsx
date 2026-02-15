@@ -6,7 +6,7 @@ import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const DEFAULT_FEEDS = [];
 
-const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey }) => {
+const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey, autoSummarize }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shuffledSources, setShuffledSources] = useState([]);
@@ -122,7 +122,12 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey }) => {
         {isLoadingInitial
           ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
           : filteredNews.map((item, index) => (
-              <NewsCard key={`${item.id}-${index}`} item={item} apiKey={apiKey} />
+              <NewsCard
+                key={`${item.id}-${index}`}
+                item={item}
+                apiKey={apiKey}
+                autoSummarize={autoSummarize}
+              />
             ))
         }
       </div>

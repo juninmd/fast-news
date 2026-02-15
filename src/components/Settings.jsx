@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Check, AlertCircle, Loader, ExternalLink } from 'lucide-react';
+import { X, Plus, Trash2, Check, AlertCircle, Loader, ExternalLink, Zap } from 'lucide-react';
 import { summarizeText } from '../services/geminiService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
+  const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [localCustomFeeds, setLocalCustomFeeds] = useState(initialCustomFeeds);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedCategory, setNewFeedCategory] = useState('');
@@ -15,6 +16,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     if (isOpen) {
       setLocalCustomFeeds(initialCustomFeeds);
       setRss2jsonApiKey(localStorage.getItem('rss2json_api_key') || '');
+      setAutoSummarize(localStorage.getItem('auto_summarize') === 'true');
       setTestStatus('idle');
       setTestMessage('');
     }
@@ -24,8 +26,9 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const handleSave = () => {
     localStorage.setItem('gemini_api_key', apiKey);
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
+    localStorage.setItem('auto_summarize', autoSummarize);
     localStorage.setItem('custom_feeds', JSON.stringify(localCustomFeeds));
-    onSave(apiKey, localCustomFeeds, rss2jsonApiKey);
+    onSave(apiKey, localCustomFeeds, rss2jsonApiKey, autoSummarize);
     onClose();
   };
 
@@ -169,6 +172,30 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                Obter chave
                <ExternalLink size={10} />
              </a>
+          </div>
+
+          <div className="flex items-center justify-between mt-6 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
+             <div className="flex items-center gap-2">
+                <div className="bg-blue-100 dark:bg-blue-900/50 p-1.5 rounded-full">
+                   <Zap size={16} className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Resumo Automático</span>
+                   <span className="block text-[10px] text-gray-500 dark:text-gray-400">Pode consumir limites da API rapidamente</span>
+                </div>
+             </div>
+             <button
+                onClick={() => setAutoSummarize(!autoSummarize)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  autoSummarize ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'
+                }`}
+             >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    autoSummarize ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+             </button>
           </div>
         </div>
 
