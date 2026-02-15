@@ -3,6 +3,9 @@ const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 export const FEED_SOURCES = [
     // Tecnologia
+    { url: 'https://www.cnet.com/rss/news/', category: 'Tecnologia' },
+    { url: 'https://www.zdnet.com/news/rss.xml', category: 'Tecnologia' },
+    { url: 'https://www.techradar.com/rss', category: 'Tecnologia' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml', category: 'Tecnologia' },
     { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', category: 'Tecnologia' },
     { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
