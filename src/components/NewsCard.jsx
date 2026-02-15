@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { summarizeText } from '../services/geminiService';
 import { ExternalLink, Sparkles, Loader, Calendar, Newspaper } from 'lucide-react';
 
-const NewsCard = ({ item, apiKey }) => {
+const NewsCard = ({ item, apiKey, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    if (autoSummarize && apiKey && !summary && !loading && !error) {
+      handleSummarize();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSummarize, apiKey]);
 
   const handleSummarize = async () => {
     if (!apiKey) {
@@ -51,13 +59,14 @@ const NewsCard = ({ item, apiKey }) => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
-      {imageUrl ? (
+      {imageUrl && !imageError ? (
         <div className="h-52 overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <img
             src={imageUrl}
             alt={item.title}
             loading="lazy"
+            onError={() => setImageError(true)}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           {item.category && (

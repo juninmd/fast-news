@@ -50,7 +50,7 @@ describe('Settings', () => {
         fireEvent.click(saveButton);
 
         expect(localStorage.getItem('gemini_api_key')).toBe('saved-key');
-        expect(onSaveMock).toHaveBeenCalledWith('saved-key', expect.any(Array), expect.any(String));
+        expect(onSaveMock).toHaveBeenCalledWith('saved-key', expect.any(Array), expect.any(String), false);
         expect(onCloseMock).toHaveBeenCalled();
     });
 
@@ -70,7 +70,7 @@ describe('Settings', () => {
         fireEvent.click(saveButton);
 
         expect(localStorage.getItem('rss2json_api_key')).toBe('new-rss-key');
-        expect(onSaveMock).toHaveBeenCalledWith(expect.any(String), expect.any(Array), 'new-rss-key');
+        expect(onSaveMock).toHaveBeenCalledWith(expect.any(String), expect.any(Array), 'new-rss-key', false);
     });
 
     it('closes modal without saving when cancel is clicked', () => {
@@ -148,7 +148,7 @@ describe('Settings', () => {
         expect(onSaveMock).toHaveBeenCalledWith(expect.any(String), expect.arrayContaining([
             expect.objectContaining({ url: 'https://initial.com' }),
             expect.objectContaining({ url: 'https://new.com/rss' })
-        ]), expect.any(String));
+        ]), expect.any(String), false);
     });
 
     it('shows success message when api key test passes', async () => {

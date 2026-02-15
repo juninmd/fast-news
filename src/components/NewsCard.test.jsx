@@ -153,6 +153,18 @@ describe('NewsCard', () => {
         });
     });
 
+    it('triggers auto summarization if enabled', async () => {
+        const summarizeSpy = vi.spyOn(geminiService, 'summarizeText').mockResolvedValue('Auto Summary');
+
+        render(<NewsCard item={mockItem} apiKey="test-key" autoSummarize={true} />);
+
+        await waitFor(() => {
+            expect(summarizeSpy).toHaveBeenCalledWith('Test content', 'test-key');
+        });
+
+        expect(screen.getByText('Auto Summary')).toBeInTheDocument();
+    });
+
     it('handles date formatting error', () => {
         // Line 48: } catch { return ''; }
         // We need to trigger an error inside new Date(dateString) or date.toLocaleDateString()
