@@ -6,13 +6,23 @@ import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const DEFAULT_FEEDS = [];
 
-const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey, autoSummarize }) => {
+const Feed = ({
+    apiKey,
+    customFeeds = DEFAULT_FEEDS,
+    rss2jsonApiKey,
+    autoSummarize,
+    selectedCategory = 'Todas',
+    searchQuery = '',
+    ollamaUrl,
+    ollamaModel,
+    telegramBotToken,
+    telegramChatId
+}) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shuffledSources, setShuffledSources] = useState([]);
   const [nextBatchIndex, setNextBatchIndex] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [init, setInit] = useState(false);
 
   // Shuffle sources on mount or when customFeeds change
@@ -85,38 +95,28 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey, autoSummari
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shuffledSources]);
 
-  const categories = useMemo(() => {
-    const cats = ['Todas', ...new Set(news.map(item => item.category).filter(Boolean))];
-    return cats.sort();
-  }, [news]);
+  const filteredNews = useMemo(() => {
+      let filtered = news;
 
-  const filteredNews = selectedCategory === 'Todas'
-    ? news
-    : news.filter(item => item.category === selectedCategory);
+      if (selectedCategory !== 'Todas') {
+          filtered = filtered.filter(item => item.category === selectedCategory);
+      }
+
+      if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          filtered = filtered.filter(item =>
+              item.title.toLowerCase().includes(query) ||
+              (item.description && item.description.toLowerCase().includes(query))
+          );
+      }
+
+      return filtered;
+  }, [news, selectedCategory, searchQuery]);
 
   const isLoadingInitial = loading && news.length === 0;
 
   return (
     <div>
-      {/* Category Filter */}
-      {!isLoadingInitial && categories.length > 1 && (
-          <div className="flex overflow-x-auto pb-4 mb-6 gap-2 no-scrollbar px-1 sticky top-16 z-30 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur py-2">
-            {categories.map(cat => (
-                <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                        selectedCategory === cat
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                    }`}
-                >
-                    {cat}
-                </button>
-            ))}
-          </div>
-      )}
-
       {/* News Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoadingInitial
@@ -127,6 +127,10 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey, autoSummari
                 item={item}
                 apiKey={apiKey}
                 autoSummarize={autoSummarize}
+                ollamaUrl={ollamaUrl}
+                ollamaModel={ollamaModel}
+                telegramBotToken={telegramBotToken}
+                telegramChatId={telegramChatId}
               />
             ))
         }
@@ -134,12 +138,16 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey, autoSummari
 
       {/* Empty State */}
       {!loading && !isLoadingInitial && filteredNews.length === 0 && (
-        <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+        <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
                 <AlertCircle className="text-gray-400 dark:text-gray-500" size={32} />
             </div>
             <p className="text-gray-500 dark:text-gray-400 text-lg">Nenhuma notícia encontrada.</p>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Tente carregar mais fontes ou verificar sua conexão.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+                {hasMore
+                    ? "Tente carregar mais fontes para encontrar o que procura."
+                    : "Verifique sua busca ou tente outra categoria."}
+            </p>
         </div>
       )}
 
@@ -150,7 +158,7 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey, autoSummari
                 <RefreshCw className="animate-spin text-blue-600 mb-2" size={32} />
                 <p className="text-gray-500 dark:text-gray-400 text-sm">Carregando mais notícias...</p>
              </div>
-        ) : hasMore && !isLoadingInitial ? (
+        ) : hasMore ? (
             <button
                 onClick={loadMoreNews}
                 className="group relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
@@ -159,7 +167,7 @@ const Feed = ({ apiKey, customFeeds = DEFAULT_FEEDS, rss2jsonApiKey, autoSummari
                 Carregar mais fontes
             </button>
         ) : (
-            <p className="text-gray-400 dark:text-gray-500 text-sm">Todas as fontes foram carregadas.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm">Todas as fontes disponíveis foram carregadas.</p>
         )}
       </div>
     </div>
