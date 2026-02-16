@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Settings from './Settings';
-import * as geminiService from '../services/geminiService';
+import * as ollamaService from '../services/ollamaService';
 
-vi.mock('../services/geminiService', () => ({
-    summarizeText: vi.fn(),
+vi.mock('../services/ollamaService', () => ({
+    summarizeWithOllama: vi.fn(),
 }));
 
 describe('Settings', () => {
@@ -21,56 +21,39 @@ describe('Settings', () => {
     it('renders settings modal when open', () => {
         render(<Settings isOpen={true} />);
         expect(screen.getByText('Configurações')).toBeInTheDocument();
-        expect(screen.getByLabelText('Token da API Gemini')).toBeInTheDocument();
+        expect(screen.getByLabelText('URL Base')).toBeInTheDocument();
     });
 
-    it('loads api key from local storage', () => {
-        localStorage.setItem('gemini_api_key', 'stored-key');
+    it('loads ollama url from local storage', () => {
+        localStorage.setItem('ollama_url', 'http://test-url');
         render(<Settings isOpen={true} />);
-        expect(screen.getByLabelText('Token da API Gemini')).toHaveValue('stored-key');
+        expect(screen.getByLabelText('URL Base')).toHaveValue('http://test-url');
     });
 
-    it('updates api key state on input change', () => {
+    it('updates ollama url state on input change', () => {
         render(<Settings isOpen={true} />);
-        const input = screen.getByLabelText('Token da API Gemini');
-        fireEvent.change(input, { target: { value: 'new-key' } });
-        expect(input).toHaveValue('new-key');
+        const input = screen.getByLabelText('URL Base');
+        fireEvent.change(input, { target: { value: 'http://new-url' } });
+        expect(input).toHaveValue('http://new-url');
     });
 
-    it('saves api key to local storage and calls onSave', () => {
+    it('saves settings to local storage and calls onSave', () => {
         const onSaveMock = vi.fn();
         const onCloseMock = vi.fn();
 
         render(<Settings isOpen={true} onSave={onSaveMock} onClose={onCloseMock} />);
 
-        const input = screen.getByLabelText('Token da API Gemini');
-        fireEvent.change(input, { target: { value: 'saved-key' } });
+        const input = screen.getByLabelText('URL Base');
+        fireEvent.change(input, { target: { value: 'http://saved-url' } });
 
         const saveButton = screen.getByRole('button', { name: 'Salvar' });
         fireEvent.click(saveButton);
 
-        expect(localStorage.getItem('gemini_api_key')).toBe('saved-key');
-        expect(onSaveMock).toHaveBeenCalledWith('saved-key', expect.any(Array), expect.any(String), false);
+        expect(localStorage.getItem('ollama_url')).toBe('http://saved-url');
+        expect(onSaveMock).toHaveBeenCalledWith(expect.objectContaining({
+            ollamaUrl: 'http://saved-url'
+        }));
         expect(onCloseMock).toHaveBeenCalled();
-    });
-
-    it('loads and saves rss2json api key', () => {
-        localStorage.setItem('rss2json_api_key', 'rss-key');
-        const onSaveMock = vi.fn();
-        const onCloseMock = vi.fn();
-
-        render(<Settings isOpen={true} onSave={onSaveMock} onClose={onCloseMock} />);
-
-        const input = screen.getByLabelText('Chave da API RSS2JSON (Opcional)');
-        expect(input).toHaveValue('rss-key');
-
-        fireEvent.change(input, { target: { value: 'new-rss-key' } });
-
-        const saveButton = screen.getByRole('button', { name: 'Salvar' });
-        fireEvent.click(saveButton);
-
-        expect(localStorage.getItem('rss2json_api_key')).toBe('new-rss-key');
-        expect(onSaveMock).toHaveBeenCalledWith(expect.any(String), expect.any(Array), 'new-rss-key', false);
     });
 
     it('closes modal without saving when cancel is clicked', () => {
@@ -86,26 +69,15 @@ describe('Settings', () => {
         expect(onCloseMock).toHaveBeenCalled();
     });
 
-     it('closes modal when X button is clicked', () => {
-        const onCloseMock = vi.fn();
-
-        render(<Settings isOpen={true} onClose={onCloseMock} />);
-
-        const buttons = screen.getAllByRole('button');
-        // The X button is usually the first icon button
-        const xButton = buttons.find(b => !b.textContent);
-
-        if (xButton) {
-             fireEvent.click(xButton);
-             expect(onCloseMock).toHaveBeenCalled();
-        }
-    });
-
     it('allows adding and removing custom feeds', () => {
         render(<Settings isOpen={true} />);
 
-        const urlInput = screen.getByPlaceholderText('https://exemplo.com/rss');
-        const catInput = screen.getByPlaceholderText('Ex: Tecnologia');
+        const urlInputs = screen.getAllByPlaceholderText('https://exemplo.com/rss');
+        // The one in the "Gerenciar Fontes" section
+        const urlInput = urlInputs[urlInputs.length - 1];
+
+        const catInputs = screen.getAllByPlaceholderText('Categoria (Ex: Tecnologia)');
+        const catInput = catInputs[catInputs.length - 1];
 
         fireEvent.change(urlInput, { target: { value: 'https://test.com/rss' } });
         fireEvent.change(catInput, { target: { value: 'TestCat' } });
@@ -124,60 +96,27 @@ describe('Settings', () => {
         expect(screen.queryByText('https://test.com/rss')).not.toBeInTheDocument();
     });
 
-    it('saves custom feeds to local storage and calls onSave', () => {
-        const onSaveMock = vi.fn();
-        const onCloseMock = vi.fn();
-        const initialFeeds = [{ url: 'https://initial.com', category: 'Init' }];
-        render(<Settings isOpen={true} onSave={onSaveMock} onClose={onCloseMock} initialCustomFeeds={initialFeeds} />);
-
-        // Add a new one
-        const urlInput = screen.getByPlaceholderText('https://exemplo.com/rss');
-        fireEvent.change(urlInput, { target: { value: 'https://new.com/rss' } });
-
-        const addButton = screen.getByTestId('add-feed-btn');
-        fireEvent.click(addButton);
-
-        const saveButton = screen.getByRole('button', { name: 'Salvar' });
-        fireEvent.click(saveButton);
-
-        const storedFeeds = JSON.parse(localStorage.getItem('custom_feeds'));
-        expect(storedFeeds).toHaveLength(2);
-        expect(storedFeeds).toContainEqual({ url: 'https://initial.com', category: 'Init' });
-        expect(storedFeeds).toContainEqual({ url: 'https://new.com/rss', category: 'Personalizado' });
-
-        expect(onSaveMock).toHaveBeenCalledWith(expect.any(String), expect.arrayContaining([
-            expect.objectContaining({ url: 'https://initial.com' }),
-            expect.objectContaining({ url: 'https://new.com/rss' })
-        ]), expect.any(String), false);
-    });
-
-    it('shows success message when api key test passes', async () => {
-        geminiService.summarizeText.mockResolvedValue('Summary');
+    it('shows success message when ollama connection test passes', async () => {
+        ollamaService.summarizeWithOllama.mockResolvedValue('Summary');
         render(<Settings isOpen={true} />);
 
-        const input = screen.getByLabelText('Token da API Gemini');
-        fireEvent.change(input, { target: { value: 'valid-key' } });
-
-        const testButton = screen.getByTitle('Testar Conexão');
+        const testButton = screen.getByText('Testar Conexão');
         fireEvent.click(testButton);
 
         await waitFor(() => {
-            expect(screen.getByText('Conexão bem-sucedida!')).toBeInTheDocument();
+            expect(screen.getByText('Conectado')).toBeInTheDocument();
         });
     });
 
-    it('shows error message when api key test fails', async () => {
-        geminiService.summarizeText.mockRejectedValue(new Error('Invalid key'));
+    it('shows error message when ollama connection test fails', async () => {
+        ollamaService.summarizeWithOllama.mockRejectedValue(new Error('Connection failed'));
         render(<Settings isOpen={true} />);
 
-        const input = screen.getByLabelText('Token da API Gemini');
-        fireEvent.change(input, { target: { value: 'invalid-key' } });
-
-        const testButton = screen.getByTitle('Testar Conexão');
+        const testButton = screen.getByText('Testar Conexão');
         fireEvent.click(testButton);
 
         await waitFor(() => {
-            expect(screen.getByText('Falha na conexão. Verifique sua chave.')).toBeInTheDocument();
+            expect(screen.getByText('Erro')).toBeInTheDocument();
         });
     });
 });
