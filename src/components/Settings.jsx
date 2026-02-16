@@ -1,56 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Check, AlertCircle, Loader, ExternalLink, Zap } from 'lucide-react';
-import { summarizeText } from '../services/geminiService';
+import React, { useState } from 'react';
+import { X, Plus, Trash2, Check, AlertCircle, Loader, ExternalLink, Zap, Bot, Send } from 'lucide-react';
+import { summarizeWithOllama } from '../services/ollamaService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
+
+  // Ollama Settings
+  const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
+  const [ollamaModel, setOllamaModel] = useState(() => localStorage.getItem('ollama_model') || 'llama3');
+
+  // Telegram Settings
+  const [telegramBotToken, setTelegramBotToken] = useState(() => localStorage.getItem('telegram_bot_token') || '');
+  const [telegramChatId, setTelegramChatId] = useState(() => localStorage.getItem('telegram_chat_id') || '');
+
   const [localCustomFeeds, setLocalCustomFeeds] = useState(initialCustomFeeds);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedCategory, setNewFeedCategory] = useState('');
-  const [testStatus, setTestStatus] = useState('idle'); // idle, testing, success, error
-  const [testMessage, setTestMessage] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      setLocalCustomFeeds(initialCustomFeeds);
-      setRss2jsonApiKey(localStorage.getItem('rss2json_api_key') || '');
-      setAutoSummarize(localStorage.getItem('auto_summarize') === 'true');
-      setTestStatus('idle');
-      setTestMessage('');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  const [ollamaStatus, setOllamaStatus] = useState('idle');
 
   const handleSave = () => {
-    localStorage.setItem('gemini_api_key', apiKey);
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
     localStorage.setItem('auto_summarize', autoSummarize);
     localStorage.setItem('custom_feeds', JSON.stringify(localCustomFeeds));
-    onSave(apiKey, localCustomFeeds, rss2jsonApiKey, autoSummarize);
+
+    localStorage.setItem('ollama_url', ollamaUrl);
+    localStorage.setItem('ollama_model', ollamaModel);
+    localStorage.setItem('telegram_bot_token', telegramBotToken);
+    localStorage.setItem('telegram_chat_id', telegramChatId);
+
+    // Pass all settings back to App
+    onSave({
+        rss2jsonApiKey,
+        autoSummarize,
+        customFeeds: localCustomFeeds,
+        ollamaUrl,
+        ollamaModel,
+        telegramBotToken,
+        telegramChatId
+    });
     onClose();
   };
 
-  const handleTestKey = async () => {
-    if (!apiKey) {
-      setTestStatus('error');
-      setTestMessage('Por favor, insira uma chave de API.');
-      return;
-    }
-
-    setTestStatus('testing');
-    setTestMessage('');
-
-    try {
-      await summarizeText("Esta é uma mensagem de teste para verificar a conexão com a API Gemini.", apiKey);
-      setTestStatus('success');
-      setTestMessage('Conexão bem-sucedida!');
-    } catch (error) {
-      console.error(error);
-      setTestStatus('error');
-      setTestMessage('Falha na conexão. Verifique sua chave.');
-    }
+  const testOllama = async () => {
+      setOllamaStatus('testing');
+      try {
+          await summarizeWithOllama('Teste de conexão.', ollamaUrl, ollamaModel);
+          setOllamaStatus('success');
+      } catch (e) {
+          console.error(e);
+          setOllamaStatus('error');
+      }
   };
 
   const handleAddFeed = () => {
@@ -75,7 +76,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
   return (
     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl shadow-black/20 transform transition-all animate-in zoom-in-95 duration-200 border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl shadow-black/20 transform transition-all animate-in zoom-in-95 duration-200 border border-gray-100 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Configurações</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-700 p-2 rounded-full transition-all">
@@ -83,120 +84,109 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
           </button>
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Token da API Gemini
-          </label>
-          <div className="flex gap-2">
-            <input
-              id="api-key-input"
-              type="password"
-              value={apiKey}
-              onChange={(e) => {
-                setApiKey(e.target.value);
-                setTestStatus('idle');
-                setTestMessage('');
-              }}
-              className="flex-grow px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
-              placeholder="Cole sua chave de API aqui"
-            />
-            <button
-              onClick={handleTestKey}
-              disabled={testStatus === 'testing' || !apiKey}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center min-w-[100px] ${
-                testStatus === 'success'
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                  : testStatus === 'error'
-                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
-              }`}
-              title="Testar Conexão"
-            >
-              {testStatus === 'testing' ? (
-                <Loader size={18} className="animate-spin" />
-              ) : testStatus === 'success' ? (
-                <Check size={18} />
-              ) : testStatus === 'error' ? (
-                <AlertCircle size={18} />
-              ) : (
-                'Testar'
-              )}
-            </button>
-          </div>
-          {testMessage && (
-            <p className={`text-xs mt-2 ${
-                testStatus === 'success' ? 'text-green-600 dark:text-green-400' :
-                testStatus === 'error' ? 'text-red-600 dark:text-red-400' : 'text-gray-500'
-            }`}>
-                {testMessage}
-            </p>
-          )}
-          <div className="flex justify-between items-center mt-2">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Sua chave é armazenada localmente no seu navegador.
-            </p>
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-            >
-              Obter chave de API
-              <ExternalLink size={10} />
-            </a>
-          </div>
-
-          <label htmlFor="rss-api-key-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 mt-4">
-            Chave da API RSS2JSON (Opcional)
-          </label>
-          <div className="flex gap-2">
-            <input
-              id="rss-api-key-input"
-              type="password"
-              value={rss2jsonApiKey}
-              onChange={(e) => setRss2jsonApiKey(e.target.value)}
-              className="flex-grow px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
-              placeholder="Para maiores limites de requisição"
-            />
-          </div>
-          <div className="flex justify-between items-center mt-2">
-             <p className="text-xs text-gray-500 dark:text-gray-400">
-               Aumenta a velocidade e limites de feeds.
-             </p>
-             <a
-               href="https://rss2json.com/plans"
-               target="_blank"
-               rel="noopener noreferrer"
-               className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-             >
-               Obter chave
-               <ExternalLink size={10} />
-             </a>
-          </div>
-
-          <div className="flex items-center justify-between mt-6 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
-             <div className="flex items-center gap-2">
-                <div className="bg-blue-100 dark:bg-blue-900/50 p-1.5 rounded-full">
-                   <Zap size={16} className="text-blue-600 dark:text-blue-400" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Ollama Section */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <Bot size={16} /> Ollama (IA Local)
+                </h3>
+                <div>
+                    <label htmlFor="ollama-url" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">URL Base</label>
+                    <input
+                        id="ollama-url"
+                        type="text"
+                        value={ollamaUrl}
+                        onChange={(e) => { setOllamaUrl(e.target.value); setOllamaStatus('idle'); }}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                        placeholder="http://localhost:11434"
+                    />
                 </div>
                 <div>
-                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Resumo Automático</span>
-                   <span className="block text-[10px] text-gray-500 dark:text-gray-400">Pode consumir limites da API rapidamente</span>
+                    <label htmlFor="ollama-model" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Modelo</label>
+                    <input
+                        id="ollama-model"
+                        type="text"
+                        value={ollamaModel}
+                        onChange={(e) => { setOllamaModel(e.target.value); setOllamaStatus('idle'); }}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                        placeholder="llama3"
+                    />
                 </div>
+                <div className="flex items-center justify-between">
+                    <p className="text-[10px] text-gray-500">Certifique-se de iniciar o Ollama com <code>OLLAMA_ORIGINS="*"</code></p>
+                    <button
+                        onClick={testOllama}
+                        disabled={ollamaStatus === 'testing'}
+                        className={`text-xs px-3 py-1 rounded border transition-colors ${
+                            ollamaStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
+                            ollamaStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
+                            'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                        }`}
+                    >
+                        {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Telegram Section */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <Send size={16} /> Telegram
+                </h3>
+                <div>
+                    <label htmlFor="telegram-token" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Bot Token</label>
+                    <input
+                        id="telegram-token"
+                        type="password"
+                        value={telegramBotToken}
+                        onChange={(e) => setTelegramBotToken(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                        placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="telegram-chat-id" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Chat ID (Canal/Grupo)</label>
+                    <input
+                        id="telegram-chat-id"
+                        type="text"
+                        value={telegramChatId}
+                        onChange={(e) => setTelegramChatId(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                        placeholder="@meucanal ou -100..."
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div className="my-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                <Zap size={16} /> Outras Configurações
+            </h3>
+             <div className="flex flex-col gap-4">
+                 <div>
+                    <label htmlFor="rss-api-key" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">RSS2JSON API Key (Opcional)</label>
+                    <input
+                        id="rss-api-key"
+                        type="password"
+                        value={rss2jsonApiKey}
+                        onChange={(e) => setRss2jsonApiKey(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                        placeholder="Chave para limites maiores"
+                    />
+                 </div>
+
+                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <span className="text-sm text-gray-700 dark:text-gray-200">Resumo Automático</span>
+                    <button
+                        onClick={() => setAutoSummarize(!autoSummarize)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        autoSummarize ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                    >
+                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${autoSummarize ? 'translate-x-5' : 'translate-x-1'}`} />
+                    </button>
+                 </div>
              </div>
-             <button
-                onClick={() => setAutoSummarize(!autoSummarize)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  autoSummarize ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'
-                }`}
-             >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    autoSummarize ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-             </button>
-          </div>
         </div>
 
         <div className="mb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
@@ -204,7 +194,6 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
           <div className="space-y-3 mb-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">URL do RSS Feed</label>
               <input
                 type="url"
                 value={newFeedUrl}
@@ -215,12 +204,11 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
             </div>
             <div className="flex gap-2">
               <div className="flex-grow">
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Categoria (Opcional)</label>
                 <input
                   type="text"
                   value={newFeedCategory}
                   onChange={(e) => setNewFeedCategory(e.target.value)}
-                  placeholder="Ex: Tecnologia"
+                  placeholder="Categoria (Ex: Tecnologia)"
                   className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 dark:text-white"
                 />
               </div>

@@ -2,7 +2,7 @@
 const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 export const FEED_SOURCES = [
-    // Tecnologia
+    // Tecnologia (Brasil & Mundo)
     { url: 'https://www.cnet.com/rss/news/', category: 'Tecnologia' },
     { url: 'https://www.zdnet.com/news/rss.xml', category: 'Tecnologia' },
     { url: 'https://www.techradar.com/rss', category: 'Tecnologia' },
@@ -33,6 +33,15 @@ export const FEED_SOURCES = [
     { url: 'https://itforum.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://imasters.com.br/feed', category: 'Tecnologia' },
     { url: 'https://news.ycombinator.com/rss', category: 'Tecnologia' },
+    { url: 'https://www.technologyreview.com/feed/', category: 'Tecnologia' },
+    { url: 'https://venturebeat.com/feed/', category: 'Tecnologia' },
+    { url: 'https://readwrite.com/feed/', category: 'Tecnologia' },
+
+    // Inteligência Artificial
+    { url: 'https://www.unite.ai/feed/', category: 'IA' },
+    { url: 'https://blogs.nvidia.com/feed/', category: 'IA' },
+    { url: 'https://openai.com/blog/rss.xml', category: 'IA' },
+    { url: 'https://www.artificialintelligence-news.com/feed/', category: 'IA' },
 
     // Brasil / Política / Geral
     { url: 'https://www.campograndenews.com.br/rss/rss.xml', category: 'Brasil' },
@@ -44,10 +53,12 @@ export const FEED_SOURCES = [
     { url: 'https://rss.uol.com.br/feed/noticias.xml', category: 'Brasil' },
     { url: 'https://rss.uol.com.br/feed/economia.xml', category: 'Brasil' },
     { url: 'https://feeds.folha.uol.com.br/emcimadahora/rss091.xml', category: 'Brasil' },
+    { url: 'https://feeds.folha.uol.com.br/poder/rss091.xml', category: 'Brasil' },
     { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
     { url: 'https://jovempan.com.br/feed', category: 'Brasil' },
     { url: 'https://noticias.r7.com/feed.xml', category: 'Brasil' },
     { url: 'https://www.estadao.com.br/rss/ultimas', category: 'Brasil' },
+    { url: 'https://www.estadao.com.br/rss/politica', category: 'Brasil' },
     { url: 'https://www.poder360.com.br/feed', category: 'Brasil' },
     { url: 'https://www.cartacapital.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.bbc.com/portuguese/index.xml', category: 'Brasil' },
@@ -69,6 +80,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.jb.com.br/rss.xml', category: 'Brasil' },
     { url: 'https://congressoemfoco.uol.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.conjur.com.br/rss.xml', category: 'Brasil' },
+    { url: 'https://noticias.uol.com.br/rss.xml', category: 'Brasil' },
 
     // Mundo
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
@@ -82,6 +94,7 @@ export const FEED_SOURCES = [
     { url: 'https://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
     { url: 'https://feeds.npr.org/1001/rss.xml', category: 'Mundo' },
     { url: 'https://agenciabrasil.ebc.com.br/rss/internacional/feed.xml', category: 'Mundo' },
+    { url: 'https://www.france24.com/en/rss', category: 'Mundo' },
 
     // Negócios
     { url: 'https://neofeed.com.br/feed/', category: 'Negócios' },
@@ -97,6 +110,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.economist.com/business/rss.xml', category: 'Negócios' },
     { url: 'https://www.valor.com.br/rss', category: 'Negócios' },
     { url: 'https://investnews.com.br/feed/', category: 'Negócios' },
+    { url: 'https://www.moneytimes.com.br/feed/', category: 'Negócios' },
 
     // Ciência
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml', category: 'Ciência' },
@@ -107,6 +121,8 @@ export const FEED_SOURCES = [
     { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/', category: 'Ciência' },
     { url: 'https://www.space.com/feeds/all', category: 'Ciência' },
     { url: 'https://super.abril.com.br/feed/', category: 'Ciência' },
+    { url: 'https://feeds.feedburner.com/scientificamerican', category: 'Ciência' },
+    { url: 'https://www.nature.com/nature.rss', category: 'Ciência' },
 
     // Esportes
     { url: 'https://trivela.com.br/feed/', category: 'Esportes' },
@@ -146,11 +162,13 @@ export const FEED_SOURCES = [
     { url: 'https://www.metropoles.com/saude/feed', category: 'Saúde' },
     { url: 'https://drauziovarella.uol.com.br/feed/', category: 'Saúde' },
     { url: 'https://vidadebebe.globo.com/rss/vidadebebe/', category: 'Saúde' },
+    { url: 'https://www.minhavida.com.br/rss', category: 'Saúde' },
 
     // Cripto & Finanças
     { url: 'https://br.cointelegraph.com/rss', category: 'Cripto' },
     { url: 'https://portaldobitcoin.uol.com.br/feed/', category: 'Cripto' },
     { url: 'https://www.criptofacil.com/feed/', category: 'Cripto' },
+    { url: 'https://livecoins.com.br/feed/', category: 'Cripto' },
 
     // Marketing & Mídia
     { url: 'https://www.meioemensagem.com.br/feed', category: 'Marketing' },
@@ -158,7 +176,8 @@ export const FEED_SOURCES = [
 
     // Moda & Lifestyle
     { url: 'https://vogue.globo.com/rss/ultimas/feed.xml', category: 'Moda' },
-    { url: 'https://gq.globo.com/rss/ultimas/feed.xml', category: 'Moda' }
+    { url: 'https://gq.globo.com/rss/ultimas/feed.xml', category: 'Moda' },
+    { url: 'https://elle.com.br/feed', category: 'Moda' }
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {

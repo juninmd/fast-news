@@ -1,27 +1,56 @@
-# NewsAI - Notícias Inteligentes
+# NewsAI - Agregador de Notícias Inteligente
 
-O **NewsAI** é um agregador de notícias moderno desenvolvido em React que reúne os principais portais do Brasil e do mundo em um único lugar. Além de organizar as notícias em cards visuais, o projeto utiliza a inteligência artificial do Google Gemini para criar resumos rápidos e objetivos das matérias.
+O **NewsAI** é um agregador de notícias moderno que utiliza Inteligência Artificial para resumir e classificar conteúdos. O projeto foi reformulado para integrar **Ollama (IA Local)** e **Telegram**, permitindo que você tenha um assistente de notícias pessoal e privado.
+
+![Preview](https://via.placeholder.com/800x400?text=NewsAI+Preview)
 
 ## Funcionalidades
 
-*   **Agregação de Notícias:** Coleta notícias de mais de 50 fontes RSS confiáveis, incluindo G1, UOL, CNN Brasil, TechCrunch, ESPN, entre outros.
-*   **Resumos com IA:** Integração com a API Google Gemini (modelo `gemini-1.5-flash`) para resumir notícias longas em 2-3 frases essenciais.
-*   **Interface Moderna:** Layout em cards responsivos com imagens, transições suaves e suporte completo a **Modo Escuro** (Dark Mode).
-*   **Top Tópicos:** Exibe os assuntos mais comentados do momento no topo da página.
-*   **Personalização:**
-    *   Adicione seus próprios feeds RSS personalizados.
-    *   Filtre notícias por categorias (Tecnologia, Brasil, Mundo, Esportes, etc.).
-    *   Gerenciamento local da Chave de API (salva no navegador).
+*   **Interface Moderna:** Layout responsivo com Sidebar, Dark Mode e Grid Masonry.
+*   **IA Local (Ollama):** Resumos privados e rápidos rodando diretamente na sua máquina, sem depender de APIs pagas.
+*   **Integração com Telegram:** Envie notícias resumidas diretamente para seu canal ou grupo do Telegram com um clique ou via automação.
+*   **Agente Autônomo:** Script em Node.js (`news-agent.js`) que monitora feeds RSS e envia novidades automaticamente para o Telegram.
+*   **Mais de 60 Fontes:** Notícias de Tecnologia, Brasil, Mundo, Ciência, Finanças e mais.
 
 ## Tecnologias
 
 *   [React](https://react.dev/) + [Vite](https://vitejs.dev/)
 *   [Tailwind CSS](https://tailwindcss.com/)
-*   [Google Generative AI SDK](https://www.npmjs.com/package/@google/generative-ai)
-*   [Lucide React](https://lucide.dev/) (Ícones)
-*   RSS2JSON API (para converter feeds XML em JSON)
+*   [Ollama](https://ollama.com/) (Llama 3, Mistral, etc.)
+*   [Telegram Bot API](https://core.telegram.org/bots/api)
+*   [RSS Parser](https://www.npmjs.com/package/rss-parser)
+
+## Pré-requisitos
+
+1.  **Node.js** (v18 ou superior).
+2.  **Ollama** instalado e rodando.
+    *   [Baixe o Ollama aqui](https://ollama.com/download).
+    *   Baixe um modelo (ex: Llama 3): `ollama pull llama3`.
+
+## Configuração do Ambiente
+
+### 1. Configurando o Ollama (CORS)
+Para que a interface Web consiga se comunicar com o Ollama, é necessário permitir requisições de outras origens (CORS).
+
+**No Mac/Linux:**
+```bash
+OLLAMA_ORIGINS="*" ollama serve
+```
+
+**No Windows (PowerShell):**
+```powershell
+$env:OLLAMA_ORIGINS="*"; ollama serve
+```
+
+### 2. Configurando o Telegram (Opcional)
+Para enviar notícias para o Telegram:
+1.  Crie um bot com o [@BotFather](https://t.me/BotFather) e obtenha o **Token**.
+2.  Crie um Canal ou Grupo e adicione o bot como administrador.
+3.  Obtenha o **Chat ID** (ex: `@meucanal` ou `-100...`).
 
 ## Instalação e Execução
+
+### Interface Web (Frontend)
 
 1.  Clone o repositório.
 2.  Instale as dependências:
@@ -32,20 +61,31 @@ O **NewsAI** é um agregador de notícias moderno desenvolvido em React que reú
     ```bash
     npm run dev
     ```
-4.  Acesse `http://localhost:5173` no seu navegador.
+4.  Acesse `http://localhost:5173`.
+5.  Vá em **Configurações** (ícone de engrenagem) e configure:
+    *   URL do Ollama: `http://localhost:11434`
+    *   Modelo: `llama3`
+    *   Telegram Token e Chat ID.
 
-## Configuração da API Gemini
+### Agente de Automação (Backend/Script)
 
-Para utilizar a funcionalidade de **Resumir**, você precisa de uma chave de API do Google Gemini.
+Para rodar o "robô" que monitora notícias e envia para o Telegram automaticamente:
 
-1.  Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).
-2.  Crie uma nova chave de API (é gratuito dentro dos limites de uso).
-3.  No NewsAI, clique no ícone de **Configurações** (engrenagem) no canto superior direito.
-4.  Cole sua chave no campo "Token da API Gemini" e clique em **Salvar**.
-5.  Pronto! O botão "Resumir" agora funcionará nos cards de notícias.
+1.  Configure as variáveis de ambiente (ou edite o arquivo `scripts/news-agent.js` se preferir, mas variáveis são mais seguras):
+    ```bash
+    export TELEGRAM_BOT_TOKEN="seu_token_aqui"
+    export TELEGRAM_CHAT_ID="@seu_canal"
+    ```
+2.  Execute o agente:
+    ```bash
+    node scripts/news-agent.js
+    ```
+    *Dica: Você pode agendar este script no `cron` para rodar a cada hora.*
 
-> **Nota:** A chave é armazenada apenas no `localStorage` do seu navegador e nunca é enviada para nenhum servidor intermediário, apenas diretamente para a API do Google.
+## Contribuição
+
+Sinta-se à vontade para abrir Issues e Pull Requests.
 
 ## Licença
 
-Este projeto é de código aberto e destinado a fins educacionais e de demonstração.
+MIT
