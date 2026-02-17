@@ -68,7 +68,7 @@ function App() {
   }, [customFeeds]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 flex font-sans">
 
       {/* Sidebar */}
       <Sidebar
@@ -80,39 +80,39 @@ function App() {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ml-72">
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ml-72 bg-gray-50/50 dark:bg-gray-900/50">
 
           {/* Header */}
-          <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md sticky top-0 z-30 border-b border-gray-100 dark:border-gray-700 px-4 sm:px-6 py-3">
-            <div className="flex justify-between items-center gap-4">
+          <header className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-xl sticky top-0 z-30 border-b border-gray-200/50 dark:border-gray-700/50 px-4 sm:px-6 py-4 shadow-sm">
+            <div className="flex justify-between items-center gap-4 max-w-7xl mx-auto w-full">
                 <div className="flex items-center gap-3 lg:hidden">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
-                        className="p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                        className="p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                     >
                         <Menu size={24} />
                     </button>
-                    <span className="font-bold text-lg dark:text-white">NewsAI</span>
+                    <span className="font-bold text-lg dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">NewsAI</span>
                 </div>
 
                 <div className="flex-1 max-w-xl hidden md:block">
                    <div className="relative group">
-                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                           <Search size={16} className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                           <Search size={18} className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                        </div>
                        <input
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Buscar notícias..."
-                          className="block w-full pl-10 pr-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl leading-5 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all sm:text-sm"
+                          className="block w-full pl-11 pr-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-2xl leading-5 bg-gray-100/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm shadow-inner"
                        />
                        {searchQuery && (
                            <button
                                 onClick={() => setSearchQuery('')}
                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                            >
-                               <X size={14} />
+                               <X size={16} />
                            </button>
                        )}
                    </div>
@@ -121,14 +121,14 @@ function App() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={toggleTheme}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+                        className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all hover:scale-105 active:scale-95"
                         title={darkMode ? "Modo claro" : "Modo escuro"}
                     >
                         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+                        className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all hover:scale-105 active:scale-95"
                         title="Configurações"
                     >
                         <SettingsIcon size={20} />
@@ -147,28 +147,28 @@ function App() {
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Buscar notícias..."
-                          className="block w-full pl-10 pr-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl leading-5 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                          className="block w-full pl-10 pr-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl leading-5 bg-gray-100/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                        />
                    </div>
             </div>
           </header>
 
           <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
-            <div className="max-w-7xl mx-auto space-y-8">
+            <div className="max-w-7xl mx-auto space-y-10">
                 {selectedCategory === 'Todas' && !searchQuery && (
-                    <section>
-                         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                             <span className="w-1 h-6 bg-blue-600 rounded-full inline-block"></span>
+                    <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+                             <span className="w-1.5 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full inline-block shadow-lg shadow-blue-500/30"></span>
                              Em Alta
                          </h2>
                          <TrendingTopics apiKey={apiKey || rss2jsonApiKey} />
                     </section>
                 )}
 
-                <section>
+                <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
                      <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <span className="w-1 h-6 bg-indigo-600 rounded-full inline-block"></span>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                            <span className="w-1.5 h-6 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-full inline-block shadow-lg shadow-indigo-500/30"></span>
                             {searchQuery ? `Resultados para "${searchQuery}"` : (selectedCategory === 'Todas' ? 'Últimas Notícias' : selectedCategory)}
                         </h2>
                      </div>
