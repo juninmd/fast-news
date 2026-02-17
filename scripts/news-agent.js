@@ -3,22 +3,41 @@ import Parser from 'rss-parser';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Configuration
-// You can override these with environment variables
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const MAX_ITEMS_PER_RUN = 5; // Prevent spamming
+const MAX_ITEMS_PER_RUN = 5;
 const HISTORY_FILE = 'history.json';
 
-// Import feeds from source
-// We need to manually define the path since we are in scripts/
+// Import feeds
 import { FEED_SOURCES } from '../src/services/newsService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const parser = new Parser();
+
+const CATEGORY_EMOJIS = {
+    'Tecnologia': '💻',
+    'IA': '🤖',
+    'Brasil': '🇧🇷',
+    'Mundo': '🌍',
+    'Negócios': '💼',
+    'Ciência': '🧪',
+    'Esportes': '⚽',
+    'Automóveis': '🚗',
+    'Entretenimento': '🎬',
+    'Games': '🎮',
+    'Saúde': '🏥',
+    'Cripto': '₿',
+    'Marketing': '📢',
+    'Moda': '👗'
+};
 
 async function loadHistory() {
     try {
@@ -30,18 +49,26 @@ async function loadHistory() {
 }
 
 async function saveHistory(history) {
-    // Keep history manageable (last 1000 items)
     const truncated = history.slice(-1000);
     await fs.writeFile(path.join(__dirname, HISTORY_FILE), JSON.stringify(truncated, null, 2));
 }
 
-async function summarizeWithOllama(text) {
-    const prompt = `Resuma a seguinte notícia em português do Brasil em um parágrafo curto e direto (máximo 3 frases). Destaque o que é mais importante.
+async function processWithOllama(text) {
+    const prompt = `
+Analise a seguinte notícia.
+Texto: "${text}"
 
-Texto:
-${text}
+Tarefa:
+1. Faça um resumo conciso e direto em português do Brasil (máximo 3 frases).
+2. Classifique a notícia em uma categoria simples (ex: Tecnologia, Política, Esportes, Economia, Ciência, Entretenimento).
 
-Resumo:`;
+Responda estritamente com um objeto JSON válido. Não inclua Markdown (como \`\`\`json).
+Formato esperado:
+{
+  "summary": "texto do resumo aqui",
+  "category": "Categoria"
+}
+`;
 
     try {
         const response = await fetch(`${OLLAMA_URL}/api/generate`, {
@@ -50,26 +77,42 @@ Resumo:`;
             body: JSON.stringify({
                 model: OLLAMA_MODEL,
                 prompt: prompt,
-                stream: false
+                stream: false,
+                format: "json" // Force JSON mode if model supports it
             })
         });
 
         if (!response.ok) throw new Error(`Ollama Error: ${response.statusText}`);
         const data = await response.json();
-        return data.response.trim();
+
+        let result;
+        try {
+            // Try to parse the response
+            const cleanResponse = data.response.trim();
+            // Remove markdown code blocks if present (even if we asked not to)
+            const jsonStr = cleanResponse.replace(/^```json\s*|\s*```$/g, '');
+            result = JSON.parse(jsonStr);
+        } catch (parseError) {
+            console.error('Failed to parse JSON from Ollama:', data.response);
+            return null;
+        }
+
+        return result;
     } catch (error) {
         console.error('Error with Ollama:', error.message);
         return null;
     }
 }
 
-async function sendToTelegram(title, summary, link, category) {
+async function sendToTelegram(title, summary, category, link) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
         console.log('Skipping Telegram (Not Configured)');
         return;
     }
 
-    const text = `*${category.toUpperCase()} | ${title}*\n\n${summary}\n\n[Ler matéria completa](${link})`;
+    const emoji = CATEGORY_EMOJIS[category] || CATEGORY_EMOJIS[Object.keys(CATEGORY_EMOJIS).find(k => category.includes(k))] || '📰';
+
+    const text = `*${emoji} ${category.toUpperCase()}*\n\n*${title}*\n\n${summary}\n\n[Ler matéria completa](${link})`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
     try {
@@ -98,14 +141,14 @@ async function run() {
     console.log('Starting News Agent...');
 
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-        console.warn('WARNING: Telegram credentials not set in environment variables (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID).');
+        console.warn('WARNING: Telegram credentials not set in environment variables.');
     }
 
     const history = await loadHistory();
     const historySet = new Set(history);
     let itemsProcessed = 0;
 
-    // Shuffle feeds to get variety
+    // Shuffle feeds
     const shuffledFeeds = [...FEED_SOURCES].sort(() => 0.5 - Math.random());
 
     for (const source of shuffledFeeds) {
@@ -115,7 +158,6 @@ async function run() {
             console.log(`Checking ${source.url}...`);
             const feed = await parser.parseURL(source.url);
 
-            // Get items from last 24h
             const now = new Date();
             const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
 
@@ -125,18 +167,20 @@ async function run() {
                 const pubDate = new Date(item.pubDate);
                 if (pubDate < oneDayAgo) continue;
 
-                // Check duplicates (link or guid)
                 const id = item.guid || item.link;
                 if (historySet.has(id)) continue;
 
                 console.log(`Processing: ${item.title}`);
 
-                // Summarize
                 const content = item.contentSnippet || item.content || item.summary || item.title;
-                const summary = await summarizeWithOllama(content);
+                const aiResult = await processWithOllama(content);
 
-                if (summary) {
-                    await sendToTelegram(item.title, summary, item.link, source.category);
+                if (aiResult && aiResult.summary) {
+                    // Use AI category if valid, otherwise fallback to source category
+                    const category = aiResult.category || source.category;
+
+                    await sendToTelegram(item.title, aiResult.summary, category, item.link);
+
                     history.push(id);
                     historySet.add(id);
                     itemsProcessed++;
