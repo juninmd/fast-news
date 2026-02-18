@@ -1,19 +1,19 @@
 import React from 'react';
-import { LayoutGrid, Globe, Cpu, Briefcase, Activity, Zap, Film, DollarSign, Heart, ShoppingBag, Radio, Bot, Menu, X, Rocket } from 'lucide-react';
+import { LayoutGrid, Globe, Cpu, Briefcase, Activity, Zap, Film, Bitcoin, Heart, ShoppingBag, Gamepad2, Bot, Menu, X, Rocket, Map, Microscope } from 'lucide-react';
 
 const CATEGORY_ICONS = {
   'Todas': LayoutGrid,
   'Tecnologia': Cpu,
-  'Brasil': Globe,
+  'Brasil': Map,
   'Mundo': Globe,
   'Negócios': Briefcase,
-  'Ciência': Activity,
+  'Ciência': Microscope,
   'Esportes': Zap,
   'Automóveis': Rocket,
   'Entretenimento': Film,
-  'Games': Radio,
+  'Games': Gamepad2,
   'Saúde': Heart,
-  'Cripto': DollarSign,
+  'Cripto': Bitcoin,
   'Marketing': ShoppingBag,
   'Moda': ShoppingBag,
   'IA': Bot,
