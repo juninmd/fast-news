@@ -83,45 +83,44 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
-      {imageUrl && !imageError ? (
-        <div className="h-48 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
-          <img
-            src={imageUrl}
-            alt={item.title}
-            loading="lazy"
-            onError={() => setImageError(true)}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-          {item.category && (
-            <div className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-md text-gray-900 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm tracking-wide uppercase">
+      {/* Image Area - Aspect Video */}
+      <div className="aspect-video overflow-hidden relative bg-gray-100 dark:bg-gray-700">
+        {imageUrl && !imageError ? (
+            <>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <img
+                    src={imageUrl}
+                    alt={item.title}
+                    loading="lazy"
+                    onError={() => setImageError(true)}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+            </>
+        ) : (
+            <div className="w-full h-full flex items-center justify-center relative">
+                 <Newspaper className="text-gray-300 dark:text-gray-600 w-12 h-12" />
+            </div>
+        )}
+        {item.category && (
+            <div className="absolute top-3 right-3 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md text-gray-900 dark:text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm tracking-wide uppercase">
                 {item.category}
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center relative">
-             <Newspaper className="text-gray-300 dark:text-gray-600 w-16 h-16" />
-             {item.category && (
-                <div className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-md text-gray-900 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm tracking-wide uppercase">
-                    {item.category}
-                </div>
-              )}
-        </div>
-      )}
+        )}
+      </div>
+
       <div className="p-5 flex flex-col flex-grow">
         <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full truncate max-w-[120px]">
+            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full truncate max-w-[120px]">
               {item.source}
             </span>
-            <div className="flex items-center text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap ml-2">
+            <div className="flex items-center text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap ml-2">
                 <Calendar size={12} className="mr-1" />
                 {formatDate(item.pubDate)}
             </div>
         </div>
 
-        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 leading-tight line-clamp-3">
-          <a href={item.link} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+          <a href={item.link} target="_blank" rel="noopener noreferrer">
             {item.title}
           </a>
         </h3>
@@ -137,7 +136,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                 <p className="text-gray-800 dark:text-gray-200 italic text-xs">{summary}</p>
             </div>
           ) : (
-            <p className="line-clamp-4">{cleanDescription}</p>
+            <p className="line-clamp-3">{cleanDescription}</p>
           )}
         </div>
 
@@ -147,10 +146,10 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                  <button
                     onClick={handleSummarize}
                     disabled={loading || summary}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm border ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm ${
                         summary
-                        ? 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400'
-                        : 'text-gray-700 bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+                        ? 'text-green-600 bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400'
+                        : 'text-white bg-blue-600 hover:bg-blue-700 border border-transparent shadow-blue-500/20'
                     }`}
                     title="Resumir com Ollama"
                  >
@@ -165,7 +164,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm border ${
                             telegramStatus === 'success' ? 'text-green-600 bg-green-50 border-green-200' :
                             telegramStatus === 'error' ? 'text-red-600 bg-red-50 border-red-200' :
-                            'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+                            'text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
                         }`}
                         title="Enviar para Telegram"
                      >
