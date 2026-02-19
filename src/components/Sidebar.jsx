@@ -9,7 +9,7 @@ const CATEGORY_ICONS = {
   'Negócios': Briefcase,
   'Ciência': Microscope,
   'Esportes': Zap,
-  'Automóveis': Rocket,
+  'Automóveis': Car,
   'Entretenimento': Film,
   'Games': Gamepad2,
   'Saúde': Heart,
@@ -63,7 +63,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                     if (window.innerWidth < 1024) onClose();
                   }}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group
+                    w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative overflow-hidden
                     ${isSelected
                       ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 shadow-sm ring-1 ring-blue-100 dark:ring-blue-800'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
@@ -71,7 +71,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                   `}
                 >
                   <Icon size={18} className={`transition-colors ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
-                  {category}
+                  <span className="relative z-10">{category}</span>
                   {isSelected && (
                       <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                   )}
@@ -88,7 +88,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                         <Bot size={16} /> Agente Autônomo
                     </div>
                     <p className="text-xs text-indigo-100 mb-3 leading-relaxed opacity-90">Execute o script <code>news-agent.js</code> para enviar resumos automáticos ao Telegram.</p>
-                    <div className="inline-flex items-center gap-1 text-[10px] bg-white/20 hover:bg-white/30 transition-colors rounded-lg px-2.5 py-1.5 backdrop-blur-md font-medium">
+                    <div className="inline-flex items-center gap-1 text-[10px] bg-white/20 hover:bg-white/30 transition-colors rounded-lg px-2.5 py-1.5 backdrop-blur-md font-medium cursor-help" title="Execute: node scripts/news-agent.js">
                        Disponível via CLI
                     </div>
                 </div>
