@@ -25,20 +25,27 @@ const Feed = ({
   const [hasMore, setHasMore] = useState(true);
   const [init, setInit] = useState(false);
 
-  // Shuffle sources on mount or when customFeeds change
+  // Shuffle and Filter sources when category or custom feeds change
   useEffect(() => {
-    const sources = [...FEED_SOURCES, ...customFeeds];
+    let sources = [...FEED_SOURCES, ...customFeeds];
+
+    // Filter by category BEFORE fetching/shuffling to ensure efficiency
+    if (selectedCategory !== 'Todas') {
+        sources = sources.filter(s => s.category === selectedCategory);
+    }
+
     // Fisher-Yates shuffle
     for (let i = sources.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [sources[i], sources[j]] = [sources[j], sources[i]];
     }
+
     setShuffledSources(sources);
-    setNews([]);
+    setNews([]); // Reset news to force fresh load
     setNextBatchIndex(0);
     setHasMore(sources.length > 0);
     setInit(true);
-  }, [customFeeds]);
+  }, [customFeeds, selectedCategory]);
 
   const loadMoreNews = async () => {
     if (loading || !hasMore || !init) return;
@@ -87,17 +94,18 @@ const Feed = ({
     }
   };
 
-  // Initial load / Reload when sources change
+  // Initial load when shuffledSources is ready
   useEffect(() => {
-    if (shuffledSources.length > 0 && news.length === 0) {
+    if (init && shuffledSources.length > 0 && news.length === 0 && !loading) {
         loadMoreNews();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shuffledSources]);
+  }, [shuffledSources, init]);
 
   const filteredNews = useMemo(() => {
       let filtered = news;
 
+      // Category is already filtered at source level, but double check just in case
       if (selectedCategory !== 'Todas') {
           filtered = filtered.filter(item => item.category === selectedCategory);
       }
@@ -138,15 +146,15 @@ const Feed = ({
 
       {/* Empty State */}
       {!loading && !isLoadingInitial && filteredNews.length === 0 && (
-        <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+        <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 animate-in fade-in zoom-in duration-300">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
                 <AlertCircle className="text-gray-400 dark:text-gray-500" size={32} />
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-lg">Nenhuma notícia encontrada.</p>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+            <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">Nenhuma notícia encontrada.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2 max-w-md mx-auto">
                 {hasMore
-                    ? "Tente carregar mais fontes para encontrar o que procura."
-                    : "Verifique sua busca ou tente outra categoria."}
+                    ? "Estamos buscando mais fontes..."
+                    : "Não encontramos notícias para esta categoria ou termo de busca no momento."}
             </p>
         </div>
       )}
@@ -167,7 +175,9 @@ const Feed = ({
                 Carregar mais fontes
             </button>
         ) : (
-            <p className="text-gray-400 dark:text-gray-500 text-sm">Todas as fontes disponíveis foram carregadas.</p>
+            filteredNews.length > 0 && (
+                <p className="text-gray-400 dark:text-gray-500 text-sm">Todas as fontes disponíveis foram carregadas.</p>
+            )
         )}
       </div>
     </div>
