@@ -46,7 +46,7 @@ describe('NewsCard', () => {
         const summarizeButton = screen.getByTitle('Resumir com Ollama');
         fireEvent.click(summarizeButton);
 
-        expect(screen.getByText('...')).toBeInTheDocument();
+        expect(screen.getByText('Gerando...')).toBeInTheDocument();
 
         await waitFor(() => {
             expect(screen.getByText('Summary result')).toBeInTheDocument();

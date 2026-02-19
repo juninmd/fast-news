@@ -2,15 +2,13 @@
 
 O **NewsAI** é um agregador de notícias moderno que utiliza Inteligência Artificial para resumir e classificar conteúdos. O projeto foi reformulado para integrar **Ollama (IA Local)** e **Telegram**, permitindo que você tenha um assistente de notícias pessoal e privado.
 
-![Preview](https://via.placeholder.com/800x400?text=NewsAI+Preview)
-
 ## Funcionalidades
 
-*   **Interface Moderna:** Layout responsivo com Sidebar, Dark Mode e Grid Masonry.
-*   **IA Local (Ollama):** Resumos privados e rápidos rodando diretamente na sua máquina, sem depender de APIs pagas.
-*   **Integração com Telegram:** Envie notícias resumidas diretamente para seu canal ou grupo do Telegram com um clique ou via automação.
-*   **Agente Autônomo:** Script em Node.js (`news-agent.js`) que monitora feeds RSS e envia novidades automaticamente para o Telegram.
-*   **Mais de 60 Fontes:** Notícias de Tecnologia, Brasil, Mundo, Ciência, Finanças e mais.
+*   **Interface Moderna:** Layout responsivo com Sidebar, Dark Mode, Grid Masonry e transições suaves.
+*   **IA Local (Ollama):** Resumos privados e classificados automaticamente (Tecnologia, Política, Esportes, etc.) rodando diretamente na sua máquina.
+*   **Integração com Telegram:** Envie notícias resumidas e categorizadas (com emojis) diretamente para seu canal ou grupo.
+*   **Agente Autônomo:** Script em Node.js (`scripts/news-agent.js`) que monitora feeds RSS, resume com IA e envia para o Telegram automaticamente.
+*   **Mais de 60 Fontes:** Notícias de Tecnologia, Brasil, Mundo, Ciência, Finanças, Esportes e Entretenimento.
 
 ## Tecnologias
 
@@ -42,45 +40,38 @@ OLLAMA_ORIGINS="*" ollama serve
 $env:OLLAMA_ORIGINS="*"; ollama serve
 ```
 
-### 2. Configurando o Telegram (Opcional)
-Para enviar notícias para o Telegram:
-1.  Crie um bot com o [@BotFather](https://t.me/BotFather) e obtenha o **Token**.
-2.  Crie um Canal ou Grupo e adicione o bot como administrador.
-3.  Obtenha o **Chat ID** (ex: `@meucanal` ou `-100...`).
-
-## Instalação e Execução
-
-### Interface Web (Frontend)
-
-1.  Clone o repositório.
-2.  Instale as dependências:
-    ```bash
-    npm install
-    ```
-3.  Inicie o servidor de desenvolvimento:
-    ```bash
-    npm run dev
-    ```
-4.  Acesse `http://localhost:5173`.
-5.  Vá em **Configurações** (ícone de engrenagem) e configure:
-    *   URL do Ollama: `http://localhost:11434`
-    *   Modelo: `llama3`
-    *   Telegram Token e Chat ID.
-
-### Agente de Automação (Backend/Script)
+### 2. Configurando o Agente de Notícias (Backend)
 
 Para rodar o "robô" que monitora notícias e envia para o Telegram automaticamente:
 
-1.  Configure as variáveis de ambiente (ou edite o arquivo `scripts/news-agent.js` se preferir, mas variáveis são mais seguras):
+1.  Crie um arquivo `.env` na raiz do projeto (use `.env.example` como base):
     ```bash
-    export TELEGRAM_BOT_TOKEN="seu_token_aqui"
-    export TELEGRAM_CHAT_ID="@seu_canal"
+    cp .env.example .env
     ```
-2.  Execute o agente:
+2.  Edite o arquivo `.env` com suas credenciais:
+    ```ini
+    OLLAMA_URL=http://localhost:11434
+    OLLAMA_MODEL=llama3
+    TELEGRAM_BOT_TOKEN=seu_token_aqui
+    TELEGRAM_CHAT_ID=seu_chat_id_aqui
+    ```
+3.  Execute o agente:
     ```bash
     node scripts/news-agent.js
     ```
-    *Dica: Você pode agendar este script no `cron` para rodar a cada hora.*
+
+## Instalação e Execução (Frontend)
+
+1.  Instale as dependências:
+    ```bash
+    npm install
+    ```
+2.  Inicie o servidor de desenvolvimento:
+    ```bash
+    npm run dev
+    ```
+3.  Acesse `http://localhost:5173`.
+4.  Vá em **Configurações** (ícone de engrenagem) para ajustar preferências locais.
 
 ## Contribuição
 
