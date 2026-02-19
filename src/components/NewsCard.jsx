@@ -165,7 +165,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${
                             telegramStatus === 'success' ? 'text-green-600 bg-green-50 border-green-200' :
                             telegramStatus === 'error' ? 'text-red-600 bg-red-50 border-red-200' :
-                            'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+                            'text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
                         }`}
                         title="Enviar para Telegram"
                      >
