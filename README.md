@@ -4,6 +4,11 @@ O **NewsAI** é um agregador de notícias moderno que utiliza Inteligência Arti
 
 ## Funcionalidades
 
+*   **Interface Moderna:** Layout responsivo com Sidebar, Dark Mode e Grid Masonry.
+*   **IA Local (Ollama):** Resumos privados e rápidos rodando diretamente na sua máquina, sem depender de APIs pagas.
+*   **Integração com Telegram:** Envie notícias resumidas e classificadas (com emojis) diretamente para seu canal ou grupo.
+*   **Agente Autônomo:** Script robusto (`news-agent.js`) que monitora mais de 100 feeds RSS e envia novidades automaticamente.
+*   **Mais de 100 Fontes:** Notícias de Tecnologia, Brasil, Mundo, Ciência, Finanças, Cripto, Games e mais.
 *   **Interface Moderna:** Layout responsivo com Sidebar, Dark Mode, Grid Masonry e transições suaves.
 *   **IA Local (Ollama):** Resumos privados e classificados automaticamente (Tecnologia, Política, Esportes, etc.) rodando diretamente na sua máquina.
 *   **Integração com Telegram:** Envie notícias resumidas e categorizadas (com emojis) diretamente para seu canal ou grupo.
@@ -40,6 +45,20 @@ OLLAMA_ORIGINS="*" ollama serve
 $env:OLLAMA_ORIGINS="*"; ollama serve
 ```
 
+### 2. Configurando Variáveis de Ambiente (.env)
+Crie um arquivo `.env` na raiz do projeto (copie de `.env.example` se existir) com o seguinte conteúdo:
+
+```ini
+# Configuração do Ollama
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=llama3
+
+# Configuração do Telegram (necessário para o agente)
+TELEGRAM_BOT_TOKEN=seu_token_aqui
+TELEGRAM_CHAT_ID=@seu_canal_ou_chat_id
+```
+
+## Instalação e Execução
 ### 2. Configurando o Agente de Notícias (Backend)
 
 Para rodar o "robô" que monitora notícias e envia para o Telegram automaticamente:
@@ -59,9 +78,14 @@ Para rodar o "robô" que monitora notícias e envia para o Telegram automaticame
     ```bash
     node scripts/news-agent.js
     ```
+4.  Acesse `http://localhost:5173`.
+
+### Agente de Automação (Backend/Script)
 
 ## Instalação e Execução (Frontend)
 
+1.  Certifique-se de ter configurado o arquivo `.env`.
+2.  Execute o agente:
 1.  Instale as dependências:
     ```bash
     npm install
@@ -70,6 +94,7 @@ Para rodar o "robô" que monitora notícias e envia para o Telegram automaticame
     ```bash
     npm run dev
     ```
+    *O script irá verificar os feeds, resumir novas notícias com o Ollama e enviar para o Telegram.*
 3.  Acesse `http://localhost:5173`.
 4.  Vá em **Configurações** (ícone de engrenagem) para ajustar preferências locais.
 
