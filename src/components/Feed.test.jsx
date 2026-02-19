@@ -57,7 +57,9 @@ describe('Feed', () => {
 
         rerender(<Feed apiKey="test-key" selectedCategory="Tech" />);
 
-        expect(screen.getByText('News 1 - Tech')).toBeInTheDocument();
+        await waitFor(() => {
+             expect(screen.getByText('News 1 - Tech')).toBeInTheDocument();
+        });
         expect(screen.queryByText('News 2 - World')).not.toBeInTheDocument();
     });
 

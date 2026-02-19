@@ -82,45 +82,45 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700/50 group overflow-hidden">
       {imageUrl && !imageError ? (
-        <div className="h-52 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="h-48 overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
           <img
             src={imageUrl}
             alt={item.title}
             loading="lazy"
             onError={() => setImageError(true)}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
           {item.category && (
-            <div className="absolute top-3 right-3 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md text-gray-900 dark:text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg tracking-wide uppercase border border-white/20">
+            <div className="absolute top-3 left-3 z-20 bg-blue-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm tracking-wide uppercase border border-white/10">
                 {item.category}
             </div>
           )}
         </div>
       ) : (
-        <div className="h-52 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center relative">
-             <Newspaper className="text-gray-300 dark:text-gray-600 w-16 h-16" />
+        <div className="h-48 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center relative border-b border-gray-100 dark:border-gray-700">
+             <Newspaper className="text-gray-300 dark:text-gray-600 w-12 h-12" />
              {item.category && (
-                <div className="absolute top-3 right-3 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md text-gray-900 dark:text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg tracking-wide uppercase">
+                <div className="absolute top-3 left-3 z-20 bg-gray-900/10 dark:bg-gray-100/10 backdrop-blur-md text-gray-500 dark:text-gray-400 text-[10px] font-bold px-2.5 py-1 rounded-lg tracking-wide uppercase">
                     {item.category}
                 </div>
               )}
         </div>
       )}
-      <div className="p-6 flex flex-col flex-grow relative">
+      <div className="p-5 flex flex-col flex-grow relative">
         <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-md truncate max-w-[140px]">
+            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md truncate max-w-[140px]">
               {item.source}
             </span>
-            <div className="flex items-center text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap ml-2 font-medium">
-                <Calendar size={12} className="mr-1.5" />
+            <div className="flex items-center text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap ml-2 font-medium">
+                <Calendar size={10} className="mr-1" />
                 {formatDate(item.pubDate)}
             </div>
         </div>
 
-        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 leading-tight line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 leading-snug line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           <a href={item.link} target="_blank" rel="noopener noreferrer">
             {item.title}
           </a>
@@ -129,32 +129,32 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
         {/* Content Area */}
         <div className="flex-grow text-gray-600 dark:text-gray-300 text-sm mb-5 leading-relaxed">
           {summary ? (
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 animate-in fade-in duration-300 shadow-inner">
-                <div className="flex items-center gap-2 mb-2 text-indigo-700 dark:text-indigo-300 font-bold text-xs uppercase tracking-wide">
-                    <Sparkles size={14} className="text-indigo-500 fill-indigo-500" />
+            <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="flex items-center gap-1.5 mb-2 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wide">
+                    <Sparkles size={12} className="text-indigo-500 fill-indigo-500" />
                     <span>Resumo IA</span>
                 </div>
-                <p className="text-gray-800 dark:text-gray-200 italic text-sm">{summary}</p>
+                <p className="text-gray-700 dark:text-gray-300 italic text-xs leading-relaxed">{summary}</p>
             </div>
           ) : (
-            <p className="line-clamp-3 opacity-90">{cleanDescription}</p>
+            <p className="line-clamp-3 opacity-80 text-xs leading-relaxed">{cleanDescription}</p>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700 gap-3">
+        <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700/50 gap-2">
              <div className="flex gap-2">
                  <button
                     onClick={handleSummarize}
                     disabled={loading || summary}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm border ${
                         summary
                         ? 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400'
-                        : 'text-gray-700 bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                        : 'text-gray-600 bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                     }`}
                     title="Resumir com Ollama"
                  >
-                    {loading ? <Loader size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                    {loading ? <Loader size={12} className="animate-spin" /> : <Sparkles size={12} />}
                     <span className="hidden sm:inline">{loading ? 'Gerando...' : (summary ? 'Pronto' : 'Resumir')}</span>
                  </button>
 
@@ -162,17 +162,17 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                      <button
                         onClick={handleSendToTelegram}
                         disabled={sendingTelegram}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm border ${
                             telegramStatus === 'success' ? 'text-green-600 bg-green-50 border-green-200' :
                             telegramStatus === 'error' ? 'text-red-600 bg-red-50 border-red-200' :
-                            'text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+                            'text-gray-600 bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                         }`}
                         title="Enviar para Telegram"
                      >
-                        {sendingTelegram ? <Loader size={14} className="animate-spin" /> :
-                         telegramStatus === 'success' ? <Check size={14} /> :
-                         telegramStatus === 'error' ? <AlertTriangle size={14} /> :
-                         <Send size={14} />}
+                        {sendingTelegram ? <Loader size={12} className="animate-spin" /> :
+                         telegramStatus === 'success' ? <Check size={12} /> :
+                         telegramStatus === 'error' ? <AlertTriangle size={12} /> :
+                         <Send size={12} />}
                      </button>
                  )}
              </div>
@@ -181,9 +181,9 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-bold transition-colors whitespace-nowrap bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-[10px] font-bold transition-colors whitespace-nowrap bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40"
              >
-                Ler <ExternalLink size={12} />
+                Ler <ExternalLink size={10} />
              </a>
         </div>
 
