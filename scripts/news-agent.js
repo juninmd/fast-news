@@ -4,10 +4,6 @@ import Parser from 'rss-parser';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
 
 // Import sources
 import { FEED_SOURCES } from '../src/services/newsService.js';
@@ -22,10 +18,6 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const MAX_ITEMS_PER_RUN = 10; // Process max 10 new items per run to avoid spam
 const CONCURRENCY_LIMIT = 3; // Process 3 feeds in parallel
 const HISTORY_FILE = 'history.json';
-const MAX_ITEMS_PER_RUN = 5;
-
-// Import feeds
-import { FEED_SOURCES } from '../src/services/newsService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const parser = new Parser({
@@ -50,23 +42,6 @@ const EMOJI_MAP = {
     'Moda': '👗'
 };
 
-const CATEGORY_EMOJIS = {
-    'Tecnologia': '💻',
-    'IA': '🤖',
-    'Brasil': '🇧🇷',
-    'Mundo': '🌍',
-    'Negócios': '💼',
-    'Ciência': '🧪',
-    'Esportes': '⚽',
-    'Automóveis': '🚗',
-    'Entretenimento': '🎬',
-    'Games': '🎮',
-    'Saúde': '🏥',
-    'Cripto': '₿',
-    'Marketing': '📢',
-    'Moda': '👗'
-};
-
 async function loadHistory() {
     try {
         const filePath = path.join(__dirname, HISTORY_FILE);
@@ -83,7 +58,6 @@ async function saveHistory(history) {
     const truncated = history.slice(-2000);
     await fs.writeFile(filePath, JSON.stringify(truncated, null, 2));
 }
-
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
@@ -105,34 +79,20 @@ Formato de saída desejado:
             body: JSON.stringify({
                 model: OLLAMA_MODEL,
                 prompt: prompt,
-                stream: false,
-                format: "json" // Force JSON mode if model supports it
+                stream: false
             })
         });
 
         if (!response.ok) throw new Error(`Ollama Error: ${response.statusText}`);
         const data = await response.json();
-
-        let result;
-        try {
-            // Try to parse the response
-            const cleanResponse = data.response.trim();
-            // Remove markdown code blocks if present (even if we asked not to)
-            const jsonStr = cleanResponse.replace(/^```json\s*|\s*```$/g, '');
-            result = JSON.parse(jsonStr);
-        } catch (parseError) {
-            console.error('Failed to parse JSON from Ollama:', data.response);
-            return null;
-        }
-
-        return result;
+        return data.response.trim();
     } catch (error) {
         console.error('⚠️ Error with Ollama:', error.message);
         return null;
     }
 }
 
-async function sendToTelegram(title, summary, category, link) {
+async function sendToTelegram(title, summary, link, category) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
         return;
     }
@@ -194,8 +154,8 @@ async function processFeed(source, historySet) {
 async function run() {
     console.log('🚀 Starting News Agent...');
 
-    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-        console.warn('WARNING: Telegram credentials not set in environment variables.');
+    if (!TELEGRAM_BOT_TOKEN) {
+        console.warn('⚠️  TELEGRAM_BOT_TOKEN not set. Messages will not be sent.');
     }
 
     const history = await loadHistory();
@@ -214,8 +174,6 @@ async function run() {
 
         const results = await Promise.all(batch.map(source => processFeed(source, historySet)));
         const candidates = results.flat();
-        const now = new Date();
-        const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
 
         // Sort candidates by date (newest first)
         candidates.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -225,8 +183,6 @@ async function run() {
 
             const id = item.guid || item.link;
             if (historySet.has(id)) continue; // Double check
-                const id = item.guid || item.link;
-                if (historySet.has(id)) continue;
 
             console.log(`📝 Processing: ${item.title}`);
 
@@ -238,19 +194,6 @@ async function run() {
                 history.push(id);
                 historySet.add(id);
                 itemsProcessed++;
-                const content = item.contentSnippet || item.content || item.summary || item.title;
-                const aiResult = await processWithOllama(content);
-
-                if (aiResult && aiResult.summary) {
-                    // Use AI category if valid, otherwise fallback to source category
-                    const category = aiResult.category || source.category;
-
-                    await sendToTelegram(item.title, aiResult.summary, category, item.link);
-
-                    history.push(id);
-                    historySet.add(id);
-                    itemsProcessed++;
-                }
             }
         }
     }
