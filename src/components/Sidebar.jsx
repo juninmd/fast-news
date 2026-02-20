@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Globe, Cpu, Briefcase, Trophy, Car, Film, Bitcoin, Heart, ShoppingBag, Gamepad2, Bot, Menu, X, Rocket, Map, Microscope, Zap } from 'lucide-react';
+import { LayoutGrid, Globe, Cpu, Briefcase, Trophy, Car, Film, Bitcoin, Heart, ShoppingBag, Gamepad2, Bot, X, Rocket, Map, Microscope } from 'lucide-react';
 
 const CATEGORY_ICONS = {
   'Todas': LayoutGrid,
@@ -85,11 +85,11 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors" />
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-2 font-bold text-sm">
-                        <Bot size={16} /> Agente Autônomo
+                        <Bot size={16} /> Agente Telegram
                     </div>
-                    <p className="text-xs text-indigo-100 mb-3 leading-relaxed opacity-90">Execute o script <code>news-agent.js</code> para enviar resumos automáticos ao Telegram.</p>
+                    <p className="text-xs text-indigo-100 mb-3 leading-relaxed opacity-90">Automatize o envio de notícias resumidas para seu canal.</p>
                     <div className="inline-flex items-center gap-1 text-[10px] bg-white/20 hover:bg-white/30 transition-colors rounded-lg px-2.5 py-1.5 backdrop-blur-md font-medium cursor-help" title="Execute: node scripts/news-agent.js">
-                       Disponível via CLI
+                       Configurar via Terminal
                     </div>
                 </div>
              </div>

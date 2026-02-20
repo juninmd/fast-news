@@ -82,7 +82,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700/50 group overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700/50 group overflow-hidden">
       {imageUrl && !imageError ? (
         <div className="h-48 overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
@@ -94,7 +94,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
           {item.category && (
-            <div className="absolute top-3 left-3 z-20 bg-blue-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm tracking-wide uppercase border border-white/10">
+            <div className="absolute top-3 left-3 z-20 bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-lg shadow-blue-900/20 tracking-wide uppercase border border-white/20">
                 {item.category}
             </div>
           )}
@@ -111,7 +111,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
       )}
       <div className="p-5 flex flex-col flex-grow relative">
         <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md truncate max-w-[140px]">
+            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md truncate max-w-[140px] border border-blue-100 dark:border-blue-900/30">
               {item.source}
             </span>
             <div className="flex items-center text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap ml-2 font-medium">
@@ -129,12 +129,12 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
         {/* Content Area */}
         <div className="flex-grow text-gray-600 dark:text-gray-300 text-sm mb-5 leading-relaxed">
           {summary ? (
-            <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <div className="flex items-center gap-1.5 mb-2 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wide">
+            <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-xl border border-indigo-100 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-sm">
+                <div className="flex items-center gap-1.5 mb-2 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wide border-b border-indigo-100 dark:border-indigo-500/10 pb-2">
                     <Sparkles size={12} className="text-indigo-500 fill-indigo-500" />
                     <span>Resumo IA</span>
                 </div>
-                <p className="text-gray-700 dark:text-gray-300 italic text-xs leading-relaxed">{summary}</p>
+                <p className="text-gray-700 dark:text-gray-300 text-xs leading-relaxed font-medium">{summary}</p>
             </div>
           ) : (
             <p className="line-clamp-3 opacity-80 text-xs leading-relaxed">{cleanDescription}</p>
@@ -147,10 +147,10 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                  <button
                     onClick={handleSummarize}
                     disabled={loading || summary}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm border ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm border transform active:scale-95 ${
                         summary
-                        ? 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400'
-                        : 'text-gray-600 bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                        ? 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 cursor-default'
+                        : 'text-gray-600 bg-white border-gray-200 hover:bg-gray-50 hover:shadow dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                     }`}
                     title="Resumir com Ollama"
                  >
@@ -162,10 +162,10 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                      <button
                         onClick={handleSendToTelegram}
                         disabled={sendingTelegram}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm border ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm border transform active:scale-95 ${
                             telegramStatus === 'success' ? 'text-green-600 bg-green-50 border-green-200' :
                             telegramStatus === 'error' ? 'text-red-600 bg-red-50 border-red-200' :
-                            'text-gray-600 bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                            'text-gray-600 bg-white border-gray-200 hover:bg-gray-50 hover:shadow dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                         }`}
                         title="Enviar para Telegram"
                      >
@@ -181,14 +181,14 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-[10px] font-bold transition-colors whitespace-nowrap bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-[10px] font-bold transition-colors whitespace-nowrap bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:shadow-sm"
              >
                 Ler <ExternalLink size={10} />
              </a>
         </div>
 
         {error && (
-            <p className="text-red-500 text-[10px] mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg border border-red-100 dark:border-red-800">{error}</p>
+            <p className="text-red-500 text-[10px] mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg border border-red-100 dark:border-red-800 animate-in fade-in">{error}</p>
         )}
       </div>
     </div>
