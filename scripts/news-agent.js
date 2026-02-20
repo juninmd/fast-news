@@ -17,7 +17,7 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 // Limits
-const MAX_ITEMS_PER_RUN = 10; // Process max 10 new items per run to avoid spam
+const MAX_ITEMS_PER_RUN = 15; // Increased limit slightly
 const CONCURRENCY_LIMIT = 5; // Process 5 feeds in parallel
 const HISTORY_FILE = 'history.json';
 
@@ -56,16 +56,21 @@ async function loadHistory() {
 
 async function saveHistory(history) {
     const filePath = path.join(__dirname, HISTORY_FILE);
-    // Keep last 2000 items
-    const truncated = history.slice(-2000);
+    // Keep last 3000 items
+    const truncated = history.slice(-3000);
     await fs.writeFile(filePath, JSON.stringify(truncated, null, 2));
 }
 
 async function classifyWithOllama(title, content) {
     const categories = Object.keys(EMOJI_MAP).join(', ');
     const prompt = `
-Atue como um editor de jornal. Classifique a notícia abaixo em UMA das seguintes categorias: ${categories}.
-Responda APENAS com o nome da categoria.
+Você é um editor chefe de um grande portal de notícias.
+Sua tarefa é classificar a notícia abaixo em EXATAMENTE UMA das seguintes categorias: ${categories}.
+
+Regras:
+1. Responda APENAS com o nome da categoria.
+2. Não use frases completas.
+3. Se tiver dúvida, escolha a mais próxima.
 
 Título: "${title}"
 Conteúdo: "${content.substring(0, 500)}"
@@ -84,31 +89,44 @@ Categoria:
             })
         });
 
-        if (!response.ok) throw new Error(`Ollama Error: ${response.statusText}`);
+        if (!response.ok) throw new Error(`Ollama Error: ${response.status} ${response.statusText}`);
         const data = await response.json();
         const category = data.response.trim().replace(/[^a-zA-ZáéíóúÁÉÍÓÚãõÃÕçÇ ]/g, ''); // Clean special chars
 
-        // Simple fuzzy match or fallback
+        // Fuzzy match
         const bestMatch = Object.keys(EMOJI_MAP).find(c => category.toLowerCase().includes(c.toLowerCase()));
         return bestMatch || 'Geral';
 
     } catch (error) {
-        console.error('⚠️ Error classifying with Ollama:', error.message);
+        if (error.cause && error.cause.code === 'ECONNREFUSED') {
+             console.error('⚠️ Ollama not running or not accessible at', OLLAMA_URL);
+        } else {
+             console.error('⚠️ Error classifying with Ollama:', error.message);
+        }
         return 'Geral';
     }
 }
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
-Atue como um jornalista experiente. Resuma a seguinte notícia em Português do Brasil.
+Você é um jornalista brasileiro experiente e conciso.
+Resuma a notícia abaixo para um canal de Telegram.
+
 Título: "${title}"
 Conteúdo: "${content.substring(0, 1500)}"
 
-Formato de saída desejado:
-- Um parágrafo curto de introdução.
-- 3 bullet points com os fatos mais importantes.
-- Tom: Informativo e direto.
-- Não use markdown no texto, apenas texto simples e emojis se necessário.
+Formato de saída OBRIGATÓRIO:
+[Breve parágrafo introdutório de 1 ou 2 frases]
+
+• [Ponto chave 1]
+• [Ponto chave 2]
+• [Ponto chave 3 (opcional)]
+
+Regras:
+- Idioma: Português do Brasil.
+- Tom: Informativo, neutro e direto.
+- Não use introduções como "Aqui está o resumo" ou "A notícia fala sobre". Comece direto no assunto.
+- Máximo de 600 caracteres.
 `;
 
     try {
@@ -122,12 +140,16 @@ Formato de saída desejado:
             })
         });
 
-        if (!response.ok) throw new Error(`Ollama Error: ${response.statusText}`);
+        if (!response.ok) throw new Error(`Ollama Error: ${response.status} ${response.statusText}`);
         const data = await response.json();
         return data.response.trim();
 
     } catch (error) {
-        console.error('⚠️ Error summarizing with Ollama:', error.message);
+        if (error.cause && error.cause.code === 'ECONNREFUSED') {
+             console.error('⚠️ Ollama not running or not accessible at', OLLAMA_URL);
+        } else {
+             console.error('⚠️ Error summarizing with Ollama:', error.message);
+        }
         return null;
     }
 }
@@ -138,10 +160,16 @@ async function sendToTelegram(title, summary, category, link) {
     }
 
     const emoji = EMOJI_MAP[category] || '📰';
-    // Telegram Markdown V2 or HTML is tricky with special chars. Let's use standard Markdown and be careful.
-    // Or just simple text if markdown fails. Let's try Markdown.
 
-    const text = `*${emoji} ${category.toUpperCase()}*\n\n*${title}*\n\n${summary}\n\n[🔗 Ler matéria completa](${link})`;
+    // Escape markdown special characters for Telegram MarkdownV2 is painful.
+    // We stick to standard Markdown (limited subset) or HTML.
+    // Let's use HTML for better safety against stray * or _.
+
+    // Sanitize basic HTML chars
+    const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeSummary = summary.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n\n<b>${safeTitle}</b>\n\n${safeSummary}\n\n<a href="${link}">🔗 Ler matéria completa</a>`;
 
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
@@ -152,7 +180,7 @@ async function sendToTelegram(title, summary, category, link) {
             body: JSON.stringify({
                 chat_id: TELEGRAM_CHAT_ID,
                 text: text,
-                parse_mode: 'Markdown',
+                parse_mode: 'HTML',
                 disable_web_page_preview: false
             })
         });
@@ -160,18 +188,16 @@ async function sendToTelegram(title, summary, category, link) {
         if (!response.ok) {
             const err = await response.json();
             console.error('❌ Telegram Error:', err.description);
-            // Fallback without markdown if error (likely due to unescaped chars)
-            if (err.description.includes('can\'t parse entities')) {
-                 await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: `${emoji} ${category.toUpperCase()}\n\n${title}\n\n${summary}\n\n${link}`,
-                        disable_web_page_preview: false
-                    })
-                });
-            }
+            // Fallback to plain text if HTML fails
+             await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: `${emoji} ${category.toUpperCase()}\n\n${title}\n\n${summary}\n\n${link}`,
+                    disable_web_page_preview: false
+                })
+            });
         } else {
             console.log(`✅ Sent to Telegram: ${title}`);
         }
@@ -201,16 +227,18 @@ async function processFeed(source, historySet) {
         }
         return newItems;
     } catch (error) {
-        // Silent fail for individual feeds to keep process running
+        // Silent fail for individual feeds
         return [];
     }
 }
 
 async function run() {
     console.log('🚀 Starting News Agent...');
+    console.log(`📡 OLLAMA_URL: ${OLLAMA_URL}`);
 
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-        console.warn('WARNING: Telegram credentials not set in environment variables.');
+        console.warn('⚠️ WARNING: Telegram credentials not set in environment variables.');
+        console.warn('   Create a .env file with TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.');
     }
 
     const history = await loadHistory();
@@ -220,12 +248,14 @@ async function run() {
     // Shuffle feeds to vary content
     const shuffledFeeds = [...FEED_SOURCES].sort(() => 0.5 - Math.random());
 
+    console.log(`📚 Loaded ${shuffledFeeds.length} feeds.`);
+
     // Process in batches
     for (let i = 0; i < shuffledFeeds.length; i += CONCURRENCY_LIMIT) {
         if (itemsProcessed >= MAX_ITEMS_PER_RUN) break;
 
         const batch = shuffledFeeds.slice(i, i + CONCURRENCY_LIMIT);
-        console.log(`📡 Checking batch ${Math.floor(i / CONCURRENCY_LIMIT) + 1}...`);
+        // console.log(`Batch ${Math.floor(i / CONCURRENCY_LIMIT) + 1}...`);
 
         const results = await Promise.all(batch.map(source => processFeed(source, historySet)));
         const candidates = results.flat();
@@ -239,13 +269,12 @@ async function run() {
             const id = item.guid || item.link;
             if (historySet.has(id)) continue; // Double check
 
-            console.log(`📝 Processing: ${item.title}`);
+            console.log(`📝 Processing: ${item.title} [${item.sourceCategory}]`);
 
             const content = item.contentSnippet || item.content || item.summary || item.title;
 
             // 1. Classify
             const category = await classifyWithOllama(item.title, content);
-            console.log(`   ↳ Category: ${category}`);
 
             // 2. Summarize
             const summary = await summarizeWithOllama(item.title, content);
@@ -257,15 +286,17 @@ async function run() {
                 history.push(id);
                 historySet.add(id);
                 itemsProcessed++;
-            }
 
-            // Small delay to be nice to Ollama
-            await new Promise(r => setTimeout(r, 1000));
+                // Delay to avoid hitting Ollama too hard
+                await new Promise(r => setTimeout(r, 2000));
+            } else {
+                 console.log('   Skipped (Ollama failed to summarize)');
+            }
         }
     }
 
     await saveHistory(history);
-    console.log(`🏁 Done. Processed ${itemsProcessed} items.`);
+    console.log(`🏁 Done. Processed ${itemsProcessed} new items.`);
 }
 
 run().catch(console.error);
