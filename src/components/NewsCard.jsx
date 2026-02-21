@@ -120,7 +120,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
             </div>
         </div>
 
-        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 leading-snug line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 leading-tight line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           <a href={item.link} target="_blank" rel="noopener noreferrer">
             {item.title}
           </a>
@@ -129,8 +129,8 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
         {/* Content Area */}
         <div className="flex-grow text-gray-600 dark:text-gray-300 text-sm mb-5 leading-relaxed">
           {summary ? (
-            <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-xl border border-indigo-100 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-sm">
-                <div className="flex items-center gap-1.5 mb-2 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wide border-b border-indigo-100 dark:border-indigo-500/10 pb-2">
+            <div className="bg-indigo-50 dark:bg-slate-800/50 p-4 rounded-xl border border-indigo-100 dark:border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-sm">
+                <div className="flex items-center gap-1.5 mb-2 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wide border-b border-indigo-100 dark:border-slate-700/50 pb-2">
                     <Sparkles size={12} className="text-indigo-500 fill-indigo-500" />
                     <span>Resumo IA</span>
                 </div>
