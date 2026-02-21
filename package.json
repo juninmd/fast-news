@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "news-agent": "node scripts/news-agent.js",
     "lint": "eslint . --no-warn-ignored",
     "preview": "vite preview",
     "test": "vitest",
