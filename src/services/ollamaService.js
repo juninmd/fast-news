@@ -1,4 +1,5 @@
 
+// Service for interacting with Ollama
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
   const prompt = `Resuma o seguinte texto em português do Brasil em um único parágrafo conciso, focando nos pontos principais. O texto é uma notícia.
 

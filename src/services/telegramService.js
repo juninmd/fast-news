@@ -1,4 +1,5 @@
 
+// Service for sending messages to Telegram
 export const sendToTelegram = async (text, botToken, chatId) => {
   if (!botToken || !chatId) {
     console.error('Telegram configuration missing');
