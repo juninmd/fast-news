@@ -21,6 +21,7 @@ export const FEED_SOURCES = [
     { url: 'https://mashable.com/feed/', category: 'Tecnologia' },
     { url: 'https://gizmodo.com/rss', category: 'Tecnologia' },
     { url: 'https://9to5mac.com/feed/', category: 'Tecnologia' },
+    { url: 'https://www.macrumors.com/macrumors.xml', category: 'Tecnologia' },
     { url: 'https://www.androidauthority.com/feed/', category: 'Tecnologia' },
     { url: 'https://www.androidcentral.com/feed', category: 'Tecnologia' },
     { url: 'https://www.theinformation.com/feed', category: 'Tecnologia' },
@@ -66,6 +67,8 @@ export const FEED_SOURCES = [
     // --- BRASIL ---
     { url: 'https://g1.globo.com/rss/g1/', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
+    { url: 'https://oantagonista.uol.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.band.uol.com.br/rss', category: 'Brasil' },
     { url: 'https://rss.uol.com.br/feed/noticias.xml', category: 'Brasil' },
     { url: 'https://feeds.folha.uol.com.br/emcimadahora/rss091.xml', category: 'Brasil' },
     { url: 'https://feeds.folha.uol.com.br/poder/rss091.xml', category: 'Brasil' },

@@ -61,6 +61,24 @@ async function saveHistory(history) {
     await fs.writeFile(filePath, JSON.stringify(truncated, null, 2));
 }
 
+async function checkOllamaHealth() {
+    try {
+        console.log(`🏥 Checking Ollama health at ${OLLAMA_URL}...`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const response = await fetch(OLLAMA_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (response.ok) {
+            console.log('✅ Ollama is reachable.');
+            return true;
+        }
+        throw new Error(`Status: ${response.status}`);
+    } catch (error) {
+        console.warn(`⚠️ Ollama is NOT reachable: ${error.message}`);
+        return false;
+    }
+}
+
 async function classifyWithOllama(title, content) {
     const categories = Object.keys(EMOJI_MAP).join(', ');
     const prompt = `
@@ -99,7 +117,7 @@ Categoria:
 
     } catch (error) {
         if (error.cause && error.cause.code === 'ECONNREFUSED') {
-             console.error('⚠️ Ollama not running or not accessible at', OLLAMA_URL);
+             // Already logged by health check usually, but good to have
         } else {
              console.error('⚠️ Error classifying with Ollama:', error.message);
         }
@@ -145,11 +163,6 @@ Regras:
         return data.response.trim();
 
     } catch (error) {
-        if (error.cause && error.cause.code === 'ECONNREFUSED') {
-             console.error('⚠️ Ollama not running or not accessible at', OLLAMA_URL);
-        } else {
-             console.error('⚠️ Error summarizing with Ollama:', error.message);
-        }
         return null;
     }
 }
@@ -161,15 +174,12 @@ async function sendToTelegram(title, summary, category, link) {
 
     const emoji = EMOJI_MAP[category] || '📰';
 
-    // Escape markdown special characters for Telegram MarkdownV2 is painful.
-    // We stick to standard Markdown (limited subset) or HTML.
-    // Let's use HTML for better safety against stray * or _.
-
     // Sanitize basic HTML chars
     const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const safeSummary = summary.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n\n<b>${safeTitle}</b>\n\n${safeSummary}\n\n<a href="${link}">🔗 Ler matéria completa</a>`;
+    // Improved formatting with Italics for summary
+    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n\n<b>${safeTitle}</b>\n\n<i>${safeSummary}</i>\n\n<a href="${link}">🔗 Ler matéria completa</a>`;
 
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
@@ -188,7 +198,7 @@ async function sendToTelegram(title, summary, category, link) {
         if (!response.ok) {
             const err = await response.json();
             console.error('❌ Telegram Error:', err.description);
-            // Fallback to plain text if HTML fails
+             // Fallback
              await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -222,12 +232,10 @@ async function processFeed(source, historySet) {
             const id = item.guid || item.link;
             if (historySet.has(id)) continue;
 
-            // Use source category as default, but we will classify later if needed
             newItems.push({ ...item, sourceCategory: source.category });
         }
         return newItems;
     } catch (error) {
-        // Silent fail for individual feeds
         return [];
     }
 }
@@ -241,33 +249,34 @@ async function run() {
         console.warn('   Create a .env file with TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.');
     }
 
+    // Health Check
+    const ollamaHealthy = await checkOllamaHealth();
+    if (!ollamaHealthy) {
+        console.warn('⚠️ Continue execution? (Attempts to classify/summarize will fail)');
+        // In a real automated script we might want to exit, but here we proceed to show feed fetching works
+    }
+
     const history = await loadHistory();
     const historySet = new Set(history);
     let itemsProcessed = 0;
 
-    // Shuffle feeds to vary content
     const shuffledFeeds = [...FEED_SOURCES].sort(() => 0.5 - Math.random());
-
     console.log(`📚 Loaded ${shuffledFeeds.length} feeds.`);
 
-    // Process in batches
     for (let i = 0; i < shuffledFeeds.length; i += CONCURRENCY_LIMIT) {
         if (itemsProcessed >= MAX_ITEMS_PER_RUN) break;
 
         const batch = shuffledFeeds.slice(i, i + CONCURRENCY_LIMIT);
-        // console.log(`Batch ${Math.floor(i / CONCURRENCY_LIMIT) + 1}...`);
-
         const results = await Promise.all(batch.map(source => processFeed(source, historySet)));
         const candidates = results.flat();
 
-        // Sort candidates by date (newest first)
         candidates.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
         for (const item of candidates) {
             if (itemsProcessed >= MAX_ITEMS_PER_RUN) break;
 
             const id = item.guid || item.link;
-            if (historySet.has(id)) continue; // Double check
+            if (historySet.has(id)) continue;
 
             console.log(`📝 Processing: ${item.title} [${item.sourceCategory}]`);
 
@@ -287,7 +296,6 @@ async function run() {
                 historySet.add(id);
                 itemsProcessed++;
 
-                // Delay to avoid hitting Ollama too hard
                 await new Promise(r => setTimeout(r, 2000));
             } else {
                  console.log('   Skipped (Ollama failed to summarize)');

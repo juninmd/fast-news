@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { fetchNews, FEED_SOURCES } from '../services/newsService';
 import NewsCard from './NewsCard';
+import HeroSection from './HeroSection';
 import SkeletonCard from './SkeletonCard';
 import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
@@ -123,15 +124,27 @@ const Feed = ({
 
   const isLoadingInitial = loading && news.length === 0;
 
+  const showHero = !searchQuery && filteredNews.length > 0;
+  const heroItem = showHero ? filteredNews[0] : null;
+  const gridItems = showHero ? filteredNews.slice(1) : filteredNews;
+
   return (
     <div>
+      {showHero && (
+          <HeroSection
+             item={heroItem}
+             ollamaUrl={ollamaUrl}
+             ollamaModel={ollamaModel}
+          />
+      )}
+
       {/* News Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {isLoadingInitial
           ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-          : filteredNews.map((item, index) => (
+          : gridItems.map((item) => (
               <NewsCard
-                key={`${item.id}-${index}`}
+                key={item.id}
                 item={item}
                 apiKey={apiKey}
                 autoSummarize={autoSummarize}
