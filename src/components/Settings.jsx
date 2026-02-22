@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info } from 'lucide-react';
-import { FEED_SOURCES } from '../services/newsService';
+import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settings as SettingsIcon } from 'lucide-react';
+import { summarizeWithOllama } from '../services/ollamaService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
@@ -17,6 +17,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [newFeedCategory, setNewFeedCategory] = useState('Geral');
 
   const [activeTab, setActiveTab] = useState('geral'); // geral, feeds, ia, telegram
+  const [ollamaStatus, setOllamaStatus] = useState('idle');
 
   if (!isOpen) return null;
 
@@ -45,6 +46,17 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     onClose();
   };
 
+  const testOllama = async () => {
+      setOllamaStatus('testing');
+      try {
+          await summarizeWithOllama('Teste', ollamaUrl, ollamaModel);
+          setOllamaStatus('success');
+      } catch (e) {
+          console.error(e);
+          setOllamaStatus('error');
+      }
+  };
+
   const addFeed = () => {
     if (newFeedUrl) {
       setCustomFeeds([...customFeeds, { url: newFeedUrl, category: newFeedCategory }]);
@@ -60,7 +72,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   };
 
   const tabs = [
-    { id: 'geral', label: 'Geral', icon: Settings },
+    { id: 'geral', label: 'Geral', icon: SettingsIcon },
     { id: 'ia', label: 'Inteligência Artificial', icon: Bot },
     { id: 'telegram', label: 'Telegram', icon: MessageSquare },
     { id: 'feeds', label: 'Fontes', icon: Rss },
@@ -75,7 +87,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             Configurações
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500">
+          <button type="button" onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500">
             <X size={20} />
           </button>
         </div>
@@ -85,6 +97,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
             {tabs.map(tab => (
                 <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setActiveTab(tab.id)}
                     className={`pb-3 px-4 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                         activeTab === tab.id
@@ -112,13 +125,12 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                         className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                         placeholder="Melhora a performance e limites de requisição"
                     />
-                    <p className="text-xs text-gray-400 mt-1">Recomendado se você adicionar muitas fontes personalizadas.</p>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
                     <div>
                         <span className="block text-sm font-medium text-gray-900 dark:text-white">Resumo Automático</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Tentar resumir notícias automaticamente ao carregar (Pode ser lento)</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Tentar resumir notícias automaticamente</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" checked={autoSummarize} onChange={(e) => setAutoSummarize(e.target.checked)} className="sr-only peer" />
@@ -134,6 +146,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Provedor de IA</label>
                     <div className="grid grid-cols-2 gap-3">
                         <button
+                            type="button"
                             onClick={() => setAiProvider('ollama')}
                             className={`p-3 rounded-xl border text-sm font-medium transition-all ${
                                 aiProvider === 'ollama'
@@ -144,6 +157,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                             Ollama (Local)
                         </button>
                         <button
+                            type="button"
                             onClick={() => setAiProvider('gemini')}
                             className={`p-3 rounded-xl border text-sm font-medium transition-all ${
                                 aiProvider === 'gemini'
@@ -160,7 +174,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
                         <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                             <Info size={16} className="shrink-0 mt-0.5" />
-                            <p>O Ollama precisa estar rodando localmente. Certifique-se de habilitar o CORS se necessário.</p>
+                            <p>O Ollama precisa estar rodando localmente.</p>
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">URL do Ollama</label>
@@ -173,7 +187,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Modelo (Ex: llama3, mistral)</label>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Modelo</label>
                             <input
                                 type="text"
                                 value={ollamaModel}
@@ -181,6 +195,20 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                                 className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
                                 placeholder="llama3"
                             />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={testOllama}
+                                disabled={ollamaStatus === 'testing'}
+                                className={`text-xs px-3 py-1 rounded border transition-colors ${
+                                    ollamaStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
+                                    ollamaStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
+                                    'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                                }`}
+                            >
+                                {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
+                            </button>
                         </div>
                      </div>
                  ) : (
@@ -192,7 +220,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                                 value={geminiApiKey}
                                 onChange={(e) => setGeminiApiKey(e.target.value)}
                                 className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
-                                placeholder="Sua chave API do Google AI Studio"
+                                placeholder="API Key"
                             />
                         </div>
                      </div>
@@ -203,8 +231,8 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
           {activeTab === 'telegram' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 text-sm text-indigo-800 dark:text-indigo-300">
-                      <h4 className="font-bold flex items-center gap-2 mb-2"><Bot size={16}/> Configuração do Bot</h4>
-                      <p>Para enviar notícias para um canal, você precisa criar um bot no @BotFather e adicionar o bot como administrador do canal.</p>
+                      <h4 className="font-bold flex items-center gap-2 mb-2"><Bot size={16}/> Telegram Bot</h4>
+                      <p>Adicione o bot ao canal como administrador.</p>
                   </div>
 
                   <div>
@@ -214,17 +242,17 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                         value={telegramBotToken}
                         onChange={(e) => setTelegramBotToken(e.target.value)}
                         className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                        placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
+                        placeholder="Token"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chat ID (@canal ou ID numérico)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chat ID</label>
                     <input
                         type="text"
                         value={telegramChatId}
                         onChange={(e) => setTelegramChatId(e.target.value)}
                         className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                        placeholder="@meucanaldenoticias"
+                        placeholder="@canal"
                     />
                   </div>
               </div>
@@ -237,7 +265,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                       type="text"
                       value={newFeedUrl}
                       onChange={(e) => setNewFeedUrl(e.target.value)}
-                      placeholder="URL do Feed RSS"
+                      placeholder="https://exemplo.com/rss"
                       className="flex-1 p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                     />
                     <select
@@ -250,6 +278,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                         ))}
                     </select>
                     <button
+                      type="button"
                       onClick={addFeed}
                       disabled={!newFeedUrl}
                       data-testid="add-feed-btn"
@@ -270,6 +299,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                             <span className="text-xs text-gray-500 dark:text-gray-400">{feed.category}</span>
                         </div>
                         <button
+                          type="button"
                           onClick={() => removeFeed(index)}
                           data-testid={`remove-feed-btn-${index}`}
                           className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
@@ -287,12 +317,14 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
         {/* Footer */}
         <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-end gap-3">
           <button
+            type="button"
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium transition-colors text-sm"
           >
             Cancelar
           </button>
           <button
+            type="button"
             onClick={handleSave}
             className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all transform active:scale-95 text-sm flex items-center gap-2"
           >
