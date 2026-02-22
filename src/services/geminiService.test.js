@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { summarizeWithGemini } from './geminiService';
 
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 describe('geminiService', () => {
     beforeEach(() => {
