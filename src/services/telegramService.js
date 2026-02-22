@@ -1,11 +1,17 @@
 
-export const sendToTelegram = async (text, botToken, chatId) => {
+export const sendToTelegram = async (message, botToken, chatId) => {
   if (!botToken || !chatId) {
-    console.error('Telegram configuration missing');
-    return false;
+    throw new Error("Telegram Bot Token or Chat ID not configured.");
   }
 
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+  const payload = {
+    chat_id: chatId,
+    text: message,
+    parse_mode: 'Markdown',
+    disable_web_page_preview: false
+  };
 
   try {
     const response = await fetch(url, {
@@ -13,22 +19,17 @@ export const sendToTelegram = async (text, botToken, chatId) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: text,
-        parse_mode: 'Markdown', // or 'HTML'
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Telegram API Error:', errorData);
-      throw new Error(`Telegram Error: ${errorData.description}`);
+      throw new Error(`Telegram API Error: ${errorData.description}`);
     }
 
-    return true;
+    return await response.json();
   } catch (error) {
-    console.error('Error sending to Telegram:', error);
+    console.error("Error sending to Telegram:", error);
     throw error;
   }
 };
