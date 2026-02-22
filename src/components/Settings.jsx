@@ -6,6 +6,10 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
 
+  // AI Settings
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+
   // Ollama Settings
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState(() => localStorage.getItem('ollama_model') || 'llama3');
@@ -25,6 +29,8 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     localStorage.setItem('auto_summarize', autoSummarize);
     localStorage.setItem('custom_feeds', JSON.stringify(localCustomFeeds));
 
+    localStorage.setItem('ai_provider', aiProvider);
+    localStorage.setItem('gemini_api_key', geminiApiKey);
     localStorage.setItem('ollama_url', ollamaUrl);
     localStorage.setItem('ollama_model', ollamaModel);
     localStorage.setItem('telegram_bot_token', telegramBotToken);
@@ -35,6 +41,8 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
         rss2jsonApiKey,
         autoSummarize,
         customFeeds: localCustomFeeds,
+        aiProvider,
+        geminiApiKey,
         ollamaUrl,
         ollamaModel,
         telegramBotToken,
@@ -85,47 +93,91 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Ollama Section */}
+            {/* AI Configuration Section */}
             <div className="space-y-4">
                 <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    <Bot size={16} /> Ollama (IA Local)
+                    <Bot size={16} /> Inteligência Artificial
                 </h3>
-                <div>
-                    <label htmlFor="ollama-url" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">URL Base</label>
-                    <input
-                        id="ollama-url"
-                        type="text"
-                        value={ollamaUrl}
-                        onChange={(e) => { setOllamaUrl(e.target.value); setOllamaStatus('idle'); }}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-                        placeholder="http://localhost:11434"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="ollama-model" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Modelo</label>
-                    <input
-                        id="ollama-model"
-                        type="text"
-                        value={ollamaModel}
-                        onChange={(e) => { setOllamaModel(e.target.value); setOllamaStatus('idle'); }}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-                        placeholder="llama3"
-                    />
-                </div>
-                <div className="flex items-center justify-between">
-                    <p className="text-[10px] text-gray-500">Certifique-se de iniciar o Ollama com <code>OLLAMA_ORIGINS="*"</code></p>
+
+                {/* Provider Selector */}
+                <div className="flex gap-4 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
                     <button
-                        onClick={testOllama}
-                        disabled={ollamaStatus === 'testing'}
-                        className={`text-xs px-3 py-1 rounded border transition-colors ${
-                            ollamaStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
-                            ollamaStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
-                            'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                        onClick={() => setAiProvider('ollama')}
+                        className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+                            aiProvider === 'ollama'
+                                ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                         }`}
                     >
-                        {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
+                        Ollama (Local)
+                    </button>
+                    <button
+                        onClick={() => setAiProvider('gemini')}
+                        className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+                            aiProvider === 'gemini'
+                                ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        }`}
+                    >
+                        Google Gemini
                     </button>
                 </div>
+
+                {aiProvider === 'ollama' ? (
+                    <>
+                        <div>
+                            <label htmlFor="ollama-url" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">URL Base</label>
+                            <input
+                                id="ollama-url"
+                                type="text"
+                                value={ollamaUrl}
+                                onChange={(e) => { setOllamaUrl(e.target.value); setOllamaStatus('idle'); }}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                                placeholder="http://localhost:11434"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="ollama-model" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Modelo</label>
+                            <input
+                                id="ollama-model"
+                                type="text"
+                                value={ollamaModel}
+                                onChange={(e) => { setOllamaModel(e.target.value); setOllamaStatus('idle'); }}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                                placeholder="llama3"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] text-gray-500">Certifique-se de iniciar o Ollama com <code>OLLAMA_ORIGINS="*"</code></p>
+                            <button
+                                onClick={testOllama}
+                                disabled={ollamaStatus === 'testing'}
+                                className={`text-xs px-3 py-1 rounded border transition-colors ${
+                                    ollamaStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
+                                    ollamaStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
+                                    'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                                }`}
+                            >
+                                {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <div>
+                        <label htmlFor="gemini-key" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Gemini API Key</label>
+                        <input
+                            id="gemini-key"
+                            type="password"
+                            value={geminiApiKey}
+                            onChange={(e) => setGeminiApiKey(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                            placeholder="Cole sua chave API aqui..."
+                        />
+                         <p className="text-[10px] text-gray-500 mt-2">
+                            Obtenha sua chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Google AI Studio</a>.
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Telegram Section */}
