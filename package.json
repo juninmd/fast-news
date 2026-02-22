@@ -16,7 +16,6 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.23",
     "dotenv": "^17.3.1",
