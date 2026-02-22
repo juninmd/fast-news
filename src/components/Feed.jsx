@@ -9,6 +9,7 @@ const DEFAULT_FEEDS = [];
 
 const Feed = ({
     apiKey,
+    aiProvider,
     customFeeds = DEFAULT_FEEDS,
     rss2jsonApiKey,
     autoSummarize,
@@ -133,6 +134,8 @@ const Feed = ({
       {showHero && (
           <HeroSection
              item={heroItem}
+             aiProvider={aiProvider}
+             apiKey={apiKey}
              ollamaUrl={ollamaUrl}
              ollamaModel={ollamaModel}
           />
@@ -146,6 +149,7 @@ const Feed = ({
               <NewsCard
                 key={item.id}
                 item={item}
+                aiProvider={aiProvider}
                 apiKey={apiKey}
                 autoSummarize={autoSummarize}
                 ollamaUrl={ollamaUrl}
