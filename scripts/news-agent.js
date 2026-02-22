@@ -17,12 +17,17 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 // Limits
-const MAX_ITEMS_PER_RUN = 15; // Increased limit slightly
-const CONCURRENCY_LIMIT = 5; // Process 5 feeds in parallel
+const MAX_ITEMS_PER_RUN = process.env.MAX_ITEMS_PER_RUN ? parseInt(process.env.MAX_ITEMS_PER_RUN) : 15;
+const CONCURRENCY_LIMIT = process.env.CONCURRENCY_LIMIT ? parseInt(process.env.CONCURRENCY_LIMIT) : 5;
 const HISTORY_FILE = 'history.json';
+const RETRY_ATTEMPTS = 3;
+
+// Args
+const args = process.argv.slice(2);
+const DRY_RUN = args.includes('--dry-run');
 
 const parser = new Parser({
-    timeout: 10000,
+    timeout: 5000,
     headers: { 'User-Agent': 'NewsAI-Agent/1.0' }
 });
 
@@ -55,8 +60,8 @@ async function loadHistory() {
 }
 
 async function saveHistory(history) {
+    if (DRY_RUN) return;
     const filePath = path.join(__dirname, HISTORY_FILE);
-    // Keep last 3000 items
     const truncated = history.slice(-3000);
     await fs.writeFile(filePath, JSON.stringify(truncated, null, 2));
 }
@@ -65,8 +70,8 @@ async function checkOllamaHealth() {
     try {
         console.log(`🏥 Checking Ollama health at ${OLLAMA_URL}...`);
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const response = await fetch(OLLAMA_URL, { signal: controller.signal });
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const response = await fetch(OLLAMA_URL, { signal: controller.signal }).catch(e => { throw e; });
         clearTimeout(timeoutId);
         if (response.ok) {
             console.log('✅ Ollama is reachable.');
@@ -79,25 +84,33 @@ async function checkOllamaHealth() {
     }
 }
 
+async function fetchWithRetry(url, options, retries = RETRY_ATTEMPTS) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response;
+        } catch (error) {
+            if (i === retries - 1) throw error;
+            const delay = Math.pow(2, i) * 1000;
+            console.log(`   ⚠️ Request failed, retrying in ${delay}ms...`);
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+}
+
 async function classifyWithOllama(title, content) {
     const categories = Object.keys(EMOJI_MAP).join(', ');
     const prompt = `
-Você é um editor chefe de um grande portal de notícias.
-Sua tarefa é classificar a notícia abaixo em EXATAMENTE UMA das seguintes categorias: ${categories}.
-
-Regras:
-1. Responda APENAS com o nome da categoria.
-2. Não use frases completas.
-3. Se tiver dúvida, escolha a mais próxima.
+Você é um editor chefe. Classifique a notícia em EXATAMENTE UMA destas categorias: ${categories}.
+Responda APENAS com o nome da categoria.
 
 Título: "${title}"
 Conteúdo: "${content.substring(0, 500)}"
-
-Categoria:
 `;
 
     try {
-        const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+        const response = await fetchWithRetry(`${OLLAMA_URL}/api/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -107,48 +120,35 @@ Categoria:
             })
         });
 
-        if (!response.ok) throw new Error(`Ollama Error: ${response.status} ${response.statusText}`);
         const data = await response.json();
-        const category = data.response.trim().replace(/[^a-zA-ZáéíóúÁÉÍÓÚãõÃÕçÇ ]/g, ''); // Clean special chars
-
-        // Fuzzy match
+        const category = data.response.trim().replace(/[^a-zA-ZáéíóúÁÉÍÓÚãõÃÕçÇ ]/g, '');
         const bestMatch = Object.keys(EMOJI_MAP).find(c => category.toLowerCase().includes(c.toLowerCase()));
         return bestMatch || 'Geral';
 
     } catch (error) {
-        if (error.cause && error.cause.code === 'ECONNREFUSED') {
-             // Already logged by health check usually, but good to have
-        } else {
-             console.error('⚠️ Error classifying with Ollama:', error.message);
-        }
+        console.error('⚠️ Error classifying:', error.message);
         return 'Geral';
     }
 }
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
-Você é um jornalista brasileiro experiente e conciso.
-Resuma a notícia abaixo para um canal de Telegram.
-
+Você é um jornalista experiente. Resuma a notícia para o Telegram.
 Título: "${title}"
 Conteúdo: "${content.substring(0, 1500)}"
 
-Formato de saída OBRIGATÓRIO:
-[Breve parágrafo introdutório de 1 ou 2 frases]
+Formato OBRIGATÓRIO:
+[Parágrafo único de introdução direta, max 2 frases]
 
 • [Ponto chave 1]
 • [Ponto chave 2]
-• [Ponto chave 3 (opcional)]
+• [Ponto chave 3]
 
-Regras:
-- Idioma: Português do Brasil.
-- Tom: Informativo, neutro e direto.
-- Não use introduções como "Aqui está o resumo" ou "A notícia fala sobre". Comece direto no assunto.
-- Máximo de 600 caracteres.
+Regras: Português do Brasil. Tom neutro. Máximo 600 caracteres. Sem saudações.
 `;
 
     try {
-        const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+        const response = await fetchWithRetry(`${OLLAMA_URL}/api/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -158,7 +158,6 @@ Regras:
             })
         });
 
-        if (!response.ok) throw new Error(`Ollama Error: ${response.status} ${response.statusText}`);
         const data = await response.json();
         return data.response.trim();
 
@@ -168,18 +167,37 @@ Regras:
 }
 
 async function sendToTelegram(title, summary, category, link) {
-    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    if (DRY_RUN) {
+        console.log('\n--- DRY RUN: MESSAGE PREVIEW ---');
+        console.log(`Category: ${category}`);
+        console.log(`Title: ${title}`);
+        console.log(`Summary:\n${summary}`);
+        console.log('--------------------------------\n');
         return;
     }
 
-    const emoji = EMOJI_MAP[category] || '📰';
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
 
-    // Sanitize basic HTML chars
+    const emoji = EMOJI_MAP[category] || '📰';
+    const hashtags = `#${category.replace(/\s+/g, '')} #Notícias`;
+
     const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const safeSummary = summary.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-    // Improved formatting with Italics for summary
-    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n\n<b>${safeTitle}</b>\n\n<i>${safeSummary}</i>\n\n<a href="${link}">🔗 Ler matéria completa</a>`;
+    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n\n<b>${safeTitle}</b>\n\n${safeSummary}\n\n<i>${hashtags}</i>`;
+
+    // Use Inline Keyboard for "Ler mais"
+    const body = {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: false,
+        reply_markup: {
+            inline_keyboard: [[
+                { text: "🔗 Ler matéria completa", url: link }
+            ]]
+        }
+    };
 
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
@@ -187,27 +205,12 @@ async function sendToTelegram(title, summary, category, link) {
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: text,
-                parse_mode: 'HTML',
-                disable_web_page_preview: false
-            })
+            body: JSON.stringify(body)
         });
 
         if (!response.ok) {
             const err = await response.json();
             console.error('❌ Telegram Error:', err.description);
-             // Fallback
-             await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: `${emoji} ${category.toUpperCase()}\n\n${title}\n\n${summary}\n\n${link}`,
-                    disable_web_page_preview: false
-                })
-            });
         } else {
             console.log(`✅ Sent to Telegram: ${title}`);
         }
@@ -218,10 +221,9 @@ async function sendToTelegram(title, summary, category, link) {
 
 async function processFeed(source, historySet) {
     try {
+        // console.log(`   Fetching ${source.url}...`);
         const feed = await parser.parseURL(source.url);
         const newItems = [];
-
-        // Get items from last 24h
         const now = new Date();
         const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
 
@@ -242,19 +244,16 @@ async function processFeed(source, historySet) {
 
 async function run() {
     console.log('🚀 Starting News Agent...');
-    console.log(`📡 OLLAMA_URL: ${OLLAMA_URL}`);
+    if (DRY_RUN) console.log('🧪 DRY RUN MODE ENABLED');
 
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-        console.warn('⚠️ WARNING: Telegram credentials not set in environment variables.');
-        console.warn('   Create a .env file with TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.');
+        if (!DRY_RUN) console.warn('⚠️ WARNING: Telegram credentials missing.');
     }
 
-    // Health Check
     const ollamaHealthy = await checkOllamaHealth();
-    if (!ollamaHealthy) {
-        console.warn('⚠️ Continue execution? (Attempts to classify/summarize will fail)');
-        // In a real automated script we might want to exit, but here we proceed to show feed fetching works
-    }
+
+    // In CI/Test environment without Ollama, we might want to skip or mock.
+    // But for "reformulation", we assume the user has it or wants it.
 
     const history = await loadHistory();
     const historySet = new Set(history);
@@ -274,37 +273,40 @@ async function run() {
 
         for (const item of candidates) {
             if (itemsProcessed >= MAX_ITEMS_PER_RUN) break;
-
             const id = item.guid || item.link;
             if (historySet.has(id)) continue;
 
-            console.log(`📝 Processing: ${item.title} [${item.sourceCategory}]`);
+            console.log(`📝 Processing: ${item.title}`);
 
             const content = item.contentSnippet || item.content || item.summary || item.title;
 
-            // 1. Classify
-            const category = await classifyWithOllama(item.title, content);
+            let category = item.sourceCategory;
+            let summary = null;
 
-            // 2. Summarize
-            const summary = await summarizeWithOllama(item.title, content);
+            if (ollamaHealthy) {
+                // If the feed category is generic or we want to re-classify
+                // Actually, trusting the feed category is faster, but the prompt asked to use ollama to classify.
+                // Let's use Ollama to CONFIRM or REFINE, but falling back to source is safer.
+                // The user prompt: "Use ollama pra poder resumir e classificar"
+                category = await classifyWithOllama(item.title, content);
+                summary = await summarizeWithOllama(item.title, content);
+            } else {
+                summary = content.substring(0, 300) + '...';
+            }
 
             if (summary) {
-                // 3. Send
                 await sendToTelegram(item.title, summary, category, item.link);
-
                 history.push(id);
                 historySet.add(id);
                 itemsProcessed++;
 
-                await new Promise(r => setTimeout(r, 2000));
-            } else {
-                 console.log('   Skipped (Ollama failed to summarize)');
+                if (!DRY_RUN) await new Promise(r => setTimeout(r, 2000));
             }
         }
     }
 
     await saveHistory(history);
-    console.log(`🏁 Done. Processed ${itemsProcessed} new items.`);
+    console.log(`🏁 Done. Processed ${itemsProcessed} items.`);
 }
 
 run().catch(console.error);

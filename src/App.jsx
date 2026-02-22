@@ -15,6 +15,7 @@ function App() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Settings State
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
@@ -76,13 +77,15 @@ function App() {
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ml-72 bg-gray-50/50 dark:bg-gray-900/50">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} bg-gray-50/50 dark:bg-gray-900/50`}>
 
           {/* Header */}
           <header className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-xl sticky top-0 z-30 border-b border-gray-200/50 dark:border-gray-700/50 px-4 sm:px-6 py-4 shadow-sm">
