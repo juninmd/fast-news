@@ -1,315 +1,303 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Check, AlertCircle, Loader, ExternalLink, Zap, Bot, Send } from 'lucide-react';
-import { summarizeWithOllama } from '../services/ollamaService';
+import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info } from 'lucide-react';
+import { FEED_SOURCES } from '../services/newsService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
-
-  // AI Settings
-  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-
-  // Ollama Settings
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState(() => localStorage.getItem('ollama_model') || 'llama3');
-
-  // Telegram Settings
   const [telegramBotToken, setTelegramBotToken] = useState(() => localStorage.getItem('telegram_bot_token') || '');
   const [telegramChatId, setTelegramChatId] = useState(() => localStorage.getItem('telegram_chat_id') || '');
 
-  const [localCustomFeeds, setLocalCustomFeeds] = useState(initialCustomFeeds);
+  const [customFeeds, setCustomFeeds] = useState(initialCustomFeeds);
   const [newFeedUrl, setNewFeedUrl] = useState('');
-  const [newFeedCategory, setNewFeedCategory] = useState('');
+  const [newFeedCategory, setNewFeedCategory] = useState('Geral');
 
-  const [ollamaStatus, setOllamaStatus] = useState('idle');
+  const [activeTab, setActiveTab] = useState('geral'); // geral, feeds, ia, telegram
+
+  if (!isOpen) return null;
 
   const handleSave = () => {
+    localStorage.setItem('gemini_api_key', geminiApiKey);
+    localStorage.setItem('ai_provider', aiProvider);
+    localStorage.setItem('custom_feeds', JSON.stringify(customFeeds));
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
     localStorage.setItem('auto_summarize', autoSummarize);
-    localStorage.setItem('custom_feeds', JSON.stringify(localCustomFeeds));
-
-    localStorage.setItem('ai_provider', aiProvider);
-    localStorage.setItem('gemini_api_key', geminiApiKey);
     localStorage.setItem('ollama_url', ollamaUrl);
     localStorage.setItem('ollama_model', ollamaModel);
     localStorage.setItem('telegram_bot_token', telegramBotToken);
     localStorage.setItem('telegram_chat_id', telegramChatId);
 
-    // Pass all settings back to App
     onSave({
-        rss2jsonApiKey,
-        autoSummarize,
-        customFeeds: localCustomFeeds,
-        aiProvider,
-        geminiApiKey,
-        ollamaUrl,
-        ollamaModel,
-        telegramBotToken,
-        telegramChatId
+      geminiApiKey,
+      aiProvider,
+      customFeeds,
+      rss2jsonApiKey,
+      autoSummarize,
+      ollamaUrl,
+      ollamaModel,
+      telegramBotToken,
+      telegramChatId
     });
     onClose();
   };
 
-  const testOllama = async () => {
-      setOllamaStatus('testing');
-      try {
-          await summarizeWithOllama('Teste de conexão.', ollamaUrl, ollamaModel);
-          setOllamaStatus('success');
-      } catch (e) {
-          console.error(e);
-          setOllamaStatus('error');
-      }
-  };
-
-  const handleAddFeed = () => {
-    if (!newFeedUrl) return;
-    const category = newFeedCategory.trim() || 'Personalizado';
-    const newFeed = { url: newFeedUrl.trim(), category };
-
-    if (localCustomFeeds.some(f => f.url === newFeed.url)) {
-      return;
+  const addFeed = () => {
+    if (newFeedUrl) {
+      setCustomFeeds([...customFeeds, { url: newFeedUrl, category: newFeedCategory }]);
+      setNewFeedUrl('');
+      setNewFeedCategory('Geral');
     }
-
-    setLocalCustomFeeds([...localCustomFeeds, newFeed]);
-    setNewFeedUrl('');
-    setNewFeedCategory('');
   };
 
-  const handleRemoveFeed = (url) => {
-    setLocalCustomFeeds(localCustomFeeds.filter(feed => feed.url !== url));
+  const removeFeed = (index) => {
+    const newFeeds = [...customFeeds];
+    newFeeds.splice(index, 1);
+    setCustomFeeds(newFeeds);
   };
 
-  if (!isOpen) return null;
+  const tabs = [
+    { id: 'geral', label: 'Geral', icon: Settings },
+    { id: 'ia', label: 'Inteligência Artificial', icon: Bot },
+    { id: 'telegram', label: 'Telegram', icon: MessageSquare },
+    { id: 'feeds', label: 'Fontes', icon: Rss },
+  ];
 
   return (
-    <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl shadow-black/20 transform transition-all animate-in zoom-in-95 duration-200 border border-gray-100 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Configurações</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-700 p-2 rounded-full transition-all">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            Configurações
+          </h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500">
             <X size={20} />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* AI Configuration Section */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    <Bot size={16} /> Inteligência Artificial
-                </h3>
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100 dark:border-gray-700 px-6 pt-2 overflow-x-auto no-scrollbar">
+            {tabs.map(tab => (
+                <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`pb-3 px-4 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+                        activeTab === tab.id
+                        ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                    }`}
+                >
+                    <tab.icon size={16} />
+                    {tab.label}
+                </button>
+            ))}
+        </div>
 
-                {/* Provider Selector */}
-                <div className="flex gap-4 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                    <button
-                        onClick={() => setAiProvider('ollama')}
-                        className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
-                            aiProvider === 'ollama'
-                                ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                        }`}
-                    >
-                        Ollama (Local)
-                    </button>
-                    <button
-                        onClick={() => setAiProvider('gemini')}
-                        className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
-                            aiProvider === 'gemini'
-                                ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                        }`}
-                    >
-                        Google Gemini
-                    </button>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {activeTab === 'geral' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RSS2JSON API Key (Opcional)</label>
+                    <input
+                        type="text"
+                        value={rss2jsonApiKey}
+                        onChange={(e) => setRss2jsonApiKey(e.target.value)}
+                        className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                        placeholder="Melhora a performance e limites de requisição"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Recomendado se você adicionar muitas fontes personalizadas.</p>
                 </div>
 
-                {aiProvider === 'ollama' ? (
-                    <>
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <div>
+                        <span className="block text-sm font-medium text-gray-900 dark:text-white">Resumo Automático</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Tentar resumir notícias automaticamente ao carregar (Pode ser lento)</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked={autoSummarize} onChange={(e) => setAutoSummarize(e.target.checked)} className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+              </div>
+          )}
+
+          {activeTab === 'ia' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Provedor de IA</label>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            onClick={() => setAiProvider('ollama')}
+                            className={`p-3 rounded-xl border text-sm font-medium transition-all ${
+                                aiProvider === 'ollama'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            Ollama (Local)
+                        </button>
+                        <button
+                            onClick={() => setAiProvider('gemini')}
+                            className={`p-3 rounded-xl border text-sm font-medium transition-all ${
+                                aiProvider === 'gemini'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            Google Gemini
+                        </button>
+                    </div>
+                 </div>
+
+                 {aiProvider === 'ollama' ? (
+                     <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                            <Info size={16} className="shrink-0 mt-0.5" />
+                            <p>O Ollama precisa estar rodando localmente. Certifique-se de habilitar o CORS se necessário.</p>
+                        </div>
                         <div>
-                            <label htmlFor="ollama-url" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">URL Base</label>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">URL do Ollama</label>
                             <input
-                                id="ollama-url"
                                 type="text"
                                 value={ollamaUrl}
-                                onChange={(e) => { setOllamaUrl(e.target.value); setOllamaStatus('idle'); }}
-                                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                                onChange={(e) => setOllamaUrl(e.target.value)}
+                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
                                 placeholder="http://localhost:11434"
                             />
                         </div>
                         <div>
-                            <label htmlFor="ollama-model" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Modelo</label>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Modelo (Ex: llama3, mistral)</label>
                             <input
-                                id="ollama-model"
                                 type="text"
                                 value={ollamaModel}
-                                onChange={(e) => { setOllamaModel(e.target.value); setOllamaStatus('idle'); }}
-                                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
+                                onChange={(e) => setOllamaModel(e.target.value)}
+                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
                                 placeholder="llama3"
                             />
                         </div>
-                        <div className="flex items-center justify-between">
-                            <p className="text-[10px] text-gray-500">Certifique-se de iniciar o Ollama com <code>OLLAMA_ORIGINS="*"</code></p>
-                            <button
-                                onClick={testOllama}
-                                disabled={ollamaStatus === 'testing'}
-                                className={`text-xs px-3 py-1 rounded border transition-colors ${
-                                    ollamaStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
-                                    ollamaStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
-                                    'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
-                                }`}
-                            >
-                                {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
-                            </button>
+                     </div>
+                 ) : (
+                     <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Gemini API Key</label>
+                            <input
+                                type="password"
+                                value={geminiApiKey}
+                                onChange={(e) => setGeminiApiKey(e.target.value)}
+                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
+                                placeholder="Sua chave API do Google AI Studio"
+                            />
                         </div>
-                    </>
-                ) : (
-                    <div>
-                        <label htmlFor="gemini-key" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Gemini API Key</label>
-                        <input
-                            id="gemini-key"
-                            type="password"
-                            value={geminiApiKey}
-                            onChange={(e) => setGeminiApiKey(e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-                            placeholder="Cole sua chave API aqui..."
-                        />
-                         <p className="text-[10px] text-gray-500 mt-2">
-                            Obtenha sua chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Google AI Studio</a>.
-                        </p>
-                    </div>
-                )}
-            </div>
+                     </div>
+                 )}
+              </div>
+          )}
 
-            {/* Telegram Section */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    <Send size={16} /> Telegram
-                </h3>
-                <div>
-                    <label htmlFor="telegram-token" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Bot Token</label>
+          {activeTab === 'telegram' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 text-sm text-indigo-800 dark:text-indigo-300">
+                      <h4 className="font-bold flex items-center gap-2 mb-2"><Bot size={16}/> Configuração do Bot</h4>
+                      <p>Para enviar notícias para um canal, você precisa criar um bot no @BotFather e adicionar o bot como administrador do canal.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot Token</label>
                     <input
-                        id="telegram-token"
                         type="password"
                         value={telegramBotToken}
                         onChange={(e) => setTelegramBotToken(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-                        placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+                        className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                        placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
                     />
-                </div>
-                <div>
-                    <label htmlFor="telegram-chat-id" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Chat ID (Canal/Grupo)</label>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chat ID (@canal ou ID numérico)</label>
                     <input
-                        id="telegram-chat-id"
                         type="text"
                         value={telegramChatId}
                         onChange={(e) => setTelegramChatId(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-                        placeholder="@meucanal ou -100..."
+                        className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                        placeholder="@meucanaldenoticias"
                     />
-                </div>
-            </div>
-        </div>
-
-        <div className="my-6 border-t border-gray-100 dark:border-gray-700 pt-6">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                <Zap size={16} /> Outras Configurações
-            </h3>
-             <div className="flex flex-col gap-4">
-                 <div>
-                    <label htmlFor="rss-api-key" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">RSS2JSON API Key (Opcional)</label>
-                    <input
-                        id="rss-api-key"
-                        type="password"
-                        value={rss2jsonApiKey}
-                        onChange={(e) => setRss2jsonApiKey(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-                        placeholder="Chave para limites maiores"
-                    />
-                 </div>
-
-                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
-                    <span className="text-sm text-gray-700 dark:text-gray-200">Resumo Automático</span>
-                    <button
-                        onClick={() => setAutoSummarize(!autoSummarize)}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        autoSummarize ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                        }`}
-                    >
-                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${autoSummarize ? 'translate-x-5' : 'translate-x-1'}`} />
-                    </button>
-                 </div>
-             </div>
-        </div>
-
-        <div className="mb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Gerenciar Fontes</h3>
-
-          <div className="space-y-3 mb-4">
-            <div>
-              <input
-                type="url"
-                value={newFeedUrl}
-                onChange={(e) => setNewFeedUrl(e.target.value)}
-                placeholder="https://exemplo.com/rss"
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-            <div className="flex gap-2">
-              <div className="flex-grow">
-                <input
-                  type="text"
-                  value={newFeedCategory}
-                  onChange={(e) => setNewFeedCategory(e.target.value)}
-                  placeholder="Categoria (Ex: Tecnologia)"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-              <div className="flex items-end">
-                <button
-                  onClick={handleAddFeed}
-                  disabled={!newFeedUrl}
-                  data-testid="add-feed-btn"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Plus size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {localCustomFeeds.length > 0 && (
-            <div className="max-h-40 overflow-y-auto pr-1 space-y-2 no-scrollbar">
-              {localCustomFeeds.map((feed, index) => (
-                <div key={`${feed.url}-${index}`} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{feed.url}</p>
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">{feed.category}</p>
                   </div>
-                  <button
-                    onClick={() => handleRemoveFeed(feed.url)}
-                    data-testid={`remove-feed-btn-${index}`}
-                    className="text-gray-400 hover:text-red-500 p-1 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
+              </div>
           )}
+
+          {activeTab === 'feeds' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newFeedUrl}
+                      onChange={(e) => setNewFeedUrl(e.target.value)}
+                      placeholder="URL do Feed RSS"
+                      className="flex-1 p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                    />
+                    <select
+                      value={newFeedCategory}
+                      onChange={(e) => setNewFeedCategory(e.target.value)}
+                      className="p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                    >
+                        {['Geral', 'Tecnologia', 'Brasil', 'Mundo', 'Negócios', 'Ciência', 'Esportes', 'Automóveis', 'Entretenimento', 'Games', 'Saúde', 'Cripto'].map(c => (
+                            <option key={c} value={c}>{c}</option>
+                        ))}
+                    </select>
+                    <button
+                      onClick={addFeed}
+                      disabled={!newFeedUrl}
+                      data-testid="add-feed-btn"
+                      className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-blue-500/30"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                    {customFeeds.length === 0 && (
+                        <p className="text-center text-gray-400 text-sm py-4">Nenhum feed personalizado adicionado.</p>
+                    )}
+                    {customFeeds.map((feed, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700 group">
+                        <div className="flex flex-col min-w-0 pr-4">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{feed.url}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{feed.category}</span>
+                        </div>
+                        <button
+                          onClick={() => removeFeed(index)}
+                          data-testid={`remove-feed-btn-${index}`}
+                          className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+              </div>
+          )}
+
         </div>
 
-        <div className="flex justify-end space-x-3 pt-2">
+        {/* Footer */}
+        <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 rounded-xl font-medium transition-all"
+            className="px-5 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium transition-colors text-sm"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
-            className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all"
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all transform active:scale-95 text-sm flex items-center gap-2"
           >
-            Salvar
+            <Save size={18} />
+            Salvar Alterações
           </button>
         </div>
       </div>
