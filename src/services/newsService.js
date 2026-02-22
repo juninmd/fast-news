@@ -235,7 +235,17 @@ export const FEED_SOURCES = [
     { url: 'https://gq.globo.com/rss/ultimas/feed.xml', category: 'Moda' },
     { url: 'https://elle.com.br/feed', category: 'Moda' },
     { url: 'https://marieclaire.globo.com/rss/ultimas/feed.xml', category: 'Moda' },
-    { url: 'https://ffw.uol.com.br/feed/', category: 'Moda' }
+    { url: 'https://ffw.uol.com.br/feed/', category: 'Moda' },
+
+    // --- VARIADOS ---
+    { url: 'https://jovempan.com.br/feed', category: 'Brasil' },
+    { url: 'https://www.gazetadopovo.com.br/feed/rss/brasil.xml', category: 'Brasil' },
+    { url: 'https://adrenaline.com.br/rss', category: 'Games' },
+    { url: 'https://www.sbtnews.com.br/feed', category: 'Brasil' },
+    { url: 'https://catracalivre.com.br/feed/', category: 'Entretenimento' },
+    { url: 'https://www.hypeness.com.br/feed/', category: 'Entretenimento' },
+    { url: 'https://canaltech.com.br/rss/ciencia', category: 'Ciência' },
+    { url: 'https://olhardigital.com.br/ciencia-e-espaco/rss', category: 'Ciência' }
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {

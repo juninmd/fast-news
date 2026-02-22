@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { summarizeWithOllama } from '../services/ollamaService';
+import { summarizeWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
 import { ExternalLink, Sparkles, Loader, Calendar, Newspaper, Send, AlertTriangle, Check } from 'lucide-react';
 
-const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
+const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sendingTelegram, setSendingTelegram] = useState(false);
@@ -12,27 +13,45 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    if (autoSummarize && ollamaUrl && !summary && !loading && !error) {
-      handleSummarize();
+    if (autoSummarize && !summary && !loading && !error) {
+      if (aiProvider === 'gemini' && apiKey) {
+        handleSummarize();
+      } else if ((!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
+        handleSummarize();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSummarize, ollamaUrl]);
+  }, [autoSummarize, ollamaUrl, apiKey, aiProvider]);
 
   const handleSummarize = async () => {
-    if (!ollamaUrl) {
-      setError("Configure o Ollama nas configurações.");
-      return;
+    if (aiProvider === 'gemini') {
+      if (!apiKey) {
+        setError("Configure a API Key do Gemini nas configurações.");
+        return;
+      }
+    } else {
+      if (!ollamaUrl) {
+        setError("Configure o Ollama nas configurações.");
+        return;
+      }
     }
 
     setLoading(true);
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      const result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+      let result;
+
+      if (aiProvider === 'gemini') {
+        result = await summarizeWithGemini(textToSummarize, apiKey);
+      } else {
+        result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+      }
+
       setSummary(result);
     } catch (error) {
       console.error(error);
-      setError("Falha ao gerar resumo. Verifique se o Ollama está rodando.");
+      setError("Falha ao gerar resumo. Verifique suas configurações.");
     } finally {
       setLoading(false);
     }
@@ -152,7 +171,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                         ? 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 cursor-default'
                         : 'text-gray-600 bg-white border-gray-200 hover:bg-gray-50 hover:shadow dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                     }`}
-                    title="Resumir com Ollama"
+                    title={`Resumir com ${aiProvider === 'gemini' ? 'Gemini' : 'Ollama'}`}
                  >
                     {loading ? <Loader size={12} className="animate-spin" /> : <Sparkles size={12} />}
                     <span className="hidden sm:inline">{loading ? 'Gerando...' : (summary ? 'Pronto' : 'Resumir')}</span>
