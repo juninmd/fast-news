@@ -31,7 +31,6 @@ const Feed = ({
   useEffect(() => {
     let sources = [...FEED_SOURCES, ...customFeeds];
 
-    // Filter by category BEFORE fetching/shuffling to ensure efficiency
     if (selectedCategory !== 'Todas') {
         sources = sources.filter(s => s.category === selectedCategory);
     }
@@ -43,7 +42,7 @@ const Feed = ({
     }
 
     setShuffledSources(sources);
-    setNews([]); // Reset news to force fresh load
+    setNews([]);
     setNextBatchIndex(0);
     setHasMore(sources.length > 0);
     setInit(true);
@@ -53,7 +52,6 @@ const Feed = ({
     if (loading || !hasMore || !init) return;
     setLoading(true);
 
-    // If API key is present, we can increase batch size. Even without key, 9 is fine with throttling implemented in fetchNews
     const batchSize = rss2jsonApiKey ? 12 : 9;
 
     try {
@@ -68,20 +66,12 @@ const Feed = ({
 
         setNews(prev => {
             const combined = [...prev, ...newNews];
-            // Unique by ID
             const unique = combined.filter((item, index, self) =>
                 index === self.findIndex((t) => (
                     t.id === item.id
                 ))
             );
-            // Sort by date desc
-            unique.sort((a, b) => {
-                const dateA = new Date(a.pubDate);
-                const dateB = new Date(b.pubDate);
-                if (isNaN(dateA)) return 1;
-                if (isNaN(dateB)) return -1;
-                return dateB - dateA;
-            });
+            unique.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
             return unique;
         });
 
@@ -96,7 +86,6 @@ const Feed = ({
     }
   };
 
-  // Initial load when shuffledSources is ready
   useEffect(() => {
     if (init && shuffledSources.length > 0 && news.length === 0 && !loading) {
         loadMoreNews();
@@ -106,12 +95,9 @@ const Feed = ({
 
   const filteredNews = useMemo(() => {
       let filtered = news;
-
-      // Category is already filtered at source level, but double check just in case
       if (selectedCategory !== 'Todas') {
           filtered = filtered.filter(item => item.category === selectedCategory);
       }
-
       if (searchQuery) {
           const query = searchQuery.toLowerCase();
           filtered = filtered.filter(item =>
@@ -119,7 +105,6 @@ const Feed = ({
               (item.description && item.description.toLowerCase().includes(query))
           );
       }
-
       return filtered;
   }, [news, selectedCategory, searchQuery]);
 
@@ -141,25 +126,33 @@ const Feed = ({
           />
       )}
 
-      {/* News Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {isLoadingInitial
-          ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-          : gridItems.map((item) => (
-              <NewsCard
-                key={item.id}
-                item={item}
-                aiProvider={aiProvider}
-                apiKey={apiKey}
-                autoSummarize={autoSummarize}
-                ollamaUrl={ollamaUrl}
-                ollamaModel={ollamaModel}
-                telegramBotToken={telegramBotToken}
-                telegramChatId={telegramChatId}
-              />
-            ))
-        }
-      </div>
+      {/* Masonry Grid */}
+      {isLoadingInitial ? (
+         <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="break-inside-avoid">
+                    <SkeletonCard />
+                </div>
+            ))}
+         </div>
+      ) : (
+         <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+            {gridItems.map((item) => (
+              <div key={item.id} className="break-inside-avoid mb-6">
+                  <NewsCard
+                    item={item}
+                    aiProvider={aiProvider}
+                    apiKey={apiKey}
+                    autoSummarize={autoSummarize}
+                    ollamaUrl={ollamaUrl}
+                    ollamaModel={ollamaModel}
+                    telegramBotToken={telegramBotToken}
+                    telegramChatId={telegramChatId}
+                  />
+              </div>
+            ))}
+         </div>
+      )}
 
       {/* Empty State */}
       {!loading && !isLoadingInitial && filteredNews.length === 0 && (
@@ -176,7 +169,7 @@ const Feed = ({
         </div>
       )}
 
-      {/* Load More / Loading State */}
+      {/* Load More */}
       <div className="mt-12 text-center pb-8">
         {loading && !isLoadingInitial ? (
              <div className="flex flex-col items-center justify-center">
