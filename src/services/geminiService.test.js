@@ -1,52 +1,71 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { summarizeText } from './geminiService';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { summarizeWithGemini } from './geminiService';
 
-vi.mock("@google/generative-ai");
+global.fetch = vi.fn();
 
 describe('geminiService', () => {
-    let mockGenerateContent;
-
     beforeEach(() => {
         vi.clearAllMocks();
-        mockGenerateContent = vi.fn();
-
-        // Properly mock the class constructor
-        // GoogleGenerativeAI is a named export, so when mocked it's a spy
-        // We need to make sure it behaves like a class constructor
-
-        GoogleGenerativeAI.prototype.getGenerativeModel = vi.fn().mockReturnValue({
-            generateContent: mockGenerateContent
-        });
     });
 
     it('should throw error if api key is missing', async () => {
-        await expect(summarizeText('some text', '')).rejects.toThrow('API Key is missing.');
-        await expect(summarizeText('some text', null)).rejects.toThrow('API Key is missing.');
+        await expect(summarizeWithGemini('some text', '')).rejects.toThrow('API Key do Gemini não fornecida.');
+        await expect(summarizeWithGemini('some text', null)).rejects.toThrow('API Key do Gemini não fornecida.');
     });
 
     it('should summarize text successfully', async () => {
         const mockResponse = {
-            response: {
-                text: () => 'Summary text',
-            },
+            ok: true,
+            json: async () => ({
+                candidates: [{
+                    content: {
+                        parts: [{ text: 'Summary text' }]
+                    }
+                }]
+            })
         };
-        mockGenerateContent.mockResolvedValue(mockResponse);
+        fetch.mockResolvedValue(mockResponse);
 
-        const summary = await summarizeText('Original text', 'fake-key');
+        const summary = await summarizeWithGemini('Original text', 'fake-key');
 
-        expect(GoogleGenerativeAI).toHaveBeenCalledWith('fake-key');
-        expect(mockGenerateContent).toHaveBeenCalledWith(expect.stringContaining('Original text'));
+        expect(fetch).toHaveBeenCalledWith(
+            expect.stringContaining('fake-key'),
+            expect.objectContaining({
+                method: 'POST',
+                body: expect.stringContaining('Original text')
+            })
+        );
         expect(summary).toBe('Summary text');
     });
 
     it('should throw error if generation fails', async () => {
-        const mockError = new Error('Generation failed');
-        mockGenerateContent.mockRejectedValue(mockError);
+        const mockErrorResponse = {
+            ok: false,
+            statusText: 'Bad Request',
+            json: async () => ({ error: { message: 'Generation failed' } })
+        };
+        fetch.mockResolvedValue(mockErrorResponse);
+
+        // Mock console.error to avoid polluting output
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        await expect(summarizeText('Original text', 'fake-key')).rejects.toThrow('Generation failed');
-        expect(consoleSpy).toHaveBeenCalledWith('Error summarizing text:', mockError);
+        await expect(summarizeWithGemini('Original text', 'fake-key')).rejects.toThrow('Gemini API Error: Generation failed');
+        expect(consoleSpy).toHaveBeenCalled();
+
+        consoleSpy.mockRestore();
+    });
+
+    it('should throw error if summary is missing in response', async () => {
+         const mockResponse = {
+            ok: true,
+            json: async () => ({
+                candidates: [] // No candidates
+            })
+        };
+        fetch.mockResolvedValue(mockResponse);
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        await expect(summarizeWithGemini('Original text', 'fake-key')).rejects.toThrow('Não foi possível gerar o resumo.');
 
         consoleSpy.mockRestore();
     });

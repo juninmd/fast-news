@@ -76,7 +76,7 @@ describe('NewsCard', () => {
         fireEvent.click(summarizeButton);
 
         await waitFor(() => {
-            expect(screen.getByText('Falha ao gerar resumo. Verifique se o Ollama está rodando.')).toBeInTheDocument();
+            expect(screen.getByText('Falha ao gerar resumo. Verifique suas configurações.')).toBeInTheDocument();
         });
 
         consoleSpy.mockRestore();

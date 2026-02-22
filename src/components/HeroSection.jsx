@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { summarizeWithOllama } from '../services/ollamaService';
+import { summarizeWithGemini } from '../services/geminiService';
 import { Sparkles, Loader, ExternalLink, Calendar, Newspaper, ArrowRight } from 'lucide-react';
 
-const HeroSection = ({ item, ollamaUrl, ollamaModel }) => {
+const HeroSection = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -11,20 +12,34 @@ const HeroSection = ({ item, ollamaUrl, ollamaModel }) => {
   if (!item) return null;
 
   const handleSummarize = async () => {
-    if (!ollamaUrl) {
-      setError("Configure o Ollama nas configurações.");
-      return;
+    if (aiProvider === 'gemini') {
+      if (!apiKey) {
+        setError("Configure a API Key do Gemini nas configurações.");
+        return;
+      }
+    } else {
+      if (!ollamaUrl) {
+        setError("Configure o Ollama nas configurações.");
+        return;
+      }
     }
 
     setLoading(true);
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      const result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+      let result;
+
+      if (aiProvider === 'gemini') {
+        result = await summarizeWithGemini(textToSummarize, apiKey);
+      } else {
+        result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+      }
+
       setSummary(result);
     } catch (error) {
       console.error(error);
-      setError("Falha ao gerar resumo. Verifique se o Ollama está rodando.");
+      setError("Falha ao gerar resumo. Verifique suas configurações.");
     } finally {
       setLoading(false);
     }
@@ -141,7 +156,7 @@ const HeroSection = ({ item, ollamaUrl, ollamaModel }) => {
             }`}
           >
             {loading ? <Loader size={18} className="animate-spin" /> : <Sparkles size={18} />}
-            <span>{loading ? 'Gerando Resumo...' : (summary ? 'Resumo Gerado' : 'Resumir com IA')}</span>
+            <span>{loading ? 'Gerando Resumo...' : (summary ? 'Resumo Gerado' : `Resumir com ${aiProvider === 'gemini' ? 'Gemini' : 'IA'}`)}</span>
           </button>
         </div>
 

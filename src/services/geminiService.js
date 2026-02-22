@@ -1,36 +1,47 @@
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const QUEUE_DELAY = 1500; // 1.5 seconds delay between requests
-let queue = Promise.resolve();
-
-export const summarizeText = async (text, apiKey) => {
+export const summarizeWithGemini = async (text, apiKey) => {
   if (!apiKey) {
-    throw new Error("API Key is missing.");
+    throw new Error("API Key do Gemini não fornecida.");
   }
 
-  // Create a promise that executes after the previous one in the queue
-  const currentRequest = queue.then(async () => {
-    // Wait for the delay
-    await new Promise(resolve => setTimeout(resolve, QUEUE_DELAY));
+  const prompt = `Resuma o seguinte texto em português do Brasil em um único parágrafo conciso, focando nos pontos principais. O texto é uma notícia.
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+Texto:
+${text}
 
-    const prompt = `Resuma a seguinte notícia em português em 2 ou 3 frases. Mantenha o resumo informativo e conciso:\n\n${text}`;
+Resumo:`;
 
-    try {
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error("Error summarizing text:", error);
-      throw error;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
     }
-  });
 
-  // Update the queue to wait for this request, catching errors so the queue continues
-  queue = currentRequest.catch(() => {});
+    const data = await response.json();
+    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-  return currentRequest;
+    if (!summary) {
+      throw new Error("Não foi possível gerar o resumo.");
+    }
+
+    return summary.trim();
+  } catch (error) {
+    console.error("Error summarizing with Gemini:", error);
+    throw error;
+  }
 };
