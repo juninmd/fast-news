@@ -13,6 +13,10 @@ vi.mock('./NewsCard', () => ({
     default: ({ item }) => <div data-testid="news-card">{item.title} - {item.category}</div>
 }));
 
+vi.mock('./HeroSection', () => ({
+    default: ({ item }) => <div data-testid="hero-section">{item.title} - {item.category}</div>
+}));
+
 vi.mock('./SkeletonCard', () => ({
     default: () => <div data-testid="skeleton-card">Skeleton</div>
 }));
