@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NewsCard from './NewsCard';
 import * as ollamaService from '../services/ollamaService';
 import * as telegramService from '../services/telegramService';
-import * as geminiService from '../services/geminiService';
 
 vi.mock('../services/ollamaService', () => ({
     summarizeWithOllama: vi.fn(),

@@ -97,14 +97,19 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
     try {
       const date = new Date(dateString);
       if (isNaN(date)) return '';
-      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     } catch {
       return '';
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full overflow-hidden group border border-gray-100 dark:border-gray-700/50 break-inside-avoid mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full overflow-hidden group border border-gray-100 dark:border-gray-700/50 break-inside-avoid mb-6">
       <div className="relative">
         {imageUrl && !imageError ? (
             <div className="aspect-video w-full overflow-hidden relative">
@@ -125,51 +130,51 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
         {/* Category Badge */}
         {item.category && (
-            <div className="absolute top-3 left-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-gray-900 dark:text-gray-100 text-[10px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
+            <div className="absolute top-3 left-3 bg-blue-600 text-white backdrop-blur-sm text-[10px] font-bold px-3 py-1 rounded-lg shadow-lg uppercase tracking-wide z-10">
                 {item.category}
             </div>
         )}
 
         {/* Action Buttons Overlay */}
-        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
              <button
                 onClick={handleSummarize}
                 disabled={loading || summary}
-                className="bg-white/90 dark:bg-gray-900/90 text-indigo-600 dark:text-indigo-400 p-1.5 rounded-full hover:scale-110 transition-transform shadow-sm disabled:opacity-50"
+                className="bg-white/90 dark:bg-gray-900/90 text-indigo-600 dark:text-indigo-400 p-2 rounded-full hover:scale-110 transition-transform shadow-sm disabled:opacity-50"
                 title="Resumir com IA"
              >
-                {loading ? <Loader size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} />}
              </button>
              {telegramBotToken && (
                  <button
                     onClick={handleSendToTelegram}
                     disabled={sendingTelegram}
-                    className="bg-white/90 dark:bg-gray-900/90 text-blue-500 dark:text-blue-400 p-1.5 rounded-full hover:scale-110 transition-transform shadow-sm"
+                    className="bg-white/90 dark:bg-gray-900/90 text-blue-500 dark:text-blue-400 p-2 rounded-full hover:scale-110 transition-transform shadow-sm"
                     title="Enviar para Telegram"
                  >
-                    {sendingTelegram ? <Loader size={14} className="animate-spin" /> :
-                     telegramStatus === 'success' ? <Check size={14} /> :
-                     <Send size={14} />}
+                    {sendingTelegram ? <Loader size={16} className="animate-spin" /> :
+                     telegramStatus === 'success' ? <Check size={16} /> :
+                     <Send size={16} />}
                  </button>
              )}
              <button
                 onClick={copyToClipboard}
-                className="bg-white/90 dark:bg-gray-900/90 text-gray-500 p-1.5 rounded-full hover:scale-110 transition-transform shadow-sm"
+                className="bg-white/90 dark:bg-gray-900/90 text-gray-500 p-2 rounded-full hover:scale-110 transition-transform shadow-sm"
                 title="Copiar Link"
              >
-                <Copy size={14} />
+                <Copy size={16} />
              </button>
         </div>
       </div>
 
-      <div className="p-4 flex flex-col flex-grow">
-        <div className="flex items-center gap-2 mb-2 text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-             <span className="text-blue-600 dark:text-blue-400">{item.source}</span>
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="flex items-center gap-2 mb-3 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+             <span className="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">{item.source}</span>
              <span>•</span>
              <span>{formatDate(item.pubDate)}</span>
         </div>
 
-        <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           <a href={item.link} target="_blank" rel="noopener noreferrer">
             {item.title}
           </a>
