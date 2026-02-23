@@ -27,7 +27,7 @@ const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 
 const parser = new Parser({
-    timeout: 5000,
+    timeout: 10000,
     headers: { 'User-Agent': 'NewsAI-Agent/1.0' }
 });
 
