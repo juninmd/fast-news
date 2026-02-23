@@ -27,7 +27,7 @@ const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 
 const parser = new Parser({
-    timeout: 5000,
+    timeout: 10000,
     headers: { 'User-Agent': 'NewsAI-Agent/1.0' }
 });
 
@@ -133,18 +133,19 @@ Conteúdo: "${content.substring(0, 500)}"
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
-Você é um jornalista experiente. Resuma a notícia para o Telegram.
+Você é um analista de notícias experiente. Resuma esta notícia para um canal de Telegram focado em rapidez e clareza.
 Título: "${title}"
 Conteúdo: "${content.substring(0, 1500)}"
 
-Formato OBRIGATÓRIO:
-[Parágrafo único de introdução direta, max 2 frases]
+Gere um resumo em português do Brasil seguindo ESTRITAMENTE este formato:
 
-• [Ponto chave 1]
-• [Ponto chave 2]
-• [Ponto chave 3]
+[Breve frase de impacto sobre o que aconteceu]
 
-Regras: Português do Brasil. Tom neutro. Máximo 600 caracteres. Sem saudações.
+• [Detalhe importante 1]
+• [Detalhe importante 2]
+• [Consequência ou contexto relevante]
+
+Mantenha o tom profissional e neutro. Máximo de 500 caracteres. Sem saudações.
 `;
 
     try {
@@ -295,12 +296,16 @@ async function run() {
             }
 
             if (summary) {
-                await sendToTelegram(item.title, summary, category, item.link);
-                history.push(id);
-                historySet.add(id);
-                itemsProcessed++;
+                try {
+                    await sendToTelegram(item.title, summary, category, item.link);
+                    history.push(id);
+                    historySet.add(id);
+                    itemsProcessed++;
 
-                if (!DRY_RUN) await new Promise(r => setTimeout(r, 2000));
+                    if (!DRY_RUN) await new Promise(r => setTimeout(r, 2000));
+                } catch (err) {
+                    console.error(`❌ Failed to process item ${item.title}:`, err);
+                }
             }
         }
     }
