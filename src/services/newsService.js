@@ -255,7 +255,15 @@ export const FEED_SOURCES = [
     { url: 'https://catracalivre.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://www.hypeness.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://canaltech.com.br/rss/ciencia', category: 'Ciência' },
-    { url: 'https://olhardigital.com.br/ciencia-e-espaco/rss', category: 'Ciência' }
+    { url: 'https://olhardigital.com.br/ciencia-e-espaco/rss', category: 'Ciência' },
+
+    // --- NOVOS PORTAIS (ADICIONADOS RECENTEMENTE) ---
+    { url: 'https://dev.to/feed', category: 'Tecnologia' },
+    { url: 'https://www.smashingmagazine.com/feed/', category: 'Tecnologia' },
+    { url: 'https://99bitcoins.com/feed/', category: 'Cripto' },
+    { url: 'https://coinjournal.net/feed/', category: 'Cripto' },
+    { url: 'https://www.inovacaotecnologica.com.br/boletim/rss.xml', category: 'Ciência' },
+    { url: 'https://piaui.folha.uol.com.br/feed/', category: 'Brasil' }
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {
