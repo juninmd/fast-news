@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Globe, Cpu, Briefcase, Trophy, Car, Film, Bitcoin, Heart, ShoppingBag, Gamepad2, Bot, X, Rocket, Map, Microscope, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutGrid, Globe, Cpu, Briefcase, Trophy, Car, Film, Bitcoin, Heart, ShoppingBag, Gamepad2, Bot, X, Rocket, Map, Microscope, ChevronLeft, ChevronRight, Newspaper } from 'lucide-react';
 
 const CATEGORY_ICONS = {
   'Todas': LayoutGrid,
@@ -17,6 +17,7 @@ const CATEGORY_ICONS = {
   'Marketing': Rocket,
   'Moda': ShoppingBag,
   'IA': Bot,
+  'Geral': Newspaper,
   'Personalizado': Globe
 };
 
@@ -36,7 +37,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
         fixed lg:sticky top-0 left-0 z-50 h-screen
         ${isCollapsed ? 'w-20' : 'w-72'}
         bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700
-        transform transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-2xl lg:shadow-none
+        transform transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden scrollbar-hide shadow-2xl lg:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className={`h-full flex flex-col ${isCollapsed ? 'p-3' : 'p-6'}`}>

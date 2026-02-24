@@ -102,11 +102,15 @@ async function fetchWithRetry(url, options, retries = RETRY_ATTEMPTS) {
 async function classifyWithOllama(title, content) {
     const categories = Object.keys(EMOJI_MAP).join(', ');
     const prompt = `
-Você é um editor chefe. Classifique a notícia em EXATAMENTE UMA destas categorias: ${categories}.
-Responda APENAS com o nome da categoria.
+Você é um editor chefe. Sua tarefa é classificar notícias.
+As categorias válidas são EXATAMENTE e APENAS estas: [${categories}].
 
+Analise a notícia abaixo:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 500)}"
+
+Responda APENAS com o nome da categoria que melhor se encaixa. Não escreva frases, não use pontuação extra.
+Se nenhuma se encaixar perfeitamente, use "Geral".
 `;
 
     try {
@@ -121,8 +125,15 @@ Conteúdo: "${content.substring(0, 500)}"
         });
 
         const data = await response.json();
-        const category = data.response.trim().replace(/[^a-zA-ZáéíóúÁÉÍÓÚãõÃÕçÇ ]/g, '');
-        const bestMatch = Object.keys(EMOJI_MAP).find(c => category.toLowerCase().includes(c.toLowerCase()));
+        // Clean the response: remove special chars and whitespace
+        let category = data.response.trim().replace(/[.,]/g, '');
+
+        // Find the best match in our map keys (case insensitive)
+        const bestMatch = Object.keys(EMOJI_MAP).find(c =>
+            category.toLowerCase() === c.toLowerCase() ||
+            category.toLowerCase().includes(c.toLowerCase())
+        );
+
         return bestMatch || 'Geral';
 
     } catch (error) {
@@ -133,19 +144,25 @@ Conteúdo: "${content.substring(0, 500)}"
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
-Você é um analista de notícias experiente. Resuma esta notícia para um canal de Telegram focado em rapidez e clareza.
+Você é um jornalista expert em síntese. Resuma a notícia abaixo para um canal de Telegram.
+O público quer informação rápida, direta e fácil de ler.
+
 Título: "${title}"
 Conteúdo: "${content.substring(0, 1500)}"
 
-Gere um resumo em português do Brasil seguindo ESTRITAMENTE este formato:
+Gere um resumo em Português do Brasil seguindo ESTRITAMENTE este formato:
 
-[Breve frase de impacto sobre o que aconteceu]
+[Uma frase curta e impactante resumindo o fato principal]
 
-• [Detalhe importante 1]
-• [Detalhe importante 2]
-• [Consequência ou contexto relevante]
+• [Ponto chave 1]
+• [Ponto chave 2]
+• [Ponto chave 3 (opcional)]
 
-Mantenha o tom profissional e neutro. Máximo de 500 caracteres. Sem saudações.
+Regras:
+- Use emojis moderadamente nos bullets se fizer sentido.
+- Mantenha o tom neutro e informativo.
+- Máximo de 400 caracteres no total.
+- NÃO inclua saudações ou "Aqui está o resumo".
 `;
 
     try {
@@ -163,6 +180,7 @@ Mantenha o tom profissional e neutro. Máximo de 500 caracteres. Sem saudações
         return data.response.trim();
 
     } catch (error) {
+        console.error('⚠️ Error summarizing:', error.message);
         return null;
     }
 }
@@ -180,14 +198,27 @@ async function sendToTelegram(title, summary, category, link) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
 
     const emoji = EMOJI_MAP[category] || '📰';
-    const hashtags = `#${category.replace(/\s+/g, '')} #Notícias`;
+    // Remove spaces for hashtag
+    const categoryHashtag = category.replace(/\s+/g, '');
+    const hashtags = `#${categoryHashtag} #Notícias`;
 
-    const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const safeSummary = summary.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Escaping HTML characters for Telegram
+    const escapeHtml = (unsafe) => {
+        return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+    }
+
+    const safeTitle = escapeHtml(title);
+    // Summary usually comes from AI, might have some formatting, but let's be safe or trust AI didn't inject HTML tags.
+    // Ollama returns plain text usually.
+    const safeSummary = escapeHtml(summary);
 
     const text = `<b>${emoji} ${category.toUpperCase()}</b>\n\n<b>${safeTitle}</b>\n\n${safeSummary}\n\n<i>${hashtags}</i>`;
 
-    // Use Inline Keyboard for "Ler mais"
     const body = {
         chat_id: TELEGRAM_CHAT_ID,
         text: text,
@@ -239,6 +270,7 @@ async function processFeed(source, historySet) {
         }
         return newItems;
     } catch (error) {
+        // console.error(`Error processing ${source.url}: ${error.message}`);
         return [];
     }
 }
@@ -252,9 +284,6 @@ async function run() {
     }
 
     const ollamaHealthy = await checkOllamaHealth();
-
-    // In CI/Test environment without Ollama, we might want to skip or mock.
-    // But for "reformulation", we assume the user has it or wants it.
 
     const history = await loadHistory();
     const historySet = new Set(history);
@@ -270,6 +299,7 @@ async function run() {
         const results = await Promise.all(batch.map(source => processFeed(source, historySet)));
         const candidates = results.flat();
 
+        // Sort by date descending
         candidates.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
         for (const item of candidates) {
@@ -285,14 +315,15 @@ async function run() {
             let summary = null;
 
             if (ollamaHealthy) {
-                // If the feed category is generic or we want to re-classify
-                // Actually, trusting the feed category is faster, but the prompt asked to use ollama to classify.
-                // Let's use Ollama to CONFIRM or REFINE, but falling back to source is safer.
-                // The user prompt: "Use ollama pra poder resumir e classificar"
-                category = await classifyWithOllama(item.title, content);
+                // Classify using Ollama
+                const detectedCategory = await classifyWithOllama(item.title, content);
+                if (detectedCategory) category = detectedCategory;
+
+                // Summarize using Ollama
                 summary = await summarizeWithOllama(item.title, content);
             } else {
-                summary = content.substring(0, 300) + '...';
+                // Fallback if no Ollama
+                summary = content ? content.substring(0, 300) + '...' : item.title;
             }
 
             if (summary) {
@@ -302,6 +333,7 @@ async function run() {
                     historySet.add(id);
                     itemsProcessed++;
 
+                    // Rate limiting between sends
                     if (!DRY_RUN) await new Promise(r => setTimeout(r, 2000));
                 } catch (err) {
                     console.error(`❌ Failed to process item ${item.title}:`, err);
