@@ -73,9 +73,17 @@ Para rodar o "robô" que monitora notícias e envia para o Telegram automaticame
 
 1.  Certifique-se de que o `.env` está configurado corretamente.
 2.  Execute o script do agente:
+
+    **Modo Único (Executa uma vez e para):**
     ```bash
     node scripts/news-agent.js
     ```
+
+    **Modo Contínuo (Loop a cada 15 minutos):**
+    ```bash
+    node scripts/news-agent.js --loop
+    ```
+
     *O script irá verificar os feeds, classificar, resumir novas notícias com o Ollama e enviar para o Telegram. Ele salva o histórico em `scripts/history.json` para evitar duplicatas.*
 
 ---

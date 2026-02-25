@@ -169,29 +169,29 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
       <div className="p-6 flex flex-col flex-grow relative">
         <div className="flex items-center gap-2 mb-3 text-[11px] text-gray-400 font-bold uppercase tracking-wider">
-             <span className="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-full">{item.source}</span>
+             <span className="text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-full border border-blue-100 dark:border-blue-800/50 shadow-sm">{item.source}</span>
              <span className="text-gray-300">•</span>
              <span>{formatDate(item.pubDate)}</span>
         </div>
 
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-4 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <h3 className="text-xl md:text-2xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors tracking-tight">
           <a href={item.link} target="_blank" rel="noopener noreferrer">
             {item.title}
           </a>
         </h3>
 
-        <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+        <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6 font-medium">
             {summary ? (
-                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/10 p-4 rounded-xl text-xs border border-indigo-100 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="flex items-center gap-1.5 mb-2 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">
+                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 p-5 rounded-2xl text-xs border border-indigo-100 dark:border-indigo-500/30 animate-in fade-in slide-in-from-bottom-2 shadow-sm">
+                    <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-300 font-extrabold text-[10px] uppercase tracking-wider">
                         <Sparkles size={12} className="fill-current" /> Resumo Inteligente
                     </div>
-                    <div className="prose prose-xs dark:prose-invert max-w-none text-indigo-900/80 dark:text-indigo-200">
+                    <div className="prose prose-xs dark:prose-invert max-w-none text-indigo-900/90 dark:text-indigo-100 leading-relaxed">
                         {summary}
                     </div>
                 </div>
             ) : (
-                <p className="line-clamp-3 opacity-90 font-light">{cleanDescription}</p>
+                <p className="line-clamp-3 opacity-90 font-normal text-gray-600 dark:text-gray-400">{cleanDescription}</p>
             )}
             {error && <p className="text-red-500 text-[10px] mt-2 font-medium bg-red-50 dark:bg-red-900/20 p-2 rounded-lg inline-block">{error}</p>}
         </div>

@@ -25,6 +25,8 @@ const RETRY_ATTEMPTS = 3;
 // Args
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
+const LOOP_MODE = args.includes('--loop');
+const LOOP_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 const parser = new Parser({
     timeout: 10000,
@@ -144,25 +146,26 @@ Se nenhuma se encaixar perfeitamente, use "Geral".
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
-Você é um jornalista expert em síntese. Resuma a notícia abaixo para um canal de Telegram.
-O público quer informação rápida, direta e fácil de ler.
+Atue como um editor experiente de um canal de notícias no Telegram.
+Sua tarefa é criar um resumo conciso, envolvente e informativo.
 
 Título: "${title}"
-Conteúdo: "${content.substring(0, 1500)}"
+Conteúdo: "${content.substring(0, 2000)}"
 
-Gere um resumo em Português do Brasil seguindo ESTRITAMENTE este formato:
+Gere o resumo em Português do Brasil EXATAMENTE neste formato:
 
-[Uma frase curta e impactante resumindo o fato principal]
+[Uma frase de impacto resumindo o acontecimento principal]
 
-• [Ponto chave 1]
-• [Ponto chave 2]
-• [Ponto chave 3 (opcional)]
+👉 [Detalhe crucial 1]
+👉 [Detalhe crucial 2]
+👉 [Detalhe crucial 3 (opcional, se houver)]
 
-Regras:
-- Use emojis moderadamente nos bullets se fizer sentido.
-- Mantenha o tom neutro e informativo.
-- Máximo de 400 caracteres no total.
-- NÃO inclua saudações ou "Aqui está o resumo".
+Diretrizes:
+- Use linguagem direta e jornalística.
+- Use emojis nos bullet points para facilitar a leitura.
+- Evite repetições.
+- NUNCA comece com "Aqui está" ou "Resumo:".
+- Máximo de 500 caracteres.
 `;
 
     try {
@@ -275,8 +278,8 @@ async function processFeed(source, historySet) {
     }
 }
 
-async function run() {
-    console.log('🚀 Starting News Agent...');
+async function processBatch() {
+    console.log('🚀 Starting News Agent cycle...');
     if (DRY_RUN) console.log('🧪 DRY RUN MODE ENABLED');
 
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
@@ -346,4 +349,21 @@ async function run() {
     console.log(`🏁 Done. Processed ${itemsProcessed} items.`);
 }
 
-run().catch(console.error);
+async function main() {
+    if (LOOP_MODE) {
+        console.log('🔄 Loop mode enabled. Running every 15 minutes.');
+        while (true) {
+            try {
+                await processBatch();
+            } catch (error) {
+                console.error('❌ Error in batch execution:', error);
+            }
+            console.log(`⏳ Waiting ${LOOP_INTERVAL / 60000} minutes...`);
+            await new Promise(resolve => setTimeout(resolve, LOOP_INTERVAL));
+        }
+    } else {
+        await processBatch();
+    }
+}
+
+main().catch(console.error);
