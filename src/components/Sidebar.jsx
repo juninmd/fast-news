@@ -86,8 +86,8 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                   className={`
                     w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3 px-4'} py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative overflow-hidden
                     ${isSelected
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 shadow-sm ring-1 ring-blue-100 dark:ring-blue-800'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 dark:from-blue-900/20 dark:to-indigo-900/20 dark:text-blue-300 shadow-sm border border-blue-100 dark:border-blue-800/50'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200 hover:pl-5'
                     }
                   `}
                 >
@@ -97,7 +97,9 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                       <>
                         <span className="relative z-10 whitespace-nowrap">{category}</span>
                         {isSelected && (
-                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                             <div className="ml-auto flex items-center">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
+                             </div>
                         )}
                       </>
                   )}

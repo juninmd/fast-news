@@ -3,7 +3,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NewsCard from './NewsCard';
 import * as ollamaService from '../services/ollamaService';
 import * as telegramService from '../services/telegramService';
+import * as geminiService from '../services/geminiService'; // Import geminiService
 
+// Mock the services
 vi.mock('../services/ollamaService', () => ({
     summarizeWithOllama: vi.fn(),
 }));
@@ -22,7 +24,7 @@ const mockItem = {
     description: '<p>Test description</p>',
     content: 'Test content',
     source: 'Test Source',
-    pubDate: '2023-10-27 10:00:00',
+    pubDate: '2023-10-27T10:00:00.000Z', // Use ISO string for consistent date parsing
     category: 'Tech',
     thumbnail: 'http://test.com/image.jpg'
 };
@@ -36,35 +38,35 @@ describe('NewsCard', () => {
         render(<NewsCard item={mockItem} ollamaUrl="http://test-url" />);
         expect(screen.getByText('Test News')).toBeInTheDocument();
         expect(screen.getByText('Test Source')).toBeInTheDocument();
-        // Date formatting might depend on locale, check basic presence
-        expect(screen.getByText(/27\/10/)).toBeInTheDocument(); // pt-BR 2-digit day/month
+        expect(screen.getByText(/27\/10/)).toBeInTheDocument();
         expect(screen.getByText('Test description...')).toBeInTheDocument();
         expect(screen.getByRole('img')).toHaveAttribute('src', 'http://test.com/image.jpg');
         expect(screen.getByText('Tech')).toBeInTheDocument();
     });
 
     it('handles summarize action', async () => {
-        ollamaService.summarizeWithOllama.mockResolvedValue('Summary result');
-        render(<NewsCard item={mockItem} ollamaUrl="http://test-url" ollamaModel="llama3" aiProvider="ollama" />);
+        // Mock implementation for this specific test
+        const summarizeMock = vi.mocked(ollamaService.summarizeWithOllama).mockResolvedValue('Summary result');
 
-        const summarizeButton = screen.getByTitle('Resumir com IA');
-        fireEvent.click(summarizeButton);
+        render(<NewsCard item={mockItem} ollamaUrl="http://test-url" ollamaModel="llama3" aiProvider="ollama" apiKey="" />);
 
-        // Loading state
-        // expect(screen.getByTitle('Resumir com IA')).toBeDisabled();
+        // Use getAllByTitle because there are multiple buttons (one in overlay, one in footer)
+        const summarizeButtons = screen.getAllByTitle('Resumir com IA');
+        fireEvent.click(summarizeButtons[0]);
 
         await waitFor(() => {
             expect(screen.getByText('Summary result')).toBeInTheDocument();
         });
-
+        expect(summarizeMock).toHaveBeenCalled();
         expect(ollamaService.summarizeWithOllama).toHaveBeenCalledWith('Test content', 'http://test-url', 'llama3');
     });
 
     it('shows error if ollama url is missing', async () => {
-         render(<NewsCard item={mockItem} ollamaUrl="" aiProvider="ollama" />);
+         vi.spyOn(console, 'error').mockImplementation(() => {});
+         render(<NewsCard item={mockItem} ollamaUrl="" aiProvider="ollama" apiKey="" />);
 
-         const summarizeButton = screen.getByTitle('Resumir com IA');
-         fireEvent.click(summarizeButton);
+         const summarizeButtons = screen.getAllByTitle('Resumir com IA');
+         fireEvent.click(summarizeButtons[0]);
 
          await waitFor(() => {
              expect(screen.getByText('Configure Ollama.')).toBeInTheDocument();
@@ -73,13 +75,13 @@ describe('NewsCard', () => {
     });
 
     it('shows error if summarization fails', async () => {
-        ollamaService.summarizeWithOllama.mockRejectedValue(new Error('API Error'));
+        vi.mocked(ollamaService.summarizeWithOllama).mockRejectedValue(new Error('API Error'));
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        render(<NewsCard item={mockItem} ollamaUrl="http://test-url" aiProvider="ollama" />);
+        render(<NewsCard item={mockItem} ollamaUrl="http://test-url" aiProvider="ollama" apiKey="" />);
 
-        const summarizeButton = screen.getByTitle('Resumir com IA');
-        fireEvent.click(summarizeButton);
+        const summarizeButtons = screen.getAllByTitle('Resumir com IA');
+        fireEvent.click(summarizeButtons[0]);
 
         await waitFor(() => {
             expect(screen.getByText('Falha ao gerar resumo.')).toBeInTheDocument();
@@ -89,14 +91,15 @@ describe('NewsCard', () => {
     });
 
     it('handles send to telegram action', async () => {
-        telegramService.sendToTelegram.mockResolvedValue(true);
+        const sendMock = vi.mocked(telegramService.sendToTelegram).mockResolvedValue(true);
+        // Ensure tokens are provided so the button renders
         render(<NewsCard item={mockItem} telegramBotToken="token" telegramChatId="chatid" />);
 
-        const sendButton = screen.getByTitle('Enviar para Telegram');
-        fireEvent.click(sendButton);
+        const sendButtons = screen.getAllByTitle('Enviar para Telegram');
+        fireEvent.click(sendButtons[0]);
 
         await waitFor(() => {
-            expect(telegramService.sendToTelegram).toHaveBeenCalled();
+            expect(sendMock).toHaveBeenCalled();
         });
     });
 
@@ -127,17 +130,16 @@ describe('NewsCard', () => {
             description: 'No image here'
         };
         render(<NewsCard item={itemNoImg} />);
-        // It renders a fallback "Newspaper" icon container
         expect(screen.queryByRole('img', { name: /Test News/i })).not.toBeInTheDocument();
     });
 
     it('triggers auto summarization if enabled', async () => {
-        ollamaService.summarizeWithOllama.mockResolvedValue('Auto Summary');
+        const summarizeMock = vi.mocked(ollamaService.summarizeWithOllama).mockResolvedValue('Auto Summary');
 
-        render(<NewsCard item={mockItem} ollamaUrl="http://test-url" autoSummarize={true} aiProvider="ollama" />);
+        render(<NewsCard item={mockItem} ollamaUrl="http://test-url" autoSummarize={true} aiProvider="ollama" apiKey="" />);
 
         await waitFor(() => {
-            expect(ollamaService.summarizeWithOllama).toHaveBeenCalledWith('Test content', 'http://test-url', undefined);
+            expect(summarizeMock).toHaveBeenCalledWith('Test content', 'http://test-url', undefined);
         });
 
         expect(screen.getByText('Auto Summary')).toBeInTheDocument();
