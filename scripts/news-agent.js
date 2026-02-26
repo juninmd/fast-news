@@ -147,25 +147,25 @@ Se nenhuma se encaixar perfeitamente, use "Geral".
 async function summarizeWithOllama(title, content) {
     const prompt = `
 Atue como um editor experiente de um canal de notícias no Telegram.
-Sua tarefa é criar um resumo conciso, envolvente e informativo.
+Sua tarefa é criar um resumo conciso, envolvente e informativo, focado em facilidade de leitura.
 
 Título: "${title}"
 Conteúdo: "${content.substring(0, 2000)}"
 
-Gere o resumo em Português do Brasil EXATAMENTE neste formato:
+Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato:
 
-[Uma frase de impacto resumindo o acontecimento principal]
+[Uma frase curta e impactante resumindo o fato principal]
 
-👉 [Detalhe crucial 1]
-👉 [Detalhe crucial 2]
-👉 [Detalhe crucial 3 (opcional, se houver)]
+👉 [Ponto-chave 1]
+👉 [Ponto-chave 2]
+👉 [Ponto-chave 3 (opcional)]
 
 Diretrizes:
-- Use linguagem direta e jornalística.
-- Use emojis nos bullet points para facilitar a leitura.
-- Evite repetições.
-- NUNCA comece com "Aqui está" ou "Resumo:".
-- Máximo de 500 caracteres.
+- Use emojis relevantes no início de cada ponto para destacar.
+- Seja direto, jornalístico e imparcial.
+- Não use introduções como "Aqui está o resumo" ou "Resumo:".
+- Mantenha o texto limpo e scannable.
+- Máximo de 600 caracteres.
 `;
 
     try {
@@ -229,7 +229,7 @@ async function sendToTelegram(title, summary, category, link) {
         disable_web_page_preview: false,
         reply_markup: {
             inline_keyboard: [[
-                { text: "🔗 Ler matéria completa", url: link }
+                { text: "📰 Ler matéria completa", url: link }
             ]]
         }
     };
