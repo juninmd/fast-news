@@ -174,38 +174,61 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
              <span>{formatDate(item.pubDate)}</span>
         </div>
 
-        <h3 className="text-xl md:text-2xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors tracking-tight">
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           <a href={item.link} target="_blank" rel="noopener noreferrer">
             {item.title}
           </a>
         </h3>
 
-        <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6 font-medium">
+        <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6 font-normal">
             {summary ? (
-                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 p-5 rounded-2xl text-xs border border-indigo-100 dark:border-indigo-500/30 animate-in fade-in slide-in-from-bottom-2 shadow-sm">
-                    <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-300 font-extrabold text-[10px] uppercase tracking-wider">
+                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 p-4 rounded-xl text-xs border border-indigo-100 dark:border-indigo-500/30 animate-in fade-in slide-in-from-bottom-2 shadow-sm">
+                    <div className="flex items-center gap-1.5 mb-2 text-indigo-600 dark:text-indigo-300 font-bold text-[10px] uppercase tracking-wider">
                         <Sparkles size={12} className="fill-current" /> Resumo Inteligente
                     </div>
-                    <div className="prose prose-xs dark:prose-invert max-w-none text-indigo-900/90 dark:text-indigo-100 leading-relaxed">
+                    <div className="prose prose-xs dark:prose-invert max-w-none text-indigo-900/90 dark:text-indigo-100 leading-relaxed whitespace-pre-line">
                         {summary}
                     </div>
                 </div>
             ) : (
-                <p className="line-clamp-3 opacity-90 font-normal text-gray-600 dark:text-gray-400">{cleanDescription}</p>
+                <p className="line-clamp-3 opacity-90 text-gray-600 dark:text-gray-400">{cleanDescription}</p>
             )}
             {error && <p className="text-red-500 text-[10px] mt-2 font-medium bg-red-50 dark:bg-red-900/20 p-2 rounded-lg inline-block">{error}</p>}
         </div>
 
-        <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700/50 flex justify-between items-center">
+        <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700/50 flex justify-between items-center gap-2">
              <a
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 hover:gap-3 transition-all group/link"
+                className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 hover:gap-3 transition-all group/link flex-1"
              >
                 Ler notícia completa
                 <ExternalLink size={14} className="text-gray-400 group-hover/link:text-blue-500 transition-colors" />
              </a>
+
+             <div className="flex gap-2">
+                <button
+                    onClick={handleSummarize}
+                    disabled={loading || summary}
+                    className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors disabled:opacity-50"
+                    title="Resumir com IA"
+                >
+                    {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                </button>
+                {telegramBotToken && (
+                    <button
+                        onClick={handleSendToTelegram}
+                        disabled={sendingTelegram}
+                        className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors disabled:opacity-50"
+                        title="Enviar para Telegram"
+                    >
+                        {sendingTelegram ? <Loader size={16} className="animate-spin" /> :
+                        telegramStatus === 'success' ? <Check size={16} /> :
+                        <Send size={16} />}
+                    </button>
+                )}
+             </div>
         </div>
       </div>
     </div>
