@@ -34,6 +34,11 @@ export const FEED_SOURCES = [
     { url: 'https://hackernoon.com/feed', category: 'Tecnologia' },
     { url: 'https://dev.to/feed', category: 'Tecnologia' },
     { url: 'https://www.sitepoint.com/feed', category: 'Tecnologia' },
+    { url: 'https://www.sciencealert.com/feed', category: 'Tecnologia' },
+    { url: 'https://www.theregister.com/headlines.atom', category: 'Tecnologia' },
+    { url: 'https://www.bleepingcomputer.com/feed/', category: 'Tecnologia' },
+    { url: 'https://krebsonsecurity.com/feed/', category: 'Tecnologia' },
+    { url: 'https://threatpost.com/feed/', category: 'Tecnologia' },
 
     // --- TECNOLOGIA (BRASIL) ---
     { url: 'https://rss.tecmundo.com.br/feed', category: 'Tecnologia' },
@@ -71,6 +76,9 @@ export const FEED_SOURCES = [
     { url: 'https://www.deepmind.com/blog/rss.xml', category: 'IA' },
     { url: 'https://news.microsoft.com/source/feed/', category: 'IA' },
     { url: 'https://ai.googleblog.com/atom.xml', category: 'IA' },
+    { url: 'https://aws.amazon.com/blogs/machine-learning/feed/', category: 'IA' },
+    { url: 'https://machinelearningmastery.com/feed/', category: 'IA' },
+    { url: 'https://towardsdatascience.com/feed', category: 'IA' },
 
     // --- BRASIL ---
     { url: 'https://g1.globo.com/rss/g1/', category: 'Brasil' },
@@ -114,6 +122,9 @@ export const FEED_SOURCES = [
     { url: 'https://noticias.uol.com.br/politica/rss.xml', category: 'Brasil' },
     { url: 'https://diplomatique.org.br/feed/', category: 'Brasil' },
     { url: 'https://guiadoestudante.abril.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.nexojornal.com.br/rss.xml', category: 'Brasil' },
+    { url: 'https://revistaforum.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.brasildefato.com.br/rss2.xml', category: 'Brasil' },
 
 
     // --- MUNDO ---
@@ -136,6 +147,11 @@ export const FEED_SOURCES = [
     { url: 'https://www.huffpost.com/section/world-news/feed', category: 'Mundo' },
     { url: 'https://www.cbsnews.com/latest/rss/world', category: 'Mundo' },
     { url: 'https://g1.globo.com/rss/g1/mundo/', category: 'Mundo' },
+    { url: 'https://www.vox.com/rss/index.xml', category: 'Mundo' },
+    { url: 'https://www.axios.com/feeds/feed.rss', category: 'Mundo' },
+    { url: 'https://time.com/feed/', category: 'Mundo' },
+    { url: 'https://www.politico.com/rss/politicopicks.xml', category: 'Mundo' },
+    { url: 'https://slate.com/feeds/all.rss', category: 'Mundo' },
 
     // --- NEGÓCIOS & FINANÇAS ---
     { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negócios' },
@@ -200,6 +216,10 @@ export const FEED_SOURCES = [
     { url: 'https://olhardigital.com.br/ciencia-e-espaco/rss', category: 'Ciência' },
     { url: 'https://www.eurekalert.org/rss.xml', category: 'Ciência' },
     { url: 'https://www.livescience.com/feeds/all', category: 'Ciência' },
+    { url: 'https://www.scientificamerican.com/feed/xml/', category: 'Ciência' },
+    { url: 'https://www.popsci.com/feed/', category: 'Ciência' },
+    { url: 'https://www.smithsonianmag.com/rss/science-nature/', category: 'Ciência' },
+    { url: 'https://www.discovermagazine.com/feed', category: 'Ciência' },
 
     // --- GAMES ---
     { url: 'https://br.ign.com/feed.xml', category: 'Games' },

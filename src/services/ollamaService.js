@@ -1,12 +1,19 @@
 
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
-  const prompt = `Resuma a seguinte notícia em Português do Brasil usando tópicos (bullet points) com emojis no início de cada ponto.
-Seja direto e conciso. Foque nos fatos principais.
+  const prompt = `
+Atue como um editor chefe experiente. Sua tarefa é criar um resumo conciso e envolvente da notícia abaixo.
 
-Texto:
+**Regras de Formatação (Markdown):**
+- Use **negrito** para destacar palavras-chave ou entidades importantes.
+- Use listas com marcadores (-) para os pontos principais.
+- Adicione um emoji relevante no início de cada ponto para tornar a leitura mais dinâmica.
+- Mantenha o tom jornalístico, direto e imparcial.
+- O resumo deve ter no máximo 3 ou 4 pontos.
+
+Notícia:
 ${text}
 
-Resumo:`;
+Resumo Markdown:`;
 
   try {
     const response = await fetch(`${baseUrl}/api/generate`, {
@@ -36,9 +43,10 @@ Resumo:`;
 };
 
 export const classifyWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
-    const prompt = `Classifique a seguinte notícia em uma das seguintes categorias: Tecnologia, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Saúde, Cripto. Retorne APENAS o nome da categoria.
+    const prompt = `Classifique a seguinte notícia em EXATAMENTE uma das seguintes categorias: Tecnologia, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Saúde, Cripto.
+Retorne APENAS o nome da categoria, sem explicações ou pontuação adicional.
 
-Texto:
+Notícia:
 ${text}
 
 Categoria:`;
