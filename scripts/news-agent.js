@@ -105,15 +105,22 @@ async function fetchWithRetry(url, options, retries = RETRY_ATTEMPTS) {
 async function classifyWithOllama(title, content) {
     const categories = Object.keys(EMOJI_MAP).join(', ');
     const prompt = `
-Você é um editor chefe. Sua tarefa é classificar notícias.
-As categorias válidas são EXATAMENTE e APENAS estas: [${categories}].
+Atue como um classificador automático de notícias. Sua única tarefa é ler o título e o conteúdo e determinar a qual categoria a notícia pertence.
+
+CATEGORIAS PERMITIDAS: [${categories}].
 
 Analise a notícia abaixo:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 500)}"
 
-Responda APENAS com o nome da categoria que melhor se encaixa. Não escreva frases, não use pontuação extra.
-Se nenhuma se encaixar perfeitamente, use "Geral".
+Regras:
+1. Responda APENAS com o nome da categoria que melhor se encaixa.
+2. Não escreva frases, não use pontuação extra.
+3. Se o assunto for sobre smartphones, software, computadores ou internet, classifique como "Tecnologia".
+4. Se o assunto for sobre economia, mercados ou empresas, classifique como "Negócios".
+5. Se nenhuma categoria se encaixar perfeitamente, use "Geral".
+
+Categoria:
 `;
 
     try {
