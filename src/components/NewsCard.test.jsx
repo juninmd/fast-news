@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NewsCard from './NewsCard';
 import * as ollamaService from '../services/ollamaService';
 import * as telegramService from '../services/telegramService';
-import * as geminiService from '../services/geminiService'; // Import geminiService
 
 // Mock the services
 vi.mock('../services/ollamaService', () => ({
@@ -12,10 +11,6 @@ vi.mock('../services/ollamaService', () => ({
 
 vi.mock('../services/telegramService', () => ({
     sendToTelegram: vi.fn(),
-}));
-
-vi.mock('../services/geminiService', () => ({
-    summarizeWithGemini: vi.fn(),
 }));
 
 const mockItem = {
