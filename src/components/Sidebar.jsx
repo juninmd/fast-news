@@ -108,18 +108,6 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
               );
             })}
           </nav>
-
-          <div className={`mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800/50 ${isCollapsed ? 'hidden' : 'block'}`}>
-             <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-5 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors" />
-                <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2 font-bold text-sm">
-                        <Bot size={16} /> Agente Telegram
-                    </div>
-                    <p className="text-xs text-indigo-100 mb-3 leading-relaxed opacity-90">Automatize o envio de notícias resumidas para seu canal.</p>
-                </div>
-             </div>
-          </div>
         </div>
       </aside>
     </>
