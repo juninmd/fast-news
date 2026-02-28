@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "news-agent": "node scripts/news-agent.js",
+    "start-agent": "node scripts/news-agent.js --loop",
     "lint": "eslint . --no-warn-ignored",
     "preview": "vite preview",
     "test": "vitest",

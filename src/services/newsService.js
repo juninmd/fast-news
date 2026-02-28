@@ -5,6 +5,7 @@ export const FEED_SOURCES = [
     // --- TECNOLOGIA (MUNDO) ---
     { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
     { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia' },
+    { url: 'https://www.theverge.com/tech/rss/index.xml', category: 'Tecnologia' },
     { url: 'https://www.wired.com/feed/rss', category: 'Tecnologia' },
     { url: 'https://arstechnica.com/feed/', category: 'Tecnologia' },
     { url: 'https://www.engadget.com/rss.xml', category: 'Tecnologia' },
@@ -129,7 +130,9 @@ export const FEED_SOURCES = [
 
     // --- MUNDO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', category: 'Mundo' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
+    { url: 'https://feeds.bbci.co.uk/news/rss.xml', category: 'Mundo' },
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },
     { url: 'https://feeds.reuters.com/reuters/worldNews', category: 'Mundo' },
     { url: 'https://www.theguardian.com/world/rss', category: 'Mundo' },
@@ -223,6 +226,7 @@ export const FEED_SOURCES = [
 
     // --- GAMES ---
     { url: 'https://br.ign.com/feed.xml', category: 'Games' },
+    { url: 'https://www.nintendolife.com/feeds/latest', category: 'Games' },
     { url: 'https://www.theenemy.com.br/rss', category: 'Games' },
     { url: 'https://www.eurogamer.net/?format=rss', category: 'Games' },
     { url: 'https://kotaku.com/rss', category: 'Games' },
@@ -310,6 +314,10 @@ export const FEED_SOURCES = [
     { url: 'https://elle.com.br/feed', category: 'Moda' },
     { url: 'https://marieclaire.globo.com/rss/ultimas/feed.xml', category: 'Moda' },
     { url: 'https://ffw.uol.com.br/feed/', category: 'Moda' },
+
+    // --- MÚSICA ---
+    { url: 'https://pitchfork.com/rss/reviews/best/albums/', category: 'Música' },
+    { url: 'https://rollingstone.uol.com.br/rss', category: 'Música' },
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {
