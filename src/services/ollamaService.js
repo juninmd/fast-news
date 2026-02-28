@@ -5,10 +5,10 @@ Atue como um editor chefe experiente. Sua tarefa é criar um resumo conciso e en
 
 **Regras de Formatação (Markdown):**
 - Use **negrito** para destacar palavras-chave ou entidades importantes.
-- Use listas com marcadores (-) para os pontos principais.
-- Adicione um emoji relevante no início de cada ponto para tornar a leitura mais dinâmica.
+- Use listas com marcadores (🔹) para os pontos principais.
+- Gere EXATAMENTE 3 pontos principais, nem mais, nem menos.
 - Mantenha o tom jornalístico, direto e imparcial.
-- O resumo deve ter no máximo 3 ou 4 pontos.
+- O resumo deve ser limpo e scannable.
 
 Notícia:
 ${text}

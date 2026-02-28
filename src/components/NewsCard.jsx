@@ -110,130 +110,108 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full flex flex-col justify-between overflow-hidden group border border-gray-100 dark:border-gray-700/50">
-      <div className="flex flex-col flex-grow">
-          <div className="relative overflow-hidden rounded-t-3xl">
-            {imageUrl && !imageError ? (
-                <div className="aspect-video w-full overflow-hidden relative">
-                    <img
-                        src={imageUrl}
-                        alt={item.title}
-                        loading="lazy"
-                        onError={() => setImageError(true)}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
-                </div>
-            ) : (
-                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center relative">
-                    <Newspaper className="text-gray-400 dark:text-gray-500 w-12 h-12" />
-                </div>
-            )}
+    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
+      <div className="relative p-2">
+        <div className="relative overflow-hidden rounded-2xl">
+          {imageUrl && !imageError ? (
+              <div className="aspect-[4/3] w-full overflow-hidden relative">
+                  <img
+                      src={imageUrl}
+                      alt={item.title}
+                      loading="lazy"
+                      onError={() => setImageError(true)}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+              </div>
+          ) : (
+              <div className="aspect-[4/3] bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
+                  <Newspaper className="text-slate-400 dark:text-slate-500 w-16 h-16 opacity-50" />
+              </div>
+          )}
 
-            {/* Category Badge */}
-            {item.category && (
-                <div className="absolute top-4 left-4 bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg uppercase tracking-wider z-10 border border-white/10">
-                    {item.category}
-                </div>
-            )}
+          {/* Category Badge */}
+          {item.category && (
+              <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-800 dark:text-slate-200 text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider z-10">
+                  {item.category}
+              </div>
+          )}
 
-            {/* Action Buttons Overlay */}
-            <div className="absolute top-4 right-4 flex gap-2 translate-x-10 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out z-10">
-                 <button
-                    onClick={handleSummarize}
-                    disabled={loading || summary}
-                    className="bg-white/90 dark:bg-gray-900/90 text-indigo-600 dark:text-indigo-400 p-2.5 rounded-full hover:scale-110 transition-transform shadow-lg disabled:opacity-50 backdrop-blur-md border border-white/20"
-                    title="Resumir com IA"
-                 >
-                    {loading ? <Loader size={18} className="animate-spin" /> : <Sparkles size={18} />}
-                 </button>
-                 {telegramBotToken && (
-                     <button
-                        onClick={handleSendToTelegram}
-                        disabled={sendingTelegram}
-                        className="bg-white/90 dark:bg-gray-900/90 text-blue-500 dark:text-blue-400 p-2.5 rounded-full hover:scale-110 transition-transform shadow-lg backdrop-blur-md border border-white/20"
-                        title="Enviar para Telegram"
-                     >
-                        {sendingTelegram ? <Loader size={18} className="animate-spin" /> :
-                         telegramStatus === 'success' ? <Check size={18} /> :
-                         <Send size={18} />}
-                     </button>
-                 )}
-                 <button
-                    onClick={copyToClipboard}
-                    className="bg-white/90 dark:bg-gray-900/90 text-gray-500 p-2.5 rounded-full hover:scale-110 transition-transform shadow-lg backdrop-blur-md border border-white/20"
-                    title="Copiar Link"
-                 >
-                    <Copy size={18} />
-                 </button>
-            </div>
+          {/* Quick Actions Overlay */}
+          <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300 z-10">
+              <button
+                  onClick={handleSummarize}
+                  disabled={loading || summary}
+                  className="bg-white/90 dark:bg-slate-900/90 text-indigo-600 dark:text-indigo-400 p-2.5 rounded-full hover:bg-white dark:hover:bg-slate-800 shadow-lg backdrop-blur-md transition-colors disabled:opacity-50"
+                  title="Resumir com IA"
+              >
+                  {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} />}
+              </button>
+              {telegramBotToken && (
+                  <button
+                      onClick={handleSendToTelegram}
+                      disabled={sendingTelegram}
+                      className="bg-white/90 dark:bg-slate-900/90 text-blue-500 dark:text-blue-400 p-2.5 rounded-full hover:bg-white dark:hover:bg-slate-800 shadow-lg backdrop-blur-md transition-colors disabled:opacity-50"
+                      title="Enviar para Telegram"
+                  >
+                      {sendingTelegram ? <Loader size={16} className="animate-spin" /> :
+                       telegramStatus === 'success' ? <Check size={16} /> :
+                       <Send size={16} />}
+                  </button>
+              )}
+              <button
+                  onClick={copyToClipboard}
+                  className="bg-white/90 dark:bg-slate-900/90 text-slate-600 dark:text-slate-400 p-2.5 rounded-full hover:bg-white dark:hover:bg-slate-800 shadow-lg backdrop-blur-md transition-colors"
+                  title="Copiar Link"
+              >
+                  <Copy size={16} />
+              </button>
           </div>
 
-          <div className="p-6 flex flex-col flex-grow relative">
-            <div className="flex items-center gap-2 mb-3 text-[11px] text-gray-400 font-bold uppercase tracking-wider">
-                 <span className="text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-full border border-blue-100 dark:border-blue-800/50 shadow-sm">{item.source}</span>
-                 <span className="text-gray-300">•</span>
-                 <span>{formatDate(item.pubDate)}</span>
-            </div>
-
-            <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-              <a href={item.link} target="_blank" rel="noopener noreferrer">
-                {item.title}
-              </a>
-            </h3>
-
-            <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6 font-normal">
-                {summary ? (
-                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 p-5 rounded-xl text-xs border border-indigo-100 dark:border-indigo-500/30 animate-in fade-in slide-in-from-bottom-2 shadow-sm">
-                        <div className="flex items-center gap-1.5 mb-2 text-indigo-600 dark:text-indigo-300 font-bold text-[10px] uppercase tracking-wider">
-                            <Sparkles size={12} className="fill-current" /> Resumo Inteligente
-                        </div>
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-indigo-900/90 dark:text-indigo-100 leading-relaxed">
-                            <ReactMarkdown>{summary}</ReactMarkdown>
-                        </div>
-                    </div>
-                ) : (
-                    <p className="line-clamp-3 opacity-90 text-gray-600 dark:text-gray-400">{cleanDescription}</p>
-                )}
-                {error && <p className="text-red-500 text-[10px] mt-2 font-medium bg-red-50 dark:bg-red-900/20 p-2 rounded-lg inline-block">{error}</p>}
-            </div>
+          {/* Source and Date on Image Bottom */}
+          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-[11px] font-medium text-white/90 drop-shadow-md z-10">
+               <span className="bg-blue-600/80 backdrop-blur-sm px-2.5 py-1 rounded-md">{item.source}</span>
+               <span className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">{formatDate(item.pubDate)}</span>
           </div>
+        </div>
       </div>
 
-      <div className="px-6 pb-6 pt-0 mt-auto flex justify-between items-center gap-2 border-t border-gray-100 dark:border-gray-700/50 pt-4">
-             <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 hover:gap-3 transition-all group/link flex-1"
-             >
-                Ler notícia completa
-                <ExternalLink size={14} className="text-gray-400 group-hover/link:text-blue-500 transition-colors" />
-             </a>
+      <div className="p-5 pt-3 flex flex-col flex-grow relative">
+        <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+          <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none">
+            {item.title}
+          </a>
+        </h3>
 
-             <div className="flex gap-2">
-                <button
-                    onClick={handleSummarize}
-                    disabled={loading || summary}
-                    className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors disabled:opacity-50"
-                    title="Resumir com IA"
-                >
-                    {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                </button>
-                {telegramBotToken && (
-                    <button
-                        onClick={handleSendToTelegram}
-                        disabled={sendingTelegram}
-                        className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors disabled:opacity-50"
-                        title="Enviar para Telegram"
-                    >
-                        {sendingTelegram ? <Loader size={16} className="animate-spin" /> :
-                        telegramStatus === 'success' ? <Check size={16} /> :
-                        <Send size={16} />}
-                    </button>
-                )}
-             </div>
+        <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4 flex-grow">
+            {summary ? (
+                <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-900/20 dark:to-blue-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
+                        <Sparkles size={14} className="fill-current" /> Resumo IA
+                    </div>
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
+                        <ReactMarkdown>{summary}</ReactMarkdown>
+                    </div>
+                </div>
+            ) : (
+                <p className="line-clamp-3">{cleanDescription}</p>
+            )}
+            {error && <p className="text-red-500 text-[11px] mt-2 font-medium bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg inline-block">{error}</p>}
         </div>
+      </div>
+
+      {/* Footer link */}
+      <div className="px-5 pb-5 mt-auto">
+         <a
+            href={item.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-full gap-2 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-sm font-semibold transition-colors group/link"
+         >
+            Ler notícia completa
+            <ExternalLink size={16} className="text-slate-400 group-hover/link:text-blue-500 transition-colors" />
+         </a>
+      </div>
     </div>
   );
 };

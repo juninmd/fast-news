@@ -48,6 +48,7 @@ const EMOJI_MAP = {
     'Cripto': '₿',
     'Marketing': '📢',
     'Moda': '👗',
+    'Música': '🎵',
     'Geral': '📰'
 };
 
@@ -156,16 +157,17 @@ Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato:
 
 [Uma frase curta e impactante resumindo o fato principal]
 
-👉 [Ponto-chave 1]
-👉 [Ponto-chave 2]
-👉 [Ponto-chave 3 (opcional)]
+🔹 [Ponto-chave 1]
+🔹 [Ponto-chave 2]
+🔹 [Ponto-chave 3]
 
 Diretrizes:
-- Use emojis relevantes no início de cada ponto para destacar.
+- Gere EXATAMENTE 3 pontos principais, nem mais, nem menos.
+- Use o emoji 🔹 no início de cada ponto para destacar.
 - Seja direto, jornalístico e imparcial.
 - Não use introduções como "Aqui está o resumo" ou "Resumo:".
 - Mantenha o texto limpo e scannable.
-- Máximo de 600 caracteres.
+- Máximo de 600 caracteres no total.
 `;
 
     try {
