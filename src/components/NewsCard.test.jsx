@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NewsCard from './NewsCard';
 import * as ollamaService from '../services/ollamaService';
 import * as telegramService from '../services/telegramService';
-import * as geminiService from '../services/geminiService'; // Import geminiService
+import '../services/geminiService';
 
 // Mock the services
 vi.mock('../services/ollamaService', () => ({
