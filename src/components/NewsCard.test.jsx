@@ -13,10 +13,6 @@ vi.mock('../services/telegramService', () => ({
     sendToTelegram: vi.fn(),
 }));
 
-vi.mock('../services/geminiService', () => ({
-    summarizeWithGemini: vi.fn(),
-}));
-
 const mockItem = {
     title: 'Test News',
     link: 'http://test.com',
