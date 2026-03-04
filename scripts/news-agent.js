@@ -112,7 +112,7 @@ Analise a notícia abaixo:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 500)}"
 
-Responda APENAS com o nome da categoria que melhor se encaixa. Não escreva frases, não use pontuação extra.
+Responda APENAS com o nome da categoria que melhor se encaixa. Não escreva frases, não use pontuação extra, não de explicações. A sua resposta DEVE ser estritamente uma das categorias da lista fornecida.
 Se nenhuma se encaixar perfeitamente, use "Geral".
 `;
 
@@ -157,16 +157,17 @@ Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato:
 
 [Uma frase curta e impactante resumindo o fato principal]
 
-🔹 [Ponto-chave 1]
-🔹 [Ponto-chave 2]
-🔹 [Ponto-chave 3]
+🔸 [Ponto-chave 1]
+🔸 [Ponto-chave 2]
+🔸 [Ponto-chave 3]
 
 Diretrizes:
 - Gere EXATAMENTE 3 pontos principais, nem mais, nem menos.
-- Use o emoji 🔹 no início de cada ponto para destacar.
+- Use o emoji 🔸 no início de cada ponto para destacar.
 - Seja direto, jornalístico e imparcial.
 - Não use introduções como "Aqui está o resumo" ou "Resumo:".
 - Mantenha o texto limpo e scannable.
+- A resposta deve ser estritamente e somente em Português.
 - Máximo de 600 caracteres no total.
 `;
 
