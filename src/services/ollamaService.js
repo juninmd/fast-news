@@ -1,19 +1,25 @@
 
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
   const prompt = `
-Atue como um editor chefe experiente. Sua tarefa é criar um resumo conciso e envolvente da notícia abaixo.
-
-**Regras de Formatação (Markdown):**
-- Use **negrito** para destacar palavras-chave ou entidades importantes.
-- Use listas com marcadores (🔹) para os pontos principais.
-- Gere EXATAMENTE 3 pontos principais, nem mais, nem menos.
-- Mantenha o tom jornalístico, direto e imparcial.
-- O resumo deve ser limpo e scannable.
+Atue como um editor de um canal de notícias no Telegram.
+Resuma a notícia de forma envolvente, fácil de ler no celular e direto ao ponto.
 
 Notícia:
 ${text}
 
-Resumo Markdown:`;
+Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
+
+[Uma frase de impacto chamativa]
+
+🔸 [Fato 1]
+🔸 [Fato 2]
+🔸 [Fato 3]
+
+Diretrizes:
+- Exatamente 3 bullet points usando o emoji 🔸.
+- Não use introduções.
+- Máximo de 500 caracteres.
+`;
 
   try {
     const response = await fetch(`${baseUrl}/api/generate`, {

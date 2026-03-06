@@ -44,6 +44,8 @@ export const FEED_SOURCES = [
     // --- TECNOLOGIA (BRASIL) ---
     { url: 'https://rss.tecmundo.com.br/feed', category: 'Tecnologia' },
     { url: 'https://canaltech.com.br/rss/', category: 'Tecnologia' },
+    { url: 'https://canaltech.com.br/rss/produtos', category: 'Tecnologia' },
+    { url: 'https://rss.techtudo.com.br/feed', category: 'Tecnologia' },
     { url: 'https://olhardigital.com.br/rss', category: 'Tecnologia' },
     { url: 'https://olhardigital.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://tecnoblog.net/feed/', category: 'Tecnologia' },
@@ -252,6 +254,7 @@ export const FEED_SOURCES = [
     { url: 'https://switch-brasil.com/feed/', category: 'Games' },
 
     // --- ESPORTES ---
+    { url: 'https://www.uol.com.br/esporte/ultimas-noticias/rss.xml', category: 'Esportes' },
     { url: 'https://trivela.com.br/feed/', category: 'Esportes' },
     { url: 'https://www.espn.com.br/rss/news', category: 'Esportes' },
     { url: 'https://ge.globo.com/rss/ge/', category: 'Esportes' },
@@ -277,6 +280,7 @@ export const FEED_SOURCES = [
     { url: 'https://wm1.com.br/rss', category: 'Automóveis' },
 
     // --- ENTRETENIMENTO ---
+    { url: 'https://f5.folha.uol.com.br/feed/rss091.xml', category: 'Entretenimento' },
     { url: 'https://www.papelpop.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://hugogloss.uol.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://www.omelete.com.br/rss/rss.aspx', category: 'Entretenimento' },
@@ -325,6 +329,9 @@ export const FEED_SOURCES = [
     // --- MÚSICA ---
     { url: 'https://pitchfork.com/rss/reviews/best/albums/', category: 'Música' },
     { url: 'https://rollingstone.uol.com.br/rss', category: 'Música' },
+
+    // --- TURISMO ---
+    { url: 'https://g1.globo.com/rss/g1/turismo-e-viagem/', category: 'Turismo' },
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {
