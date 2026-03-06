@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Globe, Cpu, Briefcase, Trophy, Car, Film, Bitcoin, Heart, ShoppingBag, Gamepad2, Bot, X, Rocket, Map, Microscope, ChevronLeft, ChevronRight, Newspaper, Headphones } from 'lucide-react';
+import { LayoutGrid, Globe, Cpu, Briefcase, Trophy, Car, Film, Bitcoin, Heart, ShoppingBag, Gamepad2, Bot, X, Rocket, Map, Microscope, ChevronLeft, ChevronRight, Newspaper, Headphones, Plane } from 'lucide-react';
 
 const CATEGORY_ICONS = {
   'Todas': LayoutGrid,
@@ -18,6 +18,7 @@ const CATEGORY_ICONS = {
   'Moda': ShoppingBag,
   'Música': Headphones,
   'IA': Bot,
+  'Turismo': Plane,
   'Geral': Newspaper,
   'Personalizado': Globe
 };

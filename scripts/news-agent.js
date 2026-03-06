@@ -49,6 +49,7 @@ const EMOJI_MAP = {
     'Marketing': '📢',
     'Moda': '👗',
     'Música': '🎵',
+    'Turismo': '✈️',
     'Geral': '📰'
 };
 
@@ -147,28 +148,24 @@ Se nenhuma se encaixar perfeitamente, use "Geral".
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
-Atue como um editor experiente de um canal de notícias no Telegram.
-Sua tarefa é criar um resumo conciso, envolvente e informativo, focado em facilidade de leitura.
+Atue como um editor de um canal de notícias no Telegram.
+Resuma a notícia de forma envolvente, fácil de ler no celular e direto ao ponto.
 
 Título: "${title}"
 Conteúdo: "${content.substring(0, 2000)}"
 
 Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato:
 
-[Uma frase curta e impactante resumindo o fato principal]
+[Uma frase de impacto chamativa]
 
-🔸 [Ponto-chave 1]
-🔸 [Ponto-chave 2]
-🔸 [Ponto-chave 3]
+🔸 [Fato 1]
+🔸 [Fato 2]
+🔸 [Fato 3]
 
 Diretrizes:
-- Gere EXATAMENTE 3 pontos principais, nem mais, nem menos.
-- Use o emoji 🔸 no início de cada ponto para destacar.
-- Seja direto, jornalístico e imparcial.
-- Não use introduções como "Aqui está o resumo" ou "Resumo:".
-- Mantenha o texto limpo e scannable.
-- A resposta deve ser estritamente e somente em Português.
-- Máximo de 600 caracteres no total.
+- Exatamente 3 bullet points usando o emoji 🔸.
+- Não use introduções.
+- Máximo de 500 caracteres.
 `;
 
     try {
@@ -223,7 +220,7 @@ async function sendToTelegram(title, summary, category, link) {
     // Ollama returns plain text usually.
     const safeSummary = escapeHtml(summary);
 
-    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n\n<b>${safeTitle}</b>\n\n${safeSummary}\n\n<i>${hashtags}</i>`;
+    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${safeSummary}\n\n<i>${hashtags}</i>`;
 
     const body = {
         chat_id: TELEGRAM_CHAT_ID,
