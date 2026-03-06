@@ -176,8 +176,8 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
         </div>
       </div>
 
-      <div className="p-6 pt-4 flex flex-col flex-grow relative">
-        <h3 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+      <div className="p-6 pt-4 flex flex-col flex-grow relative bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-900/50">
+        <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-3 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none">
             {item.title}
           </a>
@@ -201,15 +201,15 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       </div>
 
       {/* Footer link */}
-      <div className="px-5 pb-5 mt-auto">
+      <div className="px-5 pb-5 mt-auto bg-slate-50/50 dark:bg-slate-900/50">
          <a
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-full gap-2 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-sm font-semibold transition-colors group/link"
+            className="flex items-center justify-center w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg py-3 rounded-xl text-sm font-semibold transition-colors group/link"
          >
             Ler notícia completa
-            <ExternalLink size={16} className="text-slate-400 group-hover/link:text-blue-500 transition-colors" />
+            <ExternalLink size={16} className="text-blue-200 group-hover/link:text-white transition-colors" />
          </a>
       </div>
     </div>
