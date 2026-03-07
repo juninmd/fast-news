@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { summarizeWithOllama } from '../services/ollamaService';
+import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
 import { summarizeWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
 import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper } from 'lucide-react';
@@ -67,7 +67,17 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
       setSendingTelegram(true);
       try {
-          const textToSend = `*${item.title}*\n\n${summary || item.description || ''}\n\n[Ler mais](${item.link})`;
+          let finalCategory = item.category || 'Geral';
+
+          if ((!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
+              const textToClassify = item.content || item.description || item.title;
+              finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel);
+          }
+
+          const categoryHashtag = finalCategory.replace(/\s+/g, '');
+          const hashtags = `#${categoryHashtag} #Notícias`;
+
+          const textToSend = `*${finalCategory.toUpperCase()}*\n───────────────\n*${item.title}*\n\n${summary || item.description || ''}\n\n_${hashtags}_\n\n[Ler matéria completa](${item.link})`;
           await sendToTelegram(textToSend, telegramBotToken, telegramChatId);
           setTelegramStatus('success');
       } catch (e) {
@@ -114,7 +124,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       <div className="relative p-2">
         <div className="relative overflow-hidden rounded-2xl">
           {imageUrl && !imageError ? (
-              <div className="aspect-[4/3] w-full overflow-hidden relative">
+              <div className="aspect-video w-full overflow-hidden relative">
                   <img
                       src={imageUrl}
                       alt={item.title}
@@ -125,8 +135,8 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
               </div>
           ) : (
-              <div className="aspect-[4/3] bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
-                  <Newspaper className="text-slate-400 dark:text-slate-500 w-16 h-16 opacity-50" />
+              <div className="aspect-video bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
+                  <Newspaper className="text-indigo-400 dark:text-indigo-500 w-16 h-16 opacity-50" />
               </div>
           )}
 

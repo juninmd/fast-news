@@ -9,7 +9,7 @@ ${text}
 
 Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
 
-[Uma frase de impacto chamativa]
+**[Uma frase de impacto chamativa]**
 
 🔸 [Fato 1]
 🔸 [Fato 2]
