@@ -43,6 +43,7 @@ export const FEED_SOURCES = [
 
     // --- TECNOLOGIA (BRASIL) ---
     { url: 'https://rss.tecmundo.com.br/feed', category: 'Tecnologia' },
+    { url: 'https://teletime.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://canaltech.com.br/rss/', category: 'Tecnologia' },
     { url: 'https://canaltech.com.br/rss/produtos', category: 'Tecnologia' },
     { url: 'https://rss.techtudo.com.br/feed', category: 'Tecnologia' },
@@ -85,6 +86,8 @@ export const FEED_SOURCES = [
 
     // --- BRASIL ---
     { url: 'https://g1.globo.com/rss/g1/', category: 'Brasil' },
+    { url: 'https://www.tse.jus.br/rss', category: 'Brasil' },
+    { url: 'https://www.jota.info/feed', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
     { url: 'https://oantagonista.uol.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.band.uol.com.br/rss', category: 'Brasil' },
@@ -208,6 +211,8 @@ export const FEED_SOURCES = [
 
     // --- CIÊNCIA & ESPAÇO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml', category: 'Ciência' },
+    { url: 'https://revistapesquisa.fapesp.br/feed/', category: 'Ciência' },
+    { url: 'https://www.jornaldaciencia.org.br/feed/', category: 'Ciência' },
     { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', category: 'Ciência' },
     { url: 'https://www.sciencedaily.com/rss/all.xml', category: 'Ciência' },
     { url: 'https://revistagalileu.globo.com/rss/ultimas/feed.xml', category: 'Ciência' },
