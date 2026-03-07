@@ -156,7 +156,7 @@ Conteúdo: "${content.substring(0, 2000)}"
 
 Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato:
 
-[Uma frase de impacto chamativa]
+**[Uma frase de impacto chamativa]**
 
 🔸 [Fato 1]
 🔸 [Fato 2]
