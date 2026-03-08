@@ -49,7 +49,7 @@ Diretrizes:
 };
 
 export const classifyWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
-    const prompt = `Classifique a seguinte notícia em EXATAMENTE uma das seguintes categorias: Tecnologia, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Saúde, Cripto.
+    const prompt = `Classifique a seguinte notícia em EXATAMENTE uma das seguintes categorias: Tecnologia, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Saúde, Cripto, Marketing, Moda, Música, Turismo, Games.
 Retorne APENAS o nome da categoria, sem explicações ou pontuação adicional.
 
 Notícia:

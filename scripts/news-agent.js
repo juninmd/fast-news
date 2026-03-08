@@ -151,10 +151,11 @@ async function summarizeWithOllama(title, content) {
 Atue como um editor de um canal de notícias no Telegram.
 Resuma a notícia de forma envolvente, fácil de ler no celular e direto ao ponto.
 
+Notícia:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 2000)}"
 
-Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato:
+Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
 
 **[Uma frase de impacto chamativa]**
 
