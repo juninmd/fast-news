@@ -71,7 +71,7 @@ function App() {
   }, [customFeeds]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 flex font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300 flex font-sans">
 
       {/* Sidebar */}
       <Sidebar
@@ -88,7 +88,7 @@ function App() {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} bg-transparent`}>
 
           {/* Header */}
-          <header className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/50 px-4 sm:px-6 py-4">
+          <header className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/50 px-4 sm:px-6 py-4">
             <div className="flex justify-between items-center gap-4 max-w-7xl mx-auto w-full">
                 <div className="flex items-center gap-3 lg:hidden">
                     <button
