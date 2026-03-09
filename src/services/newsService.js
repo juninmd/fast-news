@@ -87,6 +87,9 @@ export const FEED_SOURCES = [
     // --- BRASIL ---
     { url: 'https://g1.globo.com/rss/g1/', category: 'Brasil' },
     { url: 'https://www.tse.jus.br/rss', category: 'Brasil' },
+    { url: 'https://www.em.com.br/rss/noticia/politica/rss.xml', category: 'Brasil' },
+    { url: 'https://www.otempo.com.br/rss/politica', category: 'Brasil' },
+    { url: 'https://gauchazh.clicrbs.com.br/rss/', category: 'Brasil' },
     { url: 'https://www.jota.info/feed', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
     { url: 'https://oantagonista.uol.com.br/feed/', category: 'Brasil' },
