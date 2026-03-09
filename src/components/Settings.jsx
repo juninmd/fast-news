@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settings as SettingsIcon } from 'lucide-react';
 import { summarizeWithOllama } from '../services/ollamaService';
+import { testGeminiConnection } from '../services/geminiService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
@@ -18,6 +19,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
   const [activeTab, setActiveTab] = useState('geral'); // geral, feeds, ia, telegram
   const [ollamaStatus, setOllamaStatus] = useState('idle');
+  const [geminiStatus, setGeminiStatus] = useState('idle');
 
   if (!isOpen) return null;
 
@@ -54,6 +56,17 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
       } catch (e) {
           console.error(e);
           setOllamaStatus('error');
+      }
+  };
+
+  const testGemini = async () => {
+      setGeminiStatus('testing');
+      try {
+          await testGeminiConnection(geminiApiKey);
+          setGeminiStatus('success');
+      } catch (e) {
+          console.error(e);
+          setGeminiStatus('error');
       }
   };
 
@@ -213,15 +226,36 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                      </div>
                  ) : (
                      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg border border-indigo-100 dark:border-indigo-800 text-xs text-indigo-800 dark:text-indigo-300">
+                            <p className="flex items-center gap-1.5 font-medium mb-1"><Info size={14}/> Rodar via Cliente</p>
+                            <p>Sua API Key do Gemini fica salva apenas no seu navegador. Os resumos são processados diretamente do seu dispositivo para a Google.</p>
+                        </div>
                         <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Gemini API Key</label>
+                            <label className="flex justify-between items-end mb-1">
+                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Gemini API Key</span>
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Obter API Key</a>
+                            </label>
                             <input
                                 type="password"
                                 value={geminiApiKey}
                                 onChange={(e) => setGeminiApiKey(e.target.value)}
-                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
-                                placeholder="API Key"
+                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                                placeholder="Insira sua API Key do Google Gemini"
                             />
+                        </div>
+                        <div className="flex justify-end pt-2">
+                            <button
+                                type="button"
+                                onClick={testGemini}
+                                disabled={geminiStatus === 'testing' || !geminiApiKey}
+                                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 font-medium ${
+                                    geminiStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
+                                    geminiStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
+                                    'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'
+                                } ${(!geminiApiKey || geminiStatus === 'testing') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {geminiStatus === 'testing' ? 'Testando...' : geminiStatus === 'success' ? 'Conectado!' : geminiStatus === 'error' ? 'Falha na Conexão' : 'Testar Conexão'}
+                            </button>
                         </div>
                      </div>
                  )}
