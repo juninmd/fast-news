@@ -45,9 +45,8 @@ describe('NewsCard', () => {
 
         render(<NewsCard item={mockItem} ollamaUrl="http://test-url" ollamaModel="llama3" aiProvider="ollama" apiKey="" />);
 
-        // Use getAllByTitle because there are multiple buttons (one in overlay, one in footer)
-        const summarizeButtons = screen.getAllByTitle('Resumir com IA');
-        fireEvent.click(summarizeButtons[0]);
+        const summarizeButton = screen.getByTitle('Resumir com IA');
+        fireEvent.click(summarizeButton);
 
         await waitFor(() => {
             expect(screen.getByText('Summary result')).toBeInTheDocument();
@@ -60,8 +59,8 @@ describe('NewsCard', () => {
          vi.spyOn(console, 'error').mockImplementation(() => {});
          render(<NewsCard item={mockItem} ollamaUrl="" aiProvider="ollama" apiKey="" />);
 
-         const summarizeButtons = screen.getAllByTitle('Resumir com IA');
-         fireEvent.click(summarizeButtons[0]);
+         const summarizeButton = screen.getByTitle('Resumir com IA');
+         fireEvent.click(summarizeButton);
 
          await waitFor(() => {
              expect(screen.getByText('Configure Ollama.')).toBeInTheDocument();
@@ -75,8 +74,8 @@ describe('NewsCard', () => {
 
         render(<NewsCard item={mockItem} ollamaUrl="http://test-url" aiProvider="ollama" apiKey="" />);
 
-        const summarizeButtons = screen.getAllByTitle('Resumir com IA');
-        fireEvent.click(summarizeButtons[0]);
+        const summarizeButton = screen.getByTitle('Resumir com IA');
+        fireEvent.click(summarizeButton);
 
         await waitFor(() => {
             expect(screen.getByText('Falha ao gerar resumo.')).toBeInTheDocument();
@@ -90,8 +89,8 @@ describe('NewsCard', () => {
         // Ensure tokens are provided so the button renders
         render(<NewsCard item={mockItem} telegramBotToken="token" telegramChatId="chatid" />);
 
-        const sendButtons = screen.getAllByTitle('Enviar para Telegram');
-        fireEvent.click(sendButtons[0]);
+        const sendButton = screen.getByTitle('Enviar para Telegram');
+        fireEvent.click(sendButton);
 
         await waitFor(() => {
             expect(sendMock).toHaveBeenCalled();
