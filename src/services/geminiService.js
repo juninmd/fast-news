@@ -45,3 +45,37 @@ Resumo:`;
     throw error;
   }
 };
+
+export const testGeminiConnection = async (apiKey) => {
+  if (!apiKey) {
+    throw new Error("API Key do Gemini não fornecida.");
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: "Olá"
+          }]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error testing Gemini connection:", error);
+    throw error;
+  }
+};
