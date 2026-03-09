@@ -88,19 +88,19 @@ function App() {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} bg-transparent`}>
 
           {/* Header */}
-          <header className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/50 px-4 sm:px-6 py-4">
-            <div className="flex justify-between items-center gap-4 max-w-7xl mx-auto w-full">
-                <div className="flex items-center gap-3 lg:hidden">
+          <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/80 px-4 sm:px-8 py-5">
+            <div className="flex justify-between items-center gap-6 max-w-[1600px] mx-auto w-full">
+                <div className="flex items-center gap-4 lg:hidden">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
                         className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
                     >
                         <Menu size={24} />
                     </button>
-                    <span className="font-bold text-lg dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">NewsAI</span>
+                    <span className="font-bold text-xl dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">NewsAI</span>
                 </div>
 
-                <div className="flex-1 max-w-2xl hidden md:block">
+                <div className="flex-1 max-w-3xl hidden md:block">
                    <div className="relative group">
                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                            <Search size={18} className="text-slate-400 group-focus-within:text-blue-500 transition-colors" />
@@ -109,31 +109,31 @@ function App() {
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Pesquise por termos, categorias..."
-                          className="block w-full pl-11 pr-4 py-2.5 border border-slate-200 dark:border-slate-800 rounded-2xl leading-5 bg-slate-100/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm shadow-inner"
+                          placeholder="Pesquise por termos ou palavras-chave..."
+                          className="block w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-800/80 rounded-[1rem] leading-5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-[15px] shadow-sm"
                        />
                        {searchQuery && (
                            <button
                                 onClick={() => setSearchQuery('')}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
                            >
-                               <X size={16} />
+                               <X size={18} />
                            </button>
                        )}
                    </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={toggleTheme}
-                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95"
+                        className="p-3 rounded-[1rem] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all hover:scale-105 active:scale-95 border border-transparent dark:hover:border-slate-700"
                         title={darkMode ? "Modo claro" : "Modo escuro"}
                     >
                         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95"
+                        className="p-3 rounded-[1rem] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all hover:scale-105 active:scale-95 border border-transparent dark:hover:border-slate-700"
                         title="Configurações"
                     >
                         <SettingsIcon size={20} />

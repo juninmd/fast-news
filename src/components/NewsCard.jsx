@@ -120,22 +120,22 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
-      <div className="relative p-2">
-        <div className="relative overflow-hidden rounded-2xl">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
+      <div className="relative p-3">
+        <div className="relative overflow-hidden rounded-[1.5rem]">
           {imageUrl && !imageError ? (
-              <div className="aspect-video w-full overflow-hidden relative">
+              <div className="aspect-[16/10] w-full overflow-hidden relative">
                   <img
                       src={imageUrl}
                       alt={item.title}
                       loading="lazy"
                       onError={() => setImageError(true)}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-slate-900/10 opacity-80 transition-opacity duration-300" />
               </div>
           ) : (
-              <div className="aspect-video bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
+              <div className="aspect-[16/10] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
                   <Newspaper className="text-indigo-400 dark:text-indigo-500 w-16 h-16 opacity-50" />
               </div>
           )}
@@ -186,9 +186,9 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
         </div>
       </div>
 
-      <div className="p-6 pt-4 flex flex-col flex-grow relative bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-900/50">
-        <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-3 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
-          <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none">
+      <div className="px-6 py-5 flex flex-col flex-grow relative">
+        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-3 leading-[1.3] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+          <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
         </h3>
@@ -211,15 +211,15 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       </div>
 
       {/* Footer link */}
-      <div className="px-5 pb-5 mt-auto bg-slate-50/50 dark:bg-slate-900/50">
+      <div className="px-6 pb-6 mt-auto">
          <a
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg py-3 rounded-xl text-sm font-semibold transition-colors group/link"
+            className="relative z-20 flex items-center justify-center w-full gap-2 bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group/link"
          >
             Ler notícia completa
-            <ExternalLink size={16} className="text-blue-200 group-hover/link:text-white transition-colors" />
+            <ExternalLink size={16} className="opacity-70 group-hover/link:opacity-100 transition-opacity" />
          </a>
       </div>
     </div>
