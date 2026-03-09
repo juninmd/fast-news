@@ -248,11 +248,11 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                                 type="button"
                                 onClick={testGemini}
                                 disabled={geminiStatus === 'testing' || !geminiApiKey}
-                                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 font-medium ${
+                                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed ${ 
                                     geminiStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
                                     geminiStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
                                     'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'
-                                } ${(!geminiApiKey || geminiStatus === 'testing') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                }`}
                             >
                                 {geminiStatus === 'testing' ? 'Testando...' : geminiStatus === 'success' ? 'Conectado!' : geminiStatus === 'error' ? 'Falha na Conexão' : 'Testar Conexão'}
                             </button>
