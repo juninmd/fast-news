@@ -120,9 +120,9 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:shadow-2xl hover:-translate-y-3 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
-      <div className="relative p-2">
-        <div className="relative overflow-hidden rounded-2xl">
+    <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 rounded-2xl shadow-lg dark:shadow-black/40 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-900/20 hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-700/50">
+      <div className="relative p-3">
+        <div className="relative overflow-hidden rounded-xl shadow-sm">
           {imageUrl && !imageError ? (
               <div className="aspect-video w-full overflow-hidden relative">
                   <img
@@ -155,14 +155,14 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
         </div>
       </div>
 
-      <div className="p-6 pt-4 flex flex-col flex-grow relative bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-900/50">
-        <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-3 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
-          <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none">
+      <div className="px-6 py-4 flex flex-col flex-grow relative bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-800/50">
+        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+          <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-sm">
             {item.title}
           </a>
         </h3>
 
-        <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4 flex-grow">
+        <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4 flex-grow font-medium">
             {summary ? (
                 <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-900/20 dark:to-blue-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2">
                     <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
@@ -180,8 +180,8 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       </div>
 
       {/* Footer link */}
-      <div className="px-5 pb-5 mt-auto bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-3">
-         <div className="flex gap-2 w-full justify-between items-center mb-2">
+      <div className="px-6 pb-6 mt-auto flex flex-col gap-4">
+         <div className="flex gap-2 w-full justify-between items-center border-t border-slate-100 dark:border-slate-800/60 pt-4">
              <div className="flex gap-2">
                   <button
                       onClick={handleSummarize}
@@ -220,10 +220,10 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg py-3 rounded-xl text-sm font-semibold transition-colors group/link"
+            className="flex items-center justify-center w-full gap-2 bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white shadow-md hover:shadow-xl py-3 rounded-xl text-sm font-bold transition-all duration-300 group/link active:scale-[0.98]"
          >
             Ler notícia completa
-            <ExternalLink size={16} className="text-blue-200 group-hover/link:text-white transition-colors" />
+            <ExternalLink size={16} className="text-white/70 group-hover/link:text-white transition-colors" />
          </a>
       </div>
     </div>
