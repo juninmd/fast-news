@@ -11,8 +11,12 @@ import { FEED_SOURCES } from '../src/services/newsService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Configuration
+// Ollama URL and Model can be defined in .env
+// Recommended model is llama3 (must be running via `ollama serve` and `ollama pull llama3`)
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
+
+// Telegram Bot Token and Chat ID (must be defined in .env)
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -106,15 +110,16 @@ async function fetchWithRetry(url, options, retries = RETRY_ATTEMPTS) {
 async function classifyWithOllama(title, content) {
     const categories = Object.keys(EMOJI_MAP).join(', ');
     const prompt = `
-Você é um editor chefe. Sua tarefa é classificar notícias.
-As categorias válidas são EXATAMENTE e APENAS estas: [${categories}].
+Sua tarefa é atuar como um sofisticado sistema de classificação de notícias.
+As categorias válidas e permitidas são EXATAMENTE E APENAS as seguintes: [${categories}].
 
-Analise a notícia abaixo:
+Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Título: "${title}"
-Conteúdo: "${content.substring(0, 500)}"
+Conteúdo: "${content.substring(0, 600)}"
 
-Responda APENAS com o nome da categoria que melhor se encaixa. Não escreva frases, não use pontuação extra, não de explicações. A sua resposta DEVE ser estritamente uma das categorias da lista fornecida.
-Se nenhuma se encaixar perfeitamente, use "Geral".
+**Regra de Ouro:** A sua resposta final DEVE conter APENAS o nome da categoria que melhor se encaixa.
+Sem introduções, sem formatação Markdown extra, sem pontuação, e sem qualquer explicação. Exemplo de saída correta: Tecnologia
+Se o assunto não se encaixar em nenhuma, a sua saída deve ser: Geral
 `;
 
     try {
@@ -148,25 +153,25 @@ Se nenhuma se encaixar perfeitamente, use "Geral".
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
-Atue como um editor de um canal de notícias no Telegram.
-Resuma a notícia de forma envolvente, fácil de ler no celular e direto ao ponto.
+Você é um editor especialista para um canal de notícias premium no Telegram.
+Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
 
-Notícia:
+Notícia Analisada:
 Título: "${title}"
-Conteúdo: "${content.substring(0, 2000)}"
+Conteúdo: "${content.substring(0, 2500)}"
 
-Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
+Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
 
-**[Uma frase de impacto chamativa]**
+**[Uma frase de impacto chamativa, curta e envolvente que resuma a notícia]**
 
-🔸 [Fato 1]
-🔸 [Fato 2]
-🔸 [Fato 3]
+🔸 [Fato 1 conciso]
+🔸 [Fato 2 conciso]
+🔸 [Fato 3 conciso]
 
-Diretrizes:
-- Exatamente 3 bullet points usando o emoji 🔸.
-- Não use introduções.
-- Máximo de 500 caracteres.
+Diretrizes Rigorosas:
+- Forneça EXATAMENTE 3 bullet points, utilizando sempre o emoji 🔸.
+- Nenhuma palavra antes ou depois da estrutura solicitada (sem introduções como "Aqui está o resumo").
+- Mantenha o texto limpo, moderno e com no máximo 500 caracteres.
 `;
 
     try {
