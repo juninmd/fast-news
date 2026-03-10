@@ -1,24 +1,24 @@
 
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
   const prompt = `
-Atue como um editor de um canal de notícias no Telegram.
-Resuma a notícia de forma envolvente, fácil de ler no celular e direto ao ponto.
+Você é um editor especialista para um canal de notícias premium no Telegram.
+Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
 
-Notícia:
+Notícia Analisada:
 ${text}
 
-Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
+Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
 
-**[Uma frase de impacto chamativa]**
+**[Uma frase de impacto chamativa, curta e envolvente que resuma a notícia]**
 
-🔸 [Fato 1]
-🔸 [Fato 2]
-🔸 [Fato 3]
+🔸 [Fato 1 conciso]
+🔸 [Fato 2 conciso]
+🔸 [Fato 3 conciso]
 
-Diretrizes:
-- Exatamente 3 bullet points usando o emoji 🔸.
-- Não use introduções.
-- Máximo de 500 caracteres.
+Diretrizes Rigorosas:
+- Forneça EXATAMENTE 3 bullet points, utilizando sempre o emoji 🔸.
+- Nenhuma palavra antes ou depois da estrutura solicitada (sem introduções como "Aqui está o resumo").
+- Mantenha o texto limpo, moderno e com no máximo 500 caracteres.
 `;
 
   try {
@@ -49,12 +49,16 @@ Diretrizes:
 };
 
 export const classifyWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
-    const prompt = `Classifique a seguinte notícia em EXATAMENTE uma das seguintes categorias: Tecnologia, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Saúde, Cripto, Marketing, Moda, Música, Turismo, Games.
-Retorne APENAS o nome da categoria, sem explicações ou pontuação adicional.
+    const prompt = `Sua tarefa é atuar como um sofisticado sistema de classificação de notícias.
+As categorias válidas e permitidas são EXATAMENTE E APENAS as seguintes: Tecnologia, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Saúde, Cripto, Marketing, Moda, Música, Turismo, Games.
 
+Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Notícia:
 ${text}
 
+**Regra de Ouro:** A sua resposta final DEVE conter APENAS o nome da categoria que melhor se encaixa.
+Sem introduções, sem formatação Markdown extra, sem pontuação, e sem qualquer explicação. Exemplo de saída correta: Tecnologia
+Se o assunto não se encaixar em nenhuma, a sua saída deve ser: Geral
 Categoria:`;
 
     try {
