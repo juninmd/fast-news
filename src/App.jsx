@@ -65,9 +65,9 @@ function App() {
   };
 
   const categories = useMemo(() => {
-      const allSources = [...FEED_SOURCES, ...customFeeds];
-      const cats = ['Todas', ...new Set(allSources.map(s => s.category).filter(Boolean))];
-      return cats.sort();
+    const allSources = [...FEED_SOURCES, ...customFeeds];
+    const cats = ['Todas', ...new Set(allSources.map(s => s.category).filter(Boolean))];
+    return cats.sort();
   }, [customFeeds]);
 
   return (
@@ -87,111 +87,111 @@ function App() {
       {/* Main Content */}
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} bg-transparent`}>
 
-          {/* Header */}
-          <header className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/50 px-4 sm:px-6 py-4">
-            <div className="flex justify-between items-center gap-4 max-w-7xl mx-auto w-full">
-                <div className="flex items-center gap-3 lg:hidden">
-                    <button
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-                    >
-                        <Menu size={24} />
-                    </button>
-                    <span className="font-bold text-lg dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">NewsAI</span>
-                </div>
-
-                <div className="flex-1 max-w-2xl hidden md:block">
-                   <div className="relative group">
-                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                           <Search size={18} className="text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                       </div>
-                       <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Pesquise por termos, categorias..."
-                          className="block w-full pl-11 pr-4 py-2.5 border border-slate-200 dark:border-slate-800 rounded-2xl leading-5 bg-slate-100/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm shadow-inner"
-                       />
-                       {searchQuery && (
-                           <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
-                           >
-                               <X size={16} />
-                           </button>
-                       )}
-                   </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={toggleTheme}
-                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95"
-                        title={darkMode ? "Modo claro" : "Modo escuro"}
-                    >
-                        {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
-                    <button
-                        onClick={() => setIsSettingsOpen(true)}
-                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95"
-                        title="Configurações"
-                    >
-                        <SettingsIcon size={20} />
-                    </button>
-                </div>
+        {/* Header */}
+        <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/80 px-4 sm:px-8 py-5">
+          <div className="flex justify-between items-center gap-6 max-w-[1600px] mx-auto w-full">
+            <div className="flex items-center gap-4 lg:hidden">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+              >
+                <Menu size={24} />
+              </button>
+              <span className="font-bold text-xl dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">NewsAI</span>
             </div>
 
-            {/* Mobile Search */}
-            <div className="md:hidden mt-3 pb-1">
-                 <div className="relative">
-                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                           <Search size={16} className="text-slate-400" />
-                       </div>
-                       <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Buscar notícias..."
-                          className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl leading-5 bg-slate-100/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm"
-                       />
-                   </div>
-            </div>
-          </header>
-
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
-            <div className="max-w-7xl mx-auto space-y-12">
-                {selectedCategory === 'Todas' && !searchQuery && (
-                    <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
-                             <span className="text-blue-600 dark:text-blue-500">Trending</span> Topics
-                         </h2>
-                         <TrendingTopics apiKey={apiKey || rss2jsonApiKey} />
-                    </section>
+            <div className="flex-1 max-w-3xl hidden md:block">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search size={18} className="text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pesquise por termos ou palavras-chave..."
+                  className="block w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-800/80 rounded-[1rem] leading-5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-[15px] shadow-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
+                  >
+                    <X size={18} />
+                  </button>
                 )}
-
-                <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 tracking-tight">
-                            {searchQuery ? `Resultados para "${searchQuery}"` : (selectedCategory === 'Todas' ? 'Últimas Notícias' : selectedCategory)}
-                        </h2>
-                     </div>
-
-                     <Feed
-                        apiKey={apiKey}
-                        aiProvider={aiProvider}
-                        rss2jsonApiKey={rss2jsonApiKey}
-                        autoSummarize={autoSummarize}
-                        customFeeds={customFeeds}
-                        selectedCategory={selectedCategory}
-                        searchQuery={searchQuery}
-                        ollamaUrl={ollamaUrl}
-                        ollamaModel={ollamaModel}
-                        telegramBotToken={telegramBotToken}
-                        telegramChatId={telegramChatId}
-                    />
-                </section>
+              </div>
             </div>
-          </main>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className="p-3 rounded-[1rem] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all hover:scale-105 active:scale-95 border border-transparent dark:hover:border-slate-700"
+                title={darkMode ? "Modo claro" : "Modo escuro"}
+              >
+                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-3 rounded-[1rem] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all hover:scale-105 active:scale-95 border border-transparent dark:hover:border-slate-700"
+                title="Configurações"
+              >
+                <SettingsIcon size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Search */}
+          <div className="md:hidden mt-3 pb-1">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={16} className="text-slate-400" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar notícias..."
+                className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl leading-5 bg-slate-100/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm"
+              />
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+          <div className="max-w-7xl mx-auto space-y-12">
+            {selectedCategory === 'Todas' && !searchQuery && (
+              <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
+                  <span className="text-blue-600 dark:text-blue-500">Trending</span> Topics
+                </h2>
+                <TrendingTopics apiKey={apiKey || rss2jsonApiKey} />
+              </section>
+            )}
+
+            <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 tracking-tight">
+                  {searchQuery ? `Resultados para "${searchQuery}"` : (selectedCategory === 'Todas' ? 'Últimas Notícias' : selectedCategory)}
+                </h2>
+              </div>
+
+              <Feed
+                apiKey={apiKey}
+                aiProvider={aiProvider}
+                rss2jsonApiKey={rss2jsonApiKey}
+                autoSummarize={autoSummarize}
+                customFeeds={customFeeds}
+                selectedCategory={selectedCategory}
+                searchQuery={searchQuery}
+                ollamaUrl={ollamaUrl}
+                ollamaModel={ollamaModel}
+                telegramBotToken={telegramBotToken}
+                telegramChatId={telegramChatId}
+              />
+            </section>
+          </div>
+        </main>
       </div>
 
       {isSettingsOpen && (
