@@ -43,6 +43,7 @@ export const FEED_SOURCES = [
 
     // --- TECNOLOGIA (BRASIL) ---
     { url: 'https://rss.tecmundo.com.br/feed', category: 'Tecnologia' },
+    { url: 'https://www.techtudo.com.br/feed', category: 'Tecnologia' },
     { url: 'https://teletime.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://canaltech.com.br/rss/', category: 'Tecnologia' },
     { url: 'https://canaltech.com.br/rss/produtos', category: 'Tecnologia' },
@@ -149,6 +150,8 @@ export const FEED_SOURCES = [
 
     // --- MUNDO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
+    { url: 'https://www.thesun.co.uk/news/worldnews/feed/', category: 'Mundo' },
+    { url: 'https://nypost.com/world/feed/', category: 'Mundo' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', category: 'Mundo' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
     { url: 'https://feeds.bbci.co.uk/news/rss.xml', category: 'Mundo' },
@@ -268,6 +271,7 @@ export const FEED_SOURCES = [
 
     // --- ESPORTES ---
     { url: 'https://www.uol.com.br/esporte/ultimas-noticias/rss.xml', category: 'Esportes' },
+    { url: 'https://www.band.uol.com.br/esportes/rss', category: 'Esportes' },
     { url: 'https://trivela.com.br/feed/', category: 'Esportes' },
     { url: 'https://www.espn.com.br/rss/news', category: 'Esportes' },
     { url: 'https://ge.globo.com/rss/ge/', category: 'Esportes' },
@@ -286,6 +290,7 @@ export const FEED_SOURCES = [
 
     // --- AUTOMÓVEIS ---
     { url: 'https://quatrorodas.abril.com.br/feed/', category: 'Automóveis' },
+    { url: 'https://www.icarros.com.br/noticias/rss.jsp', category: 'Automóveis' },
     { url: 'https://autoesporte.globo.com/rss/autoesporte/', category: 'Automóveis' },
     { url: 'https://motor1.uol.com.br/rss/news/all/', category: 'Automóveis' },
     { url: 'https://jornaldocarro.estadao.com.br/feed/', category: 'Automóveis' },
@@ -344,6 +349,8 @@ export const FEED_SOURCES = [
 
     // --- MÚSICA ---
     { url: 'https://pitchfork.com/rss/reviews/best/albums/', category: 'Música' },
+    { url: 'https://whiplash.net/rss.xml', category: 'Música' },
+    { url: 'https://www.tenhomaisdiscosqueamigos.com/feed/', category: 'Música' },
     { url: 'https://rollingstone.uol.com.br/rss', category: 'Música' },
 
     // --- TURISMO ---
