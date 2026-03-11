@@ -110,18 +110,16 @@ async function fetchWithRetry(url, options, retries = RETRY_ATTEMPTS) {
 async function classifyWithOllama(title, content) {
     const categories = Object.keys(EMOJI_MAP).join(', ');
     const prompt = `
-Sua tarefa é atuar como um sofisticado sistema de classificação de notícias.
-As categorias válidas e permitidas são EXATAMENTE E APENAS as seguintes: [${categories}].
+Você é um sistema de IA encarregado de classificar notícias com precisão.
+As categorias válidas são EXATAMENTE e APENAS estas: [${categories}].
 
 Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 600)}"
 
-**Regra de Ouro:** A sua resposta final DEVE conter APENAS o nome da categoria que melhor se encaixa.
-Sem introduções, sem formatação Markdown extra, sem pontuação, e sem qualquer explicação.
-Sua classificação servirá como hashtag em um canal do Telegram, então precisa ser exata.
-Exemplo de saída correta: Tecnologia
-Se o assunto não se encaixar em nenhuma das categorias listadas, a sua saída deve ser: Geral
+Obrigatório: Responda APENAS com o nome de UMA das categorias acima que melhor descreve o tema principal da notícia.
+Proibido: Não use pontuação extra, não escreva frases adicionais, não adicione espaços e não explique sua decisão.
+Caso nenhuma categoria se encaixe bem, ou se houver dúvida, retorne a categoria "Geral".
 `;
 
     try {
@@ -162,19 +160,19 @@ Notícia Analisada:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 2500)}"
 
-Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
+Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
 
-**[Uma frase de impacto chamativa, curta e envolvente que resuma a notícia]**
+**[Uma frase de impacto chamativa e curta]**
 
-🔸 [Fato 1 conciso]
-🔸 [Fato 2 conciso]
-🔸 [Fato 3 conciso]
+🔸 [Fato 1 mais importante]
+🔸 [Fato 2 relevante]
+🔸 [Fato 3 complementar]
 
-Diretrizes Rigorosas:
-- Forneça EXATAMENTE 3 bullet points, utilizando sempre o emoji 🔸.
-- Comece com uma frase de impacto em negrito **[Frase]**.
-- Nenhuma palavra antes ou depois da estrutura solicitada (sem introduções como "Aqui está o resumo").
-- Mantenha o texto limpo, moderno e com no máximo 500 caracteres.
+Diretrizes:
+- Você deve SEMPRE retornar EXATAMENTE 3 (três) bullet points. Nunca mais, nunca menos.
+- Cada bullet point DEVE começar com o emoji 🔸.
+- Não crie introduções nem adicione texto fora deste formato.
+- O tamanho máximo da sua resposta deve ser de 500 caracteres no total.
 `;
 
     try {
@@ -214,22 +212,26 @@ async function sendToTelegram(title, summary, category, link) {
     const categoryHashtag = category.replace(/\s+/g, '');
     const hashtags = `#${categoryHashtag} #Notícias`;
 
-    // Escaping HTML characters for Telegram
-    const escapeHtml = (unsafe) => {
-        return unsafe
+    // Ensure summary is properly mapped to Telegram HTML format
+    const formatSummaryForTelegramHTML = (text) => {
+        // First escape HTML to prevent injection from the summary content itself
+        let htmlText = text
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
-    }
+         .replace(/>/g, "&gt;");
+        // Convert Markdown bold to HTML bold safely after escaping
+        htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        return htmlText;
+    };
 
-    const safeTitle = escapeHtml(title);
-    // Summary usually comes from AI, might have some formatting, but let's be safe or trust AI didn't inject HTML tags.
-    // Ollama returns plain text usually.
-    const safeSummary = escapeHtml(summary);
+    const safeTitle = title
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;");
 
-    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${safeSummary}\n\n<i>${hashtags}</i>`;
+    const formattedSummary = formatSummaryForTelegramHTML(summary);
+
+    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${formattedSummary}\n\n<i>${hashtags}</i>`;
 
     const body = {
         chat_id: TELEGRAM_CHAT_ID,
@@ -238,7 +240,7 @@ async function sendToTelegram(title, summary, category, link) {
         disable_web_page_preview: false,
         reply_markup: {
             inline_keyboard: [[
-                { text: "📰 Ler matéria completa", url: link }
+                { text: "🔗 Ler matéria completa", url: link }
             ]]
         }
     };
