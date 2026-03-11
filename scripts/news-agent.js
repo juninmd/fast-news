@@ -118,8 +118,10 @@ Título: "${title}"
 Conteúdo: "${content.substring(0, 600)}"
 
 **Regra de Ouro:** A sua resposta final DEVE conter APENAS o nome da categoria que melhor se encaixa.
-Sem introduções, sem formatação Markdown extra, sem pontuação, e sem qualquer explicação. Exemplo de saída correta: Tecnologia
-Se o assunto não se encaixar em nenhuma, a sua saída deve ser: Geral
+Sem introduções, sem formatação Markdown extra, sem pontuação, e sem qualquer explicação.
+Sua classificação servirá como hashtag em um canal do Telegram, então precisa ser exata.
+Exemplo de saída correta: Tecnologia
+Se o assunto não se encaixar em nenhuma das categorias listadas, a sua saída deve ser: Geral
 `;
 
     try {
@@ -170,6 +172,7 @@ Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o f
 
 Diretrizes Rigorosas:
 - Forneça EXATAMENTE 3 bullet points, utilizando sempre o emoji 🔸.
+- Comece com uma frase de impacto em negrito **[Frase]**.
 - Nenhuma palavra antes ou depois da estrutura solicitada (sem introduções como "Aqui está o resumo").
 - Mantenha o texto limpo, moderno e com no máximo 500 caracteres.
 `;
