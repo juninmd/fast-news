@@ -120,9 +120,9 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 rounded-2xl shadow-lg dark:shadow-black/40 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-900/20 hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-700/50">
-      <div className="relative p-3">
-        <div className="relative overflow-hidden rounded-xl shadow-sm">
+    <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 rounded-[2rem] shadow-2xl dark:shadow-black/60 hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] dark:hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.2)] hover:-translate-y-4 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/60 dark:border-slate-700/60 ring-1 ring-black/5 dark:ring-white/10">
+      <div className="relative p-4">
+        <div className="relative overflow-hidden rounded-[1.5rem] shadow-md">
           {imageUrl && !imageError ? (
               <div className="aspect-video w-full overflow-hidden relative">
                   <img
@@ -148,15 +148,15 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           )}
 
           {/* Source and Date on Image Bottom */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-[11px] font-medium text-white/90 drop-shadow-md z-10">
+          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-xs font-medium text-white/90 drop-shadow-md z-10">
                <span className="bg-blue-600/80 backdrop-blur-sm px-2.5 py-1 rounded-md">{item.source}</span>
                <span className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">{formatDate(item.pubDate)}</span>
           </div>
         </div>
       </div>
 
-      <div className="px-6 py-4 flex flex-col flex-grow relative bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-800/50">
-        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+      <div className="px-7 py-5 flex flex-col flex-grow relative bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-800/50">
+        <h3 className="text-[1.65rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-4 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-sm">
             {item.title}
           </a>
@@ -180,8 +180,8 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       </div>
 
       {/* Footer link */}
-      <div className="px-6 pb-6 mt-auto flex flex-col gap-4">
-         <div className="flex gap-2 w-full justify-between items-center border-t border-slate-100 dark:border-slate-800/60 pt-4">
+      <div className="px-7 pb-7 mt-auto flex flex-col gap-4">
+         <div className="flex gap-3 w-full justify-between items-center border-t-2 border-slate-100 dark:border-slate-800/60 pt-5">
              <div className="flex gap-2">
                   <button
                       onClick={handleSummarize}
