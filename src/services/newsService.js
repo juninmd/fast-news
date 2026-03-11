@@ -43,6 +43,7 @@ export const FEED_SOURCES = [
 
     // --- TECNOLOGIA (BRASIL) ---
     { url: 'https://rss.tecmundo.com.br/feed', category: 'Tecnologia' },
+    { url: 'https://www.techtudo.com.br/feed', category: 'Tecnologia' },
     { url: 'https://teletime.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://canaltech.com.br/rss/', category: 'Tecnologia' },
     { url: 'https://canaltech.com.br/rss/produtos', category: 'Tecnologia' },
@@ -58,6 +59,7 @@ export const FEED_SOURCES = [
     { url: 'https://computerworld.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://itforum.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://imasters.com.br/feed', category: 'Tecnologia' },
+    { url: 'https://tecnoblog.net/feed/', category: 'Tecnologia' },
     { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Tecnologia' },
     { url: 'https://nucleo.jor.br/feed/', category: 'Tecnologia' },
     { url: 'https://mittechreview.com.br/feed/', category: 'Tecnologia' },
@@ -85,6 +87,10 @@ export const FEED_SOURCES = [
     { url: 'https://towardsdatascience.com/feed', category: 'IA' },
 
     // --- BRASIL ---
+    { url: 'https://noticias.uol.com.br/rss', category: 'Brasil' },
+    { url: 'https://jovempan.com.br/feed', category: 'Brasil' },
+    { url: 'https://www.metropoles.com/feed', category: 'Brasil' },
+    { url: 'https://www.estadao.com.br/rss/ultimas', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/', category: 'Brasil' },
     { url: 'https://www.tse.jus.br/rss', category: 'Brasil' },
     { url: 'https://www.em.com.br/rss/noticia/politica/rss.xml', category: 'Brasil' },
@@ -108,6 +114,14 @@ export const FEED_SOURCES = [
     { url: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', category: 'Brasil' },
     { url: 'https://istoe.com.br/feed/', category: 'Brasil' },
     { url: 'https://noticias.r7.com/feed.xml', category: 'Brasil' },
+    { url: 'https://www.em.com.br/rss/noticias/', category: 'Brasil' },
+    { url: 'https://jc.ne10.uol.com.br/rss', category: 'Brasil' },
+    { url: 'https://www.diariodepernambuco.com.br/rss/', category: 'Brasil' },
+    { url: 'https://www.correiobraziliense.com.br/rss/noticias', category: 'Brasil' },
+    { url: 'https://www.opovo.com.br/rss/noticias', category: 'Brasil' },
+    { url: 'https://www.otempo.com.br/rss/noticias', category: 'Brasil' },
+    { url: 'https://www.nsctotal.com.br/feed', category: 'Brasil' },
+    { url: 'https://www.gazetadopovo.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.metropoles.com/feed', category: 'Brasil' },
     { url: 'https://noticias.uol.com.br/ultimas-noticias/rss.xml', category: 'Geral' },
     { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Geral' },
@@ -144,6 +158,8 @@ export const FEED_SOURCES = [
 
     // --- MUNDO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
+    { url: 'https://www.thesun.co.uk/news/worldnews/feed/', category: 'Mundo' },
+    { url: 'https://nypost.com/world/feed/', category: 'Mundo' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', category: 'Mundo' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
     { url: 'https://feeds.bbci.co.uk/news/rss.xml', category: 'Mundo' },
@@ -185,6 +201,8 @@ export const FEED_SOURCES = [
     { url: 'https://www.suno.com.br/feed/', category: 'Negócios' },
     { url: 'https://epocanegocios.globo.com/rss/ultimas/feed.xml', category: 'Negócios' },
     { url: 'https://br.investing.com/rss/news.rss', category: 'Negócios' },
+    { url: 'https://economia.uol.com.br/rss', category: 'Negócios' },
+    { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
     { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Negócios' },
     { url: 'https://www.wsj.com/xml/rss/3_7014.xml', category: 'Negócios' },
     { url: 'https://www.ft.com/?format=rss', category: 'Negócios' },
@@ -263,10 +281,14 @@ export const FEED_SOURCES = [
 
     // --- ESPORTES ---
     { url: 'https://www.uol.com.br/esporte/ultimas-noticias/rss.xml', category: 'Esportes' },
+    { url: 'https://www.band.uol.com.br/esportes/rss', category: 'Esportes' },
     { url: 'https://trivela.com.br/feed/', category: 'Esportes' },
     { url: 'https://www.espn.com.br/rss/news', category: 'Esportes' },
     { url: 'https://ge.globo.com/rss/ge/', category: 'Esportes' },
     { url: 'https://www.lance.com.br/rss', category: 'Esportes' },
+    { url: 'https://www.gazetaesportiva.com/feed/', category: 'Esportes' },
+    { url: 'https://www.meutimao.com.br/rss/', category: 'Esportes' },
+    { url: 'https://colunadofla.com/feed/', category: 'Esportes' },
     { url: 'https://rss.uol.com.br/feed/esporte.xml', category: 'Esportes' },
     { url: 'https://agenciabrasil.ebc.com.br/rss/esportes/feed.xml', category: 'Esportes' },
     { url: 'https://motorsport.uol.com.br/rss/f1/news/', category: 'Esportes' },
@@ -278,6 +300,7 @@ export const FEED_SOURCES = [
 
     // --- AUTOMÓVEIS ---
     { url: 'https://quatrorodas.abril.com.br/feed/', category: 'Automóveis' },
+    { url: 'https://www.icarros.com.br/noticias/rss.jsp', category: 'Automóveis' },
     { url: 'https://autoesporte.globo.com/rss/autoesporte/', category: 'Automóveis' },
     { url: 'https://motor1.uol.com.br/rss/news/all/', category: 'Automóveis' },
     { url: 'https://jornaldocarro.estadao.com.br/feed/', category: 'Automóveis' },
@@ -336,6 +359,8 @@ export const FEED_SOURCES = [
 
     // --- MÚSICA ---
     { url: 'https://pitchfork.com/rss/reviews/best/albums/', category: 'Música' },
+    { url: 'https://whiplash.net/rss.xml', category: 'Música' },
+    { url: 'https://www.tenhomaisdiscosqueamigos.com/feed/', category: 'Música' },
     { url: 'https://rollingstone.uol.com.br/rss', category: 'Música' },
 
     // --- TURISMO ---

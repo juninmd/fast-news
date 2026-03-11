@@ -142,44 +142,13 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
           {/* Category Badge */}
           {item.category && (
-              <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-800 dark:text-slate-200 text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider z-10">
+              <div className="absolute top-3 left-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider z-10">
                   {item.category}
               </div>
           )}
 
-          {/* Quick Actions Overlay */}
-          <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300 z-10">
-              <button
-                  onClick={handleSummarize}
-                  disabled={loading || summary}
-                  className="bg-white/90 dark:bg-slate-900/90 text-indigo-600 dark:text-indigo-400 p-2.5 rounded-full hover:bg-white dark:hover:bg-slate-800 shadow-lg backdrop-blur-md transition-colors disabled:opacity-50"
-                  title="Resumir com IA"
-              >
-                  {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} />}
-              </button>
-              {telegramBotToken && (
-                  <button
-                      onClick={handleSendToTelegram}
-                      disabled={sendingTelegram}
-                      className="bg-white/90 dark:bg-slate-900/90 text-blue-500 dark:text-blue-400 p-2.5 rounded-full hover:bg-white dark:hover:bg-slate-800 shadow-lg backdrop-blur-md transition-colors disabled:opacity-50"
-                      title="Enviar para Telegram"
-                  >
-                      {sendingTelegram ? <Loader size={16} className="animate-spin" /> :
-                       telegramStatus === 'success' ? <Check size={16} /> :
-                       <Send size={16} />}
-                  </button>
-              )}
-              <button
-                  onClick={copyToClipboard}
-                  className="bg-white/90 dark:bg-slate-900/90 text-slate-600 dark:text-slate-400 p-2.5 rounded-full hover:bg-white dark:hover:bg-slate-800 shadow-lg backdrop-blur-md transition-colors"
-                  title="Copiar Link"
-              >
-                  <Copy size={16} />
-              </button>
-          </div>
-
           {/* Source and Date on Image Bottom */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-[11px] font-medium text-white/90 drop-shadow-md z-10">
+          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-xs font-medium text-white/90 drop-shadow-md z-10">
                <span className="bg-blue-600/80 backdrop-blur-sm px-2.5 py-1 rounded-md">{item.source}</span>
                <span className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">{formatDate(item.pubDate)}</span>
           </div>
@@ -193,7 +162,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           </a>
         </h3>
 
-        <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4 flex-grow">
+        <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4 flex-grow font-medium">
             {summary ? (
                 <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-900/20 dark:to-blue-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2">
                     <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
