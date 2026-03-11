@@ -1,13 +1,13 @@
 
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
   const prompt = `
-Atue como um editor de um canal de notícias no Telegram.
-Resuma a notícia de forma envolvente, fácil de ler no celular e direto ao ponto.
+Você é um editor especialista para um canal de notícias premium no Telegram.
+Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
 
-Notícia:
+Notícia Analisada:
 ${text}
 
-Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
+Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
 
 **[Uma frase de impacto chamativa e curta]**
 
@@ -53,6 +53,7 @@ export const classifyWithOllama = async (text, baseUrl = 'http://localhost:11434
     const categories = ['Tecnologia', 'IA', 'Brasil', 'Mundo', 'Negócios', 'Ciência', 'Esportes', 'Automóveis', 'Entretenimento', 'Games', 'Saúde', 'Cripto', 'Marketing', 'Moda', 'Música', 'Turismo', 'Geral'];
     const prompt = `Classifique a seguinte notícia em EXATAMENTE e APENAS uma das seguintes categorias: [${categories.join(', ')}].
 
+Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Notícia:
 ${text}
 

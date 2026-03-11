@@ -11,8 +11,12 @@ import { FEED_SOURCES } from '../src/services/newsService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Configuration
+// Ollama URL and Model can be defined in .env
+// Recommended model is llama3 (must be running via `ollama serve` and `ollama pull llama3`)
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
+
+// Telegram Bot Token and Chat ID (must be defined in .env)
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -109,9 +113,9 @@ async function classifyWithOllama(title, content) {
 Você é um sistema de IA encarregado de classificar notícias com precisão.
 As categorias válidas são EXATAMENTE e APENAS estas: [${categories}].
 
-Analise a notícia abaixo:
+Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Título: "${title}"
-Conteúdo: "${content.substring(0, 500)}"
+Conteúdo: "${content.substring(0, 600)}"
 
 Obrigatório: Responda APENAS com o nome de UMA das categorias acima que melhor descreve o tema principal da notícia.
 Proibido: Não use pontuação extra, não escreva frases adicionais, não adicione espaços e não explique sua decisão.
@@ -149,11 +153,12 @@ Caso nenhuma categoria se encaixe bem, ou se houver dúvida, retorne a categoria
 
 async function summarizeWithOllama(title, content) {
     const prompt = `
-Atue como um editor de um canal de notícias no Telegram.
-Resuma a notícia de forma envolvente, fácil de ler no celular e direto ao ponto.
+Você é um editor especialista para um canal de notícias premium no Telegram.
+Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
 
+Notícia Analisada:
 Título: "${title}"
-Conteúdo: "${content.substring(0, 2000)}"
+Conteúdo: "${content.substring(0, 2500)}"
 
 Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
 
