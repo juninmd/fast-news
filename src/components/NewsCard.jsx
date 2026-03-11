@@ -120,22 +120,22 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 rounded-[2rem] shadow-2xl dark:shadow-black/60 hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] dark:hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.2)] hover:-translate-y-4 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/60 dark:border-slate-700/60 ring-1 ring-black/5 dark:ring-white/10">
-      <div className="relative p-4">
-        <div className="relative overflow-hidden rounded-[1.5rem] shadow-md">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
+      <div className="relative p-3">
+        <div className="relative overflow-hidden rounded-[1.5rem]">
           {imageUrl && !imageError ? (
-              <div className="aspect-video w-full overflow-hidden relative">
+              <div className="aspect-[16/10] w-full overflow-hidden relative">
                   <img
                       src={imageUrl}
                       alt={item.title}
                       loading="lazy"
                       onError={() => setImageError(true)}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-slate-900/10 opacity-80 transition-opacity duration-300" />
               </div>
           ) : (
-              <div className="aspect-video bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
+              <div className="aspect-[16/10] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
                   <Newspaper className="text-indigo-400 dark:text-indigo-500 w-16 h-16 opacity-50" />
               </div>
           )}
@@ -155,9 +155,9 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
         </div>
       </div>
 
-      <div className="px-7 py-5 flex flex-col flex-grow relative bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-800/50">
-        <h3 className="text-[1.65rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-4 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
-          <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-sm">
+      <div className="px-6 py-5 flex flex-col flex-grow relative">
+        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-3 leading-[1.3] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+          <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
         </h3>
@@ -180,50 +180,15 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       </div>
 
       {/* Footer link */}
-      <div className="px-7 pb-7 mt-auto flex flex-col gap-4">
-         <div className="flex gap-3 w-full justify-between items-center border-t-2 border-slate-100 dark:border-slate-800/60 pt-5">
-             <div className="flex gap-2">
-                  <button
-                      onClick={handleSummarize}
-                      disabled={loading || summary}
-                      className="bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
-                      title="Resumir com IA"
-                  >
-                      {loading ? <Loader size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                      <span className="hidden sm:inline">Resumir</span>
-                  </button>
-                  {telegramBotToken && (
-                      <button
-                          onClick={handleSendToTelegram}
-                          disabled={sendingTelegram}
-                          className="bg-white dark:bg-slate-800 text-blue-500 dark:text-blue-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
-                          title="Enviar para Telegram"
-                      >
-                          {sendingTelegram ? <Loader size={14} className="animate-spin" /> :
-                           telegramStatus === 'success' ? <Check size={14} /> :
-                           <Send size={14} />}
-                           <span className="hidden sm:inline">Telegram</span>
-                      </button>
-                  )}
-             </div>
-              <button
-                  onClick={copyToClipboard}
-                  className="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-700 transition-colors text-xs font-bold flex items-center gap-1.5"
-                  title="Copiar Link"
-              >
-                  <Copy size={14} />
-                  <span className="hidden sm:inline">Copiar</span>
-              </button>
-         </div>
-
+      <div className="px-6 pb-6 mt-auto">
          <a
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-full gap-2 bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white shadow-md hover:shadow-xl py-3 rounded-xl text-sm font-bold transition-all duration-300 group/link active:scale-[0.98]"
+            className="relative z-20 flex items-center justify-center w-full gap-2 bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group/link"
          >
             Ler notícia completa
-            <ExternalLink size={16} className="text-white/70 group-hover/link:text-white transition-colors" />
+            <ExternalLink size={16} className="opacity-70 group-hover/link:opacity-100 transition-opacity" />
          </a>
       </div>
     </div>

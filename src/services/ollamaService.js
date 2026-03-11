@@ -9,17 +9,17 @@ ${text}
 
 Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
 
-**[Uma frase de impacto chamativa, curta e envolvente que resuma a notícia]**
+**[Uma frase de impacto chamativa e curta]**
 
-🔸 [Fato 1 conciso]
-🔸 [Fato 2 conciso]
-🔸 [Fato 3 conciso]
+🔸 [Fato 1 mais importante]
+🔸 [Fato 2 relevante]
+🔸 [Fato 3 complementar]
 
-Diretrizes Rigorosas:
-- Forneça EXATAMENTE 3 bullet points, utilizando sempre o emoji 🔸.
-- Comece com uma frase de impacto em negrito **[Frase]**.
-- Nenhuma palavra antes ou depois da estrutura solicitada (sem introduções como "Aqui está o resumo").
-- Mantenha o texto limpo, moderno e com no máximo 500 caracteres.
+Diretrizes:
+- Você deve SEMPRE retornar EXATAMENTE 3 (três) bullet points. Nunca mais, nunca menos.
+- Cada bullet point DEVE começar com o emoji 🔸.
+- Não crie introduções nem adicione texto fora deste formato.
+- O tamanho máximo da sua resposta deve ser de 500 caracteres no total.
 `;
 
   try {
@@ -50,18 +50,17 @@ Diretrizes Rigorosas:
 };
 
 export const classifyWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
-    const prompt = `Sua tarefa é atuar como um sofisticado sistema de classificação de notícias.
-As categorias válidas e permitidas são EXATAMENTE E APENAS as seguintes: Tecnologia, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Saúde, Cripto, Marketing, Moda, Música, Turismo, Games.
+    const categories = ['Tecnologia', 'IA', 'Brasil', 'Mundo', 'Negócios', 'Ciência', 'Esportes', 'Automóveis', 'Entretenimento', 'Games', 'Saúde', 'Cripto', 'Marketing', 'Moda', 'Música', 'Turismo', 'Geral'];
+    const prompt = `Classifique a seguinte notícia em EXATAMENTE e APENAS uma das seguintes categorias: [${categories.join(', ')}].
 
 Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Notícia:
 ${text}
 
-**Regra de Ouro:** A sua resposta final DEVE conter APENAS o nome da categoria que melhor se encaixa.
-Sem introduções, sem formatação Markdown extra, sem pontuação, e sem qualquer explicação.
-Sua classificação servirá como hashtag em um canal do Telegram, então precisa ser exata.
-Exemplo de saída correta: Tecnologia
-Se o assunto não se encaixar em nenhuma das categorias listadas, a sua saída deve ser: Geral
+Obrigatório: Retorne APENAS o nome da categoria.
+Proibido: Não explique sua decisão e não adicione pontuação (como ponto final) ou qualquer outro texto.
+Se você não tiver certeza de qual categoria escolher ou se nenhuma for exata, retorne exatamente "Geral".
+
 Categoria:`;
 
     try {
