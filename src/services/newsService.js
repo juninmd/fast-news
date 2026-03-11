@@ -59,6 +59,7 @@ export const FEED_SOURCES = [
     { url: 'https://computerworld.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://itforum.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://imasters.com.br/feed', category: 'Tecnologia' },
+    { url: 'https://tecnoblog.net/feed/', category: 'Tecnologia' },
     { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Tecnologia' },
     { url: 'https://nucleo.jor.br/feed/', category: 'Tecnologia' },
     { url: 'https://mittechreview.com.br/feed/', category: 'Tecnologia' },
@@ -86,6 +87,10 @@ export const FEED_SOURCES = [
     { url: 'https://towardsdatascience.com/feed', category: 'IA' },
 
     // --- BRASIL ---
+    { url: 'https://noticias.uol.com.br/rss', category: 'Brasil' },
+    { url: 'https://jovempan.com.br/feed', category: 'Brasil' },
+    { url: 'https://www.metropoles.com/feed', category: 'Brasil' },
+    { url: 'https://www.estadao.com.br/rss/ultimas', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/', category: 'Brasil' },
     { url: 'https://www.tse.jus.br/rss', category: 'Brasil' },
     { url: 'https://www.jota.info/feed', category: 'Brasil' },
@@ -193,6 +198,8 @@ export const FEED_SOURCES = [
     { url: 'https://www.suno.com.br/feed/', category: 'Negócios' },
     { url: 'https://epocanegocios.globo.com/rss/ultimas/feed.xml', category: 'Negócios' },
     { url: 'https://br.investing.com/rss/news.rss', category: 'Negócios' },
+    { url: 'https://economia.uol.com.br/rss', category: 'Negócios' },
+    { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
     { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Negócios' },
     { url: 'https://www.wsj.com/xml/rss/3_7014.xml', category: 'Negócios' },
     { url: 'https://www.ft.com/?format=rss', category: 'Negócios' },
