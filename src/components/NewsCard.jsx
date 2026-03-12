@@ -179,8 +179,8 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
         </div>
       </div>
 
-      {/* Footer link */}
-      <div className="px-6 pb-6 mt-auto">
+      {/* Footer Action Bar */}
+      <div className="px-6 pb-6 mt-auto space-y-3">
          <a
             href={item.link}
             target="_blank"
@@ -190,6 +190,42 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             Ler notícia completa
             <ExternalLink size={16} className="opacity-70 group-hover/link:opacity-100 transition-opacity" />
          </a>
+
+         <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+             <button
+                 onClick={handleSummarize}
+                 disabled={loading || summary !== null}
+                 title="Resumir com IA"
+                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed group/btn"
+             >
+                 {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} className="group-hover/btn:scale-110 transition-transform" />}
+                 <span>{summary ? 'Resumido' : 'Resumir IA'}</span>
+             </button>
+
+             <button
+                 onClick={handleSendToTelegram}
+                 disabled={sendingTelegram || !telegramBotToken}
+                 title="Enviar para Telegram"
+                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed group/btn"
+             >
+                 {sendingTelegram ? (
+                     <Loader size={16} className="animate-spin" />
+                 ) : telegramStatus === 'success' ? (
+                     <Check size={16} className="text-green-500" />
+                 ) : (
+                     <Send size={16} className="group-hover/btn:scale-110 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                 )}
+                 <span>{telegramStatus === 'success' ? 'Enviado!' : 'Telegram'}</span>
+             </button>
+
+             <button
+                 onClick={copyToClipboard}
+                 title="Copiar Link"
+                 className="flex-none p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+             >
+                 <Copy size={16} />
+             </button>
+         </div>
       </div>
     </div>
   );
