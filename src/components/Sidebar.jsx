@@ -85,14 +85,14 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                   }}
                   title={isCollapsed ? category : ''}
                   className={`
-                    w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3.5 px-3.5'} py-2.5 rounded-[14px] text-sm font-semibold transition-all duration-200 group relative
+                    w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3.5 px-3.5'} py-2.5 rounded-[14px] text-sm font-semibold transition-all duration-200 group relative border-l-4
                     ${isSelected
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 dark:shadow-none'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200'
+                      ? 'bg-blue-50/80 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-500 shadow-sm'
+                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200'
                     }
                   `}
                 >
-                  <Icon size={20} className={`transition-colors shrink-0 ${isSelected ? 'text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
+                  <Icon size={20} className={`transition-colors shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
 
                   {!isCollapsed && (
                         <span className="relative z-10 whitespace-nowrap">{category}</span>

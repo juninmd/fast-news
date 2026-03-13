@@ -5,6 +5,26 @@ import { sendToTelegram } from '../services/telegramService';
 import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
+const EMOJI_MAP = {
+    'Tecnologia': '💻',
+    'IA': '🤖',
+    'Brasil': '🇧🇷',
+    'Mundo': '🌍',
+    'Negócios': '💼',
+    'Ciência': '🔬',
+    'Esportes': '⚽',
+    'Automóveis': '🚗',
+    'Entretenimento': '🍿',
+    'Games': '🎮',
+    'Saúde': '⚕️',
+    'Cripto': '₿',
+    'Marketing': '🚀',
+    'Moda': '👗',
+    'Música': '🎵',
+    'Turismo': '✈️',
+    'Geral': '📰'
+};
+
 const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -74,10 +94,11 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
               finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel);
           }
 
+          const emoji = EMOJI_MAP[finalCategory] || '📰';
           const categoryHashtag = finalCategory.replace(/\s+/g, '');
           const hashtags = `#${categoryHashtag} #Notícias`;
 
-          const textToSend = `*${finalCategory.toUpperCase()}*\n───────────────\n*${item.title}*\n\n${summary || item.description || ''}\n\n_${hashtags}_\n\n[Ler matéria completa](${item.link})`;
+          const textToSend = `*${emoji} ${finalCategory.toUpperCase()}*\n───────────────\n*${item.title}*\n\n${summary || item.description || ''}\n\n_${hashtags}_\n\n[Ler matéria completa](${item.link})`;
           await sendToTelegram(textToSend, telegramBotToken, telegramChatId);
           setTelegramStatus('success');
       } catch (e) {
@@ -147,9 +168,14 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
               </div>
           )}
 
-          {/* Source and Date on Image Bottom */}
+          {/* Source Badge (Top Right) */}
+          <div className="absolute top-3 right-3 bg-blue-600/90 dark:bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-blue-400/30 z-10 flex items-center gap-1.5">
+             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+             {item.source}
+          </div>
+
+          {/* Date on Image Bottom */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 text-xs font-medium text-white/90 drop-shadow-md z-10">
-               <span className="bg-blue-600/80 backdrop-blur-sm px-2.5 py-1 rounded-md">{item.source}</span>
                <span className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">{formatDate(item.pubDate)}</span>
           </div>
         </div>

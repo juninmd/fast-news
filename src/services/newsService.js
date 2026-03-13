@@ -42,6 +42,9 @@ export const FEED_SOURCES = [
     { url: 'https://threatpost.com/feed/', category: 'Tecnologia' },
 
     // --- TECNOLOGIA (BRASIL) ---
+    { url: 'https://mundoconectado.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://www.showmetech.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://canaltech.com.br/rss/produtos', category: 'Tecnologia' },
     { url: 'https://rss.tecmundo.com.br/feed', category: 'Tecnologia' },
     { url: 'https://www.techtudo.com.br/feed', category: 'Tecnologia' },
     { url: 'https://teletime.com.br/feed/', category: 'Tecnologia' },
@@ -160,6 +163,12 @@ export const FEED_SOURCES = [
     { url: 'https://revistaforum.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.brasildefato.com.br/rss2.xml', category: 'Brasil' },
 
+
+    // --- GERAL/ENTRETENIMENTO (EXTRAS) ---
+    { url: 'https://catracalivre.com.br/feed/', category: 'Geral' },
+    { url: 'https://www.brasildefato.com.br/rss2.xml', category: 'Geral' },
+    { url: 'https://www.poder360.com.br/feed/', category: 'Geral' },
+    { url: 'https://g1.globo.com/rss/g1/pop-arte/', category: 'Entretenimento' },
 
     // --- MUNDO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
@@ -285,6 +294,10 @@ export const FEED_SOURCES = [
     { url: 'https://switch-brasil.com/feed/', category: 'Games' },
 
     // --- ESPORTES ---
+    { url: 'https://placar.com.br/feed/', category: 'Esportes' },
+    { url: 'https://diariodonordeste.verdesmares.com.br/jogada/rss', category: 'Esportes' },
+    { url: 'https://www.uol.com.br/esporte/volei/ultimas-noticias/rss.xml', category: 'Esportes' },
+    { url: 'https://www.uol.com.br/esporte/basquete/ultimas-noticias/rss.xml', category: 'Esportes' },
     { url: 'https://www.uol.com.br/esporte/ultimas-noticias/rss.xml', category: 'Esportes' },
     { url: 'https://www.band.uol.com.br/esportes/rss', category: 'Esportes' },
     { url: 'https://trivela.com.br/feed/', category: 'Esportes' },
