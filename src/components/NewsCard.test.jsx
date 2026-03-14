@@ -7,6 +7,7 @@ import * as telegramService from '../services/telegramService';
 // Mock the services
 vi.mock('../services/ollamaService', () => ({
     summarizeWithOllama: vi.fn(),
+    classifyWithOllama: vi.fn(),
 }));
 
 vi.mock('../services/telegramService', () => ({
@@ -45,7 +46,7 @@ describe('NewsCard', () => {
 
         render(<NewsCard item={mockItem} ollamaUrl="http://test-url" ollamaModel="llama3" aiProvider="ollama" apiKey="" />);
 
-        const summarizeButton = screen.getByTitle('Resumir com IA');
+        const summarizeButton = screen.getByTitle('Resumir e Classificar com IA');
         fireEvent.click(summarizeButton);
 
         await waitFor(() => {
@@ -59,7 +60,7 @@ describe('NewsCard', () => {
          vi.spyOn(console, 'error').mockImplementation(() => {});
          render(<NewsCard item={mockItem} ollamaUrl="" aiProvider="ollama" apiKey="" />);
 
-         const summarizeButton = screen.getByTitle('Resumir com IA');
+        const summarizeButton = screen.getByTitle('Resumir e Classificar com IA');
          fireEvent.click(summarizeButton);
 
          await waitFor(() => {
@@ -74,7 +75,7 @@ describe('NewsCard', () => {
 
         render(<NewsCard item={mockItem} ollamaUrl="http://test-url" aiProvider="ollama" apiKey="" />);
 
-        const summarizeButton = screen.getByTitle('Resumir com IA');
+        const summarizeButton = screen.getByTitle('Resumir e Classificar com IA');
         fireEvent.click(summarizeButton);
 
         await waitFor(() => {
@@ -89,7 +90,7 @@ describe('NewsCard', () => {
         // Ensure tokens are provided so the button renders
         render(<NewsCard item={mockItem} telegramBotToken="token" telegramChatId="chatid" />);
 
-        const sendButton = screen.getByTitle('Enviar para Telegram');
+        const sendButton = screen.getByTitle('Enviar para Telegram (Canal)');
         fireEvent.click(sendButton);
 
         await waitFor(() => {
