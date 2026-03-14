@@ -90,6 +90,9 @@ export const FEED_SOURCES = [
     { url: 'https://towardsdatascience.com/feed', category: 'IA' },
 
     // --- BRASIL ---
+    { url: 'https://jornaldebrasilia.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.correio24horas.com.br/rss', category: 'Brasil' },
+    { url: 'https://www.bnews.com.br/rss.xml', category: 'Brasil' },
     { url: 'https://noticias.uol.com.br/rss', category: 'Brasil' },
     { url: 'https://jovempan.com.br/feed', category: 'Brasil' },
     { url: 'https://www.metropoles.com/feed', category: 'Brasil' },
@@ -173,6 +176,11 @@ export const FEED_SOURCES = [
     // --- MUNDO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
     { url: 'https://www.thesun.co.uk/news/worldnews/feed/', category: 'Mundo' },
+    { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },
+    { url: 'https://feeds.reuters.com/reuters/worldNews', category: 'Mundo' },
+    { url: 'https://www.theguardian.com/world/rss', category: 'Mundo' },
+    { url: 'https://feeds.washingtonpost.com/rss/world', category: 'Mundo' },
+    { url: 'https://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
     { url: 'https://nypost.com/world/feed/', category: 'Mundo' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', category: 'Mundo' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
