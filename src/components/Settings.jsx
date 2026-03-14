@@ -185,9 +185,9 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
                  {aiProvider === 'ollama' ? (
                      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                            <Info size={16} className="shrink-0 mt-0.5" />
-                            <p>O Ollama precisa estar rodando localmente.</p>
+                        <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-col">
+                            <div className="flex items-center gap-2"><Info size={16} className="shrink-0 mt-0.5" /> <strong>Ollama Local AI</strong></div>
+                            <p>O Ollama é usado para resumir as notícias e classificá-las em categorias para envio ao Telegram de forma gratuita e privada. Ele precisa estar rodando na sua máquina.</p>
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">URL do Ollama</label>
@@ -265,8 +265,13 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
           {activeTab === 'telegram' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 text-sm text-indigo-800 dark:text-indigo-300">
-                      <h4 className="font-bold flex items-center gap-2 mb-2"><Bot size={16}/> Telegram Bot</h4>
-                      <p>Adicione o bot ao canal como administrador.</p>
+                      <h4 className="font-bold flex items-center gap-2 mb-2"><Bot size={16}/> Automação Telegram (Canal)</h4>
+                      <p className="mb-2">Configuração para enviar resumos classificados automaticamente (ou via botões nos cards) para seu Canal ou Grupo do Telegram.</p>
+                      <ul className="list-disc list-inside text-xs opacity-80 space-y-1">
+                         <li>Crie um bot com o @BotFather.</li>
+                         <li>Adicione o bot ao seu Canal como administrador.</li>
+                         <li>Insira o Token do Bot e o ID/Username do Canal abaixo (ex: @meucanal).</li>
+                      </ul>
                   </div>
 
                   <div>

@@ -46,10 +46,10 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-8 relative`}>
             {!isCollapsed ? (
               <div className="flex items-center gap-3">
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-[14px] shadow-lg shadow-blue-500/30">
-                    <Globe className="text-white h-5 w-5" />
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-2xl shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                    <Globe className="text-white h-5 w-5 animate-pulse" />
                 </div>
-                <h1 className="text-[22px] font-black tracking-tight text-slate-900 dark:text-white">NewsAI</h1>
+                <h1 className="text-[24px] font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">NewsAI</h1>
               </div>
             ) : (
                 <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-xl shadow-lg shadow-blue-500/20">
@@ -87,7 +87,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                   className={`
                     w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3.5 px-3.5'} py-2.5 rounded-[14px] text-sm font-semibold transition-all duration-200 group relative border-l-4
                     ${isSelected
-                      ? 'bg-blue-50/80 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-500 shadow-sm'
+                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-500 shadow-sm'
                       : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200'
                     }
                   `}
