@@ -27,6 +27,7 @@ const EMOJI_MAP = {
 
 const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
+  const [aiCategory, setAiCategory] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sendingTelegram, setSendingTelegram] = useState(false);
   const [telegramStatus, setTelegramStatus] = useState(null); // success, error
@@ -67,6 +68,16 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
         result = await summarizeWithGemini(textToSummarize, apiKey);
       } else {
         result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+
+        // Add classification with Ollama here
+        try {
+            const classifiedCategory = await classifyWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+            if (classifiedCategory) {
+                 setAiCategory(classifiedCategory);
+            }
+        } catch (catError) {
+             console.error("Failed to classify:", catError);
+        }
       }
 
       setSummary(result);
@@ -87,11 +98,12 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
       setSendingTelegram(true);
       try {
-          let finalCategory = item.category || 'Geral';
+          let finalCategory = aiCategory || item.category || 'Geral';
 
-          if ((!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
+          if (!aiCategory && (!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
               const textToClassify = item.content || item.description || item.title;
               finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel);
+              setAiCategory(finalCategory); // cache it
           }
 
           const emoji = EMOJI_MAP[finalCategory] || '📰';
@@ -141,7 +153,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-xl dark:hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
       <div className="relative p-3">
         <div className="relative overflow-hidden rounded-[1.5rem]">
           {imageUrl && !imageError ? (
@@ -151,7 +163,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
                       alt={item.title}
                       loading="lazy"
                       onError={() => setImageError(true)}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-slate-900/10 opacity-80 transition-opacity duration-300" />
               </div>
@@ -162,9 +174,12 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           )}
 
           {/* Category Badge */}
-          {item.category && (
-              <div className="absolute top-3 left-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider z-10">
-                  {item.category}
+          {(aiCategory || item.category) && (
+              <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
+                  <div className={`bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider flex items-center gap-1 ${aiCategory ? 'border border-indigo-500/50 dark:border-indigo-400/50 shadow-indigo-500/20' : ''}`}>
+                      {aiCategory && <Sparkles size={10} className="text-indigo-600 dark:text-indigo-400" />}
+                      {aiCategory || item.category}
+                  </div>
               </div>
           )}
 
@@ -211,35 +226,35 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-20 flex items-center justify-center w-full gap-2 bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group/link"
+            className="relative z-20 flex items-center justify-center w-full gap-2 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-blue-600 hover:to-indigo-600 dark:from-slate-800 dark:to-slate-800/80 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-slate-800 hover:text-white dark:text-slate-200 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] group/link"
          >
             Ler notícia completa
-            <ExternalLink size={16} className="opacity-70 group-hover/link:opacity-100 transition-opacity" />
+            <ExternalLink size={16} className="opacity-70 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all" />
          </a>
 
-         <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+         <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
              <button
                  onClick={handleSummarize}
                  disabled={loading || summary !== null}
-                 title="Resumir com IA"
-                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed group/btn"
+                 title="Resumir e Classificar com IA"
+                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-800/50 text-indigo-700 dark:text-indigo-300 font-bold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn hover:shadow-sm border border-indigo-100/50 dark:border-indigo-800/50"
              >
-                 {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} className="group-hover/btn:scale-110 transition-transform" />}
-                 <span>{summary ? 'Resumido' : 'Resumir IA'}</span>
+                 {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} className="group-hover/btn:scale-110 group-hover/btn:rotate-12 transition-all text-indigo-500" />}
+                 <span>{summary ? 'Resumo IA' : 'Resumir IA'}</span>
              </button>
 
              <button
                  onClick={handleSendToTelegram}
                  disabled={sendingTelegram || !telegramBotToken}
-                 title="Enviar para Telegram"
-                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed group/btn"
+                 title="Enviar para Telegram (Canal)"
+                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-blue-50/80 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 font-bold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn hover:shadow-sm border border-blue-100/50 dark:border-blue-800/50"
              >
                  {sendingTelegram ? (
                      <Loader size={16} className="animate-spin" />
                  ) : telegramStatus === 'success' ? (
-                     <Check size={16} className="text-green-500" />
+                     <Check size={16} className="text-emerald-500" />
                  ) : (
-                     <Send size={16} className="group-hover/btn:scale-110 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                     <Send size={16} className="group-hover/btn:scale-110 transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-blue-500" />
                  )}
                  <span>{telegramStatus === 'success' ? 'Enviado!' : 'Telegram'}</span>
              </button>
@@ -247,7 +262,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
              <button
                  onClick={copyToClipboard}
                  title="Copiar Link"
-                 className="flex-none p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                 className="flex-none p-2.5 rounded-xl bg-slate-50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors border border-slate-200/50 dark:border-slate-700/50"
              >
                  <Copy size={16} />
              </button>
