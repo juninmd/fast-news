@@ -53,7 +53,7 @@ Resumo:`;
 
 export const classifyWithGemini = async (text, apiKey) => {
   const prompt = `Classifique a seguinte notícia em APENAS UMA das seguintes categorias:
-Tecnologia, IA, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Games, Saúde, Cripto, Marketing, Moda, Música, Turismo.
+Tecnologia, IA, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Games, Saúde, Cripto, Marketing, Moda, Música, Turismo, Geral.
 Responda APENAS com o nome da categoria, sem nenhuma outra palavra ou pontuação.
 Se não tiver certeza, responda "Geral".
 
