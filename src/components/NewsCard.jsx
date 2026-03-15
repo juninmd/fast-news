@@ -66,27 +66,19 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
       if (aiProvider === 'gemini') {
         result = await summarizeWithGemini(textToSummarize, apiKey);
-
-        try {
-            const classifiedCategory = await classifyWithGemini(textToSummarize, apiKey);
-            if (classifiedCategory) {
-                 setAiCategory(classifiedCategory);
-            }
-        } catch (catError) {
-             console.error("Failed to classify:", catError);
-        }
       } else {
         result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+      }
 
-        // Add classification with Ollama here
-        try {
-            const classifiedCategory = await classifyWithOllama(textToSummarize, ollamaUrl, ollamaModel);
-            if (classifiedCategory) {
-                 setAiCategory(classifiedCategory);
-            }
-        } catch (catError) {
-             console.error("Failed to classify:", catError);
-        }
+      try {
+          const classifiedCategory = aiProvider === 'gemini'
+              ? await classifyWithGemini(textToSummarize, apiKey)
+              : await classifyWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+          if (classifiedCategory) {
+               setAiCategory(classifiedCategory);
+          }
+      } catch (catError) {
+           console.error("Failed to classify:", catError);
       }
 
       setSummary(result);
