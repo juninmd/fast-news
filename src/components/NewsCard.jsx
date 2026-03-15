@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
-import { summarizeWithGemini } from '../services/geminiService';
+import { summarizeWithGemini, classifyWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
 import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -66,6 +66,15 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
       if (aiProvider === 'gemini') {
         result = await summarizeWithGemini(textToSummarize, apiKey);
+
+        try {
+            const classifiedCategory = await classifyWithGemini(textToSummarize, apiKey);
+            if (classifiedCategory) {
+                 setAiCategory(classifiedCategory);
+            }
+        } catch (catError) {
+             console.error("Failed to classify:", catError);
+        }
       } else {
         result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
 
@@ -100,9 +109,13 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       try {
           let finalCategory = aiCategory || item.category || 'Geral';
 
-          if (!aiCategory && (!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
+          if (!aiCategory) {
               const textToClassify = item.content || item.description || item.title;
-              finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel);
+              if (aiProvider === 'gemini' && apiKey) {
+                  finalCategory = await classifyWithGemini(textToClassify, apiKey);
+              } else if ((!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
+                  finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel);
+              }
               setAiCategory(finalCategory); // cache it
           }
 
