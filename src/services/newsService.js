@@ -172,6 +172,9 @@ export const FEED_SOURCES = [
     { url: 'https://www.brasildefato.com.br/rss2.xml', category: 'Geral' },
     { url: 'https://www.poder360.com.br/feed/', category: 'Geral' },
     { url: 'https://g1.globo.com/rss/g1/pop-arte/', category: 'Entretenimento' },
+    { url: 'https://g1.globo.com/rss/g1/sao-paulo/', category: 'Brasil' },
+    { url: 'https://g1.globo.com/rss/g1/rio-de-janeiro/', category: 'Brasil' },
+    { url: 'https://g1.globo.com/rss/g1/minas-gerais/', category: 'Brasil' },
 
     // --- MUNDO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
@@ -209,6 +212,8 @@ export const FEED_SOURCES = [
     { url: 'https://slate.com/feeds/all.rss', category: 'Mundo' },
 
     // --- NEGÓCIOS & FINANÇAS ---
+    { url: 'https://valor.globo.com/rss/financas/', category: 'Negócios' },
+    { url: 'https://valor.globo.com/rss/empresas/', category: 'Negócios' },
     { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negócios' },
     { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html', category: 'Negócios' },
     { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
@@ -283,6 +288,9 @@ export const FEED_SOURCES = [
 
     // --- GAMES ---
     { url: 'https://br.ign.com/feed.xml', category: 'Games' },
+    { url: 'https://omelete.com.br/rss', category: 'Entretenimento' },
+    { url: 'https://br.ign.com/playstation/feed.xml', category: 'Games' },
+    { url: 'https://br.ign.com/xbox/feed.xml', category: 'Games' },
     { url: 'https://www.nintendolife.com/feeds/latest', category: 'Games' },
     { url: 'https://www.theenemy.com.br/rss', category: 'Games' },
     { url: 'https://www.eurogamer.net/?format=rss', category: 'Games' },
