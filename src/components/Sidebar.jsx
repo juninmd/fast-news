@@ -47,12 +47,12 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
             {!isCollapsed ? (
               <div className="flex items-center gap-3">
                 <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-2xl shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-                    <Globe className="text-white h-5 w-5 animate-pulse" />
+                    <Globe className="text-white h-6 w-6 animate-pulse" />
                 </div>
-                <h1 className="text-[24px] font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">NewsAI</h1>
+                <h1 className="text-[26px] font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600">NewsAI</h1>
               </div>
             ) : (
-                <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-xl shadow-lg shadow-blue-500/20">
+                <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
                     <Globe className="text-white h-5 w-5" />
                 </div>
             )}
@@ -92,7 +92,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                     }
                   `}
                 >
-                  <Icon size={20} className={`transition-colors shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
+                  <Icon size={22} className={`transition-colors shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
 
                   {!isCollapsed && (
                         <span className="relative z-10 whitespace-nowrap">{category}</span>
