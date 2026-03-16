@@ -208,18 +208,18 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           </a>
         </h3>
 
-        <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4 flex-grow font-medium">
+        <div className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed mb-4 flex-grow font-medium">
             {summary ? (
-                <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-900/20 dark:to-blue-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2">
+                <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-900/20 dark:to-blue-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2 shadow-sm">
                     <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
                         <Sparkles size={14} className="fill-current" /> Resumo IA
                     </div>
-                    <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 prose-p:leading-relaxed prose-li:my-1">
                         <ReactMarkdown>{summary}</ReactMarkdown>
                     </div>
                 </div>
             ) : (
-                <p className="line-clamp-3">{cleanDescription}</p>
+                <p className="line-clamp-3 opacity-90">{cleanDescription}</p>
             )}
             {error && <p className="text-red-500 text-[11px] mt-2 font-medium bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg inline-block">{error}</p>}
         </div>
@@ -231,10 +231,10 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-20 flex items-center justify-center w-full gap-2 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-blue-600 hover:to-indigo-600 dark:from-slate-800 dark:to-slate-800/80 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-slate-800 hover:text-white dark:text-slate-200 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] group/link"
+            className="relative z-20 flex items-center justify-center w-full gap-2 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-blue-600 hover:to-indigo-600 dark:from-slate-800/80 dark:to-slate-800 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-slate-800 hover:text-white dark:text-slate-200 py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] group/link active:scale-[0.98]"
          >
             Ler notícia completa
-            <ExternalLink size={16} className="opacity-70 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all" />
+            <ExternalLink size={18} className="opacity-70 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all" />
          </a>
 
          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
