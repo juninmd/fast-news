@@ -163,7 +163,7 @@ function App() {
                          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                              <span className="text-blue-600 dark:text-blue-500">Trending</span> Topics
                          </h2>
-                         <TrendingTopics apiKey={rss2jsonApiKey} />
+                         <TrendingTopics />
                     </section>
                 )}
 
