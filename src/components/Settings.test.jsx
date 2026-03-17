@@ -2,15 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Settings from './Settings';
 import * as ollamaService from '../services/ollamaService';
-import * as geminiService from '../services/geminiService';
 
 // Mock the ollama service
 vi.mock('../services/ollamaService', () => ({
     summarizeWithOllama: vi.fn(),
-}));
-
-vi.mock('../services/geminiService', () => ({
-    testGeminiConnection: vi.fn(),
 }));
 
 describe('Settings', () => {
@@ -148,50 +143,6 @@ describe('Settings', () => {
 
         await waitFor(() => {
             expect(screen.getByText('Erro')).toBeInTheDocument();
-        });
-    });
-
-    it('shows success message when gemini connection test passes', async () => {
-        geminiService.testGeminiConnection.mockResolvedValue(true);
-        render(<Settings isOpen={true} />);
-
-        // Navigate to IA tab
-        fireEvent.click(screen.getByRole('button', { name: /Inteligência Artificial/i }));
-
-        // Select Gemini
-        fireEvent.click(screen.getByText('Google Gemini'));
-
-        // Fill API key to enable button
-        const input = await screen.findByPlaceholderText('Insira sua API Key do Google Gemini');
-        fireEvent.change(input, { target: { value: 'test-api-key' } });
-
-        const testButton = await screen.findByText('Testar Conexão');
-        fireEvent.click(testButton);
-
-        await waitFor(() => {
-            expect(screen.getByText('Conectado!')).toBeInTheDocument();
-        });
-    });
-
-    it('shows error message when gemini connection test fails', async () => {
-        geminiService.testGeminiConnection.mockRejectedValue(new Error('Connection failed'));
-        render(<Settings isOpen={true} />);
-
-        // Navigate to IA tab
-        fireEvent.click(screen.getByRole('button', { name: /Inteligência Artificial/i }));
-
-        // Select Gemini
-        fireEvent.click(screen.getByText('Google Gemini'));
-
-        // Fill API key to enable button
-        const input = await screen.findByPlaceholderText('Insira sua API Key do Google Gemini');
-        fireEvent.change(input, { target: { value: 'test-api-key' } });
-
-        const testButton = await screen.findByText('Testar Conexão');
-        fireEvent.click(testButton);
-
-        await waitFor(() => {
-            expect(screen.getByText('Falha na Conexão')).toBeInTheDocument();
         });
     });
 });
