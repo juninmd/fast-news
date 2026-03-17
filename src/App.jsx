@@ -18,8 +18,7 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Settings State
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
-  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+  const [aiProvider, setAiProvider] = useState(() => 'ollama');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key'));
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -53,7 +52,6 @@ function App() {
   };
 
   const handleSaveSettings = (newSettings) => {
-    setApiKey(newSettings.geminiApiKey);
     setAiProvider(newSettings.aiProvider);
     setCustomFeeds(newSettings.customFeeds);
     setRss2jsonApiKey(newSettings.rss2jsonApiKey);
@@ -165,7 +163,7 @@ function App() {
                          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                              <span className="text-blue-600 dark:text-blue-500">Trending</span> Topics
                          </h2>
-                         <TrendingTopics apiKey={apiKey || rss2jsonApiKey} />
+                         <TrendingTopics apiKey={rss2jsonApiKey} />
                     </section>
                 )}
 
@@ -177,7 +175,6 @@ function App() {
                      </div>
 
                      <Feed
-                        apiKey={apiKey}
                         aiProvider={aiProvider}
                         rss2jsonApiKey={rss2jsonApiKey}
                         autoSummarize={autoSummarize}
