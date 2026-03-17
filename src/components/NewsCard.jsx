@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
-import { summarizeWithGemini, classifyWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
 import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -36,44 +35,27 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
   useEffect(() => {
     if (autoSummarize && !summary && !loading && !error) {
-      if (aiProvider === 'gemini' && apiKey) {
-        handleSummarize();
-      } else if ((!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
+      if (ollamaUrl) {
         handleSummarize();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSummarize, ollamaUrl, apiKey, aiProvider]);
+  }, [autoSummarize, ollamaUrl]);
 
   const handleSummarize = async () => {
-    if (aiProvider === 'gemini') {
-      if (!apiKey) {
-        setError("Configure API Key do Gemini.");
-        return;
-      }
-    } else {
-      if (!ollamaUrl) {
-        setError("Configure Ollama.");
-        return;
-      }
+    if (!ollamaUrl) {
+      setError("Configure Ollama.");
+      return;
     }
 
     setLoading(true);
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      let result;
-
-      if (aiProvider === 'gemini') {
-        result = await summarizeWithGemini(textToSummarize, apiKey);
-      } else {
-        result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
-      }
+      let result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
 
       try {
-          const classifiedCategory = aiProvider === 'gemini'
-              ? await classifyWithGemini(textToSummarize, apiKey)
-              : await classifyWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+          const classifiedCategory = await classifyWithOllama(textToSummarize, ollamaUrl, ollamaModel);
           if (classifiedCategory) {
                setAiCategory(classifiedCategory);
           }
@@ -103,9 +85,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
           if (!aiCategory) {
               const textToClassify = item.content || item.description || item.title;
-              if (aiProvider === 'gemini' && apiKey) {
-                  finalCategory = await classifyWithGemini(textToClassify, apiKey);
-              } else if ((!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
+              if (ollamaUrl) {
                   finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel);
               }
               setAiCategory(finalCategory); // cache it
@@ -159,10 +139,10 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-xl dark:hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
-      <div className="relative p-3">
-        <div className="relative overflow-hidden rounded-[1.5rem]">
+      <div className="relative p-2">
+        <div className="relative overflow-hidden rounded-t-[1.8rem] rounded-b-2xl shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
           {imageUrl && !imageError ? (
-              <div className="aspect-[16/10] w-full overflow-hidden relative">
+              <div className="aspect-[16/10] w-full overflow-hidden relative group-hover:after:absolute group-hover:after:inset-0 group-hover:after:bg-black/10 transition-all">
                   <img
                       src={imageUrl}
                       alt={item.title}
@@ -173,15 +153,15 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-slate-900/10 opacity-80 transition-opacity duration-300" />
               </div>
           ) : (
-              <div className="aspect-[16/10] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
-                  <Newspaper className="text-indigo-400 dark:text-indigo-500 w-16 h-16 opacity-50" />
+              <div className="aspect-[16/10] bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
+                  <Newspaper className="text-slate-400 dark:text-slate-600 w-16 h-16 opacity-50" />
               </div>
           )}
 
           {/* Category Badge */}
           {(aiCategory || item.category) && (
               <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
-                  <div className={`bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider flex items-center gap-1 ${aiCategory ? 'border border-indigo-500/50 dark:border-indigo-400/50 shadow-indigo-500/20' : ''}`}>
+                  <div className={`bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl text-slate-800 dark:text-slate-200 text-[11px] font-black px-3 py-1.5 rounded-full shadow-lg shadow-black/5 uppercase tracking-wider flex items-center gap-1.5 border border-white/20 ${aiCategory ? 'bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-900/80 dark:to-indigo-900/80 text-indigo-700 dark:text-indigo-300 border-indigo-200/50 dark:border-indigo-700/50 shadow-indigo-500/20' : ''}`}>
                       {aiCategory && <Sparkles size={10} className="text-indigo-600 dark:text-indigo-400" />}
                       {aiCategory || item.category}
                   </div>
@@ -189,20 +169,20 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           )}
 
           {/* Source Badge (Top Right) */}
-          <div className="absolute top-3 right-3 bg-blue-600/90 dark:bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-blue-400/30 z-10 flex items-center gap-1.5">
-             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+          <div className="absolute top-3 right-3 bg-slate-900/80 dark:bg-black/60 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-white/10 z-10 flex items-center gap-1.5 group-hover:bg-blue-600/90 transition-colors">
+             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 group-hover:bg-white animate-pulse transition-colors"></span>
              {item.source}
           </div>
 
           {/* Date on Image Bottom */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-xs font-medium text-white/90 drop-shadow-md z-10">
-               <span className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">{formatDate(item.pubDate)}</span>
+          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-xs font-semibold text-white/90 drop-shadow-md z-10">
+               <span className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 shadow-sm">{formatDate(item.pubDate)}</span>
           </div>
         </div>
       </div>
 
       <div className="px-6 py-5 flex flex-col flex-grow relative">
-        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-3 leading-[1.3] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+        <h3 className="text-[22px] font-extrabold tracking-tight text-slate-900 dark:text-white mb-3 leading-[1.25] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
@@ -231,7 +211,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-20 flex items-center justify-center w-full gap-2 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-blue-600 hover:to-indigo-600 dark:from-slate-800/80 dark:to-slate-800 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-slate-800 hover:text-white dark:text-slate-200 py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] group/link active:scale-[0.98]"
+            className="relative z-20 flex items-center justify-center w-full gap-2 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-blue-600 hover:to-indigo-600 dark:from-slate-800/80 dark:to-slate-900 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-slate-800 hover:text-white dark:text-slate-200 py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] group/link active:scale-[0.98] border border-slate-200/50 dark:border-slate-700/50 hover:border-transparent dark:hover:border-transparent"
          >
             Ler notícia completa
             <ExternalLink size={18} className="opacity-70 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all" />
@@ -242,7 +222,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
                  onClick={handleSummarize}
                  disabled={loading || summary !== null}
                  title="Resumir e Classificar com IA"
-                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-800/50 text-indigo-700 dark:text-indigo-300 font-bold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn hover:shadow-sm border border-indigo-100/50 dark:border-indigo-800/50"
+                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-indigo-50/80 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-800/70 text-indigo-700 dark:text-indigo-300 font-bold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn hover:shadow-md border border-indigo-100/50 dark:border-indigo-800/50"
              >
                  {loading ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} className="group-hover/btn:scale-110 group-hover/btn:rotate-12 transition-all text-indigo-500" />}
                  <span>{summary ? 'Resumo IA' : 'Resumir IA'}</span>
@@ -252,7 +232,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
                  onClick={handleSendToTelegram}
                  disabled={sendingTelegram || !telegramBotToken}
                  title="Enviar para Telegram (Canal)"
-                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-blue-50/80 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 font-bold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn hover:shadow-sm border border-blue-100/50 dark:border-blue-800/50"
+                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-blue-50/80 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/70 text-blue-700 dark:text-blue-300 font-bold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn hover:shadow-md border border-blue-100/50 dark:border-blue-800/50"
              >
                  {sendingTelegram ? (
                      <Loader size={16} className="animate-spin" />

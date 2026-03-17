@@ -399,6 +399,13 @@ export const FEED_SOURCES = [
 
     // --- TURISMO ---
     { url: 'https://g1.globo.com/rss/g1/turismo-e-viagem/', category: 'Turismo' },
+
+    // --- ADICIONADOS ---
+    { url: 'https://veja.abril.com.br/feed/', category: 'Brasil' },
+    { url: 'https://exame.com/feed/', category: 'Negócios' },
+    { url: 'https://oglobo.globo.com/rss/', category: 'Brasil' },
+    { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
+    { url: 'https://tecnoblog.net/feed/', category: 'Tecnologia' },
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {

@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settings as SettingsIcon } from 'lucide-react';
 import { summarizeWithOllama } from '../services/ollamaService';
-import { testGeminiConnection } from '../services/geminiService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+  const [aiProvider, setAiProvider] = useState(() => 'ollama');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -19,13 +17,11 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
   const [activeTab, setActiveTab] = useState('geral'); // geral, feeds, ia, telegram
   const [ollamaStatus, setOllamaStatus] = useState('idle');
-  const [geminiStatus, setGeminiStatus] = useState('idle');
 
   if (!isOpen) return null;
 
   const handleSave = () => {
-    localStorage.setItem('gemini_api_key', geminiApiKey);
-    localStorage.setItem('ai_provider', aiProvider);
+    localStorage.setItem('ai_provider', 'ollama');
     localStorage.setItem('custom_feeds', JSON.stringify(customFeeds));
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
     localStorage.setItem('auto_summarize', autoSummarize);
@@ -35,7 +31,6 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     localStorage.setItem('telegram_chat_id', telegramChatId);
 
     onSave({
-      geminiApiKey,
       aiProvider,
       customFeeds,
       rss2jsonApiKey,
@@ -56,17 +51,6 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
       } catch (e) {
           console.error(e);
           setOllamaStatus('error');
-      }
-  };
-
-  const testGemini = async () => {
-      setGeminiStatus('testing');
-      try {
-          await testGeminiConnection(geminiApiKey);
-          setGeminiStatus('success');
-      } catch (e) {
-          console.error(e);
-          setGeminiStatus('error');
       }
   };
 
@@ -142,8 +126,8 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
                 <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
                     <div>
-                        <span className="block text-sm font-medium text-gray-900 dark:text-white">Resumo Automático</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Tentar resumir notícias automaticamente</span>
+                        <span className="block text-sm font-bold text-gray-900 dark:text-white">Resumo Automático</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Tentar resumir notícias automaticamente na interface.</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" checked={autoSummarize} onChange={(e) => setAutoSummarize(e.target.checked)} className="sr-only peer" />
@@ -155,110 +139,46 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
           {activeTab === 'ia' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Provedor de IA</label>
-                    <div className="grid grid-cols-2 gap-3">
+                 <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-col">
+                        <div className="flex items-center gap-2"><Info size={16} className="shrink-0 mt-0.5" /> <strong>Ollama Local AI</strong></div>
+                        <p>O Ollama é usado para resumir as notícias e classificá-las em categorias para envio ao Telegram de forma gratuita e privada. Ele precisa estar rodando na sua máquina.</p>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">URL do Ollama</label>
+                        <input
+                            type="text"
+                            value={ollamaUrl}
+                            onChange={(e) => setOllamaUrl(e.target.value)}
+                            className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
+                            placeholder="http://localhost:11434"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Modelo</label>
+                        <input
+                            type="text"
+                            value={ollamaModel}
+                            onChange={(e) => setOllamaModel(e.target.value)}
+                            className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
+                            placeholder="llama3"
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
                         <button
                             type="button"
-                            onClick={() => setAiProvider('ollama')}
-                            className={`p-3 rounded-xl border text-sm font-medium transition-all ${
-                                aiProvider === 'ollama'
-                                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                                : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            onClick={testOllama}
+                            disabled={ollamaStatus === 'testing'}
+                            className={`text-xs px-3 py-1 rounded border transition-colors ${
+                                ollamaStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
+                                ollamaStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
+                                'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
                             }`}
                         >
-                            Ollama (Local)
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setAiProvider('gemini')}
-                            className={`p-3 rounded-xl border text-sm font-medium transition-all ${
-                                aiProvider === 'gemini'
-                                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                                : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            Google Gemini
+                            {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
                         </button>
                     </div>
                  </div>
-
-                 {aiProvider === 'ollama' ? (
-                     <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-col">
-                            <div className="flex items-center gap-2"><Info size={16} className="shrink-0 mt-0.5" /> <strong>Ollama Local AI</strong></div>
-                            <p>O Ollama é usado para resumir as notícias e classificá-las em categorias para envio ao Telegram de forma gratuita e privada. Ele precisa estar rodando na sua máquina.</p>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">URL do Ollama</label>
-                            <input
-                                type="text"
-                                value={ollamaUrl}
-                                onChange={(e) => setOllamaUrl(e.target.value)}
-                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
-                                placeholder="http://localhost:11434"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Modelo</label>
-                            <input
-                                type="text"
-                                value={ollamaModel}
-                                onChange={(e) => setOllamaModel(e.target.value)}
-                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
-                                placeholder="llama3"
-                            />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={testOllama}
-                                disabled={ollamaStatus === 'testing'}
-                                className={`text-xs px-3 py-1 rounded border transition-colors ${
-                                    ollamaStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
-                                    ollamaStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
-                                    'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
-                                }`}
-                            >
-                                {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
-                            </button>
-                        </div>
-                     </div>
-                 ) : (
-                     <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg border border-indigo-100 dark:border-indigo-800 text-xs text-indigo-800 dark:text-indigo-300">
-                            <p className="flex items-center gap-1.5 font-medium mb-1"><Info size={14}/> Rodar via Cliente</p>
-                            <p>Sua API Key do Gemini fica salva apenas no seu navegador. Os resumos são processados diretamente do seu dispositivo para a Google.</p>
-                        </div>
-                        <div>
-                            <label className="flex justify-between items-end mb-1">
-                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Gemini API Key</span>
-                                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Obter API Key</a>
-                            </label>
-                            <input
-                                type="password"
-                                value={geminiApiKey}
-                                onChange={(e) => setGeminiApiKey(e.target.value)}
-                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-                                placeholder="Insira sua API Key do Google Gemini"
-                            />
-                        </div>
-                        <div className="flex justify-end pt-2">
-                            <button
-                                type="button"
-                                onClick={testGemini}
-                                disabled={geminiStatus === 'testing' || !geminiApiKey}
-                                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed ${ 
-                                    geminiStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
-                                    geminiStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
-                                    'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'
-                                }`}
-                            >
-                                {geminiStatus === 'testing' ? 'Testando...' : geminiStatus === 'success' ? 'Conectado!' : geminiStatus === 'error' ? 'Falha na Conexão' : 'Testar Conexão'}
-                            </button>
-                        </div>
-                     </div>
-                 )}
               </div>
           )}
 
@@ -266,32 +186,34 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 text-sm text-indigo-800 dark:text-indigo-300">
                       <h4 className="font-bold flex items-center gap-2 mb-2"><Bot size={16}/> Automação Telegram (Canal)</h4>
-                      <p className="mb-2">Configuração para enviar resumos classificados automaticamente (ou via botões nos cards) para seu Canal ou Grupo do Telegram.</p>
+                      <p className="mb-2">Configuração para enviar resumos classificados manualmente via botões nos cards. Para automação em 2º plano, execute <code>node scripts/news-agent.js --loop</code> no terminal do projeto com o Ollama rodando.</p>
                       <ul className="list-disc list-inside text-xs opacity-80 space-y-1">
-                         <li>Crie um bot com o @BotFather.</li>
-                         <li>Adicione o bot ao seu Canal como administrador.</li>
+                         <li>Crie um bot no Telegram com o @BotFather.</li>
+                         <li>Adicione o bot ao seu Canal do Telegram como administrador.</li>
                          <li>Insira o Token do Bot e o ID/Username do Canal abaixo (ex: @meucanal).</li>
                       </ul>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot Token</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" title="O Token de acesso do seu bot fornecido pelo @BotFather">Bot Token</label>
                     <input
                         type="password"
                         value={telegramBotToken}
                         onChange={(e) => setTelegramBotToken(e.target.value)}
                         className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                         placeholder="Token"
+                        title="O Token de acesso do seu bot fornecido pelo @BotFather"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chat ID</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" title="O ID do canal que o bot deve enviar, ex: @meucanal">Chat ID</label>
                     <input
                         type="text"
                         value={telegramChatId}
                         onChange={(e) => setTelegramChatId(e.target.value)}
                         className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                         placeholder="@canal"
+                        title="O ID do canal que o bot deve enviar, ex: @meucanal"
                     />
                   </div>
               </div>
