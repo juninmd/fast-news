@@ -154,7 +154,7 @@ Caso nenhuma categoria se encaixe bem, ou se houver dúvida, retorne a categoria
 async function summarizeWithOllama(title, content) {
     const prompt = `
 Você é um editor especialista para um canal de notícias premium no Telegram.
-Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
+Sua missão é criar um resumo altamente persuasivo e engajador para um canal de notícias no Telegram. Use um tom empolgante, seja direto ao ponto e inclua emojis adequados para cada tópico abordado.
 
 Notícia Analisada:
 Título: "${title}"

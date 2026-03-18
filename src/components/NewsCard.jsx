@@ -24,7 +24,7 @@ const EMOJI_MAP = {
     'Geral': '📰'
 };
 
-const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
+const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [aiCategory, setAiCategory] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -138,7 +138,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-xl dark:hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
+    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-3 dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
       <div className="relative p-2">
         <div className="relative overflow-hidden rounded-t-[1.8rem] rounded-b-2xl shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
           {imageUrl && !imageError ? (

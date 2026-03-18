@@ -406,6 +406,9 @@ export const FEED_SOURCES = [
     { url: 'https://oglobo.globo.com/rss/', category: 'Brasil' },
     { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
     { url: 'https://tecnoblog.net/feed/', category: 'Tecnologia' },
+    { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
+    { url: 'https://rss.tecmundo.com.br/feed', category: 'Tecnologia' },
+    { url: 'https://www.theenemy.com.br/rss', category: 'Games' },
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {

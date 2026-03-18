@@ -8,7 +8,6 @@ import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 const DEFAULT_FEEDS = [];
 
 const Feed = ({
-    aiProvider,
     customFeeds = DEFAULT_FEEDS,
     rss2jsonApiKey,
     autoSummarize,
@@ -118,7 +117,6 @@ const Feed = ({
       {showHero && (
           <HeroSection
              item={heroItem}
-             aiProvider={aiProvider}
              ollamaUrl={ollamaUrl}
              ollamaModel={ollamaModel}
           />
@@ -139,7 +137,6 @@ const Feed = ({
               <div key={item.id} className="break-inside-avoid mb-6">
                   <NewsCard
                     item={item}
-                    aiProvider={aiProvider}
                     autoSummarize={autoSummarize}
                     ollamaUrl={ollamaUrl}
                     ollamaModel={ollamaModel}
