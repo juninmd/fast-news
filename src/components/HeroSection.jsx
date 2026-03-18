@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { summarizeWithOllama } from '../services/ollamaService';
-import { Sparkles, Loader, ExternalLink, Calendar, Newspaper, ArrowRight } from 'lucide-react';
+import { Sparkles, Loader, ExternalLink, Calendar, Newspaper, ArrowRight, X } from 'lucide-react';
 
-const HeroSection = ({ item, aiProvider, ollamaUrl, ollamaModel }) => {
+const HeroSection = ({ item, ollamaUrl, ollamaModel }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

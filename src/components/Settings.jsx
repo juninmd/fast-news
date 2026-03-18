@@ -3,7 +3,6 @@ import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settin
 import { summarizeWithOllama } from '../services/ollamaService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
-  const [aiProvider, setAiProvider] = useState(() => 'ollama');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -21,7 +20,6 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   if (!isOpen) return null;
 
   const handleSave = () => {
-    localStorage.setItem('ai_provider', 'ollama');
     localStorage.setItem('custom_feeds', JSON.stringify(customFeeds));
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
     localStorage.setItem('auto_summarize', autoSummarize);
@@ -31,7 +29,6 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     localStorage.setItem('telegram_chat_id', telegramChatId);
 
     onSave({
-      aiProvider,
       customFeeds,
       rss2jsonApiKey,
       autoSummarize,

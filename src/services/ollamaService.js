@@ -2,7 +2,7 @@
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
   const prompt = `
 Você é um editor especialista para um canal de notícias premium no Telegram.
-Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
+Sua missão é criar um resumo altamente persuasivo e engajador para um canal de notícias no Telegram. Use um tom empolgante, seja direto ao ponto e inclua emojis adequados para cada tópico abordado.
 
 Notícia Analisada:
 ${text}

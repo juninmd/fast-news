@@ -18,7 +18,6 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Settings State
-  const [aiProvider, setAiProvider] = useState(() => 'ollama');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key'));
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -52,7 +51,6 @@ function App() {
   };
 
   const handleSaveSettings = (newSettings) => {
-    setAiProvider(newSettings.aiProvider);
     setCustomFeeds(newSettings.customFeeds);
     setRss2jsonApiKey(newSettings.rss2jsonApiKey);
     setAutoSummarize(newSettings.autoSummarize);
@@ -86,7 +84,7 @@ function App() {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} bg-transparent`}>
 
           {/* Header */}
-          <header className="bg-white/70 dark:bg-[#0f172a]/70 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/80 px-4 sm:px-8 py-5 shadow-sm dark:shadow-slate-900/20">
+          <header className="bg-white/85 dark:bg-[#0f172a]/85 backdrop-blur-3xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/80 px-4 sm:px-8 py-5 shadow-sm dark:shadow-slate-900/20">
             <div className="flex justify-between items-center gap-6 max-w-[1600px] mx-auto w-full">
                 <div className="flex items-center gap-4 lg:hidden">
                     <button
@@ -175,7 +173,6 @@ function App() {
                      </div>
 
                      <Feed
-                        aiProvider={aiProvider}
                         rss2jsonApiKey={rss2jsonApiKey}
                         autoSummarize={autoSummarize}
                         customFeeds={customFeeds}
