@@ -24,6 +24,21 @@ const EMOJI_MAP = {
     'Geral': '📰'
 };
 
+const escapeHTML = (text) => {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+};
+
+const formatSummaryForTelegramHTML = (text) => {
+    if (!text) return '';
+    let htmlText = escapeHTML(text);
+    htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    return htmlText;
+};
+
 const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [aiCategory, setAiCategory] = useState(null);
@@ -95,20 +110,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           const categoryHashtag = finalCategory.replace(/\s+/g, '');
           const hashtags = `#${categoryHashtag} #Notícias`;
 
-          const formatSummaryForTelegramHTML = (text) => {
-              if (!text) return '';
-              let htmlText = text
-                  .replace(/&/g, "&amp;")
-                  .replace(/</g, "&lt;")
-                  .replace(/>/g, "&gt;");
-              htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-              return htmlText;
-          };
-
-          const safeTitle = item.title
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;");
+          const safeTitle = escapeHTML(item.title);
 
           const formattedSummary = formatSummaryForTelegramHTML(summary || item.description || '');
 
