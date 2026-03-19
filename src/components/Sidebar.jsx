@@ -87,7 +87,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                   className={`
                     w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3.5 px-4'} py-3 rounded-2xl text-[15px] font-bold transition-all duration-300 group relative
                     ${isSelected
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-600 dark:to-indigo-500 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_4px_20px_rgba(37,99,235,0.4)] scale-105 border-l-4 border-white'
                       : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200 hover:shadow-sm'
                     }
                   `}
