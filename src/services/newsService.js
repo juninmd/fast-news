@@ -406,6 +406,16 @@ export const FEED_SOURCES = [
     { url: 'https://oglobo.globo.com/rss/', category: 'Brasil' },
     { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
     { url: 'https://tecnoblog.net/feed/', category: 'Tecnologia' },
+    { url: 'https://g1.globo.com/rss/g1/carros/', category: 'Automóveis' },
+    { url: 'https://g1.globo.com/rss/g1/turismo-e-viagem/', category: 'Turismo' },
+    { url: 'https://feeds.folha.uol.com.br/esporte/rss091.xml', category: 'Esportes' },
+    { url: 'https://feeds.folha.uol.com.br/mercado/rss091.xml', category: 'Negócios' },
+    { url: 'https://feeds.folha.uol.com.br/ilustrada/rss091.xml', category: 'Entretenimento' },
+    { url: 'https://rss.uol.com.br/feed/economia.xml', category: 'Negócios' },
+    { url: 'https://rss.uol.com.br/feed/tecnologia.xml', category: 'Tecnologia' },
+    { url: 'https://rss.uol.com.br/feed/entretenimento.xml', category: 'Entretenimento' },
+    { url: 'https://www.tecmundo.com.br/rss', category: 'Tecnologia' },
+    { url: 'https://www.meioemensagem.com.br/feed', category: 'Marketing' },
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {

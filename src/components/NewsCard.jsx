@@ -95,8 +95,25 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           const categoryHashtag = finalCategory.replace(/\s+/g, '');
           const hashtags = `#${categoryHashtag} #Notícias`;
 
-          const textToSend = `*${emoji} ${finalCategory.toUpperCase()}*\n───────────────\n*${item.title}*\n\n${summary || item.description || ''}\n\n_${hashtags}_\n\n[Ler matéria completa](${item.link})`;
-          await sendToTelegram(textToSend, telegramBotToken, telegramChatId);
+          const formatSummaryForTelegramHTML = (text) => {
+              if (!text) return '';
+              let htmlText = text
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;");
+              htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+              return htmlText;
+          };
+
+          const safeTitle = item.title
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+
+          const formattedSummary = formatSummaryForTelegramHTML(summary || item.description || '');
+
+          const textToSend = `<b>${emoji} ${finalCategory.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${formattedSummary}\n\n<i>${hashtags}</i>\n\n<a href="${item.link}">Ler matéria completa</a>`;
+          await sendToTelegram(textToSend, telegramBotToken, telegramChatId, 'HTML');
           setTelegramStatus('success');
       } catch (e) {
           console.error(e);
@@ -138,7 +155,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-xl dark:hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_40px_-10px_rgba(255,255,255,0.05)] hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
       <div className="relative p-2">
         <div className="relative overflow-hidden rounded-t-[1.8rem] rounded-b-2xl shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
           {imageUrl && !imageError ? (
@@ -182,7 +199,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       </div>
 
       <div className="px-6 py-5 flex flex-col flex-grow relative">
-        <h3 className="text-[22px] font-extrabold tracking-tight text-slate-900 dark:text-white mb-3 leading-[1.25] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+        <h3 className="text-[24px] font-black tracking-tight text-slate-900 dark:text-white mb-3 leading-[1.25] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
