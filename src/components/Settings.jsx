@@ -3,7 +3,7 @@ import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settin
 import { summarizeWithOllama } from '../services/ollamaService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
-  const [aiProvider, setAiProvider] = useState(() => 'ollama');
+  const [aiProvider] = useState(() => 'ollama');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
