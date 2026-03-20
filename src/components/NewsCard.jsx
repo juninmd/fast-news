@@ -39,7 +39,7 @@ const formatSummaryForTelegramHTML = (text) => {
     return htmlText;
 };
 
-const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
+const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [aiCategory, setAiCategory] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -201,7 +201,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       </div>
 
       <div className="px-6 py-5 flex flex-col flex-grow relative">
-        <h3 className="text-[24px] font-black tracking-tight text-slate-900 dark:text-white mb-3 leading-[1.25] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+        <h3 className="text-2xl md:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 mb-3 leading-[1.2] group-hover:from-blue-600 group-hover:to-blue-500 dark:group-hover:from-blue-400 dark:group-hover:to-blue-300 transition-all line-clamp-3">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
@@ -230,10 +230,10 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-20 flex items-center justify-center w-full gap-2 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-blue-600 hover:to-indigo-600 dark:from-slate-800/80 dark:to-slate-900 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-slate-800 hover:text-white dark:text-slate-200 py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] group/link active:scale-[0.98] border border-slate-200/50 dark:border-slate-700/50 hover:border-transparent dark:hover:border-transparent"
+            className="relative z-20 flex items-center justify-center w-full gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] group/link active:scale-[0.98] border border-transparent"
          >
             Ler notícia completa
-            <ExternalLink size={18} className="opacity-70 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all" />
+            <ExternalLink size={18} className="opacity-80 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all" />
          </a>
 
          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
