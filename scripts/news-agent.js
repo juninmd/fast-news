@@ -160,9 +160,9 @@ Notícia Analisada:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 2500)}"
 
-Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
+Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato abaixo:
 
-**[Uma frase de impacto chamativa, curta e envolvente que resuma a notícia]**
+[Uma frase de impacto chamativa, curta e envolvente que resuma a notícia]
 
 🔸 [Fato 1 conciso]
 🔸 [Fato 2 conciso]
