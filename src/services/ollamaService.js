@@ -50,7 +50,7 @@ Diretrizes Rigorosas:
 
 export const classifyWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
     const prompt = `Sua tarefa é atuar como um sofisticado sistema de classificação de notícias.
-As categorias válidas e permitidas são EXATAMENTE E APENAS as seguintes: Tecnologia, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Saúde, Cripto, Marketing, Moda, Música, Turismo, Games.
+As categorias válidas e permitidas são EXATAMENTE E APENAS as seguintes: Tecnologia, IA, Brasil, Mundo, Negócios, Ciência, Esportes, Automóveis, Entretenimento, Games, Saúde, Cripto, Marketing, Moda, Música, Turismo, Geral.
 
 Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Notícia:
