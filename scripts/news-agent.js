@@ -26,7 +26,7 @@ const RETRY_ATTEMPTS = 3;
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const LOOP_MODE = args.includes('--loop');
-const LOOP_INTERVAL = 15 * 60 * 1000; // 15 minutes
+const LOOP_INTERVAL = (process.env.LOOP_INTERVAL_MINUTES || 15) * 60 * 1000;
 
 const parser = new Parser({
     timeout: 10000,
