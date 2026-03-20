@@ -5,10 +5,13 @@ def verify_news_card(page):
     page.goto("http://localhost:5173")
 
     # Wait for news cards to load
-    page.wait_for_selector("text=Carregar mais fontes", timeout=10000)
+    page.wait_for_selector(".bg-white.dark\\:bg-gray-800", timeout=10000)  # Wait for a card to appear
 
-    # Check for enhanced font size (text-xl or text-2xl)
-    # This is a bit indirect, but we can visually inspect the screenshot
+    # Check for enhanced font size (text-xl)
+    card_title = page.locator("h3 a").first
+    font_size = card_title.evaluate("element => getComputedStyle(element).fontSize")
+    # In Tailwind, text-xl is 1.25rem, which is typically 20px.
+    assert font_size == "20px", f"Expected font size '20px', but got '{font_size}'"
 
     # Take a screenshot
     page.screenshot(path="verification_screenshot.png", full_page=True)
