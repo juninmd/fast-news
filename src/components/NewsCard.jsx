@@ -217,7 +217,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
          </div>
 
          <a
-            href={item.link}
+href={item.link.startsWith('http') ? item.link : '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg py-3 rounded-xl text-sm font-semibold transition-colors group/link"
