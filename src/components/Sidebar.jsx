@@ -38,7 +38,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
       <aside className={`
         fixed lg:sticky top-0 left-0 z-50 h-screen
         ${isCollapsed ? 'w-20' : 'w-72'}
-        bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-3xl border-r border-slate-200/50 dark:border-slate-800/80
+        bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/80
         transform transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden scrollbar-hide shadow-2xl lg:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
@@ -87,12 +87,12 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                   className={`
                     w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3.5 px-4'} py-3 rounded-2xl text-[15px] font-bold transition-all duration-300 group relative
                     ${isSelected
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_4px_20px_rgba(37,99,235,0.4)] scale-105 border-l-4 border-white'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-600 shadow-sm scale-105'
                       : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200 hover:shadow-sm'
                     }
                   `}
                 >
-                  <Icon size={20} className={`transition-all duration-300 shrink-0 ${isSelected ? 'text-white scale-110 drop-shadow-sm' : 'text-slate-400 group-hover:text-blue-500 group-hover:scale-110'}`} />
+                  <Icon size={20} className={`transition-all duration-300 shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400 scale-110 drop-shadow-sm' : 'text-slate-400 group-hover:text-blue-500 group-hover:scale-110'}`} />
 
                   {!isCollapsed && (
                         <span className="relative z-10 whitespace-nowrap">{category}</span>
