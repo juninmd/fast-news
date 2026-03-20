@@ -109,18 +109,17 @@ async function fetchWithRetry(url, options, retries = RETRY_ATTEMPTS) {
 
 async function classifyWithOllama(title, content) {
     const categories = Object.keys(EMOJI_MAP).join(', ');
-    const prompt = `
-Você é um sistema de IA encarregado de classificar notícias com precisão.
-As categorias válidas são EXATAMENTE e APENAS estas: [${categories}].
+    const prompt = `Classifique a seguinte notícia em EXATAMENTE e APENAS uma das seguintes categorias: [${categories}].
 
 Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 600)}"
 
-Obrigatório: Responda APENAS com o nome de UMA das categorias acima que melhor descreve o tema principal da notícia.
-Proibido: Não use pontuação extra, não escreva frases adicionais, não adicione espaços e não explique sua decisão.
-Caso nenhuma categoria se encaixe bem, ou se houver dúvida, retorne a categoria "Geral".
-`;
+Obrigatório: Retorne APENAS o nome da categoria.
+Proibido: Não explique sua decisão e não adicione pontuação (como ponto final) ou qualquer outro texto.
+Se você não tiver certeza de qual categoria escolher ou se nenhuma for exata, retorne exatamente "Geral".
+
+Categoria:`;
 
     try {
         const response = await fetchWithRetry(`${OLLAMA_URL}/api/generate`, {
@@ -160,7 +159,7 @@ Notícia Analisada:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 2500)}"
 
-Gere o resumo em Português do Brasil seguindo ESTRITAMENTE este formato em Markdown:
+Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
 
 **[Uma frase de impacto chamativa e curta]**
 
@@ -231,7 +230,7 @@ async function sendToTelegram(title, summary, category, link) {
 
     const formattedSummary = formatSummaryForTelegramHTML(summary);
 
-    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${formattedSummary}\n\n<i>${hashtags}</i>`;
+    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${formattedSummary}\n\n<i>${hashtags}</i>\n\n<a href="${link}">Ler matéria completa</a>`;
 
     const body = {
         chat_id: TELEGRAM_CHAT_ID,

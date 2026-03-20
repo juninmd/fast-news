@@ -55,7 +55,7 @@ export const classifyWithOllama = async (text, baseUrl = 'http://localhost:11434
 
 Analise o título e o conteúdo da notícia abaixo para determinar seu assunto principal:
 Notícia:
-${text}
+${text.substring(0, 600)}
 
 Obrigatório: Retorne APENAS o nome da categoria.
 Proibido: Não explique sua decisão e não adicione pontuação (como ponto final) ou qualquer outro texto.

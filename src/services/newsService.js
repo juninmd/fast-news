@@ -416,6 +416,13 @@ export const FEED_SOURCES = [
     { url: 'https://rss.uol.com.br/feed/entretenimento.xml', category: 'Entretenimento' },
     { url: 'https://www.tecmundo.com.br/rss', category: 'Tecnologia' },
     { url: 'https://www.meioemensagem.com.br/feed', category: 'Marketing' },
+
+    // --- NOVOS PORTAIS ADICIONADOS (MAIS BRASIL E GERAL) ---
+    { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Tecnologia' },
+    { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Negócios' },
+    { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
+    { url: 'https://feeds.folha.uol.com.br/emcimadahora/rss091.xml', category: 'Brasil' },
+    { url: 'https://noticias.uol.com.br/rss.xml', category: 'Brasil' },
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {
