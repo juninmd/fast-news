@@ -177,7 +177,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             </div>
 
             <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-              <a href={item.link} target="_blank" rel="noopener noreferrer">
+              <a href={item.link.startsWith('http') ? item.link : '#'} target="_blank" rel="noopener noreferrer">
                 {item.title}
               </a>
             </h3>
@@ -200,9 +200,9 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           </div>
       </div>
 
-      <div className="px-6 pb-6 pt-0 mt-auto flex justify-between items-center gap-2 border-t border-gray-100 dark:border-gray-700/50 pt-4">
+      <div className="px-6 pb-6 mt-auto flex justify-between items-center gap-2 border-t border-gray-100 dark:border-gray-700/50 pt-4">
              <a
-                href={item.link}
+               href={item.link.startsWith('http') ? item.link : '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 hover:gap-3 transition-all group/link flex-1"
