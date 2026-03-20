@@ -1,5 +1,5 @@
 
-export const sendToTelegram = async (message, botToken, chatId) => {
+export const sendToTelegram = async (message, botToken, chatId, parseMode = 'HTML') => {
   if (!botToken || !chatId) {
     throw new Error("Telegram Bot Token or Chat ID not configured.");
   }
@@ -9,7 +9,7 @@ export const sendToTelegram = async (message, botToken, chatId) => {
   const payload = {
     chat_id: chatId,
     text: message,
-    parse_mode: 'Markdown',
+    parse_mode: parseMode,
     disable_web_page_preview: false
   };
 
