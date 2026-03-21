@@ -1,7 +1,6 @@
-
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
   const prompt = `
-Você é um editor especialista para um canal de notícias premium no Telegram.
+Você é um editor especialista e curador de conteúdo para um canal de notícias premium no Telegram.
 Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
 
 Notícia Analisada:
@@ -20,6 +19,7 @@ Diretrizes:
 - Cada bullet point DEVE começar com o emoji 🔸.
 - Não crie introduções, saudações nem adicione texto fora deste formato. Oculte links.
 - O tamanho máximo da sua resposta deve ser de 500 caracteres no total.
+- Foque em manter o leitor engajado e bem informado rapidamente.
 `;
 
   try {
