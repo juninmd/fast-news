@@ -96,6 +96,9 @@ def verify_news_card(page):
     font_size = card_title.evaluate("element => getComputedStyle(element).fontSize")
     # In Tailwind, text-xl is 1.25rem, which is typically 20px.
     assert font_size == "20px", f"Expected font size '20px', but got '{font_size}'"
+    font_size = card_title.evaluate("element => getComputedStyle(element).fontSize")
+    # In Tailwind, text-xl is 1.25rem, which is typically 20px.
+    assert font_size == "20px", f"Expected font size '20px', but got '{font_size}'"
 
     # Take a screenshot
     page.screenshot(path="verification_screenshot.png", full_page=True)
