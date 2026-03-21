@@ -423,6 +423,16 @@ export const FEED_SOURCES = [
     { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
     { url: 'https://feeds.folha.uol.com.br/emcimadahora/rss091.xml', category: 'Brasil' },
     { url: 'https://noticias.uol.com.br/rss.xml', category: 'Brasil' },
+    { url: 'https://jovempan.com.br/noticias/mundo/feed', category: 'Mundo' },
+    { url: 'https://jovempan.com.br/noticias/tecnologia/feed', category: 'Tecnologia' },
+    { url: 'https://www.r7.com/tecnologia/feed.xml', category: 'Tecnologia' },
+    { url: 'https://www.r7.com/economia/feed.xml', category: 'Negócios' },
+    { url: 'https://noticias.uol.com.br/saude/rss.xml', category: 'Saúde' },
+    { url: 'https://oglobo.globo.com/rss/mundo.xml', category: 'Mundo' },
+    { url: 'https://www.bbc.com/portuguese/topics/c7zp57yyz25t/index.xml', category: 'Mundo' },
+    { url: 'https://www.bbc.com/portuguese/topics/c340q0p2585t/index.xml', category: 'Ciência' },
+    { url: 'https://noticias.uol.com.br/meio-ambiente/rss.xml', category: 'Ciência' },
+    { url: 'https://www.techtudo.com.br/rss', category: 'Tecnologia' },
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {

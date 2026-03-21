@@ -157,7 +157,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_40px_-10px_rgba(255,255,255,0.05)] hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-[0_20px_50px_-12px_rgba(255,255,255,0.05)] hover:-translate-y-2 hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
       <div className="relative p-2">
         <div className="relative overflow-hidden rounded-t-[1.8rem] rounded-b-2xl shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
           {imageUrl && !imageError ? (
@@ -172,7 +172,7 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-slate-900/10 opacity-80 transition-opacity duration-300" />
               </div>
           ) : (
-              <div className="aspect-[16/10] bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
+              <div className="aspect-[16/10] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
                   <Newspaper className="text-slate-400 dark:text-slate-600 w-16 h-16 opacity-50" />
               </div>
           )}
