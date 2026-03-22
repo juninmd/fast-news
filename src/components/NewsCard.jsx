@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
+import { summarizeWithGemini, classifyWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
 import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -39,7 +40,7 @@ const formatSummaryForTelegramHTML = (text) => {
     return htmlText;
 };
 
-const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
+const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [aiCategory, setAiCategory] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -50,16 +51,20 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
 
   useEffect(() => {
     if (autoSummarize && !summary && !loading && !error) {
-      if (ollamaUrl) {
+      if ((aiProvider === 'ollama' && ollamaUrl) || (aiProvider === 'gemini' && geminiApiKey)) {
         handleSummarize();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSummarize, ollamaUrl]);
+  }, [autoSummarize, aiProvider, ollamaUrl, geminiApiKey]);
 
   const handleSummarize = async () => {
-    if (!ollamaUrl) {
+    if (aiProvider === 'ollama' && !ollamaUrl) {
       setError("Configure Ollama.");
+      return;
+    }
+    if (aiProvider === 'gemini' && !geminiApiKey) {
+      setError("Configure a API Key do Gemini.");
       return;
     }
 
@@ -67,15 +72,25 @@ const NewsCard = ({ item, ollamaUrl, ollamaModel, telegramBotToken, telegramChat
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      let result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+      let result;
+      let classifiedCategory;
 
-      try {
-          const classifiedCategory = await classifyWithOllama(textToSummarize, ollamaUrl, ollamaModel);
-          if (classifiedCategory) {
-               setAiCategory(classifiedCategory);
+      if (aiProvider === 'gemini') {
+          result = await summarizeWithGemini(textToSummarize, geminiApiKey);
+          try {
+             classifiedCategory = await classifyWithGemini(textToSummarize, geminiApiKey);
+             if (classifiedCategory) setAiCategory(classifiedCategory);
+          } catch (catError) {
+             console.error("Failed to classify with Gemini:", catError);
           }
-      } catch (catError) {
-           console.error("Failed to classify:", catError);
+      } else {
+          result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+          try {
+              classifiedCategory = await classifyWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+              if (classifiedCategory) setAiCategory(classifiedCategory);
+          } catch (catError) {
+               console.error("Failed to classify with Ollama:", catError);
+          }
       }
 
       setSummary(result);
