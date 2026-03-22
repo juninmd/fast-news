@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { summarizeWithOllama } from '../services/ollamaService';
-import { Sparkles, Loader, ExternalLink, Calendar, Newspaper, ArrowRight } from 'lucide-react';
+import { summarizeWithGemini } from '../services/geminiService';
+import { Sparkles, Loader, ExternalLink, Calendar, Newspaper, ArrowRight, X } from 'lucide-react';
 
-const HeroSection = ({ item, ollamaUrl, ollamaModel }) => {
+const HeroSection = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -11,8 +12,12 @@ const HeroSection = ({ item, ollamaUrl, ollamaModel }) => {
   if (!item) return null;
 
   const handleSummarize = async () => {
-    if (!ollamaUrl) {
+    if (aiProvider === 'ollama' && !ollamaUrl) {
       setError("Configure o Ollama nas configurações.");
+      return;
+    }
+    if (aiProvider === 'gemini' && !geminiApiKey) {
+      setError("Configure a API Key do Gemini nas configurações.");
       return;
     }
 
@@ -20,7 +25,13 @@ const HeroSection = ({ item, ollamaUrl, ollamaModel }) => {
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      let result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+      let result;
+
+      if (aiProvider === 'gemini') {
+          result = await summarizeWithGemini(textToSummarize, geminiApiKey);
+      } else {
+          result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+      }
 
       setSummary(result);
     } catch (error) {
