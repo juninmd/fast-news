@@ -18,7 +18,8 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Settings State
-  const [aiProvider, setAiProvider] = useState(() => 'ollama');
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key'));
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -53,6 +54,7 @@ function App() {
 
   const handleSaveSettings = (newSettings) => {
     setAiProvider(newSettings.aiProvider);
+    setGeminiApiKey(newSettings.geminiApiKey);
     setCustomFeeds(newSettings.customFeeds);
     setRss2jsonApiKey(newSettings.rss2jsonApiKey);
     setAutoSummarize(newSettings.autoSummarize);
@@ -176,6 +178,7 @@ function App() {
 
                      <Feed
                         aiProvider={aiProvider}
+                        geminiApiKey={geminiApiKey}
                         rss2jsonApiKey={rss2jsonApiKey}
                         autoSummarize={autoSummarize}
                         customFeeds={customFeeds}
