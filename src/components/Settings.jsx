@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settings as SettingsIcon } from 'lucide-react';
+import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
 import { summarizeWithOllama } from '../services/ollamaService';
+import { testGeminiConnection } from '../services/geminiService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
-  const [aiProvider] = useState(() => 'ollama');
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -11,6 +13,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [telegramBotToken, setTelegramBotToken] = useState(() => localStorage.getItem('telegram_bot_token') || '');
   const [telegramChatId, setTelegramChatId] = useState(() => localStorage.getItem('telegram_chat_id') || '');
 
+  const [geminiStatus, setGeminiStatus] = useState(null); // testing, success, error
   const [customFeeds, setCustomFeeds] = useState(initialCustomFeeds);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedCategory, setNewFeedCategory] = useState('Geral');
@@ -20,8 +23,21 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
   if (!isOpen) return null;
 
+  const testGemini = async () => {
+      setGeminiStatus('testing');
+      try {
+          await testGeminiConnection(geminiApiKey);
+          setGeminiStatus('success');
+      } catch (error) {
+          console.error("Gemini test failed", error);
+          setGeminiStatus('error');
+      }
+      setTimeout(() => setGeminiStatus(null), 3000);
+  };
+
   const handleSave = () => {
-    localStorage.setItem('ai_provider', 'ollama');
+    localStorage.setItem('ai_provider', aiProvider);
+    localStorage.setItem('gemini_api_key', geminiApiKey);
     localStorage.setItem('custom_feeds', JSON.stringify(customFeeds));
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
     localStorage.setItem('auto_summarize', autoSummarize);
@@ -32,6 +48,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
     onSave({
       aiProvider,
+      geminiApiKey,
       customFeeds,
       rss2jsonApiKey,
       autoSummarize,
@@ -139,7 +156,34 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
 
           {activeTab === 'ia' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                 <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+
+                 <div className="flex gap-4 mb-4">
+                    <button
+                        type="button"
+                        onClick={() => setAiProvider('ollama')}
+                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                            aiProvider === 'ollama'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300'
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-300'
+                        }`}
+                    >
+                        <div className="font-bold flex items-center justify-center gap-2"><Bot size={18}/> Ollama Local</div>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setAiProvider('gemini')}
+                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                            aiProvider === 'gemini'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300'
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-300'
+                        }`}
+                    >
+                        <div className="font-bold flex items-center justify-center gap-2"><ShieldCheck size={18}/> Google Gemini</div>
+                    </button>
+                 </div>
+
+                 {aiProvider === 'ollama' && (
+                 <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700 animate-in fade-in">
                     <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-col">
                         <div className="flex items-center gap-2"><Info size={16} className="shrink-0 mt-0.5" /> <strong>Ollama Local AI</strong></div>
                         <p>O Ollama é usado para resumir as notícias e classificá-las em categorias para envio ao Telegram de forma gratuita e privada. Ele precisa estar rodando na sua máquina.</p>
@@ -179,6 +223,41 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                         </button>
                     </div>
                  </div>
+                 )}
+
+                 {aiProvider === 'gemini' && (
+                 <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700 animate-in fade-in">
+                    <div className="flex items-start gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg flex-col">
+                        <div className="flex items-center gap-2"><Info size={16} className="shrink-0 mt-0.5" /> <strong>Google Gemini API</strong></div>
+                        <p>O Gemini é executado via API usando seu próprio navegador (client-side). Adicione sua chave de API para resumir e classificar as notícias.</p>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Gemini API Key</label>
+                        <input
+                            type="password"
+                            value={geminiApiKey}
+                            onChange={(e) => setGeminiApiKey(e.target.value)}
+                            className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            placeholder="AIzaSy..."
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <button
+                            type="button"
+                            onClick={testGemini}
+                            disabled={geminiStatus === 'testing' || !geminiApiKey}
+                            className={`text-xs px-3 py-1 rounded border transition-colors ${
+                                geminiStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
+                                geminiStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
+                                'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 disabled:opacity-50'
+                            }`}
+                        >
+                            {geminiStatus === 'testing' ? 'Testando...' : geminiStatus === 'success' ? 'Conectado' : geminiStatus === 'error' ? 'Erro' : 'Testar Conexão'}
+                        </button>
+                    </div>
+                 </div>
+                 )}
+
               </div>
           )}
 
