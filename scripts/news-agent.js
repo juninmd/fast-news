@@ -171,6 +171,7 @@ Diretrizes:
 - Você deve SEMPRE retornar EXATAMENTE 3 (três) bullet points. Nunca mais, nunca menos.
 - Cada bullet point DEVE começar com o emoji 🔸.
 - Não crie introduções, saudações nem adicione texto fora deste formato. Oculte links.
+- Use um Português do Brasil natural e jornalístico.
 - O tamanho máximo da sua resposta deve ser de 500 caracteres no total.
 `;
 

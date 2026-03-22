@@ -71,7 +71,7 @@ function App() {
   }, [customFeeds]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/30 to-slate-100 dark:from-slate-950 dark:via-slate-900/80 dark:to-slate-950 transition-colors duration-500 flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 dark:from-slate-950 dark:via-slate-900/80 dark:to-slate-950 transition-colors duration-500 flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500/30">
 
       {/* Sidebar */}
       <Sidebar
@@ -88,7 +88,7 @@ function App() {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} bg-transparent`}>
 
           {/* Header */}
-          <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/80 px-4 sm:px-8 py-5 shadow-sm dark:shadow-slate-900/20">
+          <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/80 px-4 sm:px-8 py-5 shadow-sm dark:shadow-slate-900/20">
             <div className="flex justify-between items-center gap-6 max-w-[1600px] mx-auto w-full">
                 <div className="flex items-center gap-4 lg:hidden">
                     <button
