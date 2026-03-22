@@ -433,6 +433,17 @@ export const FEED_SOURCES = [
     { url: 'https://www.bbc.com/portuguese/topics/c340q0p2585t/index.xml', category: 'Ciência' },
     { url: 'https://noticias.uol.com.br/meio-ambiente/rss.xml', category: 'Ciência' },
     { url: 'https://www.techtudo.com.br/rss', category: 'Tecnologia' },
+
+    // --- ADICIONADOS (EXTRAS) ---
+    { url: 'https://oglobo.globo.com/rss/brasil.xml', category: 'Brasil' },
+    { url: 'https://oglobo.globo.com/rss/economia.xml', category: 'Negócios' },
+    { url: 'https://oglobo.globo.com/rss/mundo.xml', category: 'Mundo' },
+    { url: 'https://g1.globo.com/rss/g1/educacao/', category: 'Educação' },
+    { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/', category: 'Saúde' },
+    { url: 'https://jovempan.com.br/noticias/brasil/feed', category: 'Brasil' },
+    { url: 'https://www.correiobraziliense.com.br/rss/noticia/politica/rss.xml', category: 'Política' },
+    { url: 'https://www.cartacapital.com.br/politica/feed/', category: 'Política' },
+    { url: 'https://www.metropoles.com/brasil/feed', category: 'Brasil' }
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {
