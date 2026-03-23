@@ -258,6 +258,7 @@ export const FEED_SOURCES = [
     { url: 'https://blog.coinbase.com/feed', category: 'Cripto' },
 
     // --- CIÊNCIA & ESPAÇO ---
+    { url: 'https://jornal.usp.br/feed/', category: 'Ciência' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml', category: 'Ciência' },
     { url: 'https://revistapesquisa.fapesp.br/feed/', category: 'Ciência' },
     { url: 'https://www.jornaldaciencia.org.br/feed/', category: 'Ciência' },
@@ -435,6 +436,11 @@ export const FEED_SOURCES = [
     { url: 'https://www.techtudo.com.br/rss', category: 'Tecnologia' },
 
     // --- ADICIONADOS (EXTRAS) ---
+    { url: 'https://www.correiobraziliense.com.br/rss/noticia/tecnologia/rss.xml', category: 'Tecnologia' },
+    { url: 'https://www.nexo.com.br/rss', category: 'Brasil' },
+    { url: 'https://agenciapublica.org/feed/', category: 'Brasil' },
+    { url: 'https://www.metropoles.com/tecnologia/feed', category: 'Tecnologia' },
+    { url: 'https://noticias.uol.com.br/cotidiano/rss.xml', category: 'Geral' },
     { url: 'https://oglobo.globo.com/rss/brasil.xml', category: 'Brasil' },
     { url: 'https://oglobo.globo.com/rss/economia.xml', category: 'Negócios' },
     { url: 'https://oglobo.globo.com/rss/mundo.xml', category: 'Mundo' },
