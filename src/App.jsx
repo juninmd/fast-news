@@ -85,10 +85,10 @@ function App() {
       />
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} bg-transparent`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-24' : 'lg:ml-80'} bg-transparent`}>
 
           {/* Header */}
-          <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-2xl sticky top-0 z-30 border-b border-slate-200/50 dark:border-slate-800/80 px-4 sm:px-8 py-5 shadow-sm dark:shadow-slate-900/20">
+          <header className="bg-white dark:bg-[#0f172a] sticky top-0 z-30 border-b border-slate-200/60 dark:border-slate-800/60 px-4 sm:px-8 py-5 shadow-sm dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
             <div className="flex justify-between items-center gap-6 max-w-[1600px] mx-auto w-full">
                 <div className="flex items-center gap-4 lg:hidden">
                     <button
