@@ -39,9 +39,9 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
       {/* Sidebar Container */}
       <aside className={`
         fixed lg:sticky top-0 left-0 z-50 h-screen
-        ${isCollapsed ? 'w-20' : 'w-72'}
-        bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/80
-        transform transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden scrollbar-hide shadow-2xl lg:shadow-none
+        ${isCollapsed ? 'w-24' : 'w-80'}
+        bg-white dark:bg-[#0b1120] border-r border-slate-200 dark:border-slate-800/60
+        transform transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden scrollbar-hide shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)] lg:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className={`h-full flex flex-col ${isCollapsed ? 'p-3' : 'p-6'}`}>
@@ -94,7 +94,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                     }
                   `}
                 >
-                  <Icon size={20} className={`transition-all duration-300 shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400 scale-110 drop-shadow-sm' : 'text-slate-400 group-hover:text-blue-500 group-hover:scale-110'}`} />
+                  <Icon size={22} className={`transition-all duration-300 shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400 scale-110 drop-shadow-sm' : 'text-slate-400 group-hover:text-blue-500 group-hover:scale-110'}`} />
 
                   {!isCollapsed && (
                         <span className="relative z-10 whitespace-nowrap">{category}</span>

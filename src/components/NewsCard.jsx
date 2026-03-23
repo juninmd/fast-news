@@ -174,23 +174,24 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-[0_20px_50px_-12px_rgba(255,255,255,0.05)] hover:-translate-y-2 hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
-      <div className="relative p-3">
-        <div className="relative overflow-hidden rounded-t-[1.8rem] rounded-b-2xl shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-[0_20px_50px_-12px_rgba(59,130,246,0.15)] hover:-translate-y-2 hover:border-blue-500/40 dark:hover:border-blue-400/40 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
+      <div className="relative p-0 m-2 mt-2">
+        <div className="relative overflow-hidden rounded-2xl shadow-inner border border-white/20 dark:border-white/5">
           {imageUrl && !imageError ? (
-              <div className="aspect-[16/10] w-full overflow-hidden relative group-hover:after:absolute group-hover:after:inset-0 group-hover:after:bg-black/10 transition-all">
+              <div className="aspect-[16/9] w-full overflow-hidden relative group-hover:after:absolute group-hover:after:inset-0 group-hover:after:bg-black/20 transition-all">
                   <img
                       src={imageUrl}
                       alt={item.title}
                       loading="lazy"
                       onError={() => setImageError(true)}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-slate-900/10 opacity-80 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent opacity-90 transition-opacity duration-300" />
               </div>
           ) : (
-              <div className="aspect-[16/10] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
+              <div className="aspect-[16/9] bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
                   <Newspaper className="text-slate-400 dark:text-slate-600 w-16 h-16 opacity-50" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent opacity-50 transition-opacity duration-300" />
               </div>
           )}
 
@@ -218,13 +219,13 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
       </div>
 
       <div className="px-6 py-5 flex flex-col flex-grow relative">
-        <h3 className="text-2xl md:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 mb-3 leading-[1.2] group-hover:from-blue-600 group-hover:to-blue-500 dark:group-hover:from-blue-400 dark:group-hover:to-blue-300 transition-all line-clamp-3">
+        <h3 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3 drop-shadow-sm">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
         </h3>
 
-        <div className="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed mb-4 flex-grow font-medium">
+        <div className="text-[14px] text-slate-600 dark:text-slate-300 leading-relaxed mb-4 flex-grow font-medium">
             {summary ? (
                 <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-950/40 dark:to-blue-950/30 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2 shadow-sm">
                     <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
@@ -247,10 +248,10 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-20 flex items-center justify-center w-full gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] group/link active:scale-[0.98] border border-transparent"
+            className="relative z-20 flex items-center justify-center w-full gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-blue-600 dark:hover:bg-blue-500 py-3.5 rounded-xl text-[14px] font-bold transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] group/link active:scale-95"
          >
             Ler notícia completa
-            <ExternalLink size={18} className="opacity-80 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all" />
+            <ExternalLink size={16} className="opacity-80 group-hover/link:opacity-100 group-hover/link:translate-x-1 transition-all" />
          </a>
 
          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
