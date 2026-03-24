@@ -286,7 +286,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
                  title="Copiar Link"
                  className="flex items-center justify-center p-2.5 rounded-xl bg-slate-50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors border border-slate-200/60 dark:border-slate-700/60 active:scale-[0.95]"
              >
-                 <Copy size={16} />
+<Copy size={15} />
              </button>
          </div>
       </div>
