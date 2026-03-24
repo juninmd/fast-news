@@ -449,7 +449,32 @@ export const FEED_SOURCES = [
     { url: 'https://jovempan.com.br/noticias/brasil/feed', category: 'Brasil' },
     { url: 'https://www.correiobraziliense.com.br/rss/noticia/politica/rss.xml', category: 'Política' },
     { url: 'https://www.cartacapital.com.br/politica/feed/', category: 'Política' },
-    { url: 'https://www.metropoles.com/brasil/feed', category: 'Brasil' }
+    { url: 'https://www.metropoles.com/brasil/feed', category: 'Brasil' },
+
+    // --- NOVOS PORTAIS (ADICIONADOS RECENTEMENTE) ---
+    { url: 'https://g1.globo.com/rss/g1/pop-arte/', category: 'Entretenimento' },
+    { url: 'https://g1.globo.com/rss/g1/natureza/', category: 'Ciência' },
+    { url: 'https://g1.globo.com/rss/g1/concursos-e-emprego/', category: 'Negócios' },
+    { url: 'https://g1.globo.com/rss/g1/planeta-bizarro/', category: 'Geral' },
+    { url: 'https://feeds.folha.uol.com.br/cotidiano/rss091.xml', category: 'Brasil' },
+    { url: 'https://feeds.folha.uol.com.br/educacao/rss091.xml', category: 'Educação' },
+    { url: 'https://feeds.folha.uol.com.br/equilibrioesaude/rss091.xml', category: 'Saúde' },
+    { url: 'https://feeds.folha.uol.com.br/tec/rss091.xml', category: 'Tecnologia' },
+    { url: 'https://feeds.folha.uol.com.br/turismo/rss091.xml', category: 'Turismo' },
+    { url: 'https://noticias.uol.com.br/internacional/rss.xml', category: 'Mundo' },
+    { url: 'https://noticias.uol.com.br/ciencia/rss.xml', category: 'Ciência' },
+    { url: 'https://www.band.uol.com.br/noticias/rss', category: 'Brasil' },
+    { url: 'https://www.band.uol.com.br/entretenimento/rss', category: 'Entretenimento' },
+    { url: 'https://www.sbtnews.com.br/feed/politica', category: 'Política' },
+    { url: 'https://www.sbtnews.com.br/feed/economia', category: 'Negócios' },
+    { url: 'https://www.tecmundo.com.br/rss/jogos', category: 'Games' },
+    { url: 'https://www.tecmundo.com.br/rss/software', category: 'Tecnologia' },
+    { url: 'https://www.tecmundo.com.br/rss/ciencia', category: 'Ciência' },
+    { url: 'https://www.jornalopcao.com.br/feed/', category: 'Brasil' },
+    { url: 'https://diariodonordeste.verdesmares.com.br/rss/noticias', category: 'Brasil' },
+    { url: 'https://jc.ne10.uol.com.br/rss/pernambuco', category: 'Brasil' },
+    { url: 'https://br.ign.com/cinema/feed.xml', category: 'Entretenimento' },
+    { url: 'https://br.ign.com/tv/feed.xml', category: 'Entretenimento' }
 ];
 
 const fetchWithConcurrency = async (sources, apiKey) => {
