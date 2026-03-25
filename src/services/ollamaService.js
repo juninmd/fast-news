@@ -20,6 +20,7 @@ Diretrizes:
 - Não crie introduções, saudações nem adicione texto fora deste formato. Oculte links.
 - Use um Português do Brasil natural e jornalístico.
 - O tamanho máximo da sua resposta deve ser de 500 caracteres no total.
+- Mantenha um tom engajador e vibrante.
 `;
 
   try {
@@ -57,7 +58,7 @@ Analise o título e o conteúdo da notícia abaixo para determinar seu assunto p
 Notícia:
 ${text.substring(0, 600)}
 
-Obrigatório: Retorne APENAS o nome da categoria.
+Obrigatório: Retorne ESTRITAMENTE o nome de UMA das categorias acima, e mais NADA.
 Proibido: Não explique sua decisão e não adicione pontuação (como ponto final) ou qualquer outro texto.
 Se você não tiver certeza de qual categoria escolher ou se nenhuma for exata, retorne exatamente "Geral".
 
