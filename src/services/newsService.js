@@ -90,6 +90,10 @@ export const FEED_SOURCES = [
     { url: 'https://towardsdatascience.com/feed', category: 'IA' },
 
     // --- BRASIL ---
+    { url: 'https://jornalistaslivres.org/feed/', category: 'Brasil' },
+    { url: 'https://www.pragmatismopolitico.com.br/feed', category: 'Brasil' },
+    { url: 'https://www.correiodopovo.com.br/rss', category: 'Brasil' },
+    { url: 'https://www.jornalnh.com.br/rss', category: 'Brasil' },
     { url: 'https://jornaldebrasilia.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.correio24horas.com.br/rss', category: 'Brasil' },
     { url: 'https://www.bnews.com.br/rss.xml', category: 'Brasil' },

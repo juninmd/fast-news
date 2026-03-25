@@ -174,7 +174,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-[0_20px_50px_-12px_rgba(59,130,246,0.15)] hover:-translate-y-2 hover:border-blue-500/40 dark:hover:border-blue-400/40 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
+    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-md hover:shadow-2xl hover:shadow-indigo-500/30 dark:hover:shadow-[0_20px_50px_-12px_rgba(59,130,246,0.15)] hover:-translate-y-2 hover:border-blue-500/40 dark:hover:border-blue-400/40 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
       <div className="relative p-0 m-2 mt-2">
         <div className="relative overflow-hidden rounded-2xl shadow-inner border border-white/20 dark:border-white/5">
           {imageUrl && !imageError ? (
@@ -227,7 +227,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
 
         <div className="text-[14px] text-slate-600 dark:text-slate-300 leading-relaxed mb-4 flex-grow font-medium">
             {summary ? (
-                <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-950/40 dark:to-blue-950/30 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2 shadow-sm">
+                <div className="bg-gradient-to-br from-indigo-100/80 to-blue-100/60 dark:from-indigo-900/50 dark:to-blue-900/30 p-5 rounded-[1.5rem] border border-indigo-200/60 dark:border-indigo-500/30 animate-in fade-in slide-in-from-bottom-2 shadow-md">
                     <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
                         <Sparkles size={14} className="fill-current" /> Resumo IA
                     </div>

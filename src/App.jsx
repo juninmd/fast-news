@@ -71,7 +71,7 @@ function App() {
   }, [customFeeds]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 dark:from-slate-950 dark:via-slate-900/80 dark:to-slate-950 transition-colors duration-500 flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/20 to-slate-200 dark:from-slate-950 dark:via-slate-900/80 dark:to-slate-950 transition-colors duration-500 flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500/30">
 
       {/* Sidebar */}
       <Sidebar
