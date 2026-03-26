@@ -37,8 +37,10 @@ const escapeHTML = (text) => {
 
 const formatSummaryForTelegramHTML = (text) => {
     if (!text) return '';
-    let htmlText = escapeHTML(text);
-    htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    // Use temporary placeholders to not double-escape bold text
+    let parsedText = text.replace(/\*\*(.*?)\*\*/g, '@@BOLD@@$1@@ENDBOLD@@');
+    let htmlText = escapeHTML(parsedText);
+    htmlText = htmlText.replace(/@@BOLD@@/g, '<b>').replace(/@@ENDBOLD@@/g, '</b>');
     return htmlText;
 };
 
@@ -174,11 +176,11 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-md hover:shadow-2xl hover:shadow-indigo-500/30 dark:hover:shadow-[0_20px_50px_-12px_rgba(59,130,246,0.15)] hover:-translate-y-2 hover:border-blue-500/40 dark:hover:border-blue-400/40 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-md hover:shadow-2xl hover:shadow-indigo-500/30 dark:hover:shadow-[0_20px_50px_-12px_rgba(59,130,246,0.15)] hover:-translate-y-2 hover:border-blue-500/40 dark:hover:border-blue-400/40 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
       <div className="relative p-0 m-2 mt-2">
         <div className="relative overflow-hidden rounded-2xl shadow-inner border border-white/20 dark:border-white/5">
           {imageUrl && !imageError ? (
-              <div className="aspect-[16/9] w-full overflow-hidden relative group-hover:after:absolute group-hover:after:inset-0 group-hover:after:bg-black/20 transition-all">
+              <div className="aspect-video w-full overflow-hidden relative group-hover:after:absolute group-hover:after:inset-0 group-hover:after:bg-black/20 transition-all">
                   <img
                       src={imageUrl}
                       alt={item.title}
@@ -189,7 +191,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent opacity-90 transition-opacity duration-300" />
               </div>
           ) : (
-              <div className="aspect-[16/9] bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
+              <div className="aspect-video bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center relative">
                   <Newspaper className="text-slate-400 dark:text-slate-600 w-16 h-16 opacity-50" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent opacity-50 transition-opacity duration-300" />
               </div>
