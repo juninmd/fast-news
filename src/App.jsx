@@ -18,7 +18,8 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Settings State
-  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+  // Default to ollama to strictly enforce the requested feature
+  const [aiProvider, setAiProvider] = useState(() => 'ollama');
   const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key'));
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
@@ -71,7 +72,7 @@ function App() {
   }, [customFeeds]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/20 to-slate-200 dark:from-slate-950 dark:via-slate-900/80 dark:to-slate-950 transition-colors duration-500 flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[#F5F7FA] dark:bg-[#0B0F19] transition-colors duration-500 flex font-sans text-[#1A202C] dark:text-[#E2E8F0] selection:bg-blue-500/30">
 
       {/* Sidebar */}
       <Sidebar
@@ -88,71 +89,71 @@ function App() {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-24' : 'lg:ml-80'} bg-transparent`}>
 
           {/* Header */}
-          <header className="bg-white dark:bg-[#0f172a] sticky top-0 z-30 border-b border-slate-200/60 dark:border-slate-800/60 px-4 sm:px-8 py-5 shadow-sm dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+          <header className="bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl sticky top-0 z-30 border-b border-gray-200 dark:border-gray-800 px-4 sm:px-8 py-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
             <div className="flex justify-between items-center gap-6 max-w-[1600px] mx-auto w-full">
                 <div className="flex items-center gap-4 lg:hidden">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
-                        className="p-2.5 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors active:scale-95"
+                        className="p-2.5 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors active:scale-95"
                     >
                         <Menu size={24} />
                     </button>
-                    <span className="font-black text-2xl dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 tracking-tight">NewsAI</span>
+                    <span className="font-black text-2xl dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-400 tracking-tight">NewsAI</span>
                 </div>
 
-                <div className="flex-1 max-w-3xl hidden md:block">
-                   <div className="relative group shadow-sm rounded-[1rem]">
-                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                           <Search size={20} className="text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <div className="flex-1 max-w-2xl hidden md:block mx-auto">
+                   <div className="relative group shadow-sm rounded-full overflow-hidden transition-all duration-300 hover:shadow-md hover:shadow-indigo-500/10 focus-within:shadow-md focus-within:shadow-indigo-500/20">
+                       <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                           <Search size={18} className="text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                        </div>
                        <input
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Pesquise por termos ou palavras-chave..."
-                          className="block w-full pl-12 pr-4 py-3.5 border border-slate-200 dark:border-slate-700/80 rounded-[1rem] leading-5 bg-slate-50/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-[15px]"
+                          placeholder="Encontre as notícias que importam para você..."
+                          className="block w-full pl-12 pr-10 py-3.5 border-none bg-gray-100/80 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-[#1A202C] focus:ring-2 focus:ring-indigo-500/50 transition-all text-[15px] font-medium"
                        />
                        {searchQuery && (
                            <button
                                 onClick={() => setSearchQuery('')}
-                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
+                                className="absolute inset-y-0 right-0 pr-5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                            >
-                               <X size={18} />
+                               <X size={16} />
                            </button>
                        )}
                    </div>
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={toggleTheme}
-                        className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm hover:shadow transition-all hover:scale-105 active:scale-95"
+                        className="p-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 active:scale-95"
                         title={darkMode ? "Modo claro" : "Modo escuro"}
                     >
-                        {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
                     </button>
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm hover:shadow transition-all hover:scale-105 active:scale-95"
+                        className="p-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 active:scale-95"
                         title="Configurações"
                     >
-                        <SettingsIcon size={20} />
+                        <SettingsIcon size={18} />
                     </button>
                 </div>
             </div>
 
             {/* Mobile Search */}
             <div className="md:hidden mt-4 pb-2">
-                 <div className="relative shadow-sm rounded-xl">
-                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                           <Search size={18} className="text-slate-400" />
+                 <div className="relative shadow-sm rounded-full overflow-hidden">
+                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                           <Search size={16} className="text-gray-400" />
                        </div>
                        <input
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Buscar notícias..."
-                          className="block w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700/80 rounded-xl leading-5 bg-slate-50 dark:bg-slate-900/80 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-[15px]"
+                          className="block w-full pl-10 pr-4 py-3 border-none bg-gray-100 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-[14px]"
                        />
                    </div>
             </div>
@@ -170,8 +171,8 @@ function App() {
                 )}
 
                 <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 tracking-tight">
+                     <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3 tracking-tight border-l-4 border-indigo-500 pl-4 rounded-sm">
                             {searchQuery ? `Resultados para "${searchQuery}"` : (selectedCategory === 'Todas' ? 'Últimas Notícias' : selectedCategory)}
                         </h2>
                      </div>

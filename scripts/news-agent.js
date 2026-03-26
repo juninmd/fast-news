@@ -217,13 +217,15 @@ async function sendToTelegram(title, summary, category, link) {
     const formatSummaryForTelegramHTML = (text) => {
         // Remove URLs from the summary text to strictly "hide links"
         const noLinksText = text.replace(/https?:\[^\s]+|www\.[^\s]+/g, '');
-        // First escape HTML to prevent injection from the summary content itself
-        let htmlText = noLinksText
+        // Convert Markdown bold to a temporary placeholder
+        let parsedText = noLinksText.replace(/\*\*(.*?)\*\*/g, '@@BOLD@@$1@@ENDBOLD@@');
+        // Escape HTML to prevent injection
+        let htmlText = parsedText
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
          .replace(/>/g, "&gt;");
-        // Convert Markdown bold to HTML bold safely after escaping
-        htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        // Convert placeholders back to HTML bold tags safely
+        htmlText = htmlText.replace(/@@BOLD@@/g, '<b>').replace(/@@ENDBOLD@@/g, '</b>');
         return htmlText;
     };
 

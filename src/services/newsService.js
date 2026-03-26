@@ -181,6 +181,10 @@ export const FEED_SOURCES = [
     { url: 'https://g1.globo.com/rss/g1/minas-gerais/', category: 'Brasil' },
 
     // --- MUNDO ---
+    { url: 'https://g1.globo.com/rss/g1/mundo/', category: 'Mundo' },
+    { url: 'https://noticias.uol.com.br/internacional/rss.xml', category: 'Mundo' },
+    { url: 'https://www.gazetadopovo.com.br/feed/rss/mundo.xml', category: 'Mundo' },
+    { url: 'https://oglobo.globo.com/rss/mundo.xml', category: 'Mundo' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
     { url: 'https://www.thesun.co.uk/news/worldnews/feed/', category: 'Mundo' },
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },
