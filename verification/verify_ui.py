@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright
 
 def run_cuj(page):
     page.goto("http://localhost:5173")
-    page.wait_for_timeout(5000) # wait longer for news to fetch
+    page.wait_for_selector("div.break-inside-avoid", timeout=10000) # wait for news cards to render
 
     # Take screenshot of the loaded news cards showing the modernized UI
     page.screenshot(path="/app/verification/screenshots/verification3.png")
