@@ -37,8 +37,9 @@ const escapeHTML = (text) => {
 
 const formatSummaryForTelegramHTML = (text) => {
     if (!text) return '';
-    let htmlText = escapeHTML(text);
-    htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    let preHtmlText = text.replace(/\*\*(.*?)\*\*/g, '@@BOLD@@$1@@ENDBOLD@@');
+    let htmlText = escapeHTML(preHtmlText);
+    htmlText = htmlText.replace(/@@BOLD@@(.*?)@@ENDBOLD@@/g, '<b>$1</b>');
     return htmlText;
 };
 
@@ -218,8 +219,8 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
         </div>
       </div>
 
-      <div className="px-6 py-5 flex flex-col flex-grow relative">
-        <h3 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3 drop-shadow-sm">
+      <div className="px-8 py-6 flex flex-col flex-grow relative">
+        <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3 drop-shadow-sm">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
