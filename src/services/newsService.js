@@ -163,7 +163,6 @@ export const FEED_SOURCES = [
     { url: 'https://www.sbtnews.com.br/feed', category: 'Brasil' },
     { url: 'https://jovempan.com.br/feed', category: 'Brasil' },
     { url: 'https://www.gazetadopovo.com.br/feed/rss/brasil.xml', category: 'Brasil' },
-    { url: 'https://noticias.uol.com.br/politica/rss.xml', category: 'Brasil' },
     { url: 'https://diplomatique.org.br/feed/', category: 'Brasil' },
     { url: 'https://guiadoestudante.abril.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.nexojornal.com.br/rss.xml', category: 'Brasil' },
@@ -179,6 +178,13 @@ export const FEED_SOURCES = [
     { url: 'https://g1.globo.com/rss/g1/sao-paulo/', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/rio-de-janeiro/', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/minas-gerais/', category: 'Brasil' },
+
+    // --- ADICIONADOS A PEDIDO ---
+    { url: 'https://www.poder360.com.br/feed', category: 'Política' },
+    { url: 'https://congressoemfoco.uol.com.br/feed/', category: 'Política' },
+    { url: 'https://www.brasil247.com/feed', category: 'Política' },
+    { url: 'https://www.diariodocentrodomundo.com.br/feed/', category: 'Política' },
+    { url: 'https://revistaforum.com.br/feed/', category: 'Política' },
 
     // --- MUNDO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
@@ -406,7 +412,6 @@ export const FEED_SOURCES = [
     { url: 'https://g1.globo.com/rss/g1/turismo-e-viagem/', category: 'Turismo' },
 
     // --- ADICIONADOS ---
-    { url: 'https://veja.abril.com.br/feed/', category: 'Brasil' },
     { url: 'https://exame.com/feed/', category: 'Negócios' },
     { url: 'https://oglobo.globo.com/rss/', category: 'Brasil' },
     { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
@@ -441,6 +446,11 @@ export const FEED_SOURCES = [
 
     // --- ADICIONADOS (EXTRAS) ---
     { url: 'https://www.correiobraziliense.com.br/rss/noticia/tecnologia/rss.xml', category: 'Tecnologia' },
+    { url: 'https://g1.globo.com/rss/g1/brasil/', category: 'Brasil' },
+    { url: 'https://noticias.uol.com.br/politica/rss.xml', category: 'Política' },
+    { url: 'https://veja.abril.com.br/politica/feed/', category: 'Política' },
+    { url: 'https://www.correiobraziliense.com.br/rss/noticia/politica/rss.xml', category: 'Política' },
+    { url: 'https://www.cartacapital.com.br/politica/feed/', category: 'Política' },
     { url: 'https://www.nexo.com.br/rss', category: 'Brasil' },
     { url: 'https://agenciapublica.org/feed/', category: 'Brasil' },
     { url: 'https://www.metropoles.com/tecnologia/feed', category: 'Tecnologia' },
@@ -451,8 +461,6 @@ export const FEED_SOURCES = [
     { url: 'https://g1.globo.com/rss/g1/educacao/', category: 'Educação' },
     { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/', category: 'Saúde' },
     { url: 'https://jovempan.com.br/noticias/brasil/feed', category: 'Brasil' },
-    { url: 'https://www.correiobraziliense.com.br/rss/noticia/politica/rss.xml', category: 'Política' },
-    { url: 'https://www.cartacapital.com.br/politica/feed/', category: 'Política' },
     { url: 'https://www.metropoles.com/brasil/feed', category: 'Brasil' },
 
     // --- NOVOS PORTAIS (ADICIONADOS RECENTEMENTE) ---

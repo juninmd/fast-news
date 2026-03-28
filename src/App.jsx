@@ -71,7 +71,7 @@ function App() {
   }, [customFeeds]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/20 to-slate-200 dark:from-slate-950 dark:via-slate-900/80 dark:to-slate-950 transition-colors duration-500 flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 transition-colors duration-500 flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500/30">
 
       {/* Sidebar */}
       <Sidebar
@@ -88,7 +88,7 @@ function App() {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-24' : 'lg:ml-80'} bg-transparent`}>
 
           {/* Header */}
-          <header className="bg-white dark:bg-[#0f172a] sticky top-0 z-30 border-b border-slate-200/60 dark:border-slate-800/60 px-4 sm:px-8 py-5 shadow-sm dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+          <header className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-30 border-b border-slate-200/60 dark:border-slate-800/60 px-4 sm:px-8 py-5 shadow-md">
             <div className="flex justify-between items-center gap-6 max-w-[1600px] mx-auto w-full">
                 <div className="flex items-center gap-4 lg:hidden">
                     <button
@@ -97,7 +97,7 @@ function App() {
                     >
                         <Menu size={24} />
                     </button>
-                    <span className="font-black text-2xl dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 tracking-tight">NewsAI</span>
+                    <span className="font-black text-2xl text-slate-900 dark:text-white tracking-tight">NewsAI</span>
                 </div>
 
                 <div className="flex-1 max-w-3xl hidden md:block">
