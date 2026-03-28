@@ -1,27 +1,22 @@
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
-  const prompt = `
-Você é um editor especialista para um canal de notícias premium no Telegram.
-Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
+  const prompt = `Você é um editor sênior para um canal de notícias premium no Telegram.
+Sua tarefa é criar um resumo altamente engajador, direto e otimizado para mobile.
 
 Notícia Analisada:
 ${text}
 
-Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
+Gere o resumo em Português do Brasil, seguindo RIGOROSAMENTE este formato:
 
-**[Uma frase de impacto chamativa e curta]**
+**[Crie uma frase de impacto curta e instigante]**
 
-🔸 [Fato 1 mais importante]
-🔸 [Fato 2 relevante]
-🔸 [Fato 3 complementar]
+🔸 [Ponto principal 1]
+🔸 [Ponto principal 2]
+🔸 [Ponto principal 3]
 
-Diretrizes:
-- Você deve SEMPRE retornar EXATAMENTE 3 (três) bullet points. Nunca mais, nunca menos.
-- Cada bullet point DEVE começar com o emoji 🔸.
-- Não crie introduções, saudações nem adicione texto fora deste formato. Oculte links.
-- Use um Português do Brasil natural e jornalístico.
-- O tamanho máximo da sua resposta deve ser de 500 caracteres no total.
-- Mantenha um tom engajador e vibrante.
-`;
+Regras irrevogáveis:
+- Exatamente 3 bullet points começando com 🔸.
+- Proibido saudações, conclusões ou links no texto.
+- Máximo de 500 caracteres.`;
 
   try {
     const response = await fetch(`${baseUrl}/api/generate`, {
