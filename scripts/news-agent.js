@@ -151,30 +151,25 @@ Categoria:`;
 }
 
 async function summarizeWithOllama(title, content) {
-    const prompt = `
-Você é um editor especialista para um canal de notícias premium no Telegram.
-Sua missão é criar um resumo dinâmico, direto ao ponto e otimizado para leitura em dispositivos móveis.
+    const prompt = `Você é um editor sênior para um canal de notícias premium no Telegram.
+Sua tarefa é criar um resumo altamente engajador, direto e otimizado para mobile.
 
 Notícia Analisada:
 Título: "${title}"
 Conteúdo: "${content.substring(0, 2500)}"
 
-Por favor, elabore o resumo em Português do Brasil, obedecendo ESTRITAMENTE o formato Markdown abaixo:
+Gere o resumo em Português do Brasil, seguindo RIGOROSAMENTE este formato:
 
-**[Uma frase de impacto chamativa e curta]**
+**[Crie uma frase de impacto curta e instigante]**
 
-🔸 [Fato 1 mais importante]
-🔸 [Fato 2 relevante]
-🔸 [Fato 3 complementar]
+🔸 [Ponto principal 1]
+🔸 [Ponto principal 2]
+🔸 [Ponto principal 3]
 
-Diretrizes:
-- Você deve SEMPRE retornar EXATAMENTE 3 (três) bullet points. Nunca mais, nunca menos.
-- Cada bullet point DEVE começar com o emoji 🔸.
-- Não crie introduções, saudações nem adicione texto fora deste formato. Oculte links.
-- Use um Português do Brasil natural e jornalístico.
-- O tamanho máximo da sua resposta deve ser de 500 caracteres no total.
-- Mantenha um tom engajador e vibrante.
-`;
+Regras irrevogáveis:
+- Exatamente 3 bullet points começando com 🔸.
+- Proibido saudações, conclusões ou links no texto.
+- Máximo de 500 caracteres.`;
 
     try {
         const response = await fetchWithRetry(`${OLLAMA_URL}/api/generate`, {
@@ -217,13 +212,15 @@ async function sendToTelegram(title, summary, category, link) {
     const formatSummaryForTelegramHTML = (text) => {
         // Remove URLs from the summary text to strictly "hide links"
         const noLinksText = text.replace(/https?:\[^\s]+|www\.[^\s]+/g, '');
-        // First escape HTML to prevent injection from the summary content itself
-        let htmlText = noLinksText
+        // Replace Markdown bold with a placeholder to prevent double escaping
+        let preHtmlText = noLinksText.replace(/\*\*(.*?)\*\*/g, '@@BOLD@@$1@@ENDBOLD@@');
+        // Escape HTML to prevent injection from the summary content itself
+        let htmlText = preHtmlText
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
          .replace(/>/g, "&gt;");
-        // Convert Markdown bold to HTML bold safely after escaping
-        htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        // Convert placeholder to HTML bold tags safely after escaping
+        htmlText = htmlText.replace(/@@BOLD@@(.*?)@@ENDBOLD@@/g, '<b>$1</b>');
         return htmlText;
     };
 
@@ -234,7 +231,7 @@ async function sendToTelegram(title, summary, category, link) {
 
     const formattedSummary = formatSummaryForTelegramHTML(summary);
 
-    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${formattedSummary}\n\n<i>${hashtags}</i>\n\n<a href="${link}">Ler matéria completa</a>`;
+    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${formattedSummary}\n\n<i>${hashtags}</i>\n\n<a href="${link}">Ler matéria completa na Fonte original</a>`;
 
     const body = {
         chat_id: TELEGRAM_CHAT_ID,
