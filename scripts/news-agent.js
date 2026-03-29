@@ -211,7 +211,7 @@ async function sendToTelegram(title, summary, category, link) {
     // Ensure summary is properly mapped to Telegram HTML format
     const formatSummaryForTelegramHTML = (text) => {
         // Remove URLs from the summary text to strictly "hide links"
-        const noLinksText = text.replace(/https?:\[^\s]+|www\.[^\s]+/g, '');
+        const noLinksText = text.replace(/https?:\/\/[^\s]+|www\.[^\s]+/g, '');
         // Replace Markdown bold with a placeholder to prevent double escaping
         let preHtmlText = noLinksText.replace(/\*\*(.*?)\*\*/g, '@@BOLD@@$1@@ENDBOLD@@');
         // Escape HTML to prevent injection from the summary content itself
