@@ -37,7 +37,8 @@ const escapeHTML = (text) => {
 
 const formatSummaryForTelegramHTML = (text) => {
     if (!text) return '';
-    let preHtmlText = text.replace(/\*\*(.*?)\*\*/g, '@@BOLD@@$1@@ENDBOLD@@');
+    const noLinksText = text.replace(/https?:\/\/[^\s]+|www\.[^\s]+/g, '');
+    let preHtmlText = noLinksText.replace(/\*\*(.*?)\*\*/g, '@@BOLD@@$1@@ENDBOLD@@');
     let htmlText = escapeHTML(preHtmlText);
     htmlText = htmlText.replace(/@@BOLD@@(.*?)@@ENDBOLD@@/g, '<b>$1</b>');
     return htmlText;
@@ -249,13 +250,13 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-full gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3 rounded-xl text-[14px] font-bold transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-blue-500/25 active:scale-[0.98]"
+            className="flex items-center justify-center w-full gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-xl text-[14px] font-bold transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-[0.98]"
          >
             <span>Acessar Notícia Completa</span>
-            <ExternalLink size={16} className="transition-transform group-hover:translate-x-1" />
+            <ExternalLink size={15} className="transition-transform group-hover:translate-x-1" />
          </a>
 
-         <div className="grid grid-cols-[1fr_1fr_auto] gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/50">
+         <div className="grid grid-cols-[1fr_1fr_auto] gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-700/80">
              <button
                  onClick={handleSummarize}
                  disabled={loading || summary !== null}

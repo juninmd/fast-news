@@ -186,6 +186,13 @@ export const FEED_SOURCES = [
     { url: 'https://www.diariodocentrodomundo.com.br/feed/', category: 'Política' },
     { url: 'https://revistaforum.com.br/feed/', category: 'Política' },
 
+    // --- NOVOS PORTAIS SOLICITADOS ---
+    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', category: 'Mundo' },
+    { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },
+    { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
+    { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia' },
+
     // --- MUNDO ---
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
     { url: 'https://www.thesun.co.uk/news/worldnews/feed/', category: 'Mundo' },
