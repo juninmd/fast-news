@@ -454,6 +454,10 @@ export const FEED_SOURCES = [
     // --- ADICIONADOS (EXTRAS) ---
     { url: 'https://www.correiobraziliense.com.br/rss/noticia/tecnologia/rss.xml', category: 'Tecnologia' },
     { url: 'https://g1.globo.com/rss/g1/brasil/', category: 'Brasil' },
+    { url: 'https://jovempan.com.br/noticias/tecnologia/feed', category: 'Tecnologia' },
+    { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.metropoles.com/feed', category: 'Brasil' },
+    { url: 'https://noticias.uol.com.br/rss.xml', category: 'Brasil' },
     { url: 'https://noticias.uol.com.br/politica/rss.xml', category: 'Política' },
     { url: 'https://veja.abril.com.br/politica/feed/', category: 'Política' },
     { url: 'https://www.correiobraziliense.com.br/rss/noticia/politica/rss.xml', category: 'Política' },
