@@ -176,7 +176,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-md hover:shadow-2xl hover:shadow-indigo-500/30 dark:hover:shadow-[0_20px_50px_-12px_rgba(59,130,246,0.15)] hover:-translate-y-2 hover:border-blue-500/40 dark:hover:border-blue-400/40 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
+    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-lg hover:shadow-xl hover:shadow-indigo-500/30 dark:hover:shadow-[0_20px_50px_-12px_rgba(59,130,246,0.15)] hover:-translate-y-2 hover:border-blue-500/40 dark:hover:border-blue-400/40 transition-all duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
       <div className="relative p-0 m-2 mt-2">
         <div className="relative overflow-hidden rounded-2xl shadow-inner border border-white/20 dark:border-white/5">
           {imageUrl && !imageError ? (
@@ -220,8 +220,8 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
         </div>
       </div>
 
-      <div className="px-8 py-6 flex flex-col flex-grow relative">
-        <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3 drop-shadow-sm">
+      <div className="p-6 flex flex-col flex-grow relative">
+        <h3 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3 drop-shadow-sm">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
