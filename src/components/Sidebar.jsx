@@ -37,72 +37,80 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
       )}
 
       {/* Sidebar Container */}
-      <aside className={`
-        fixed lg:sticky top-0 left-0 z-50 h-screen
-        ${isCollapsed ? 'w-24' : 'w-80'}
-        bg-white dark:bg-[#0b1120] border-r border-slate-200 dark:border-slate-800/60
-        transform transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden scrollbar-hide shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)] lg:shadow-none
+      <aside className={`fixed inset-y-0 left-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-r-2 border-slate-100 dark:border-slate-800/80 transform transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col shadow-[20px_0_40px_-15px_rgba(0,0,0,0.1)] lg:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isCollapsed ? 'w-24' : 'w-80'}
       `}>
-        <div className={`h-full flex flex-col ${isCollapsed ? 'p-3' : 'p-6'}`}>
-          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-8 relative`}>
-            {!isCollapsed ? (
-              <div className="flex items-center gap-3">
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-2xl shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-                    <Globe className="text-white h-6 w-6 animate-pulse" />
+        <div className="p-6 flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800/80 h-[88px] shrink-0">
+            <div className={`flex items-center gap-4 overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-full opacity-100'}`}>
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0 transform hover:scale-105 transition-transform">
+                    <Globe className="text-white" size={22} />
                 </div>
-                <h1 className="text-[26px] font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600">NewsAI</h1>
-              </div>
-            ) : (
-                <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
-                    <Globe className="text-white h-5 w-5" />
-                </div>
-            )}
+                <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 tracking-tight">NewsAI</h1>
+            </div>
 
-            {/* Collapse Button (Desktop) */}
-            <button
-                onClick={toggleCollapse}
-                className="hidden lg:flex absolute -right-3.5 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1 rounded-full shadow-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors z-20"
-            >
-                {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ChevronLeft size={14} strokeWidth={3} />}
-            </button>
-
-             {/* Close Button (Mobile) */}
-            <button onClick={onClose} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
-                <X size={20} />
-            </button>
-          </div>
-
-          <nav className="space-y-1 flex-grow">
-            {categories.map((category) => {
-              const Icon = CATEGORY_ICONS[category] || LayoutGrid;
-              const isSelected = selectedCategory === category;
-
-              return (
+            <div className="flex items-center gap-2">
                 <button
-                  key={category}
-                  onClick={() => {
-                    onSelectCategory(category);
-                    if (window.innerWidth < 1024) onClose();
-                  }}
-                  title={isCollapsed ? category : ''}
-                  className={`
-                    w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3.5 px-4'} py-3 rounded-2xl text-[15px] font-bold transition-all duration-300 group relative
-                    ${isSelected
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-600 shadow-sm scale-105'
-                      : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200 hover:shadow-sm'
-                    }
-                  `}
+                    onClick={toggleCollapse}
+                    className="hidden lg:flex p-2.5 rounded-2xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                 >
-                  <Icon size={22} className={`transition-all duration-300 shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400 scale-110 drop-shadow-sm' : 'text-slate-400 group-hover:text-blue-500 group-hover:scale-110'}`} />
-
-                  {!isCollapsed && (
-                        <span className="relative z-10 whitespace-nowrap">{category}</span>
-                  )}
+                    {isCollapsed ? <ChevronRight size={22} /> : <ChevronLeft size={22} />}
                 </button>
-              );
-            })}
-          </nav>
+                <button onClick={onClose} className="lg:hidden p-2.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                    <X size={24} />
+                </button>
+            </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-5 custom-scrollbar">
+            <div className="space-y-1.5">
+                <p className={`text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-5 px-4 ${isCollapsed ? 'hidden' : 'block'}`}>Categorias</p>
+                {categories.map((category) => {
+                  const Icon = CATEGORY_ICONS[category] || LayoutGrid;
+                  const isSelected = selectedCategory === category;
+                  return (
+                    <button
+                        key={category}
+                        onClick={() => { onSelectCategory(category); onClose(); }}
+                        className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-[1.2rem] transition-all duration-200 group relative overflow-hidden
+                            ${isSelected
+                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-700 dark:text-blue-400 font-bold shadow-sm border border-blue-100/50 dark:border-blue-800/30'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 font-medium border border-transparent'
+                            }
+                        `}
+                        title={isCollapsed ? category : ''}
+                    >
+                        {isSelected && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-500 to-indigo-600" />
+                        )}
+                        <span className={`shrink-0 transition-transform duration-300 ${isSelected ? 'scale-110 text-blue-600 dark:text-blue-400' : 'group-hover:scale-110 group-hover:text-slate-800 dark:group-hover:text-slate-200'}`}>
+                            <Icon size={20} />
+                        </span>
+                        <span className={`whitespace-nowrap transition-all duration-300 text-[15px] ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100 w-auto'}`}>
+                            {category}
+                        </span>
+                    </button>
+                  );
+                })}
+            </div>
+        </nav>
+
+        {/* Footer Area */}
+        <div className={`p-6 border-t-2 border-slate-100 dark:border-slate-800/80 transition-all duration-300 ${isCollapsed ? 'items-center px-4' : ''}`}>
+             <div className={`flex items-center gap-4 ${isCollapsed ? 'justify-center' : ''}`}>
+                 <div className="w-12 h-12 rounded-[1.2rem] bg-slate-50 dark:bg-slate-900 flex items-center justify-center shrink-0 border-2 border-slate-200 dark:border-slate-800 shadow-sm">
+                     <span className="text-[15px] font-black bg-clip-text text-transparent bg-gradient-to-br from-slate-600 to-slate-400 dark:from-slate-300 dark:to-slate-500">AI</span>
+                 </div>
+                 {!isCollapsed && (
+                     <div className="flex flex-col">
+                         <span className="text-[15px] font-bold text-slate-900 dark:text-white leading-tight mb-0.5">Agente Autônomo</span>
+                         <span className="text-[12px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                             Sincronizado
+                         </span>
+                     </div>
+                 )}
+             </div>
         </div>
       </aside>
     </>
