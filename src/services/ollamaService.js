@@ -15,6 +15,7 @@ Gere o resumo em Português do Brasil, seguindo RIGOROSAMENTE este formato:
 
 Regras irrevogáveis:
 - Exatamente 3 bullet points começando com 🔸.
+- Proibido usar hashtags.
 - Proibido saudações, conclusões ou links no texto.
 - Máximo de 500 caracteres.`;
 

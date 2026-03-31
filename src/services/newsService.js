@@ -172,7 +172,16 @@ export const FEED_SOURCES = [
 
     // --- GERAL/ENTRETENIMENTO (EXTRAS) ---
     { url: 'https://catracalivre.com.br/feed/', category: 'Geral' },
+    { url: 'https://www.theguardian.com/international/rss', category: 'Mundo' },
+    { url: 'https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada', category: 'Brasil' },
     { url: 'https://www.brasildefato.com.br/rss2.xml', category: 'Geral' },
+    { url: 'https://www.rfi.fr/br/brasil/rss', category: 'Brasil' },
+    { url: 'https://www.rfi.fr/br/mundo/rss', category: 'Mundo' },
+    { url: 'https://g1.globo.com/rss/g1/politica/mensalao/', category: 'Política' },
+    { url: 'https://g1.globo.com/rss/g1/economia/agronegocios/', category: 'Negócios' },
+    { url: 'https://g1.globo.com/rss/g1/economia/mercados/', category: 'Negócios' },
+    { url: 'https://www.estadao.com.br/rss/economia', category: 'Negócios' },
+    { url: 'https://www.estadao.com.br/rss/internacional', category: 'Mundo' },
     { url: 'https://www.poder360.com.br/feed/', category: 'Geral' },
     { url: 'https://g1.globo.com/rss/g1/pop-arte/', category: 'Entretenimento' },
     { url: 'https://g1.globo.com/rss/g1/sao-paulo/', category: 'Brasil' },
