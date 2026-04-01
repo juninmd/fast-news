@@ -248,7 +248,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
       <div className="px-6 pb-6 mt-auto flex flex-col gap-3">
          <button
              onClick={handleSendToTelegram}
-             disabled={sendingTelegram || !telegramBotToken}
+             disabled={sendingTelegram || loading || !telegramBotToken || !telegramChatId}
              title="Enviar para Telegram (Canal)"
              className="flex items-center justify-center w-full gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
          >
@@ -259,7 +259,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
              ) : (
                  <Send size={18} className="text-white" />
              )}
-             <span>{telegramStatus === 'success' ? 'Enviado para o Canal!' : 'Resumir com IA & Enviar Telegram'}</span>
+             <span>{telegramStatus === 'success' ? 'Enviado para o Canal!' : (summary ? 'Enviar para o Telegram' : 'Resumir com IA & Enviar Telegram')}</span>
          </button>
 
          <div className="grid grid-cols-[1fr_1fr_auto] gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-700/80">
