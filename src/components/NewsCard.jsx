@@ -246,15 +246,21 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
 
       {/* Footer Action Bar */}
       <div className="px-6 pb-6 mt-auto flex flex-col gap-3">
-         <a
-            href={item.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center w-full gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-[0.98]"
+         <button
+             onClick={handleSendToTelegram}
+             disabled={sendingTelegram || !telegramBotToken}
+             title="Enviar para Telegram (Canal)"
+             className="flex items-center justify-center w-full gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
          >
-            <span>Acessar Notícia Completa</span>
-            <ExternalLink size={15} className="transition-transform group-hover:translate-x-1" />
-         </a>
+             {sendingTelegram ? (
+                 <Loader size={18} className="animate-spin" />
+             ) : telegramStatus === 'success' ? (
+                 <Check size={18} className="text-white" />
+             ) : (
+                 <Send size={18} className="text-white" />
+             )}
+             <span>{telegramStatus === 'success' ? 'Enviado para o Canal!' : 'Resumir com IA & Enviar Telegram'}</span>
+         </button>
 
          <div className="grid grid-cols-[1fr_1fr_auto] gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-700/80">
              <button
@@ -264,24 +270,18 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
                  className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-indigo-50 dark:bg-slate-800/50 dark:hover:bg-indigo-900/30 text-slate-700 hover:text-indigo-700 dark:text-slate-300 dark:hover:text-indigo-300 font-semibold text-[13px] transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200/60 dark:border-slate-700/60 hover:border-indigo-200 dark:hover:border-indigo-800/60"
              >
                  {loading ? <Loader size={15} className="animate-spin text-indigo-500" /> : <Sparkles size={15} className="text-indigo-500" />}
-                 <span className="truncate">{summary ? 'Gerado por IA' : 'Resumir'}</span>
+                 <span className="truncate">{summary ? 'Gerado por IA' : 'Apenas Resumir'}</span>
              </button>
 
-             <button
-                 onClick={handleSendToTelegram}
-                 disabled={sendingTelegram || !telegramBotToken}
-                 title="Enviar para Telegram (Canal)"
-                 className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-blue-50 dark:bg-slate-800/50 dark:hover:bg-blue-900/30 text-slate-700 hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300 font-semibold text-[13px] transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-200 dark:hover:border-blue-800/60"
+             <a
+                 href={item.link}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-blue-50 dark:bg-slate-800/50 dark:hover:bg-blue-900/30 text-slate-700 hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300 font-semibold text-[13px] transition-all border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-200 dark:hover:border-blue-800/60"
              >
-                 {sendingTelegram ? (
-                     <Loader size={15} className="animate-spin text-blue-500" />
-                 ) : telegramStatus === 'success' ? (
-                     <Check size={15} className="text-emerald-500" />
-                 ) : (
-                     <Send size={15} className="text-blue-500" />
-                 )}
-                 <span className="truncate">{telegramStatus === 'success' ? 'Enviado!' : 'Telegram'}</span>
-             </button>
+                 <ExternalLink size={15} className="text-blue-500" />
+                 <span className="truncate">Acessar Notícia</span>
+             </a>
 
              <button
                  onClick={copyToClipboard}
