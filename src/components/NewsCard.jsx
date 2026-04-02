@@ -221,7 +221,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
       </div>
 
       <div className="p-6 flex flex-col flex-grow relative">
-        <h3 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3 drop-shadow-sm">
+        <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3 drop-shadow-sm">
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none before:absolute before:inset-0">
             {item.title}
           </a>
