@@ -435,6 +435,11 @@ export const FEED_SOURCES = [
     { url: 'https://www.meioemensagem.com.br/feed', category: 'Marketing' },
 
     // --- NOVOS PORTAIS ADICIONADOS (MAIS BRASIL E GERAL) ---
+    { url: 'https://www.correiobraziliense.com.br/rss/noticia/brasil/rss.xml', category: 'Brasil' },
+    { url: 'https://veja.abril.com.br/brasil/feed/', category: 'Brasil' },
+    { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
+    { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Política' },
+    { url: 'https://exame.com/brasil/feed/', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Tecnologia' },
     { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Negócios' },
     { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },

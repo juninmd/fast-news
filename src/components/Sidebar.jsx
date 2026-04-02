@@ -87,7 +87,7 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
                   }}
                   title={isCollapsed ? category : ''}
                   className={`
-                    w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3.5 px-4'} py-3 rounded-2xl text-[15px] font-bold transition-all duration-300 group relative
+                    w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3 rounded-2xl text-[15px] font-bold transition-all duration-300 group relative
                     ${isSelected
                       ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-600 shadow-sm scale-105'
                       : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200 hover:shadow-sm'
