@@ -17,8 +17,12 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.66",
+    "@ai-sdk/google": "^3.0.58",
+    "@ai-sdk/openai": "^3.0.50",
     "@google/generative-ai": "^0.24.1",
     "@vitejs/plugin-react": "^5.1.4",
+    "ai": "^6.0.146",
     "autoprefixer": "^10.4.23",
     "dotenv": "^17.3.1",
     "lucide-react": "^0.562.0",
