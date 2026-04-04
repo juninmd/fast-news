@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
+import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settings as SettingsIcon, ShieldCheck, Sparkles } from 'lucide-react';
 import { summarizeWithOllama } from '../services/ollamaService';
 import { testGeminiConnection } from '../services/geminiService';
 
 const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
   const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [aiSdkProvider, setAiSdkProvider] = useState(() => localStorage.getItem('ai_sdk_provider') || 'openai');
+  const [aiSdkApiKey, setAiSdkApiKey] = useState(() => localStorage.getItem('ai_sdk_api_key') || '');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -38,6 +40,8 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const handleSave = () => {
     localStorage.setItem('ai_provider', aiProvider);
     localStorage.setItem('gemini_api_key', geminiApiKey);
+    localStorage.setItem('ai_sdk_provider', aiSdkProvider);
+    localStorage.setItem('ai_sdk_api_key', aiSdkApiKey);
     localStorage.setItem('custom_feeds', JSON.stringify(customFeeds));
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
     localStorage.setItem('auto_summarize', autoSummarize);
@@ -49,6 +53,8 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     onSave({
       aiProvider,
       geminiApiKey,
+      aiSdkProvider,
+      aiSdkApiKey,
       customFeeds,
       rss2jsonApiKey,
       autoSummarize,
@@ -180,6 +186,17 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                     >
                         <div className="font-bold flex items-center justify-center gap-2"><ShieldCheck size={18}/> Google Gemini</div>
                     </button>
+                    <button
+                        type="button"
+                        onClick={() => setAiProvider('ai-sdk')}
+                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                            aiProvider === 'ai-sdk'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300'
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-300'
+                        }`}
+                    >
+                        <div className="font-bold flex items-center justify-center gap-2"><Sparkles size={18}/> Vercel AI SDK</div>
+                    </button>
                  </div>
 
                  {aiProvider === 'ollama' && (
@@ -221,6 +238,39 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                         >
                             {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
                         </button>
+                    </div>
+                 </div>
+                 )}
+
+                 {aiProvider === 'ai-sdk' && (
+                 <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700 animate-in fade-in">
+                    <div className="flex items-start gap-2 text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg flex-col">
+                        <div className="flex items-center gap-2"><Info size={16} className="shrink-0 mt-0.5" /> <strong>Vercel AI SDK</strong></div>
+                        <p>Agnóstico a provedor. Funciona totalmente no client-side via APIs públicas. Escolha seu provedor e forneça a chave de API.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Provedor AI SDK</label>
+                        <select
+                            value={aiSdkProvider}
+                            onChange={(e) => setAiSdkProvider(e.target.value)}
+                            className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                        >
+                            <option value="openai">OpenAI (GPT-4o-mini)</option>
+                            <option value="anthropic">Anthropic (Claude 3 Haiku)</option>
+                            <option value="google">Google (Gemini 1.5 Flash)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">API Key ({aiSdkProvider})</label>
+                        <input
+                            type="password"
+                            value={aiSdkApiKey}
+                            onChange={(e) => setAiSdkApiKey(e.target.value)}
+                            className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            placeholder="Insira sua API Key..."
+                        />
                     </div>
                  </div>
                  )}

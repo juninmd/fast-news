@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
 import { summarizeWithGemini, classifyWithGemini } from '../services/geminiService';
+import { summarizeWithAiSdk, classifyWithAiSdk } from '../services/aiSdkService';
 import { sendToTelegram } from '../services/telegramService';
 import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -44,7 +45,7 @@ const formatSummaryForTelegramHTML = (text) => {
     return htmlText;
 };
 
-const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
+const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [aiCategory, setAiCategory] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -71,6 +72,10 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
       setError("Configure a API Key do Gemini.");
       return;
     }
+    if (aiProvider === 'ai-sdk' && !aiSdkApiKey) {
+      setError(`Configure a API Key do ${aiSdkProvider} nas configurações do AI SDK.`);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -86,6 +91,14 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
              if (classifiedCategory) setAiCategory(classifiedCategory);
           } catch (catError) {
              console.error("Failed to classify with Gemini:", catError);
+          }
+      } else if (aiProvider === 'ai-sdk') {
+          result = await summarizeWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey);
+          try {
+              classifiedCategory = await classifyWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey);
+              if (classifiedCategory) setAiCategory(classifiedCategory);
+          } catch (catError) {
+               console.error("Failed to classify with AI SDK:", catError);
           }
       } else {
           result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
@@ -119,8 +132,12 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
 
           if (!aiCategory) {
               const textToClassify = item.content || item.description || item.title;
-              if (ollamaUrl) {
-                  finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel);
+              if (aiProvider === 'gemini') {
+                  finalCategory = await classifyWithGemini(textToClassify, geminiApiKey) || finalCategory;
+              } else if (aiProvider === 'ai-sdk') {
+                  finalCategory = await classifyWithAiSdk(textToClassify, aiSdkProvider, aiSdkApiKey) || finalCategory;
+              } else if (ollamaUrl) {
+                  finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel) || finalCategory;
               }
               setAiCategory(finalCategory); // cache it
           }
@@ -296,4 +313,4 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel, tele
   );
 };
 
-export default NewsCard;
+export default React.memo(NewsCard);
