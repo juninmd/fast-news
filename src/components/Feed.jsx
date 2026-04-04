@@ -10,6 +10,8 @@ const DEFAULT_FEEDS = [];
 const Feed = ({
     aiProvider,
     geminiApiKey,
+    aiSdkProvider,
+    aiSdkApiKey,
     customFeeds = DEFAULT_FEEDS,
     rss2jsonApiKey,
     autoSummarize,
@@ -121,6 +123,8 @@ const Feed = ({
              item={heroItem}
              aiProvider={aiProvider}
              geminiApiKey={geminiApiKey}
+             aiSdkProvider={aiSdkProvider}
+             aiSdkApiKey={aiSdkApiKey}
              ollamaUrl={ollamaUrl}
              ollamaModel={ollamaModel}
           />
@@ -143,6 +147,8 @@ const Feed = ({
                     item={item}
                     aiProvider={aiProvider}
                     geminiApiKey={geminiApiKey}
+                    aiSdkProvider={aiSdkProvider}
+                    aiSdkApiKey={aiSdkApiKey}
                     autoSummarize={autoSummarize}
                     ollamaUrl={ollamaUrl}
                     ollamaModel={ollamaModel}
@@ -194,4 +200,4 @@ const Feed = ({
   );
 };
 
-export default Feed;
+export default React.memo(Feed);

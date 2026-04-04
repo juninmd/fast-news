@@ -42,6 +42,7 @@ export const FEED_SOURCES = [
     { url: 'https://threatpost.com/feed/', category: 'Tecnologia' },
 
     // --- TECNOLOGIA (BRASIL) ---
+    { url: 'https://www.em.com.br/rss/noticia/tecnologia/rss.xml', category: 'Tecnologia' },
     { url: 'https://mundoconectado.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://www.showmetech.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://canaltech.com.br/rss/produtos', category: 'Tecnologia' },
@@ -194,6 +195,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia' },
 
     // --- MUNDO ---
+    { url: 'https://www.bbc.com/portuguese/topics/c340q0p2585t/index.xml', category: 'Mundo' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
     { url: 'https://www.thesun.co.uk/news/worldnews/feed/', category: 'Mundo' },
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },

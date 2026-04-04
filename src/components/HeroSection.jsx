@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { summarizeWithOllama } from '../services/ollamaService';
 import { summarizeWithGemini } from '../services/geminiService';
 import { Sparkles, Loader, ExternalLink, Calendar, Newspaper, ArrowRight, X } from 'lucide-react';
+import { summarizeWithAiSdk } from '../services/aiSdkService';
 
-const HeroSection = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel }) => {
+const HeroSection = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, ollamaUrl, ollamaModel }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -20,6 +21,10 @@ const HeroSection = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel })
       setError("Configure a API Key do Gemini nas configurações.");
       return;
     }
+    if (aiProvider === 'ai-sdk' && !aiSdkApiKey) {
+      setError(`Configure a API Key do ${aiSdkProvider} nas configurações do AI SDK.`);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -29,6 +34,8 @@ const HeroSection = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel })
 
       if (aiProvider === 'gemini') {
           result = await summarizeWithGemini(textToSummarize, geminiApiKey);
+      } else if (aiProvider === 'ai-sdk') {
+          result = await summarizeWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey);
       } else {
           result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
       }
@@ -123,7 +130,7 @@ const HeroSection = ({ item, aiProvider, geminiApiKey, ollamaUrl, ollamaModel })
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
                         </span>
-                        Resumo IA Ollama/Gemini
+                        Resumo IA {aiProvider === 'ai-sdk' ? aiSdkProvider : aiProvider}
                     </div>
                     <p className="text-lg md:text-xl leading-relaxed font-medium relative z-10 text-slate-200 drop-shadow-sm">
                         {summary}
