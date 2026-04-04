@@ -80,11 +80,11 @@ ${text}
         });
 
         // Limpa a resposta para garantir que seja apenas uma hashtag válida
-        const cleanResult = result.trim().replace(/[^a-zA-ZÀ-ÿ0-9#]/g, '');
-        if (cleanResult.startsWith('#')) {
-             // Retorna a palavra sem o hash, com primeira maiuscula para bater com nossas categorias
-             const word = cleanResult.substring(1);
-             return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        const match = result.match(/#([a-zA-ZÀ-ÿ0-9]+)/);
+        if (match) {
+             const word = match[1];
+             const normalized = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+             return normalized === 'Ia' ? 'IA' : normalized;
         }
 
         return null;
