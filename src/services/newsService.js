@@ -186,6 +186,8 @@ export const FEED_SOURCES = [
     { url: 'https://www.brasil247.com/feed', category: 'Política' },
     { url: 'https://www.diariodocentrodomundo.com.br/feed/', category: 'Política' },
     { url: 'https://revistaforum.com.br/feed/', category: 'Política' },
+    { url: 'https://operamundi.uol.com.br/feed', category: 'Mundo' },
+    { url: 'https://br.sputniknews.com/export/rss2/archive/index.xml', category: 'Mundo' },
 
     // --- NOVOS PORTAIS SOLICITADOS ---
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
