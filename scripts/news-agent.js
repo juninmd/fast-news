@@ -5,6 +5,11 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { generateText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+
 // Import sources
 import { FEED_SOURCES } from '../src/services/newsService.js';
 
@@ -19,6 +24,11 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
 // Telegram Bot Token and Chat ID (must be defined in .env)
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+// AI Provider settings
+const AI_PROVIDER = process.env.AI_PROVIDER || 'ollama'; // 'ollama' or 'ai-sdk'
+const AI_SDK_PROVIDER = process.env.AI_SDK_PROVIDER || 'openai';
+const AI_SDK_API_KEY = process.env.AI_SDK_API_KEY;
 
 // Limits
 const MAX_ITEMS_PER_RUN = process.env.MAX_ITEMS_PER_RUN ? parseInt(process.env.MAX_ITEMS_PER_RUN) : 15;
@@ -191,6 +201,103 @@ Regras irrevogáveis:
     }
 }
 
+const getAiSdkModel = () => {
+    switch (AI_SDK_PROVIDER) {
+        case 'openai': {
+            const openai = createOpenAI({ apiKey: AI_SDK_API_KEY, compatibility: 'strict' });
+            return openai('gpt-4o-mini');
+        }
+        case 'anthropic': {
+            const anthropic = createAnthropic({ apiKey: AI_SDK_API_KEY });
+            return anthropic('claude-3-haiku-20240307');
+        }
+        case 'google': {
+            const google = createGoogleGenerativeAI({ apiKey: AI_SDK_API_KEY });
+            return google('gemini-1.5-flash');
+        }
+        default:
+            throw new Error(`Provider ${AI_SDK_PROVIDER} not supported by AI SDK.`);
+    }
+};
+
+async function classifyWithAiSdk(title, content) {
+    if (!AI_SDK_API_KEY) return 'Geral';
+    try {
+        const model = getAiSdkModel();
+        const categories = Object.keys(EMOJI_MAP).join(', ');
+
+        const prompt = `Você é um classificador automático de categorias de notícias.
+Leia o título e o conteúdo abaixo e escolha APENAS UMA das seguintes categorias que melhor descreve o tema principal da notícia:
+[${categories}].
+
+Regra muito importante: Responda APENAS com a categoria escolhida em formato de hashtag.
+Exemplo 1: #Esportes
+Exemplo 2: #Tecnologia
+
+Título a ser classificado: "${title}"
+Conteúdo: "${content.substring(0, 600)}"`;
+
+        const { text: result } = await generateText({
+            model,
+            prompt,
+        });
+
+        const match = result.match(/#([a-zA-ZÀ-ÿ0-9]+)/);
+        if (match) {
+             const word = match[1];
+             const normalized = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+             const bestMatch = Object.keys(EMOJI_MAP).find(c =>
+                 normalized.toLowerCase() === c.toLowerCase() ||
+                 normalized.toLowerCase().includes(c.toLowerCase()) ||
+                 (normalized === 'Ia' && c === 'IA')
+             );
+             return bestMatch || 'Geral';
+        }
+
+        return 'Geral';
+    } catch (error) {
+        console.error('⚠️ Error classifying with AI SDK:', error.message);
+        return 'Geral';
+    }
+}
+
+async function summarizeWithAiSdk(title, content) {
+    if (!AI_SDK_API_KEY) return null;
+    try {
+        const model = getAiSdkModel();
+        const prompt = `Você é um editor sênior para um canal de notícias premium no Telegram.
+Sua tarefa é criar um resumo altamente engajador, direto e otimizado para mobile.
+
+Notícia Analisada:
+Título: "${title}"
+Conteúdo: "${content.substring(0, 2500)}"
+
+Gere o resumo em Português do Brasil, seguindo RIGOROSAMENTE este formato:
+
+**[Crie uma frase de impacto curta e instigante]**
+
+🔸 [Ponto principal 1]
+🔸 [Ponto principal 2]
+🔸 [Ponto principal 3]
+
+Regras irrevogáveis:
+- A primeira linha deve começar com a frase de impacto em negrito (**).
+- Exatamente 3 bullet points começando com 🔸.
+- Proibido saudações, conclusões, links ou texto extra.
+- Máximo de 500 caracteres.`;
+
+        const { text: result } = await generateText({
+            model,
+            prompt,
+        });
+
+        return result.trim();
+    } catch (error) {
+        console.error('⚠️ Error summarizing with AI SDK:', error.message);
+        return null;
+    }
+}
+
 async function sendToTelegram(title, summary, category, link) {
     if (DRY_RUN) {
         console.log('\n--- DRY RUN: MESSAGE PREVIEW ---');
@@ -297,7 +404,12 @@ async function processBatch() {
         if (!DRY_RUN) console.warn('⚠️ WARNING: Telegram credentials missing.');
     }
 
-    const ollamaHealthy = await checkOllamaHealth();
+    let ollamaHealthy = false;
+    if (AI_PROVIDER === 'ollama') {
+        ollamaHealthy = await checkOllamaHealth();
+    } else if (AI_PROVIDER === 'ai-sdk' && !AI_SDK_API_KEY) {
+        if (!DRY_RUN) console.warn('⚠️ WARNING: AI SDK API Key missing.');
+    }
 
     const history = await loadHistory();
     const historySet = new Set(history);
@@ -328,7 +440,14 @@ async function processBatch() {
             let category = item.sourceCategory;
             let summary = null;
 
-            if (ollamaHealthy) {
+            if (AI_PROVIDER === 'ai-sdk' && AI_SDK_API_KEY) {
+                // Classify using AI SDK
+                const detectedCategory = await classifyWithAiSdk(item.title, content);
+                if (detectedCategory) category = detectedCategory;
+
+                // Summarize using AI SDK
+                summary = await summarizeWithAiSdk(item.title, content);
+            } else if (AI_PROVIDER === 'ollama' && ollamaHealthy) {
                 // Classify using Ollama
                 const detectedCategory = await classifyWithOllama(item.title, content);
                 if (detectedCategory) category = detectedCategory;
@@ -336,7 +455,7 @@ async function processBatch() {
                 // Summarize using Ollama
                 summary = await summarizeWithOllama(item.title, content);
             } else {
-                // Fallback if no Ollama
+                // Fallback if no AI or unhealthy
                 summary = content ? content.substring(0, 300) + '...' : item.title;
             }
 
