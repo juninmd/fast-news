@@ -442,11 +442,12 @@ async function processBatch() {
 
             if (AI_PROVIDER === 'ai-sdk' && AI_SDK_API_KEY) {
                 // Classify using AI SDK
-                const detectedCategory = await classifyWithAiSdk(item.title, content);
+                const [detectedCategory, aiSummary] = await Promise.all([
+                    classifyWithAiSdk(item.title, content),
+                    summarizeWithAiSdk(item.title, content)
+                ]);
                 if (detectedCategory) category = detectedCategory;
-
-                // Summarize using AI SDK
-                summary = await summarizeWithAiSdk(item.title, content);
+                summary = aiSummary;
             } else if (AI_PROVIDER === 'ollama' && ollamaHealthy) {
                 // Classify using Ollama
                 const detectedCategory = await classifyWithOllama(item.title, content);
