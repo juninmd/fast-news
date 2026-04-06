@@ -65,7 +65,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSummarize, aiProvider, ollamaUrl, geminiApiKey, aiSdkApiKey]);
+  }, [autoSummarize, aiProvider, ollamaUrl, geminiApiKey, aiSdkApiKey, aiSdkProvider]);
 
   const handleSummarize = async () => {
     if (aiProvider === 'ollama' && !ollamaUrl) {
