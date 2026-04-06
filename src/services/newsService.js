@@ -479,7 +479,19 @@ export const FEED_SOURCES = [
     { url: 'https://jovempan.com.br/noticias/brasil/feed', category: 'Brasil' },
     { url: 'https://www.metropoles.com/brasil/feed', category: 'Brasil' },
 
-    // --- NOVOS PORTAIS (ADICIONADOS RECENTEMENTE) ---
+    // --- NOVOS PORTAIS ADICIONADOS RECENTEMENTE ---
+    { url: 'https://br.yahoo.com/news/rss', category: 'Geral' },
+    { url: 'https://br.financas.yahoo.com/news/rss', category: 'Negócios' },
+    { url: 'https://www.reuters.com/arc/outboundfeeds/news-letters/world-news', category: 'Mundo' },
+    { url: 'https://news.yahoo.com/rss/', category: 'Mundo' },
+    { url: 'https://finance.yahoo.com/news/rss/', category: 'Negócios' },
+    { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
+    { url: 'https://www.infomoney.com.br/mercados/feed/', category: 'Negócios' },
+    { url: 'https://www.infomoney.com.br/politica/feed/', category: 'Política' },
+    { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia' },
+    { url: 'https://www.wired.com/feed/rss', category: 'Tecnologia' },
+    { url: 'https://www.npr.org/rss/rss.php?id=1001', category: 'Mundo' },
+    { url: 'https://feeds.npr.org/1004/rss.xml', category: 'Mundo' },
     { url: 'https://g1.globo.com/rss/g1/pop-arte/', category: 'Entretenimento' },
     { url: 'https://g1.globo.com/rss/g1/natureza/', category: 'Ciência' },
     { url: 'https://g1.globo.com/rss/g1/concursos-e-emprego/', category: 'Negócios' },
