@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { fetchNews, FEED_SOURCES } from '../services/newsService';
 import NewsCard from './NewsCard';
 import HeroSection from './HeroSection';
@@ -110,6 +110,30 @@ const Feed = ({
       return filtered;
   }, [news, selectedCategory, searchQuery]);
 
+  const observerTarget = useRef(null);
+
+  const handleObserver = useCallback((entries) => {
+    const target = entries[0];
+    if (target.isIntersecting && hasMore && !loading && init) {
+        loadMoreNews();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, hasMore, init]);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0.1 });
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+        observer.observe(currentTarget);
+    }
+    return () => {
+        if (currentTarget) {
+            observer.unobserve(currentTarget);
+        }
+    };
+  }, [handleObserver]);
+
   const isLoadingInitial = loading && news.length === 0;
 
   const showHero = !searchQuery && filteredNews.length > 0;
@@ -175,26 +199,16 @@ const Feed = ({
         </div>
       )}
 
-      {/* Load More */}
-      <div className="mt-12 text-center pb-8">
+      {/* Load More / Infinite Scroll Target */}
+      <div ref={observerTarget} className="mt-12 text-center pb-8">
         {loading && !isLoadingInitial ? (
              <div className="flex flex-col items-center justify-center">
                 <RefreshCw className="animate-spin text-blue-600 mb-2" size={32} />
                 <p className="text-gray-500 dark:text-gray-400 text-sm">Carregando mais notícias...</p>
              </div>
-        ) : hasMore ? (
-            <button
-                onClick={loadMoreNews}
-                className="group relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
-            >
-                <PlusCircle className="mr-2 group-hover:rotate-90 transition-transform" size={20} />
-                Carregar mais fontes
-            </button>
-        ) : (
-            filteredNews.length > 0 && (
-                <p className="text-gray-400 dark:text-gray-500 text-sm">Todas as fontes disponíveis foram carregadas.</p>
-            )
-        )}
+        ) : !hasMore && filteredNews.length > 0 ? (
+            <p className="text-gray-400 dark:text-gray-500 text-sm">Todas as fontes disponíveis foram carregadas.</p>
+        ) : null}
       </div>
     </div>
   );

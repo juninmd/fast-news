@@ -56,12 +56,16 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
 
   useEffect(() => {
     if (autoSummarize && !summary && !loading && !error) {
-      if ((aiProvider === 'ollama' && ollamaUrl) || (aiProvider === 'gemini' && geminiApiKey)) {
+      if (
+        (aiProvider === 'ollama' && ollamaUrl) ||
+        (aiProvider === 'gemini' && geminiApiKey) ||
+        (aiProvider === 'ai-sdk' && aiSdkApiKey)
+      ) {
         handleSummarize();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSummarize, aiProvider, ollamaUrl, geminiApiKey]);
+  }, [autoSummarize, aiProvider, ollamaUrl, geminiApiKey, aiSdkApiKey]);
 
   const handleSummarize = async () => {
     if (aiProvider === 'ollama' && !ollamaUrl) {
