@@ -45,7 +45,7 @@ const formatSummaryForTelegramHTML = (text) => {
     return htmlText;
 };
 
-const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
+const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [aiCategory, setAiCategory] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -97,9 +97,9 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
              console.error("Failed to classify with Gemini:", catError);
           }
       } else if (aiProvider === 'ai-sdk') {
-          result = await summarizeWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey);
+          result = await summarizeWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey, aiSdkModel);
           try {
-              classifiedCategory = await classifyWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey);
+              classifiedCategory = await classifyWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey, aiSdkModel);
               if (classifiedCategory) setAiCategory(classifiedCategory);
           } catch (catError) {
                console.error("Failed to classify with AI SDK:", catError);
@@ -139,7 +139,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
               if (aiProvider === 'gemini') {
                   finalCategory = await classifyWithGemini(textToClassify, geminiApiKey) || finalCategory;
               } else if (aiProvider === 'ai-sdk') {
-                  finalCategory = await classifyWithAiSdk(textToClassify, aiSdkProvider, aiSdkApiKey) || finalCategory;
+                  finalCategory = await classifyWithAiSdk(textToClassify, aiSdkProvider, aiSdkApiKey, aiSdkModel) || finalCategory;
               } else if (ollamaUrl) {
                   finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel) || finalCategory;
               }

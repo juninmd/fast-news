@@ -8,6 +8,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [aiSdkProvider, setAiSdkProvider] = useState(() => localStorage.getItem('ai_sdk_provider') || 'openai');
   const [aiSdkApiKey, setAiSdkApiKey] = useState(() => localStorage.getItem('ai_sdk_api_key') || '');
+  const [aiSdkModel, setAiSdkModel] = useState(() => localStorage.getItem('ai_sdk_model') || '');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -42,6 +43,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
     localStorage.setItem('gemini_api_key', geminiApiKey);
     localStorage.setItem('ai_sdk_provider', aiSdkProvider);
     localStorage.setItem('ai_sdk_api_key', aiSdkApiKey);
+    localStorage.setItem('ai_sdk_model', aiSdkModel);
     localStorage.setItem('custom_feeds', JSON.stringify(customFeeds));
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
     localStorage.setItem('auto_summarize', autoSummarize);
@@ -55,6 +57,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
       geminiApiKey,
       aiSdkProvider,
       aiSdkApiKey,
+      aiSdkModel,
       customFeeds,
       rss2jsonApiKey,
       autoSummarize,
@@ -270,6 +273,17 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                             onChange={(e) => setAiSdkApiKey(e.target.value)}
                             className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                             placeholder="Insira sua API Key..."
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Modelo Opcional (ex: gpt-4o-mini)</label>
+                        <input
+                            type="text"
+                            value={aiSdkModel}
+                            onChange={(e) => setAiSdkModel(e.target.value)}
+                            className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            placeholder="Vazio usa o padrão do provedor"
                         />
                     </div>
                  </div>

@@ -12,6 +12,7 @@ const Feed = ({
     geminiApiKey,
     aiSdkProvider,
     aiSdkApiKey,
+    aiSdkModel,
     customFeeds = DEFAULT_FEEDS,
     rss2jsonApiKey,
     autoSummarize,
@@ -149,6 +150,7 @@ const Feed = ({
              geminiApiKey={geminiApiKey}
              aiSdkProvider={aiSdkProvider}
              aiSdkApiKey={aiSdkApiKey}
+             aiSdkModel={aiSdkModel}
              ollamaUrl={ollamaUrl}
              ollamaModel={ollamaModel}
           />
@@ -173,6 +175,7 @@ const Feed = ({
                     geminiApiKey={geminiApiKey}
                     aiSdkProvider={aiSdkProvider}
                     aiSdkApiKey={aiSdkApiKey}
+                    aiSdkModel={aiSdkModel}
                     autoSummarize={autoSummarize}
                     ollamaUrl={ollamaUrl}
                     ollamaModel={ollamaModel}

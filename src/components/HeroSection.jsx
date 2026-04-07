@@ -4,7 +4,7 @@ import { summarizeWithGemini } from '../services/geminiService';
 import { Sparkles, Loader, ExternalLink, Calendar, Newspaper, ArrowRight, X } from 'lucide-react';
 import { summarizeWithAiSdk } from '../services/aiSdkService';
 
-const HeroSection = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, ollamaUrl, ollamaModel }) => {
+const HeroSection = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel, ollamaUrl, ollamaModel }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,7 +35,7 @@ const HeroSection = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKe
       if (aiProvider === 'gemini') {
           result = await summarizeWithGemini(textToSummarize, geminiApiKey);
       } else if (aiProvider === 'ai-sdk') {
-          result = await summarizeWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey);
+          result = await summarizeWithAiSdk(textToSummarize, aiSdkProvider, aiSdkApiKey, aiSdkModel);
       } else {
           result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
       }

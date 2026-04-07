@@ -22,6 +22,7 @@ function App() {
   const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
   const [aiSdkProvider, setAiSdkProvider] = useState(() => localStorage.getItem('ai_sdk_provider') || 'openai');
   const [aiSdkApiKey, setAiSdkApiKey] = useState(() => localStorage.getItem('ai_sdk_api_key'));
+  const [aiSdkModel, setAiSdkModel] = useState(() => localStorage.getItem('ai_sdk_model') || '');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key'));
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
@@ -59,6 +60,7 @@ function App() {
     setGeminiApiKey(newSettings.geminiApiKey);
     setAiSdkProvider(newSettings.aiSdkProvider);
     setAiSdkApiKey(newSettings.aiSdkApiKey);
+    setAiSdkModel(newSettings.aiSdkModel);
     setCustomFeeds(newSettings.customFeeds);
     setRss2jsonApiKey(newSettings.rss2jsonApiKey);
     setAutoSummarize(newSettings.autoSummarize);
@@ -185,6 +187,7 @@ function App() {
                         geminiApiKey={geminiApiKey}
                         aiSdkProvider={aiSdkProvider}
                         aiSdkApiKey={aiSdkApiKey}
+                        aiSdkModel={aiSdkModel}
                         rss2jsonApiKey={rss2jsonApiKey}
                         autoSummarize={autoSummarize}
                         customFeeds={customFeeds}
