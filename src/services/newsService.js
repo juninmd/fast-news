@@ -1,6 +1,9 @@
 
 const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
+// Export for testing
+export const clearCache = () => feedCache.clear();
+
 export const FEED_SOURCES = [
     // --- TECNOLOGIA (MUNDO) ---
     { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
@@ -514,8 +517,12 @@ export const FEED_SOURCES = [
     { url: 'https://diariodonordeste.verdesmares.com.br/rss/noticias', category: 'Brasil' },
     { url: 'https://jc.ne10.uol.com.br/rss/pernambuco', category: 'Brasil' },
     { url: 'https://br.ign.com/cinema/feed.xml', category: 'Entretenimento' },
-    { url: 'https://br.ign.com/tv/feed.xml', category: 'Entretenimento' }
+    { url: 'https://br.ign.com/tv/feed.xml', category: 'Entretenimento' },
+    { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' }
 ];
+
+const CACHE_EXPIRATION_MS = 5 * 60 * 1000; // 5 minutes
+const feedCache = new Map();
 
 const fetchWithConcurrency = async (sources, apiKey) => {
     // If API key is present, we can be more aggressive, but let's stick to safe limits.
@@ -527,17 +534,29 @@ const fetchWithConcurrency = async (sources, apiKey) => {
     let results = [];
     for (let i = 0; i < sources.length; i += BATCH_LIMIT) {
         const chunk = sources.slice(i, i + BATCH_LIMIT);
-        const promises = chunk.map(source => {
+        const promises = chunk.map(async source => {
+            const cacheKey = `${source.url}_${apiKey || 'no-key'}`;
+            const cached = feedCache.get(cacheKey);
+            const now = Date.now();
+
+            if (cached && now - cached.timestamp < CACHE_EXPIRATION_MS) {
+                return cached.data;
+            }
+
             let url = `${RSS2JSON_API}${encodeURIComponent(source.url)}`;
             if (apiKey) url += `&api_key=${apiKey}`;
 
-            return fetch(url)
-                .then(res => res.json())
-                .then(data => ({ ...data, category: source.category }))
-                .catch(err => {
-                    console.error(`Error fetching ${source.url}:`, err);
-                    return null;
-                });
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const result = { ...data, category: source.category };
+
+                feedCache.set(cacheKey, { timestamp: now, data: result });
+                return result;
+            } catch (err) {
+                console.error(`Error fetching ${source.url}:`, err);
+                return null;
+            }
         });
 
         const chunkResults = await Promise.all(promises);
