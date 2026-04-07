@@ -29,6 +29,7 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const AI_PROVIDER = process.env.AI_PROVIDER || 'ollama'; // 'ollama' or 'ai-sdk'
 const AI_SDK_PROVIDER = process.env.AI_SDK_PROVIDER || 'openai';
 const AI_SDK_API_KEY = process.env.AI_SDK_API_KEY;
+const AI_SDK_MODEL = process.env.AI_SDK_MODEL;
 
 // Limits
 const MAX_ITEMS_PER_RUN = process.env.MAX_ITEMS_PER_RUN ? parseInt(process.env.MAX_ITEMS_PER_RUN) : 15;
@@ -205,15 +206,15 @@ const getAiSdkModel = () => {
     switch (AI_SDK_PROVIDER) {
         case 'openai': {
             const openai = createOpenAI({ apiKey: AI_SDK_API_KEY, compatibility: 'strict' });
-            return openai('gpt-4o-mini');
+            return openai(AI_SDK_MODEL || 'gpt-4o-mini');
         }
         case 'anthropic': {
             const anthropic = createAnthropic({ apiKey: AI_SDK_API_KEY });
-            return anthropic('claude-3-haiku-20240307');
+            return anthropic(AI_SDK_MODEL || 'claude-3-haiku-20240307');
         }
         case 'google': {
             const google = createGoogleGenerativeAI({ apiKey: AI_SDK_API_KEY });
-            return google('gemini-1.5-flash');
+            return google(AI_SDK_MODEL || 'gemini-1.5-flash');
         }
         default:
             throw new Error(`Provider ${AI_SDK_PROVIDER} not supported by AI SDK.`);

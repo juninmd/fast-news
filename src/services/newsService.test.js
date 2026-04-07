@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchNews, FEED_SOURCES } from './newsService';
+import { fetchNews, FEED_SOURCES, clearCache } from './newsService';
 
 // Mocking the global fetch
 // eslint-disable-next-line no-undef
@@ -9,6 +9,7 @@ describe('newsService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.useRealTimers();
+        clearCache();
     });
 
     it('should fetch news from multiple sources and aggregate them', async () => {
@@ -171,7 +172,12 @@ describe('newsService', () => {
         await vi.runAllTimersAsync();
 
         await promise;
-        expect(fetch).toHaveBeenCalledTimes(FEED_SOURCES.length);
+
+        // Remove duplicates and count the expected fetch calls. Since we cache by source.url and apiKey ('no-key'),
+        // unique source urls will only be fetched once.
+        const uniqueSourceUrls = new Set(FEED_SOURCES.map(source => source.url));
+        expect(fetch).toHaveBeenCalledTimes(uniqueSourceUrls.size);
+
         vi.useRealTimers();
     });
 
