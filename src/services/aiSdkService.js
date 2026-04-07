@@ -3,30 +3,30 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
-const getModel = (provider, apiKey) => {
+const getModel = (provider, apiKey, modelName) => {
     switch (provider) {
         case 'openai': {
             const openai = createOpenAI({ apiKey, compatibility: 'strict' });
-            return openai('gpt-4o-mini');
+            return openai(modelName || 'gpt-4o-mini');
         }
         case 'anthropic': {
             const anthropic = createAnthropic({ apiKey });
-            return anthropic('claude-3-haiku-20240307');
+            return anthropic(modelName || 'claude-3-haiku-20240307');
         }
         case 'google': {
             const google = createGoogleGenerativeAI({ apiKey });
-            return google('gemini-1.5-flash');
+            return google(modelName || 'gemini-1.5-flash');
         }
         default:
             throw new Error(`Provider ${provider} not supported by AI SDK in this app.`);
     }
 };
 
-export const summarizeWithAiSdk = async (text, aiSdkProvider, apiKey) => {
+export const summarizeWithAiSdk = async (text, aiSdkProvider, apiKey, modelName) => {
     if (!text) return null;
 
     try {
-        const model = getModel(aiSdkProvider, apiKey);
+        const model = getModel(aiSdkProvider, apiKey, modelName);
 
         const prompt = `Você é um editor sênior de um portal de notícias no Brasil. Seu objetivo é resumir as notícias para um formato direto e atraente no Telegram.
 Crie um resumo seguindo rigorosamente estas regras:
@@ -55,11 +55,11 @@ ${text}
     }
 };
 
-export const classifyWithAiSdk = async (text, aiSdkProvider, apiKey) => {
+export const classifyWithAiSdk = async (text, aiSdkProvider, apiKey, modelName) => {
     if (!text) return null;
 
     try {
-        const model = getModel(aiSdkProvider, apiKey);
+        const model = getModel(aiSdkProvider, apiKey, modelName);
 
         const prompt = `Você é um classificador automático de categorias de notícias.
 Leia o texto abaixo e escolha APENAS UMA das seguintes categorias que melhor descreve o tema principal da notícia:
