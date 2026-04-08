@@ -34,7 +34,7 @@ Edite o arquivo `.env` com suas configurações:
 OLLAMA_URL=http://localhost:11434
 OLLAMA_MODEL=llama3
 
-# Configurações do Vercel AI SDK (Opcional - Provedor Agnostico)
+# Configurações do Vercel AI SDK (Opcional - Agnóstico de Provedor)
 AI_PROVIDER=ai-sdk
 AI_SDK_PROVIDER=openai # openai, anthropic, google
 AI_SDK_API_KEY=sua_api_key_aqui
