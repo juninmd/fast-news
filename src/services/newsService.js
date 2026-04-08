@@ -483,7 +483,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.metropoles.com/brasil/feed', category: 'Brasil' },
 
     // --- NOVOS PORTAIS ADICIONADOS RECENTEMENTE ---
-    { url: 'http://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
+    { url: 'https://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
     { url: 'https://br.yahoo.com/news/rss', category: 'Geral' },
     { url: 'https://br.financas.yahoo.com/news/rss', category: 'Negócios' },
     { url: 'https://www.reuters.com/arc/outboundfeeds/news-letters/world-news', category: 'Mundo' },
