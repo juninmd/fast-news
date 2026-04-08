@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import Feed from './Feed';
 import * as newsService from '../services/newsService';
 
@@ -114,7 +114,11 @@ describe('Feed', () => {
         });
 
         // Trigger observer to load more
-        triggerIntersect();
+        await waitFor(() => {
+             if (triggerIntersect) {
+                 triggerIntersect();
+             }
+        });
 
         await waitFor(() => {
              expect(screen.getByText('News 3 - Extra')).toBeInTheDocument();
@@ -127,10 +131,10 @@ describe('Feed', () => {
          newsService.fetchNews.mockResolvedValue([]);
 
          // Setup mock IntersectionObserver
-         let triggerIntersect;
          window.IntersectionObserver = class {
               constructor(callback) {
-                  triggerIntersect = () => callback([{ isIntersecting: true }]);
+                  // Not used in this test, but constructor requires callback
+                  this._callback = callback;
               }
               observe() {}
               unobserve() {}
