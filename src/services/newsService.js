@@ -483,6 +483,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.metropoles.com/brasil/feed', category: 'Brasil' },
 
     // --- NOVOS PORTAIS ADICIONADOS RECENTEMENTE ---
+    { url: 'http://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
     { url: 'https://br.yahoo.com/news/rss', category: 'Geral' },
     { url: 'https://br.financas.yahoo.com/news/rss', category: 'Negócios' },
     { url: 'https://www.reuters.com/arc/outboundfeeds/news-letters/world-news', category: 'Mundo' },
@@ -521,7 +522,7 @@ export const FEED_SOURCES = [
     { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' }
 ];
 
-const CACHE_EXPIRATION_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes
 const feedCache = new Map();
 
 const fetchWithConcurrency = async (sources, apiKey) => {
