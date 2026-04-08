@@ -97,11 +97,10 @@ describe('Feed', () => {
         // Setup mock IntersectionObserver
         const observe = vi.fn();
         const unobserve = vi.fn();
+        let triggerIntersect;
         window.IntersectionObserver = class {
              constructor(callback) {
-                 this.triggerIntersect = () => callback([{ isIntersecting: true }]);
-                 // Expose to window for triggering in test
-                 window.triggerIntersect = this.triggerIntersect;
+                 triggerIntersect = () => callback([{ isIntersecting: true }]);
              }
              observe() { observe(); }
              unobserve() { unobserve(); }
@@ -116,7 +115,9 @@ describe('Feed', () => {
 
         // Trigger observer to load more
         await waitFor(() => {
-             window.triggerIntersect();
+             if (triggerIntersect) {
+                 triggerIntersect();
+             }
         });
 
         await waitFor(() => {
@@ -132,7 +133,8 @@ describe('Feed', () => {
          // Setup mock IntersectionObserver
          window.IntersectionObserver = class {
               constructor(callback) {
-                  this.triggerIntersect = () => callback([{ isIntersecting: true }]);
+                  // Not used in this test, but constructor requires callback
+                  this._callback = callback;
               }
               observe() {}
               unobserve() {}
