@@ -100,10 +100,6 @@ describe('Settings', () => {
              expect(screen.getByText('https://test.com/rss')).toBeInTheDocument();
         });
 
-        // Remove it
-        // Note: index might vary if default feeds existed, but here we assume none or this is appended.
-        // Wait, default custom feeds is empty [] in this test.
-        // So index is 0.
         const removeButton = screen.getByTestId('remove-feed-btn-0');
         fireEvent.click(removeButton);
 
@@ -120,8 +116,6 @@ describe('Settings', () => {
 
         await screen.findByText('URL do Ollama');
 
-        // Ensure connection button is present.
-        // The text is 'Testar Conexão' initially.
         const testButton = await screen.findByText('Testar Conexão');
         fireEvent.click(testButton);
 
@@ -144,5 +138,32 @@ describe('Settings', () => {
         await waitFor(() => {
             expect(screen.getByText('Erro')).toBeInTheDocument();
         });
+    });
+
+    it('saves AI SDK settings to local storage', async () => {
+        render(<Settings isOpen={true} onSave={vi.fn()} onClose={vi.fn()} />);
+
+        fireEvent.click(screen.getByRole('button', { name: /Inteligência Artificial/i }));
+
+        const aiSdkButton = await screen.findByText(/Vercel AI SDK/i);
+        fireEvent.click(aiSdkButton);
+
+        const providerLabel = await screen.findByText(/Provedor AI SDK/i);
+        const providerSelect = providerLabel.parentElement.querySelector('select');
+        const apiKeyLabel = await screen.findByText(/API Key/i);
+        const apiKeyInput = apiKeyLabel.parentElement.querySelector('input');
+        const modelInput = await screen.findByPlaceholderText(/Vazio usa o padrão do provedor/i);
+
+        fireEvent.change(providerSelect, { target: { value: 'anthropic' } });
+        fireEvent.change(apiKeyInput, { target: { value: 'sk-test-ai-sdk' } });
+        fireEvent.change(modelInput, { target: { value: 'claude-3-opus' } });
+
+        const saveButton = screen.getByRole('button', { name: /Salvar Alterações/i });
+        fireEvent.click(saveButton);
+
+        expect(localStorage.getItem('ai_provider')).toBe('ai-sdk');
+        expect(localStorage.getItem('ai_sdk_provider')).toBe('anthropic');
+        expect(localStorage.getItem('ai_sdk_api_key')).toBe('sk-test-ai-sdk');
+        expect(localStorage.getItem('ai_sdk_model')).toBe('claude-3-opus');
     });
 });
