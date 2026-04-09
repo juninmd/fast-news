@@ -48,4 +48,4 @@ const TrendingTopics = () => {
   );
 };
 
-export default TrendingTopics;
+export default React.memo(TrendingTopics);
