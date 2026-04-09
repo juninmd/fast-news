@@ -120,6 +120,11 @@ describe('Feed', () => {
              }
         });
 
+        // Wait for state updates related to loadMoreNews
+        await waitFor(() => {
+             expect(newsService.fetchNews).toHaveBeenCalledTimes(2);
+        });
+
         await waitFor(() => {
              expect(screen.getByText('News 3 - Extra')).toBeInTheDocument();
         });

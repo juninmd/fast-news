@@ -519,6 +519,7 @@ export const FEED_SOURCES = [
     { url: 'https://jc.ne10.uol.com.br/rss/pernambuco', category: 'Brasil' },
     { url: 'https://br.ign.com/cinema/feed.xml', category: 'Entretenimento' },
     { url: 'https://br.ign.com/tv/feed.xml', category: 'Entretenimento' },
+    { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' }
 ];
 

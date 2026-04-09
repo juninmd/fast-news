@@ -181,4 +181,4 @@ const HeroSection = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKe
   );
 };
 
-export default HeroSection;
+export default React.memo(HeroSection);
