@@ -335,6 +335,7 @@ export const FEED_SOURCES = [
     { url: 'https://switch-brasil.com/feed/', category: 'Games' },
 
     // --- ESPORTES ---
+    { url: 'https://jovempan.com.br/esportes/feed', category: 'Esportes' },
     { url: 'https://placar.com.br/feed/', category: 'Esportes' },
     { url: 'https://diariodonordeste.verdesmares.com.br/jogada/rss', category: 'Esportes' },
     { url: 'https://www.uol.com.br/esporte/volei/ultimas-noticias/rss.xml', category: 'Esportes' },
