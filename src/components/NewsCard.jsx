@@ -56,10 +56,11 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
   const [isVisible, setIsVisible] = useState(false);
   const cardRef = useRef(null);
 
-  const handleObserver = useCallback((entries) => {
-    const target = entries[0];
-    if (target.isIntersecting) {
+  const handleObserver = useCallback((entries, observer) => {
+    const [entry] = entries;
+    if (entry.isIntersecting) {
         setIsVisible(true);
+        observer.unobserve(entry.target);
     }
   }, []);
 
