@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
 import { summarizeWithGemini, classifyWithGemini } from '../services/geminiService';
 import { summarizeWithAiSdk, classifyWithAiSdk } from '../services/aiSdkService';
@@ -53,9 +53,32 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
   const [telegramStatus, setTelegramStatus] = useState(null); // success, error
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef(null);
+
+  const handleObserver = useCallback((entries) => {
+    const target = entries[0];
+    if (target.isIntersecting) {
+        setIsVisible(true);
+    }
+  }, []);
 
   useEffect(() => {
-    if (autoSummarize && !summary && !loading && !error) {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0.1 });
+    const currentTarget = cardRef.current;
+    if (currentTarget) {
+        observer.observe(currentTarget);
+    }
+    return () => {
+        if (currentTarget) {
+            observer.unobserve(currentTarget);
+        }
+    };
+  }, [handleObserver]);
+
+  useEffect(() => {
+    if (isVisible && autoSummarize && !summary && !loading && !error) {
       if (
         (aiProvider === 'ollama' && ollamaUrl) ||
         (aiProvider === 'gemini' && geminiApiKey) ||
@@ -65,7 +88,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSummarize, aiProvider, ollamaUrl, geminiApiKey, aiSdkApiKey, aiSdkProvider]);
+  }, [isVisible, autoSummarize, aiProvider, ollamaUrl, geminiApiKey, aiSdkApiKey, aiSdkProvider]);
 
   const handleSummarize = async () => {
     if (aiProvider === 'ollama' && !ollamaUrl) {
@@ -197,7 +220,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-md hover:scale-105 transition-transform duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
+    <div ref={cardRef} className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-md hover:scale-105 transition-transform duration-300 h-full flex flex-col overflow-hidden group border border-slate-100 dark:border-slate-800">
       <div className="relative p-0 m-2 mt-2">
         <div className="relative overflow-hidden rounded-2xl shadow-inner border border-white/20 dark:border-white/5">
           {imageUrl && !imageError ? (
