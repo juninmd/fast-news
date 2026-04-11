@@ -5,6 +5,8 @@ const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 export const clearCache = () => feedCache.clear();
 
 export const FEED_SOURCES = [
+    { url: 'https://www.omelete.com.br/rss', category: 'Entretenimento' },
+    { url: 'https://jovemnerd.com.br/feed', category: 'Entretenimento' },
     // --- TECNOLOGIA (MUNDO) ---
     { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
     { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia' },

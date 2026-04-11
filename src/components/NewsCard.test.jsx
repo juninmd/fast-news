@@ -131,7 +131,24 @@ describe('NewsCard', () => {
     it('triggers auto summarization if enabled', async () => {
         const summarizeMock = vi.mocked(ollamaService.summarizeWithOllama).mockResolvedValue('Auto Summary');
 
+        let triggerIntersect;
+        window.IntersectionObserver = class {
+            constructor(callback) {
+                triggerIntersect = () => callback([{ isIntersecting: true }]);
+            }
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        };
+
         render(<NewsCard item={mockItem} ollamaUrl="http://test-url" autoSummarize={true} aiProvider="ollama" apiKey="" />);
+
+        // Simulate intersection
+        await waitFor(() => {
+             if (triggerIntersect) {
+                 triggerIntersect();
+             }
+        });
 
         await waitFor(() => {
             expect(summarizeMock).toHaveBeenCalledWith('Test content', 'http://test-url', undefined);
