@@ -20,7 +20,7 @@ const getModel = (provider, apiKey, modelName) => {
         }
         case 'mistral': {
             const mistral = createMistral({ apiKey });
-            return mistral(modelName || 'mistral-large-latest');
+            return mistral(modelName || 'mistral-small-latest');
         }
         default:
             throw new Error(`Provider ${provider} not supported by AI SDK in this app.`);
