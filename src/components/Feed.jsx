@@ -141,6 +141,14 @@ const Feed = ({
   const heroItem = showHero ? filteredNews[0] : null;
   const gridItems = showHero ? filteredNews.slice(1) : filteredNews;
 
+  const skeletonCards = useMemo(() => (
+      Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="break-inside-avoid mb-6">
+              <SkeletonCard />
+          </div>
+      ))
+  ), []);
+
   return (
     <div>
       {showHero && (
@@ -159,11 +167,7 @@ const Feed = ({
       {/* Masonry Grid */}
       {isLoadingInitial ? (
          <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="break-inside-avoid mb-6">
-                    <SkeletonCard />
-                </div>
-            ))}
+            {skeletonCards}
          </div>
       ) : (
          <div className="columns-1 md:columns-2 lg:columns-3 gap-6">

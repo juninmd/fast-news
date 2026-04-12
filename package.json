@@ -19,6 +19,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.66",
     "@ai-sdk/google": "^3.0.58",
+    "@ai-sdk/mistral": "^3.0.30",
     "@ai-sdk/openai": "^3.0.50",
     "@google/generative-ai": "^0.24.1",
     "@vitejs/plugin-react": "^5.1.4",
