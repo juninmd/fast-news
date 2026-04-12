@@ -523,7 +523,8 @@ export const FEED_SOURCES = [
     { url: 'https://br.ign.com/cinema/feed.xml', category: 'Entretenimento' },
     { url: 'https://br.ign.com/tv/feed.xml', category: 'Entretenimento' },
     { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
-    { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' }
+    { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' },
+    { url: 'https://g1.globo.com/rss/g1/esporte/', category: 'Esportes' }
 ];
 
 const CACHE_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes
