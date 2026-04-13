@@ -8,6 +8,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.omelete.com.br/rss', category: 'Entretenimento' },
     { url: 'https://jovemnerd.com.br/feed', category: 'Entretenimento' },
     // --- TECNOLOGIA (MUNDO) ---
+    { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Tecnologia' },
     { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
     { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia' },
     { url: 'https://www.theverge.com/tech/rss/index.xml', category: 'Tecnologia' },
