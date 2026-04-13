@@ -2,6 +2,7 @@ import { generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createMistral } from '@ai-sdk/mistral';
 
 const getModel = (provider, apiKey, modelName) => {
     switch (provider) {
@@ -16,6 +17,10 @@ const getModel = (provider, apiKey, modelName) => {
         case 'google': {
             const google = createGoogleGenerativeAI({ apiKey });
             return google(modelName || 'gemini-1.5-flash');
+        }
+        case 'mistral': {
+            const mistral = createMistral({ apiKey });
+            return mistral(modelName || 'mistral-large-latest');
         }
         default:
             throw new Error(`Provider ${provider} not supported by AI SDK in this app.`);

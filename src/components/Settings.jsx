@@ -262,6 +262,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                             <option value="openai">OpenAI (GPT-4o-mini)</option>
                             <option value="anthropic">Anthropic (Claude 3 Haiku)</option>
                             <option value="google">Google (Gemini 1.5 Flash)</option>
+                            <option value="mistral">Mistral (Mistral Large)</option>
                         </select>
                     </div>
 
