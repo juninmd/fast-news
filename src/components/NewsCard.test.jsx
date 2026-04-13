@@ -134,7 +134,7 @@ describe('NewsCard', () => {
         let triggerIntersect;
         window.IntersectionObserver = class {
             constructor(callback) {
-                triggerIntersect = () => callback([{ isIntersecting: true }]);
+                triggerIntersect = () => callback([{ isIntersecting: true, target: document.createElement("div") }], this);
             }
             observe() {}
             unobserve() {}
