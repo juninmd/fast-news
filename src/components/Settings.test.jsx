@@ -125,6 +125,7 @@ describe('Settings', () => {
     });
 
     it('shows error message when ollama connection test fails', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         ollamaService.summarizeWithOllama.mockRejectedValue(new Error('Connection failed'));
         render(<Settings isOpen={true} />);
 
@@ -138,6 +139,7 @@ describe('Settings', () => {
         await waitFor(() => {
             expect(screen.getByText('Erro')).toBeInTheDocument();
         });
+        consoleSpy.mockRestore();
     });
 
     it('saves AI SDK settings to local storage', async () => {
