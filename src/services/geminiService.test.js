@@ -9,8 +9,10 @@ describe('geminiService', () => {
     });
 
     it('should throw error if api key is missing', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         await expect(summarizeWithGemini('some text', '')).rejects.toThrow('API Key do Gemini não fornecida.');
         await expect(summarizeWithGemini('some text', null)).rejects.toThrow('API Key do Gemini não fornecida.');
+        consoleSpy.mockRestore();
     });
 
     it('should summarize text successfully', async () => {
