@@ -447,6 +447,9 @@ export const FEED_SOURCES = [
 
     // --- NOVOS PORTAIS ADICIONADOS (MAIS BRASIL E GERAL) ---
     { url: 'https://www.correiobraziliense.com.br/rss/noticia/brasil/rss.xml', category: 'Brasil' },
+    { url: 'https://www.e-farsas.com/feed', category: 'Brasil' },
+    { url: 'https://www.tse.jus.br/rss/noticias', category: 'Política' },
+    { url: 'https://blog.nubank.com.br/feed/', category: 'Negócios' },
     { url: 'https://veja.abril.com.br/brasil/feed/', category: 'Brasil' },
     { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios' },
     { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Política' },
