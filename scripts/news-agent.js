@@ -219,7 +219,7 @@ const getAiSdkModel = () => {
         }
         case 'mistral': {
             const mistral = createMistral({ apiKey: AI_SDK_API_KEY });
-            return mistral(AI_SDK_MODEL || 'mistral-large-latest');
+            return mistral(AI_SDK_MODEL || 'mistral-small-latest');
         }
         default:
             throw new Error(`Provider ${AI_SDK_PROVIDER} not supported by AI SDK.`);
