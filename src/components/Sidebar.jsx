@@ -109,4 +109,4 @@ const Sidebar = ({ isOpen, onClose, categories, selectedCategory, onSelectCatego
   );
 };
 
-export default Sidebar;
+export default React.memo(Sidebar);
