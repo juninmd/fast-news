@@ -527,7 +527,11 @@ export const FEED_SOURCES = [
     { url: 'https://br.ign.com/cinema/feed.xml', category: 'Entretenimento' },
     { url: 'https://br.ign.com/tv/feed.xml', category: 'Entretenimento' },
     { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
-    { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' }
+    { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' },
+    { url: 'https://www.theguardian.com/world/rss', category: 'Mundo' },
+    { url: 'https://epocanegocios.globo.com/rss/ultimas/', category: 'Negócios' },
+    { url: 'https://valor.globo.com/rss/noticias/', category: 'Negócios' },
+    { url: 'https://www.terra.com.br/rss', category: 'Geral' }
 ];
 
 const CACHE_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes
