@@ -332,7 +332,6 @@ export const FEED_SOURCES = [
     { url: 'https://jovemnerd.com.br/feed/nerdbunker', category: 'Games' },
     { url: 'https://www.pcgamer.com/rss', category: 'Games' },
     { url: 'https://jovemnerd.com.br/feed/games', category: 'Games' },
-    { url: 'https://adrenaline.com.br/rss', category: 'Games' },
     { url: 'https://www.rockpapershotgun.com/feed', category: 'Games' },
     { url: 'https://www.comboinfinito.com.br/principal/feed/', category: 'Games' },
     { url: 'https://switch-brasil.com/feed/', category: 'Games' },
@@ -527,7 +526,10 @@ export const FEED_SOURCES = [
     { url: 'https://br.ign.com/cinema/feed.xml', category: 'Entretenimento' },
     { url: 'https://br.ign.com/tv/feed.xml', category: 'Entretenimento' },
     { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
-    { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' }
+    { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' },
+
+    // --- PORTAIS ADICIONADOS NESTA ITERACAO ---
+    { url: 'https://www.adrenaline.com.br/feed/', category: 'Games' }
 ];
 
 const CACHE_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes
