@@ -263,6 +263,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                             <option value="anthropic">Anthropic (Claude 3 Haiku)</option>
                             <option value="google">Google (Gemini 1.5 Flash)</option>
                             <option value="mistral">Mistral (Mistral Large)</option>
+                            <option value="deepseek">DeepSeek (DeepSeek Chat)</option>
                         </select>
                     </div>
 

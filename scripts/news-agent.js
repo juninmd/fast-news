@@ -10,6 +10,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createMistral } from '@ai-sdk/mistral';
+import { createDeepSeek } from '@ai-sdk/deepseek';
 
 // Import sources
 import { FEED_SOURCES } from '../src/services/newsService.js';
@@ -220,6 +221,10 @@ const getAiSdkModel = () => {
         case 'mistral': {
             const mistral = createMistral({ apiKey: AI_SDK_API_KEY });
             return mistral(AI_SDK_MODEL || 'mistral-small-latest');
+        }
+        case 'deepseek': {
+            const deepseek = createDeepSeek({ apiKey: AI_SDK_API_KEY });
+            return deepseek(AI_SDK_MODEL || 'deepseek-chat');
         }
         default:
             throw new Error(`Provider ${AI_SDK_PROVIDER} not supported by AI SDK.`);
