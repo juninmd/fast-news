@@ -3,6 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createMistral } from '@ai-sdk/mistral';
+import { createDeepSeek } from '@ai-sdk/deepseek';
 
 const getModel = (provider, apiKey, modelName) => {
     switch (provider) {
@@ -21,6 +22,10 @@ const getModel = (provider, apiKey, modelName) => {
         case 'mistral': {
             const mistral = createMistral({ apiKey });
             return mistral(modelName || 'mistral-large-latest');
+        }
+        case 'deepseek': {
+            const deepseek = createDeepSeek({ apiKey });
+            return deepseek(modelName || 'deepseek-chat');
         }
         default:
             throw new Error(`Provider ${provider} not supported by AI SDK in this app.`);
