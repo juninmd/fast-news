@@ -445,6 +445,9 @@ export const FEED_SOURCES = [
     { url: 'https://www.meioemensagem.com.br/feed', category: 'Marketing' },
 
     // --- NOVOS PORTAIS ADICIONADOS (MAIS BRASIL E GERAL) ---
+    { url: 'https://www.diariocentrodomundo.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.legiaodosherois.com.br/feed', category: 'Entretenimento' },
+    { url: 'https://aventurasnahistoria.uol.com.br/feed/', category: 'Ciência' },
     { url: 'https://www.correiobraziliense.com.br/rss/noticia/brasil/rss.xml', category: 'Brasil' },
     { url: 'https://www.e-farsas.com/feed', category: 'Brasil' },
     { url: 'https://www.tse.jus.br/rss/noticias', category: 'Política' },
