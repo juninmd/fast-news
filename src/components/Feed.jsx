@@ -141,6 +141,24 @@ const Feed = ({
   const heroItem = showHero ? filteredNews[0] : null;
   const gridItems = showHero ? filteredNews.slice(1) : filteredNews;
 
+  const renderedGridItems = useMemo(() => gridItems.map((item) => (
+      <div key={item.id} className="break-inside-avoid mb-6">
+          <NewsCard
+            item={item}
+            aiProvider={aiProvider}
+            geminiApiKey={geminiApiKey}
+            aiSdkProvider={aiSdkProvider}
+            aiSdkApiKey={aiSdkApiKey}
+            aiSdkModel={aiSdkModel}
+            autoSummarize={autoSummarize}
+            ollamaUrl={ollamaUrl}
+            ollamaModel={ollamaModel}
+            telegramBotToken={telegramBotToken}
+            telegramChatId={telegramChatId}
+          />
+      </div>
+  )), [gridItems, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel, autoSummarize, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId]);
+
   return (
     <div>
       {showHero && (
@@ -167,23 +185,7 @@ const Feed = ({
          </div>
       ) : (
          <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-            {gridItems.map((item) => (
-              <div key={item.id} className="break-inside-avoid mb-6">
-                  <NewsCard
-                    item={item}
-                    aiProvider={aiProvider}
-                    geminiApiKey={geminiApiKey}
-                    aiSdkProvider={aiSdkProvider}
-                    aiSdkApiKey={aiSdkApiKey}
-                    aiSdkModel={aiSdkModel}
-                    autoSummarize={autoSummarize}
-                    ollamaUrl={ollamaUrl}
-                    ollamaModel={ollamaModel}
-                    telegramBotToken={telegramBotToken}
-                    telegramChatId={telegramChatId}
-                  />
-              </div>
-            ))}
+            {renderedGridItems}
          </div>
       )}
 
