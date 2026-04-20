@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Feed from './components/Feed';
 import TrendingTopics from './components/TrendingTopics';
 import Settings from './components/Settings';
@@ -55,7 +55,7 @@ function App() {
     setDarkMode(!darkMode);
   };
 
-  const handleSaveSettings = (newSettings) => {
+  const handleSaveSettings = useCallback((newSettings) => {
     setAiProvider(newSettings.aiProvider);
     setGeminiApiKey(newSettings.geminiApiKey);
     setAiSdkProvider(newSettings.aiSdkProvider);
@@ -68,7 +68,7 @@ function App() {
     setOllamaModel(newSettings.ollamaModel);
     setTelegramBotToken(newSettings.telegramBotToken);
     setTelegramChatId(newSettings.telegramChatId);
-  };
+  }, []);
 
   const categories = useMemo(() => {
       const allSources = [...FEED_SOURCES, ...customFeeds];
