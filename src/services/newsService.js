@@ -535,7 +535,8 @@ export const FEED_SOURCES = [
     // --- PORTAIS ADICIONADOS NESTA ITERACAO ---
     { url: 'https://www.adrenaline.com.br/feed/', category: 'Games' },
     { url: 'https://www.hardware.com.br/feed', category: 'Tecnologia' },
-    { url: 'https://macmagazine.com.br/feed/', category: 'Tecnologia' }
+    { url: 'https://macmagazine.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://feed.infoq.com/', category: 'Tecnologia' }
 ];
 
 const CACHE_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes

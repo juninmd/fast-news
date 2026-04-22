@@ -91,7 +91,7 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVisible, autoSummarize, aiProvider, ollamaUrl, geminiApiKey, aiSdkApiKey, aiSdkProvider]);
 
-  const handleSummarize = async () => {
+  const handleSummarize = useCallback(async () => {
     if (aiProvider === 'ollama' && !ollamaUrl) {
       setError("Configure Ollama.");
       return;
@@ -145,9 +145,9 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
     } finally {
       setLoading(false);
     }
-  };
+  }, [aiProvider, ollamaUrl, ollamaModel, geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel, item]);
 
-  const handleSendToTelegram = async () => {
+  const handleSendToTelegram = useCallback(async () => {
       if (!telegramBotToken || !telegramChatId) {
           setTelegramStatus('error');
           setTimeout(() => setTelegramStatus(null), 3000);
@@ -188,11 +188,11 @@ const NewsCard = ({ item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, 
           setSendingTelegram(false);
           setTimeout(() => setTelegramStatus(null), 3000);
       }
-  };
+  }, [aiCategory, item, aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel, ollamaUrl, ollamaModel, summary, telegramBotToken, telegramChatId]);
 
-  const copyToClipboard = () => {
+  const copyToClipboard = useCallback(() => {
       navigator.clipboard.writeText(item.link);
-  };
+  }, [item.link]);
 
   const getImage = () => {
     if (item.enclosure && item.enclosure.link) return item.enclosure.link;
