@@ -22,7 +22,7 @@ export const config = {
 
   ollama: {
     baseUrl: optional('OLLAMA_BASE_URL', 'http://localhost:11434/v1'),
-    model: optional('OLLAMA_MODEL', 'llama3.2'),
+    model: optional('OLLAMA_MODEL', 'gemma4'),
     embeddingModel: optional('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text'),
   },
 
