@@ -26,7 +26,7 @@ async function ollamaEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
 async function googleLanguageModel(modelId?: string): Promise<LanguageModelV1> {
   process.env['GOOGLE_GENERATIVE_AI_API_KEY'] = config.geminiApiKey;
   const { google } = await import('@ai-sdk/google');
-  return google(modelId ?? config.ai.analysisModel || 'gemini-1.5-pro');
+  return google(modelId ?? (config.ai.analysisModel || 'gemini-1.5-pro'));
 }
 
 async function googleEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
@@ -39,7 +39,7 @@ async function googleEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
 async function openaiLanguageModel(modelId?: string): Promise<LanguageModelV1> {
   process.env['OPENAI_API_KEY'] = config.openaiApiKey;
   const { openai } = await import('@ai-sdk/openai');
-  return openai(modelId ?? config.ai.analysisModel || 'gpt-4o-mini');
+  return openai(modelId ?? (config.ai.analysisModel || 'gpt-4o-mini'));
 }
 
 async function openaiEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
@@ -52,7 +52,7 @@ async function openaiEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
 async function anthropicLanguageModel(modelId?: string): Promise<LanguageModelV1> {
   process.env['ANTHROPIC_API_KEY'] = config.anthropicApiKey;
   const { anthropic } = await import('@ai-sdk/anthropic');
-  return anthropic(modelId ?? config.ai.analysisModel || 'claude-3-5-haiku-20241022');
+  return anthropic(modelId ?? (config.ai.analysisModel || 'claude-3-5-haiku-20241022'));
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
