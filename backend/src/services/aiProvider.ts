@@ -9,16 +9,16 @@ type Provider = 'ollama' | 'google' | 'openai' | 'anthropic';
 
 const provider = (): Provider => config.aiProvider as Provider;
 
-// ── Ollama (local, via OpenAI-compatible API) ─────────────────────────────────
+// ── Ollama (local, nativo) ────────────────────────────────────────────────────
 async function ollamaLanguageModel(modelId?: string): Promise<LanguageModel> {
-  const { createOpenAI } = await import('@ai-sdk/openai');
-  const ollama = createOpenAI({ baseURL: config.ollama.baseUrl, apiKey: 'ollama' });
+  const { createOllama } = await import('@ai-sdk/ollama');
+  const ollama = createOllama({ baseURL: config.ollama.baseUrl.replace(/\/v1$/, '') });
   return ollama(modelId ?? config.ollama.model);
 }
 
 async function ollamaEmbeddingModel(): Promise<EmbeddingModel<string>> {
-  const { createOpenAI } = await import('@ai-sdk/openai');
-  const ollama = createOpenAI({ baseURL: config.ollama.baseUrl, apiKey: 'ollama' });
+  const { createOllama } = await import('@ai-sdk/ollama');
+  const ollama = createOllama({ baseURL: config.ollama.baseUrl.replace(/\/v1$/, '') });
   return ollama.embedding(config.ollama.embeddingModel);
 }
 
