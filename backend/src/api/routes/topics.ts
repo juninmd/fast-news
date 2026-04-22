@@ -36,7 +36,7 @@ topicsRouter.post('/', async (req: Request, res: Response) => {
 });
 
 topicsRouter.get('/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await query(
     'SELECT * FROM tracked_topics WHERE id = $1',
     [id]
@@ -46,7 +46,7 @@ topicsRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 topicsRouter.get('/:id/analysis', async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const topics = await getAllTrackedTopics();
   const topic = topics.find((t) => t.id === id);
   if (!topic) return res.status(404).json({ error: 'Topic not found' });
@@ -66,7 +66,7 @@ topicsRouter.get('/:id/analysis', async (req: Request, res: Response) => {
 });
 
 topicsRouter.get('/:id/history', async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const limit = Math.min(parseInt(req.query['limit'] as string ?? '10', 10), 30);
 
   const result = await query(
@@ -81,6 +81,6 @@ topicsRouter.get('/:id/history', async (req: Request, res: Response) => {
 });
 
 topicsRouter.delete('/:id', async (req: Request, res: Response) => {
-  await query('UPDATE tracked_topics SET is_active = FALSE WHERE id = $1', [req.params['id']]);
+  await query('UPDATE tracked_topics SET is_active = FALSE WHERE id = $1', [req.params.id as string]);
   return res.json({ success: true });
 });
