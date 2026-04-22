@@ -533,7 +533,9 @@ export const FEED_SOURCES = [
     { url: 'https://veja.abril.com.br/economia/feed/', category: 'Negócios' },
 
     // --- PORTAIS ADICIONADOS NESTA ITERACAO ---
-    { url: 'https://www.adrenaline.com.br/feed/', category: 'Games' }
+    { url: 'https://www.adrenaline.com.br/feed/', category: 'Games' },
+    { url: 'https://www.hardware.com.br/feed', category: 'Tecnologia' },
+    { url: 'https://macmagazine.com.br/feed/', category: 'Tecnologia' }
 ];
 
 const CACHE_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes
