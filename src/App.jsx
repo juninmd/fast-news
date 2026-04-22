@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react';
 import Feed from './components/Feed';
 import TrendingTopics from './components/TrendingTopics';
-import Settings from './components/Settings';
 import Sidebar from './components/Sidebar';
 import { Newspaper, Moon, Sun, Settings as SettingsIcon, Menu, Search, X } from 'lucide-react';
 import { FEED_SOURCES } from './services/newsService';
+
+const Settings = lazy(() => import('./components/Settings'));
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -24,7 +25,10 @@ function App() {
   const [aiSdkApiKey, setAiSdkApiKey] = useState(() => localStorage.getItem('ai_sdk_api_key'));
   const [aiSdkModel, setAiSdkModel] = useState(() => localStorage.getItem('ai_sdk_model') || '');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key'));
-  const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
+  const [autoSummarize, setAutoSummarize] = useState(() => {
+    const stored = localStorage.getItem('auto_summarize');
+    return stored !== null ? stored === 'true' : true; // Default to true if not set
+  });
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState(() => localStorage.getItem('ollama_model') || 'llama3');
   const [telegramBotToken, setTelegramBotToken] = useState(() => localStorage.getItem('telegram_bot_token'));
@@ -204,12 +208,14 @@ function App() {
       </div>
 
       {isSettingsOpen && (
-        <Settings
-          isOpen={true}
-          onClose={() => setIsSettingsOpen(false)}
-          onSave={handleSaveSettings}
-          initialCustomFeeds={customFeeds}
-        />
+        <Suspense fallback={null}>
+          <Settings
+            isOpen={true}
+            onClose={() => setIsSettingsOpen(false)}
+            onSave={handleSaveSettings}
+            initialCustomFeeds={customFeeds}
+          />
+        </Suspense>
       )}
     </div>
   );
