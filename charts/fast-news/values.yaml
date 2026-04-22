@@ -1,0 +1,100 @@
+# ─── Backend ──────────────────────────────────────────────────────────────────
+backend:
+  image:
+    repository: fast-news-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 3001
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"
+  env:
+    NODE_ENV: production
+    AI_PROVIDER: ollama
+    CRON_INGESTION: "*/30 * * * *"
+    CRON_LEARNING: "0 0 * * *"
+    CRON_DIGEST: "0 11 * * *"
+    INGESTION_BATCH_SIZE: "10"
+    MAX_ARTICLES_PER_FEED: "20"
+    RAG_TOP_K: "10"
+    EMBEDDING_DIMENSIONS: "768"
+    TELEGRAM_MAX_NEWS_PER_RUN: "5"
+    TELEGRAM_NEWS_CATEGORIES: "Mundo,Negócios,Brasil"
+
+# ── Secrets (substitua nos valores ou use sealed-secrets / external-secrets) ───
+secrets:
+  telegramBotToken: "CHANGE_ME"
+  telegramChatIds: "CHANGE_ME"
+  postgresPassword: "fastnews_secret"
+
+# ─── Ollama (LLM local) ───────────────────────────────────────────────────────
+ollama:
+  enabled: true
+  image:
+    repository: ollama/ollama
+    tag: latest
+  port: 11434
+  model: llama3.2
+  embeddingModel: nomic-embed-text
+  storage:
+    size: 25Gi
+    storageClass: ""   # deixe em branco para usar o default do cluster
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "4000m"
+      memory: "8Gi"
+  # gpu:
+  #   enabled: true
+  #   resourceName: nvidia.com/gpu
+  #   count: 1
+
+# ─── PostgreSQL + pgvector ────────────────────────────────────────────────────
+postgres:
+  image:
+    repository: pgvector/pgvector
+    tag: pg16
+  port: 5432
+  database: fastnews
+  username: fastnews
+  storage:
+    size: 10Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+# ─── Redis ────────────────────────────────────────────────────────────────────
+redis:
+  image:
+    repository: redis
+    tag: 7-alpine
+  port: 6379
+  storage:
+    size: 2Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "64Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+# ─── Ingress ──────────────────────────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: nginx
+  host: fast-news.local
+  tls: false
