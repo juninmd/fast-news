@@ -3,60 +3,60 @@
  * Troque de provider com a env AI_PROVIDER: ollama | google | openai | anthropic
  */
 import { config } from '../config/env.js';
-import type { LanguageModelV1, EmbeddingModelV1 } from 'ai';
+import type { LanguageModel, EmbeddingModel } from 'ai';
 
 type Provider = 'ollama' | 'google' | 'openai' | 'anthropic';
 
 const provider = (): Provider => config.aiProvider as Provider;
 
 // ── Ollama (local, via OpenAI-compatible API) ─────────────────────────────────
-async function ollamaLanguageModel(modelId?: string): Promise<LanguageModelV1> {
+async function ollamaLanguageModel(modelId?: string): Promise<LanguageModel> {
   const { createOpenAI } = await import('@ai-sdk/openai');
   const ollama = createOpenAI({ baseURL: config.ollama.baseUrl, apiKey: 'ollama' });
   return ollama(modelId ?? config.ollama.model);
 }
 
-async function ollamaEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
+async function ollamaEmbeddingModel(): Promise<EmbeddingModel<string>> {
   const { createOpenAI } = await import('@ai-sdk/openai');
   const ollama = createOpenAI({ baseURL: config.ollama.baseUrl, apiKey: 'ollama' });
   return ollama.embedding(config.ollama.embeddingModel);
 }
 
 // ── Google Gemini ─────────────────────────────────────────────────────────────
-async function googleLanguageModel(modelId?: string): Promise<LanguageModelV1> {
+async function googleLanguageModel(modelId?: string): Promise<LanguageModel> {
   process.env['GOOGLE_GENERATIVE_AI_API_KEY'] = config.geminiApiKey;
   const { google } = await import('@ai-sdk/google');
   return google(modelId ?? (config.ai.analysisModel || 'gemini-1.5-pro'));
 }
 
-async function googleEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
+async function googleEmbeddingModel(): Promise<EmbeddingModel<string>> {
   process.env['GOOGLE_GENERATIVE_AI_API_KEY'] = config.geminiApiKey;
   const { google } = await import('@ai-sdk/google');
   return google.textEmbeddingModel(config.ai.embeddingModel || 'text-embedding-004');
 }
 
 // ── OpenAI ────────────────────────────────────────────────────────────────────
-async function openaiLanguageModel(modelId?: string): Promise<LanguageModelV1> {
+async function openaiLanguageModel(modelId?: string): Promise<LanguageModel> {
   process.env['OPENAI_API_KEY'] = config.openaiApiKey;
   const { openai } = await import('@ai-sdk/openai');
   return openai(modelId ?? (config.ai.analysisModel || 'gpt-4o-mini'));
 }
 
-async function openaiEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
+async function openaiEmbeddingModel(): Promise<EmbeddingModel<string>> {
   process.env['OPENAI_API_KEY'] = config.openaiApiKey;
   const { openai } = await import('@ai-sdk/openai');
   return openai.embedding(config.ai.embeddingModel || 'text-embedding-3-small');
 }
 
 // ── Anthropic ─────────────────────────────────────────────────────────────────
-async function anthropicLanguageModel(modelId?: string): Promise<LanguageModelV1> {
+async function anthropicLanguageModel(modelId?: string): Promise<LanguageModel> {
   process.env['ANTHROPIC_API_KEY'] = config.anthropicApiKey;
   const { anthropic } = await import('@ai-sdk/anthropic');
   return anthropic(modelId ?? (config.ai.analysisModel || 'claude-3-5-haiku-20241022'));
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
-export async function getLanguageModel(modelId?: string): Promise<LanguageModelV1> {
+export async function getLanguageModel(modelId?: string): Promise<LanguageModel> {
   switch (provider()) {
     case 'google':    return googleLanguageModel(modelId);
     case 'openai':    return openaiLanguageModel(modelId);
@@ -65,7 +65,7 @@ export async function getLanguageModel(modelId?: string): Promise<LanguageModelV
   }
 }
 
-export async function getFastModel(): Promise<LanguageModelV1> {
+export async function getFastModel(): Promise<LanguageModel> {
   switch (provider()) {
     case 'google':    return googleLanguageModel(config.ai.fastModel || 'gemini-1.5-flash');
     case 'openai':    return openaiLanguageModel(config.ai.fastModel || 'gpt-4o-mini');
@@ -74,7 +74,7 @@ export async function getFastModel(): Promise<LanguageModelV1> {
   }
 }
 
-export async function getEmbeddingModel(): Promise<EmbeddingModelV1<string>> {
+export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
   switch (provider()) {
     case 'google':  return googleEmbeddingModel();
     case 'openai':  return openaiEmbeddingModel();
