@@ -11,14 +11,14 @@ const provider = (): Provider => config.aiProvider as Provider;
 
 // ── Ollama (local, nativo) ────────────────────────────────────────────────────
 async function ollamaLanguageModel(modelId?: string): Promise<LanguageModel> {
-  const { createOllama } = await import('@ai-sdk/ollama');
-  const ollama = createOllama({ baseURL: config.ollama.baseUrl.replace(/\/v1$/, '') });
+  const { createOllama } = await import('ollama-ai-provider');
+  const ollama = createOllama({ baseURL: config.ollama.baseUrl.replace(/\/v1$/, '/api') });
   return ollama(modelId ?? config.ollama.model);
 }
 
 async function ollamaEmbeddingModel(): Promise<EmbeddingModel<string>> {
-  const { createOllama } = await import('@ai-sdk/ollama');
-  const ollama = createOllama({ baseURL: config.ollama.baseUrl.replace(/\/v1$/, '') });
+  const { createOllama } = await import('ollama-ai-provider');
+  const ollama = createOllama({ baseURL: config.ollama.baseUrl.replace(/\/v1$/, '/api') });
   return ollama.embedding(config.ollama.embeddingModel);
 }
 
