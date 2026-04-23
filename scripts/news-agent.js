@@ -227,7 +227,15 @@ async function sendToTelegram(title, summary, category, link) {
 
     const formattedSummary = formatSummaryForTelegramHTML(summary);
 
-    const text = `<b>${emoji} ${category.toUpperCase()}</b>\n───────────────\n<b>${safeTitle}</b>\n\n${formattedSummary}\n\n<i>${hashtags}</i>`;
+    const text = [
+        `<b>${emoji} ${category.toUpperCase()}</b>`,
+        `──────────────────────`,
+        `<b>${safeTitle}</b>`,
+        ``,
+        formattedSummary,
+        ``,
+        `<i>${hashtags}</i>`
+    ].join('\n');
 
     const body = {
         chat_id: TELEGRAM_CHAT_ID,
