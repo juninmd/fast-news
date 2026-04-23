@@ -21,30 +21,58 @@ export function getBot(): Telegraf {
 
 function setupCommands(bot: Telegraf): void {
   bot.start((ctx: Context) =>
-    ctx.reply('📰 *Fast News AI*\n\n/news /topics /analysis /financial /ask /digest', { parse_mode: 'Markdown' })
+    ctx.replyWithHTML(
+      `📰 <b>FAST NEWS AI</b>\n` +
+      `──────────────────────\n` +
+      `Bem-vindo ao centro de inteligência financeira.\n\n` +
+      `📌 <b>Comandos:</b>\n` +
+      `• /news — Principais notícias\n` +
+      `• /topics — Tópicos monitorados\n` +
+      `• /analysis — Análise profunda\n` +
+      `• /financial — Oportunidades\n` +
+      `• /ask — Perguntar à IA\n\n` +
+      `──────────────────────\n` +
+      `<i>Sempre à frente do mercado.</i>`
+    )
   );
 
   bot.command('topics', async (ctx: Context) => {
     const topics = await getAllTrackedTopics();
-    const list = topics.map((t, i) => `${i + 1}. *${t.name}*`).join('\n');
-    await ctx.reply(`📊 *Tópicos Monitorados:*\n\n${list}`, { parse_mode: 'Markdown' });
+    const list = topics.map((t, i) => `• <b>${t.name}</b>`).join('\n');
+    await ctx.replyWithHTML(
+      `📊 <b>TÓPICOS MONITORADOS</b>\n` +
+      `──────────────────────\n` +
+      `${list}\n` +
+      `──────────────────────`
+    );
   });
 
   bot.command('financial', async (ctx: Context) => {
     const opps = await getActiveOpportunities() as Record<string, unknown>[];
-    if (!opps.length) return ctx.reply('📉 Nenhuma oportunidade ativa.');
+    if (!opps.length) return ctx.reply('📉 Nenhuma oportunidade ativa no momento.');
     const text = opps.slice(0, 6).map((o) =>
-      `${o['direction'] === 'buy' ? '📈' : o['direction'] === 'sell' ? '📉' : '👀'} *${o['asset']}* — ${String(o['reasoning']).slice(0, 100)}`
+      `${o['direction'] === 'buy' ? '📈' : o['direction'] === 'sell' ? '📉' : '👀'} <b>${o['asset']}</b>\n${String(o['reasoning']).slice(0, 120)}...`
     ).join('\n\n');
-    await ctx.reply(`💰 *Oportunidades Financeiras:*\n\n${text}`, { parse_mode: 'Markdown' });
+    await ctx.replyWithHTML(
+      `💰 <b>OPORTUNIDADES FINANCEIRAS</b>\n` +
+      `──────────────────────\n` +
+      `${text}\n` +
+      `──────────────────────`
+    );
   });
 
   bot.command('news', async (ctx: Context) => {
     const articles = await searchSimilarArticles('principais notícias', 1, 8);
     const text = articles.map((a, i) =>
-      `${i + 1}. *${a.title.slice(0, 80)}*\n   📰 ${a.source} — [ler](${a.url})`
+      `${i + 1}. <b>${a.title.slice(0, 80)}</b>\n   📰 ${a.source} — <a href="${a.url}">ler</a>`
     ).join('\n\n');
-    await ctx.reply(`📰 *Top Notícias:*\n\n${text || 'Sem notícias.'}`, { parse_mode: 'Markdown', link_preview_options: { is_disabled: true } });
+    await ctx.replyWithHTML(
+      `📰 <b>TOP NOTÍCIAS</b>\n` +
+      `──────────────────────\n` +
+      `${text || 'Sem notícias recentes.'}\n` +
+      `──────────────────────`,
+      { link_preview_options: { is_disabled: true } }
+    );
   });
 
   bot.command('analysis', async (ctx: Context) => {
@@ -69,15 +97,21 @@ function setupCommands(bot: Telegraf): void {
   });
 }
 
-/** Formata uma notícia para o Telegram */
 function formatArticle(article: { title: string; url: string; source: string; category: string }): string {
   const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
   const title = article.title.slice(0, 200);
-  return `${emoji} *${escapeMarkdown(title)}*\n📌 ${escapeMarkdown(article.source)}\n🔗 [Ler notícia](${article.url})`;
+  return `${emoji} <b>${escapeHtml(title)}</b>\n` +
+         `──────────────────────\n` +
+         `📌 <b>Fonte:</b> ${escapeHtml(article.source)}\n` +
+         `🏷️ <b>Categoria:</b> ${article.category}\n` +
+         `🔗 <a href="${article.url}">Ler notícia completa</a>`;
 }
 
-function escapeMarkdown(text: string): string {
-  return text.replace(/[_*[\]()~`>#+=|{}.!-]/g, '\\$&');
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 /** Posta novas notícias no Telegram após ingestion */
@@ -94,7 +128,7 @@ export async function postNewArticles(
     const message = formatArticle(article);
     for (const chatId of config.telegramChatIds) {
       await getBot().telegram.sendMessage(chatId, message, {
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         link_preview_options: { is_disabled: true },
       }).catch(console.error);
     }
@@ -106,7 +140,7 @@ export async function sendDigest(content: string): Promise<void> {
   const chunks = content.match(/[\s\S]{1,4000}/g) ?? [];
   for (const chatId of config.telegramChatIds) {
     for (const chunk of chunks) {
-      await getBot().telegram.sendMessage(chatId, chunk, { parse_mode: 'Markdown' })
+      await getBot().telegram.sendMessage(chatId, chunk, { parse_mode: 'HTML' })
         .catch(() => getBot().telegram.sendMessage(chatId, chunk));
       await sleep(500);
     }
@@ -116,7 +150,7 @@ export async function sendDigest(content: string): Promise<void> {
 async function sendLongMessage(ctx: Context, text: string): Promise<void> {
   const chunks = text.match(/[\s\S]{1,4000}/g) ?? [];
   for (const chunk of chunks) {
-    await ctx.reply(chunk, { parse_mode: 'Markdown' }).catch(() => ctx.reply(chunk));
+    await ctx.reply(chunk, { parse_mode: 'HTML' }).catch(() => ctx.reply(chunk));
   }
 }
 
