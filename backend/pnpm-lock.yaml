@@ -33,7 +33,7 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       ollama-ai-provider:
-        specifier: ^1.2.0
+        specifier: 1.2.0
         version: 1.2.0(zod@3.25.76)
       pg:
         specifier: ^8.13.0
