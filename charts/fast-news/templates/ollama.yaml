@@ -1,0 +1,96 @@
+{{- if .Values.ollama.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-ollama-pvc
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- if .Values.ollama.storage.storageClass }}
+  storageClassName: {{ .Values.ollama.storage.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.ollama.storage.size }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-ollama
+  labels:
+    {{- include "fast-news.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-ollama
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-ollama
+    spec:
+      containers:
+        - name: ollama
+          image: {{ .Values.ollama.image.repository }}:{{ .Values.ollama.image.tag }}
+          ports:
+            - containerPort: {{ .Values.ollama.port }}
+          volumeMounts:
+            - name: models
+              mountPath: /root/.ollama
+          resources:
+            {{- toYaml .Values.ollama.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.ollama.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-ollama-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-ollama
+spec:
+  selector:
+    app: {{ .Release.Name }}-ollama
+  ports:
+    - port: {{ .Values.ollama.port }}
+      targetPort: {{ .Values.ollama.port }}
+---
+# Job para puxar os modelos na primeira instalação
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-ollama-pull
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-ollama
+          image: busybox:latest
+          command: ['sh', '-c', 'until wget -qO- http://{{ .Release.Name }}-ollama:{{ .Values.ollama.port }}/; do echo waiting; sleep 5; done']
+      containers:
+        - name: pull-models
+          image: curlimages/curl:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "Pulling {{ .Values.ollama.model }}..." &&
+              curl -s http://{{ .Release.Name }}-ollama:{{ .Values.ollama.port }}/api/pull \
+                -d '{"name":"{{ .Values.ollama.model }}"}' &&
+              echo "Pulling {{ .Values.ollama.embeddingModel }}..." &&
+              curl -s http://{{ .Release.Name }}-ollama:{{ .Values.ollama.port }}/api/pull \
+                -d '{"name":"{{ .Values.ollama.embeddingModel }}"}' &&
+              echo "Models ready!"
+{{- end }}
