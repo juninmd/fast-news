@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { summarizeText } from '../services/geminiService';
 import { summarizeTextWithAiSdk } from '../services/aiSdkService';
 import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
@@ -140,6 +141,29 @@ const NewsCard = ({ item, apiKey, aiConfig }) => {
       </div>
     </div>
   );
+};
+
+NewsCard.propTypes = {
+  item: PropTypes.shape({
+    id: PropTypes.string,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    content: PropTypes.string,
+    link: PropTypes.string,
+    pubDate: PropTypes.string,
+    source: PropTypes.string,
+    category: PropTypes.string,
+    enclosure: PropTypes.shape({
+      link: PropTypes.string
+    }),
+    thumbnail: PropTypes.string
+  }).isRequired,
+  apiKey: PropTypes.string,
+  aiConfig: PropTypes.shape({
+    provider: PropTypes.string,
+    apiKey: PropTypes.string,
+    model: PropTypes.string
+  })
 };
 
 export default React.memo(NewsCard);
