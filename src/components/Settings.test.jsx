@@ -16,36 +16,44 @@ describe('Settings', () => {
     it('renders settings modal when open', () => {
         render(<Settings isOpen={true} />);
         expect(screen.getByText('Configurações')).toBeInTheDocument();
-        expect(screen.getByLabelText('Token da API Gemini')).toBeInTheDocument();
+        expect(screen.getByText('Gemini')).toBeInTheDocument();
+        expect(screen.getByText('AI SDK (Agnóstico)')).toBeInTheDocument();
     });
 
-    it('loads api key from local storage', () => {
+    it('loads settings from local storage', () => {
         localStorage.setItem('gemini_api_key', 'stored-key');
+        localStorage.setItem('ai_provider', 'gemini');
         render(<Settings isOpen={true} />);
         expect(screen.getByLabelText('Token da API Gemini')).toHaveValue('stored-key');
     });
 
-    it('updates api key state on input change', () => {
-        render(<Settings isOpen={true} />);
-        const input = screen.getByLabelText('Token da API Gemini');
-        fireEvent.change(input, { target: { value: 'new-key' } });
-        expect(input).toHaveValue('new-key');
-    });
-
-    it('saves api key to local storage and calls onSave', () => {
+    it('switches to AI SDK tab and saves correctly', () => {
         const onSaveMock = vi.fn();
         const onCloseMock = vi.fn();
 
         render(<Settings isOpen={true} onSave={onSaveMock} onClose={onCloseMock} />);
 
-        const input = screen.getByLabelText('Token da API Gemini');
-        fireEvent.change(input, { target: { value: 'saved-key' } });
+        // Switch tab
+        fireEvent.click(screen.getByText('AI SDK (Agnóstico)'));
+
+        const providerSelect = screen.getByLabelText('Provedor');
+        fireEvent.change(providerSelect, { target: { value: 'google' } });
+
+        const keyInput = screen.getByLabelText(/Token da API/);
+        fireEvent.change(keyInput, { target: { value: 'ai-sdk-key' } });
 
         const saveButton = screen.getByRole('button', { name: 'Salvar' });
         fireEvent.click(saveButton);
 
-        expect(localStorage.getItem('gemini_api_key')).toBe('saved-key');
-        expect(onSaveMock).toHaveBeenCalledWith('saved-key');
+        expect(localStorage.getItem('ai_provider')).toBe('aisdk');
+        expect(localStorage.getItem('ai_sdk_provider')).toBe('google');
+        expect(localStorage.getItem('ai_sdk_api_key')).toBe('ai-sdk-key');
+
+        expect(onSaveMock).toHaveBeenCalledWith(expect.objectContaining({
+            aiProvider: 'aisdk',
+            aiSdkProvider: 'google',
+            aiSdkApiKey: 'ai-sdk-key'
+        }));
         expect(onCloseMock).toHaveBeenCalled();
     });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchTrendingTopics } from '../services/newsService';
 import { TrendingUp } from 'lucide-react';
 

@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { fetchNews, FEED_SOURCES } from '../services/newsService';
 import NewsCard from './NewsCard';
 import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const BATCH_SIZE = 6; // Load 6 sources at a time to be safe with rate limits
 
-const Feed = ({ apiKey }) => {
+const Feed = ({ aiSettings }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shuffledSources, setShuffledSources] = useState([]);
@@ -13,6 +13,8 @@ const Feed = ({ apiKey }) => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [init, setInit] = useState(false);
+
+  const loaderRef = useRef(null);
 
   // Shuffle sources on mount
   useEffect(() => {
@@ -26,7 +28,7 @@ const Feed = ({ apiKey }) => {
     setInit(true);
   }, []);
 
-  const loadMoreNews = async () => {
+  const loadMoreNews = useCallback(async () => {
     if (loading || !hasMore || !init) return;
     setLoading(true);
 
@@ -68,7 +70,7 @@ const Feed = ({ apiKey }) => {
     } finally {
         setLoading(false);
     }
-  };
+  }, [loading, hasMore, init, shuffledSources, nextBatchIndex]);
 
   // Initial load
   useEffect(() => {
@@ -78,14 +80,33 @@ const Feed = ({ apiKey }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [init]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+        (entries) => {
+            if (entries[0].isIntersecting && !loading && hasMore) {
+                loadMoreNews();
+            }
+        },
+        { rootMargin: '100px' }
+    );
+
+    if (loaderRef.current) {
+        observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loading, hasMore, loadMoreNews]);
+
   const categories = useMemo(() => {
     const cats = ['Todas', ...new Set(news.map(item => item.category).filter(Boolean))];
     return cats.sort();
   }, [news]);
 
-  const filteredNews = selectedCategory === 'Todas'
-    ? news
-    : news.filter(item => item.category === selectedCategory);
+  const filteredNews = useMemo(() => {
+      return selectedCategory === 'Todas'
+        ? news
+        : news.filter(item => item.category === selectedCategory);
+  }, [news, selectedCategory]);
 
   return (
     <div>
@@ -111,7 +132,7 @@ const Feed = ({ apiKey }) => {
       {/* News Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredNews.map((item, index) => (
-            <NewsCard key={`${item.id}-${index}`} item={item} apiKey={apiKey} />
+            <NewsCard key={`${item.id}-${index}`} item={item} aiSettings={aiSettings} />
         ))}
       </div>
 
@@ -127,7 +148,7 @@ const Feed = ({ apiKey }) => {
       )}
 
       {/* Load More / Loading State */}
-      <div className="mt-12 text-center pb-8">
+      <div ref={loaderRef} className="mt-12 text-center pb-8">
         {loading ? (
              <div className="flex flex-col items-center justify-center">
                 <RefreshCw className="animate-spin text-blue-600 mb-2" size={32} />
