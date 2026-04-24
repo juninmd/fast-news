@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import Feed from './components/Feed';
 import TrendingTopics from './components/TrendingTopics';
-import Settings from './components/Settings';
 import { Newspaper, Moon, Sun, Settings as SettingsIcon } from 'lucide-react';
+
+const Settings = lazy(() => import('./components/Settings'));
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -12,7 +13,13 @@ function App() {
     return false;
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
+  const [aiSettings, setAiSettings] = useState(() => ({
+    apiKey: localStorage.getItem('gemini_api_key') || '',
+    aiProvider: localStorage.getItem('ai_provider') || 'gemini',
+    aiSdkProvider: localStorage.getItem('ai_sdk_provider') || 'openai',
+    aiSdkApiKey: localStorage.getItem('ai_sdk_api_key') || '',
+    aiSdkModel: localStorage.getItem('ai_sdk_model') || ''
+  }));
 
   useEffect(() => {
     if (darkMode) {
@@ -26,9 +33,13 @@ function App() {
     setDarkMode(!darkMode);
   };
 
-  const handleSaveSettings = (newKey) => {
-    setApiKey(newKey);
+  const handleSaveSettings = (newSettings) => {
+    setAiSettings(newSettings);
   };
+
+  const hasValidConfig = aiSettings.aiProvider === 'gemini'
+    ? !!aiSettings.apiKey
+    : !!aiSettings.aiSdkApiKey;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -57,13 +68,12 @@ function App() {
               </button>
             </div>
           </div>
-
         </div>
       </header>
 
       <TrendingTopics />
 
-      {!apiKey && (
+      {!hasValidConfig && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded-md">
             <div className="flex">
@@ -74,7 +84,7 @@ function App() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700 dark:text-yellow-200">
-                  Por favor configure sua Chave de API Gemini para habilitar os resumos inteligentes.
+                  Por favor configure sua Chave de API de IA (Gemini ou AI SDK) para habilitar os resumos inteligentes.
                   <button
                     onClick={() => setIsSettingsOpen(true)}
                     className="font-medium underline hover:text-yellow-600 dark:hover:text-yellow-100 ml-2"
@@ -89,14 +99,16 @@ function App() {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Feed apiKey={apiKey} />
+        <Feed aiSettings={aiSettings} />
       </main>
 
-      <Settings
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onSave={handleSaveSettings}
-      />
+      <Suspense fallback={null}>
+        <Settings
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          onSave={handleSaveSettings}
+        />
+      </Suspense>
     </div>
   );
 }

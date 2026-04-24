@@ -1,31 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { summarizeText } from '../services/geminiService';
+import { summarizeTextAiSdk } from '../services/aiSdkService';
 import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
 
-const NewsCard = ({ item, apiKey }) => {
+const NewsCard = React.memo(({ item, aiSettings }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const cardRef = useRef(null);
 
   const handleSummarize = async () => {
-    if (!apiKey) {
+    const { aiProvider, apiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel } = aiSettings;
+
+    if (aiProvider === 'gemini' && !apiKey) {
       setError("Por favor adicione sua chave de API Gemini nas configurações.");
       return;
+    }
+    if (aiProvider === 'aisdk' && !aiSdkApiKey) {
+        setError(`Por favor adicione sua chave de API ${aiSdkProvider} nas configurações.`);
+        return;
     }
 
     setLoading(true);
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      const result = await summarizeText(textToSummarize, apiKey);
+      let result;
+
+      if (aiProvider === 'gemini') {
+          result = await summarizeText(textToSummarize, apiKey);
+      } else {
+          result = await summarizeTextAiSdk(textToSummarize, {
+              provider: aiSdkProvider,
+              apiKey: aiSdkApiKey,
+              modelName: aiSdkModel
+          });
+      }
+
       setSummary(result);
     } catch (error) {
       console.error(error);
-      setError("Falha ao gerar resumo. Verifique sua chave de API.");
+      setError("Falha ao gerar resumo. Verifique suas configurações e chave de API.");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+        (entries) => {
+            if (entries[0].isIntersecting && !summary && !loading && !error) {
+                 // Check if there is an active key before auto-summarizing
+                const { aiProvider, apiKey, aiSdkApiKey } = aiSettings || {};
+                const hasKey = aiProvider === 'gemini' ? !!apiKey : !!aiSdkApiKey;
+                if (hasKey) {
+                    handleSummarize();
+                }
+                observer.disconnect();
+            }
+        },
+        { rootMargin: '200px' }
+    );
+
+    if (cardRef.current) {
+        observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiSettings, summary, loading, error]);
 
   const getImage = () => {
     if (item.enclosure && item.enclosure.link) return item.enclosure.link;
@@ -50,7 +93,7 @@ const NewsCard = ({ item, apiKey }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
+    <div ref={cardRef} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
       {imageUrl && (
         <div className="h-52 overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -114,10 +157,10 @@ const NewsCard = ({ item, apiKey }) => {
              </button>
 
              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-semibold transition-colors"
+                 href={item.link}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-semibold transition-colors"
              >
                 Ler mais <ExternalLink size={14} />
              </a>
@@ -129,6 +172,7 @@ const NewsCard = ({ item, apiKey }) => {
       </div>
     </div>
   );
-};
+});
 
+NewsCard.displayName = 'NewsCard';
 export default NewsCard;

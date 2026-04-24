@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchNews, FEED_SOURCES } from './newsService';
 
 // Mocking the global fetch
-// eslint-disable-next-line no-undef
+
 global.fetch = vi.fn();
 
 describe('newsService', () => {

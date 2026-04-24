@@ -51,6 +51,7 @@ export const FEED_SOURCES = [
     { url: 'https://revistaforum.com.br/feed', category: 'Brasil' },
     { url: 'https://catracalivre.com.br/feed/', category: 'Brasil' },
 
+    { url: 'https://istoe.com.br/feed/', category: 'Brasil' },
     // Mundo
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
