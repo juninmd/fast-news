@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import { fetchNews, FEED_SOURCES } from '../services/newsService';
 import NewsCard from './NewsCard';
 import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
@@ -147,6 +148,15 @@ const Feed = ({ apiKey, aiConfig }) => {
       </div>
     </div>
   );
+};
+
+Feed.propTypes = {
+  apiKey: PropTypes.string,
+  aiConfig: PropTypes.shape({
+    provider: PropTypes.string,
+    apiKey: PropTypes.string,
+    model: PropTypes.string
+  })
 };
 
 export default Feed;
