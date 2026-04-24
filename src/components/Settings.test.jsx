@@ -16,18 +16,19 @@ describe('Settings', () => {
     it('renders settings modal when open', () => {
         render(<Settings isOpen={true} />);
         expect(screen.getByText('Configurações')).toBeInTheDocument();
-        expect(screen.getByLabelText('Token da API Gemini')).toBeInTheDocument();
+        expect(screen.getByLabelText('Token da API')).toBeInTheDocument();
+        expect(screen.getByLabelText('Provedor de IA')).toBeInTheDocument();
     });
 
     it('loads api key from local storage', () => {
         localStorage.setItem('gemini_api_key', 'stored-key');
         render(<Settings isOpen={true} />);
-        expect(screen.getByLabelText('Token da API Gemini')).toHaveValue('stored-key');
+        expect(screen.getByLabelText('Token da API')).toHaveValue('stored-key');
     });
 
     it('updates api key state on input change', () => {
         render(<Settings isOpen={true} />);
-        const input = screen.getByLabelText('Token da API Gemini');
+        const input = screen.getByLabelText('Token da API');
         fireEvent.change(input, { target: { value: 'new-key' } });
         expect(input).toHaveValue('new-key');
     });
@@ -38,14 +39,15 @@ describe('Settings', () => {
 
         render(<Settings isOpen={true} onSave={onSaveMock} onClose={onCloseMock} />);
 
-        const input = screen.getByLabelText('Token da API Gemini');
+        const input = screen.getByLabelText('Token da API');
         fireEvent.change(input, { target: { value: 'saved-key' } });
 
         const saveButton = screen.getByRole('button', { name: 'Salvar' });
         fireEvent.click(saveButton);
 
         expect(localStorage.getItem('gemini_api_key')).toBe('saved-key');
-        expect(onSaveMock).toHaveBeenCalledWith('saved-key');
+        expect(localStorage.getItem('ai_api_key')).toBe('saved-key');
+        expect(onSaveMock).toHaveBeenCalledWith({ apiKey: 'saved-key', provider: 'gemini', model: '' });
         expect(onCloseMock).toHaveBeenCalled();
     });
 

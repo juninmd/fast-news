@@ -2,9 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NewsCard from './NewsCard';
 import * as geminiService from '../services/geminiService';
+import * as aiSdkService from '../services/aiSdkService';
 
 vi.mock('../services/geminiService', () => ({
     summarizeText: vi.fn(),
+}));
+
+vi.mock('../services/aiSdkService', () => ({
+    summarizeTextWithAiSdk: vi.fn(),
 }));
 
 const mockItem = {
@@ -51,14 +56,32 @@ describe('NewsCard', () => {
         expect(screen.getByText('Resumido')).toBeInTheDocument();
     });
 
+    it('handles summarize action with ai sdk', async () => {
+        aiSdkService.summarizeTextWithAiSdk.mockResolvedValue('Summary result SDK');
+        render(<NewsCard item={mockItem} aiConfig={{ provider: 'openai', apiKey: 'test-key-sdk', model: 'gpt-4o' }} />);
+
+        const summarizeButton = screen.getByRole('button', { name: /Resumir/i });
+        fireEvent.click(summarizeButton);
+
+        expect(screen.getByText('Resumindo...')).toBeInTheDocument();
+
+        await waitFor(() => {
+            expect(screen.getByText('Summary result SDK')).toBeInTheDocument();
+        });
+
+        expect(aiSdkService.summarizeTextWithAiSdk).toHaveBeenCalledWith('Test content', 'openai', 'test-key-sdk', 'gpt-4o');
+        expect(screen.getByText('Resumido')).toBeInTheDocument();
+    });
+
     it('shows error if api key is missing', () => {
          render(<NewsCard item={mockItem} apiKey="" />);
 
          const summarizeButton = screen.getByRole('button', { name: /Resumir/i });
          fireEvent.click(summarizeButton);
 
-         expect(screen.getByText('Por favor adicione sua chave de API Gemini nas configurações.')).toBeInTheDocument();
+         expect(screen.getByText('Por favor adicione sua chave de API nas configurações.')).toBeInTheDocument();
          expect(geminiService.summarizeText).not.toHaveBeenCalled();
+         expect(aiSdkService.summarizeTextWithAiSdk).not.toHaveBeenCalled();
     });
 
     it('shows error if summarization fails', async () => {
@@ -71,7 +94,7 @@ describe('NewsCard', () => {
         fireEvent.click(summarizeButton);
 
         await waitFor(() => {
-            expect(screen.getByText('Falha ao gerar resumo. Verifique sua chave de API.')).toBeInTheDocument();
+            expect(screen.getByText('Falha ao gerar resumo. Verifique sua chave de API e provedor.')).toBeInTheDocument();
         });
 
         consoleSpy.mockRestore();

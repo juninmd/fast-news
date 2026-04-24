@@ -5,7 +5,7 @@ import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const BATCH_SIZE = 6; // Load 6 sources at a time to be safe with rate limits
 
-const Feed = ({ apiKey }) => {
+const Feed = ({ apiKey, aiConfig }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shuffledSources, setShuffledSources] = useState([]);
@@ -111,7 +111,7 @@ const Feed = ({ apiKey }) => {
       {/* News Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredNews.map((item, index) => (
-            <NewsCard key={`${item.id}-${index}`} item={item} apiKey={apiKey} />
+            <NewsCard key={`${item.id}-${index}`} item={item} apiKey={apiKey} aiConfig={aiConfig} />
         ))}
       </div>
 

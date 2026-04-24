@@ -4,7 +4,7 @@ import App from './App';
 
 // Mock child components
 vi.mock('./components/Feed', () => ({
-    default: ({ apiKey }) => <div data-testid="feed">Feed Component (Key: {apiKey})</div>
+    default: ({ apiKey, aiConfig }) => <div data-testid="feed">Feed Component (Key: {apiKey}, Provider: {aiConfig?.provider})</div>
 }));
 
 vi.mock('./components/Settings', () => ({
@@ -12,7 +12,7 @@ vi.mock('./components/Settings', () => ({
         isOpen ? (
             <div data-testid="settings-modal">
                 Settings Modal
-                <button onClick={() => { onSave('new-api-key'); onClose(); }}>Save</button>
+                <button onClick={() => { onSave({ apiKey: 'new-api-key', provider: 'openai', model: '' }); onClose(); }}>Save</button>
                 <button onClick={onClose}>Close</button>
             </div>
         ) : null
@@ -33,7 +33,7 @@ describe('App', () => {
 
     it('shows notification if api key is missing', () => {
         render(<App />);
-        expect(screen.getByText(/Por favor configure sua Chave de API Gemini/)).toBeInTheDocument();
+        expect(screen.getByText(/Por favor configure sua Chave de API para habilitar os resumos inteligentes/)).toBeInTheDocument();
 
         const buttons = screen.getAllByRole('button', { name: /Configurações/i });
         expect(buttons).toHaveLength(2);
@@ -73,10 +73,10 @@ describe('App', () => {
         expect(screen.queryByTestId('settings-modal')).not.toBeInTheDocument();
 
         // Check if api key was updated in Feed
-        expect(screen.getByTestId('feed')).toHaveTextContent('Feed Component (Key: new-api-key)');
+        expect(screen.getByTestId('feed')).toHaveTextContent('Feed Component (Key: new-api-key, Provider: openai)');
 
         // Notification should disappear
-        expect(screen.queryByText(/Por favor configure sua Chave de API Gemini/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Por favor configure sua Chave de API para habilitar os resumos inteligentes/)).not.toBeInTheDocument();
     });
 
     it('closes modal on close', () => {

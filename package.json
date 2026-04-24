@@ -12,7 +12,12 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.71",
+    "@ai-sdk/google": "^3.0.64",
+    "@ai-sdk/mistral": "^3.0.30",
+    "@ai-sdk/openai": "^3.0.53",
     "@google/generative-ai": "^0.24.1",
+    "ai": "^6.0.168",
     "autoprefixer": "^10.4.23",
     "lucide-react": "^0.562.0",
     "postcss": "^8.5.6",

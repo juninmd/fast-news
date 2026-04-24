@@ -50,6 +50,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.diariodocentrodomundo.com.br/feed/', category: 'Brasil' },
     { url: 'https://revistaforum.com.br/feed', category: 'Brasil' },
     { url: 'https://catracalivre.com.br/feed/', category: 'Brasil' },
+    { url: 'https://www.nexojornal.com.br/rss.xml', category: 'Brasil' },
 
     // Mundo
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
