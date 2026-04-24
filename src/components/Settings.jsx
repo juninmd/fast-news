@@ -2,11 +2,19 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
 const Settings = ({ isOpen, onClose, onSave }) => {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('ai_api_key') || localStorage.getItem('gemini_api_key') || '');
+  const [aiModel, setAiModel] = useState(() => localStorage.getItem('ai_model') || '');
 
   const handleSave = () => {
-    localStorage.setItem('gemini_api_key', apiKey);
-    onSave(apiKey);
+    localStorage.setItem('ai_provider', aiProvider);
+    localStorage.setItem('ai_api_key', apiKey);
+    localStorage.setItem('ai_model', aiModel);
+    // Backward compatibility for existing users
+    if (aiProvider === 'gemini') {
+      localStorage.setItem('gemini_api_key', apiKey);
+    }
+    onSave({ provider: aiProvider, apiKey, model: aiModel });
     onClose();
   };
 
@@ -22,20 +30,57 @@ const Settings = ({ isOpen, onClose, onSave }) => {
           </button>
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Token da API Gemini
-          </label>
-          <input
-            id="api-key-input"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
-            placeholder="Cole sua chave de API aqui"
-          />
+        <div className="mb-6 space-y-4">
+          <div>
+            <label htmlFor="ai-provider-select" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Provedor de IA
+            </label>
+            <select
+              id="ai-provider-select"
+              value={aiProvider}
+              onChange={(e) => setAiProvider(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="gemini">Google Gemini (Direct)</option>
+              <option value="openai">OpenAI (via AI SDK)</option>
+              <option value="google">Google (via AI SDK)</option>
+              <option value="anthropic">Anthropic (via AI SDK)</option>
+              <option value="mistral">Mistral (via AI SDK)</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Token da API
+            </label>
+            <input
+              id="api-key-input"
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
+              placeholder="Cole sua chave de API aqui"
+            />
+          </div>
+
+          {aiProvider !== 'gemini' && (
+            <div>
+              <label htmlFor="ai-model-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Modelo da IA (opcional)
+              </label>
+              <input
+                id="ai-model-input"
+                type="text"
+                value={aiModel}
+                onChange={(e) => setAiModel(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
+                placeholder="Ex: gpt-4o-mini"
+              />
+            </div>
+          )}
+
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            Sua chave é armazenada localmente no seu navegador.
+            Suas chaves são armazenadas localmente no seu navegador.
           </p>
         </div>
 

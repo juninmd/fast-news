@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { summarizeText } from '../services/geminiService';
+import { summarizeTextWithAiSdk } from '../services/aiSdkService';
 import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
 
-const NewsCard = ({ item, apiKey }) => {
+const NewsCard = ({ item, apiKey, aiConfig }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSummarize = async () => {
-    if (!apiKey) {
-      setError("Por favor adicione sua chave de API Gemini nas configurações.");
+    const keyToUse = aiConfig?.apiKey || apiKey;
+
+    if (!keyToUse) {
+      setError("Por favor adicione sua chave de API nas configurações.");
       return;
     }
 
@@ -17,11 +20,18 @@ const NewsCard = ({ item, apiKey }) => {
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      const result = await summarizeText(textToSummarize, apiKey);
+      let result;
+
+      if (!aiConfig || aiConfig.provider === 'gemini') {
+          result = await summarizeText(textToSummarize, keyToUse);
+      } else {
+          result = await summarizeTextWithAiSdk(textToSummarize, aiConfig.provider, keyToUse, aiConfig.model);
+      }
+
       setSummary(result);
     } catch (error) {
       console.error(error);
-      setError("Falha ao gerar resumo. Verifique sua chave de API.");
+      setError("Falha ao gerar resumo. Verifique sua chave de API e provedor.");
     } finally {
       setLoading(false);
     }
@@ -57,6 +67,7 @@ const NewsCard = ({ item, apiKey }) => {
           <img
             src={imageUrl}
             alt={item.title}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           {item.category && (
@@ -131,4 +142,4 @@ const NewsCard = ({ item, apiKey }) => {
   );
 };
 
-export default NewsCard;
+export default React.memo(NewsCard);
