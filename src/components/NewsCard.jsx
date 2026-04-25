@@ -1,15 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { summarizeText } from '../services/geminiService';
+import { summarizeTextAiSdk } from '../services/aiSdkService';
 import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
 
-const NewsCard = ({ item, apiKey }) => {
+const NewsCard = React.memo(({ item, aiConfig }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const cardRef = useRef(null);
 
-  const handleSummarize = async () => {
-    if (!apiKey) {
+  const handleSummarize = useCallback(async () => {
+    if (loading || summary) return;
+
+    if (!aiConfig) {
+        setError("Configurações de IA não encontradas.");
+        return;
+    }
+
+    const { aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel } = aiConfig;
+
+    if (aiProvider === 'gemini' && !geminiApiKey) {
       setError("Por favor adicione sua chave de API Gemini nas configurações.");
+      return;
+    }
+
+    if (aiProvider === 'ai-sdk' && !aiSdkApiKey) {
+      setError("Por favor adicione sua chave de API AI SDK nas configurações.");
       return;
     }
 
@@ -17,15 +33,51 @@ const NewsCard = ({ item, apiKey }) => {
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      const result = await summarizeText(textToSummarize, apiKey);
+      let result = '';
+
+      if (aiProvider === 'gemini') {
+         result = await summarizeText(textToSummarize, geminiApiKey);
+      } else if (aiProvider === 'ai-sdk') {
+         result = await summarizeTextAiSdk(textToSummarize, {
+             provider: aiSdkProvider,
+             apiKey: aiSdkApiKey,
+             modelName: aiSdkModel
+         });
+      }
+
       setSummary(result);
     } catch (error) {
       console.error(error);
-      setError("Falha ao gerar resumo. Verifique sua chave de API.");
+      setError("Falha ao gerar resumo. Verifique suas configurações e chave de API.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [item, aiConfig, loading, summary]);
+
+  useEffect(() => {
+    if (!aiConfig?.autoSummarize || summary || loading || error) return;
+
+    const observer = new IntersectionObserver(
+        (entries) => {
+            if (entries[0].isIntersecting) {
+                handleSummarize();
+            }
+        },
+        { threshold: 0.1 }
+    );
+
+    const target = cardRef.current;
+
+    if (target) {
+        observer.observe(target);
+    }
+
+    return () => {
+        if (target) {
+            observer.unobserve(target);
+        }
+    };
+  }, [aiConfig, summary, loading, error, handleSummarize]);
 
   const getImage = () => {
     if (item.enclosure && item.enclosure.link) return item.enclosure.link;
@@ -50,13 +102,14 @@ const NewsCard = ({ item, apiKey }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
+    <div ref={cardRef} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
       {imageUrl && (
         <div className="h-52 overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <img
             src={imageUrl}
             alt={item.title}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           {item.category && (
@@ -129,6 +182,6 @@ const NewsCard = ({ item, apiKey }) => {
       </div>
     </div>
   );
-};
+});
 
 export default NewsCard;
