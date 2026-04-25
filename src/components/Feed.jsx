@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { fetchNews, FEED_SOURCES } from '../services/newsService';
 import NewsCard from './NewsCard';
 import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const BATCH_SIZE = 6; // Load 6 sources at a time to be safe with rate limits
 
-const Feed = ({ apiKey }) => {
+const Feed = ({ aiConfig }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [shuffledSources, setShuffledSources] = useState([]);
@@ -13,6 +13,8 @@ const Feed = ({ apiKey }) => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [init, setInit] = useState(false);
+
+  const observerTarget = useRef(null);
 
   // Shuffle sources on mount
   useEffect(() => {
@@ -26,7 +28,7 @@ const Feed = ({ apiKey }) => {
     setInit(true);
   }, []);
 
-  const loadMoreNews = async () => {
+  const loadMoreNews = useCallback(async () => {
     if (loading || !hasMore || !init) return;
     setLoading(true);
 
@@ -68,7 +70,31 @@ const Feed = ({ apiKey }) => {
     } finally {
         setLoading(false);
     }
-  };
+  }, [loading, hasMore, init, nextBatchIndex, shuffledSources]);
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+        (entries) => {
+            if (entries[0].isIntersecting && hasMore && !loading) {
+                loadMoreNews();
+            }
+        },
+        { threshold: 0.1 }
+    );
+
+    const target = observerTarget.current;
+
+    if (target) {
+        observer.observe(target);
+    }
+
+    return () => {
+        if (target) {
+            observer.unobserve(target);
+        }
+    };
+  }, [observerTarget, loadMoreNews, hasMore, loading]);
 
   // Initial load
   useEffect(() => {
@@ -83,9 +109,11 @@ const Feed = ({ apiKey }) => {
     return cats.sort();
   }, [news]);
 
-  const filteredNews = selectedCategory === 'Todas'
-    ? news
-    : news.filter(item => item.category === selectedCategory);
+  const filteredNews = useMemo(() => {
+    return selectedCategory === 'Todas'
+        ? news
+        : news.filter(item => item.category === selectedCategory);
+  }, [news, selectedCategory]);
 
   return (
     <div>
@@ -111,7 +139,7 @@ const Feed = ({ apiKey }) => {
       {/* News Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredNews.map((item, index) => (
-            <NewsCard key={`${item.id}-${index}`} item={item} apiKey={apiKey} />
+            <NewsCard key={`${item.id}-${index}`} item={item} aiConfig={aiConfig} />
         ))}
       </div>
 
@@ -127,7 +155,7 @@ const Feed = ({ apiKey }) => {
       )}
 
       {/* Load More / Loading State */}
-      <div className="mt-12 text-center pb-8">
+      <div ref={observerTarget} className="mt-12 text-center pb-8 min-h-[50px]">
         {loading ? (
              <div className="flex flex-col items-center justify-center">
                 <RefreshCw className="animate-spin text-blue-600 mb-2" size={32} />

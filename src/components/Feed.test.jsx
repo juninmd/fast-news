@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import Feed from './Feed';
 import * as newsService from '../services/newsService';
 
@@ -24,6 +24,25 @@ vi.mock('./NewsCard', () => ({
 describe('Feed', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        // Setup specific IntersectionObserver Mock for this test block
+        class SpecificMockIntersectionObserver {
+            constructor(callback) {
+                this.callback = callback;
+            }
+            observe() {
+                // Attach the callback to a global so we can trigger it in tests
+                window.triggerIntersectFeed = () => {
+                    this.callback([{ isIntersecting: true }]);
+                };
+            }
+            unobserve() {}
+            disconnect() {}
+        }
+        window.IntersectionObserver = SpecificMockIntersectionObserver;
+    });
+
+    afterEach(() => {
+        delete window.triggerIntersectFeed;
     });
 
     it('renders and fetches initial news', async () => {
@@ -342,135 +361,58 @@ describe('Feed', () => {
         // Yes, if we keep a reference.
     });
 
-    it('returns early if loading', async () => {
+    it('triggers loadMoreNews via IntersectionObserver', async () => {
+        const mockNews1 = [
+            { id: '1', title: 'News 1', category: 'Cat 1', pubDate: '2023-01-01' },
+        ];
+        const mockNews2 = [
+            { id: '2', title: 'News 2', category: 'Cat 2', pubDate: '2023-01-02' }
+        ];
+
+        newsService.fetchNews
+            .mockResolvedValueOnce(mockNews1)
+            .mockResolvedValueOnce(mockNews2);
+
+        render(<Feed aiConfig={{ autoSummarize: false }} />);
+
+        // Wait for initial load
+        await waitFor(() => {
+            expect(screen.getByText('News 1 - Cat 1')).toBeInTheDocument();
+        });
+
+        // Trigger the intersection observer manually
+        act(() => {
+            if (window.triggerIntersectFeed) {
+                window.triggerIntersectFeed();
+            }
+        });
+
+        // Wait for the second load
+        await waitFor(() => {
+            expect(screen.getByText('News 2 - Cat 2')).toBeInTheDocument();
+        });
+    });
+
+    it('does not trigger loadMoreNews via IntersectionObserver when loading is true', async () => {
          const mockNews = [{ id: '1', title: 'N', category: 'C', pubDate: '2023-01-01' }];
          // Delay to keep loading true
          newsService.fetchNews.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(mockNews), 100)));
 
-         render(<Feed apiKey="test-key" />);
+         render(<Feed aiConfig={{ autoSummarize: false }} />);
 
-         // Wait for first load to finish so button appears
+         // the initial load triggers immediately. Trigger intersection right away.
+         act(() => {
+             if (window.triggerIntersectFeed) {
+                 window.triggerIntersectFeed();
+             }
+         });
+
+         // wait for things to settle
          await waitFor(() => {
              expect(screen.getByText('Carregar mais fontes')).toBeInTheDocument();
          });
 
-         const button = screen.getByText('Carregar mais fontes');
-
-         // Click once to start loading
-         fireEvent.click(button);
-
-         // Now loading is true.
-         // Click again immediately (even if button might be removing from DOM, we have reference)
-         // React might throw if element is detached, but fireEvent might still work on the fiber/handler if not yet committed?
-         // Or we can assume the component re-renders and removes button.
-         // But `fireEvent.click(button)` is synchronous.
-         // State update `setLoading(true)` is async/batched.
-         // So if we click twice in row?
-
-         fireEvent.click(button);
-
-         // If we click twice, the second click happens before re-render?
-         // If so, `loading` state might still be false?
-         // No, React 18 batches.
-         // But inside `loadMoreNews`, `loading` comes from closure `const [loading, ...` which is fixed for that render cycle.
-         // So `loading` will be false for both clicks!
-         // So both will pass the check `if (loading ...)`!
-         // Then `setLoading(true)` called twice.
-
-         // This implies the guard `if (loading)` doesn't work for rapid clicks in same render cycle!
-         // It only works for subsequent renders.
-         // And in subsequent render, button is gone.
-
-         // So `if (loading)` is effectively dead code for clicks if the button is removed when loading is true?
-         // Yes.
-
-         // What about `!hasMore`?
-         // If hasMore is false, button is gone.
-         // If we keep reference?
-         // Same issue.
-
-         // What about `!init`?
-         // Only called from useEffect if init is true.
-         // And button only rendered if init is true (since feed sources are set).
-
-         // So lines 30 is indeed defensive and mostly unreachable in normal React flow with this UI.
-         // BUT, we want 100% coverage.
-         // We can mock `useState`? Complicated.
-
-         // We can assume that if we click the button, and then somehow trigger it again...
-
-         // Actually, wait.
-         // If we look at the logic:
-         // `setLoading(true)` triggers re-render.
-         // In new render, `loading` is true. `NewsCard` grid is shown, and spinner is shown. Button is hidden.
-         // So user CANNOT click.
-
-         // So the only way to hit this line is if `loadMoreNews` is called while `loading` is true but unrelated to button click?
-         // But `loadMoreNews` is only attached to button.
-
-         // EXCEPT:
-         // StrictMode? Double invocation?
-
-         // If we really want to cover it, we might need to change the test approach or the code.
-         // Removing the guard might be unsafe if we change UI later.
-
-         // Can we trick it?
-         // What if we have `hasMore` true, but button is NOT removed?
-         // The UI code:
-         // {loading ? (...) : hasMore ? (button) : (...)}
-         // So button is definitely removed.
-
-         // Maybe we can trigger `loadMoreNews` via the `useEffect`?
-         // `useEffect(() => { if (init && news.length === 0) loadMoreNews(); }, [init]);`
-         // This runs once when init becomes true.
-
-         // What if `init` becomes true, calls `loadMoreNews`.
-         // Then something else triggers `loadMoreNews`?
-         // No other triggers.
-
-         // Wait, `line 30` is uncovered.
-         // `30: if (loading || !hasMore || !init) return;`
-         // It means we never return `undefined` from this line.
-         // We always pass through.
-
-         // To hit `return`, one condition must be true.
-
-         // How about `!hasMore`?
-         // If we keep the button in DOM (by manually manipulating or using stale reference)?
-         // In testing-library, `fireEvent.click(element)` works even if element is not in document,
-         // it just dispatches event. But React event system delegates.
-         // If the element is unmounted, events might not bubble up?
-
-         // Let's try firing event on a saved button reference after wait.
-    });
-
-    it('attempts to cover guard clause by double clicking', async () => {
-          const mockNews = [{ id: '1', title: 'N', category: 'C', pubDate: '2023-01-01' }];
-         // Delay to keep loading true
-         newsService.fetchNews.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(mockNews), 100)));
-
-         render(<Feed apiKey="test-key" />);
-
-         await waitFor(() => {
-             expect(screen.getByText('Carregar mais fontes')).toBeInTheDocument();
-         });
-
-         const button = screen.getByText('Carregar mais fontes');
-
-         // First click
-         fireEvent.click(button);
-
-         // If we click again immediately, `loading` is false (closure).
-         // So it passes guard.
-
-         // We need `loading` to be true.
-         // This requires a re-render where `loading` is true.
-         // But in that re-render, button is gone.
-         // So we can't click it via UI.
-
-         // Unless we use a custom render that exposes the function? No.
-
-         // Maybe we can mock `init`?
-         // No.
+         // we only expect the fetch function to have been called ONCE successfully despite intersecting while loading
+         expect(newsService.fetchNews).toHaveBeenCalledTimes(1);
     });
 });
