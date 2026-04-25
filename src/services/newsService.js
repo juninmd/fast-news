@@ -26,6 +26,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.b9.com.br/feed/', category: 'Tecnologia' },
 
     // Brasil / Política / Geral
+    { url: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/tecnologia/', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
     { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Brasil' },

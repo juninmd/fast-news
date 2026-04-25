@@ -12,7 +12,18 @@ function App() {
     return false;
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key'));
+
+  const [aiConfig, setAiConfig] = useState(() => {
+    const autoSummarizeVal = localStorage.getItem('auto_summarize');
+    return {
+      geminiApiKey: localStorage.getItem('gemini_api_key') || '',
+      aiProvider: localStorage.getItem('ai_provider') || 'gemini',
+      aiSdkProvider: localStorage.getItem('ai_sdk_provider') || 'openai',
+      aiSdkApiKey: localStorage.getItem('ai_sdk_api_key') || '',
+      aiSdkModel: localStorage.getItem('ai_sdk_model') || '',
+      autoSummarize: autoSummarizeVal !== null ? autoSummarizeVal === 'true' : true
+    };
+  });
 
   useEffect(() => {
     if (darkMode) {
@@ -26,8 +37,14 @@ function App() {
     setDarkMode(!darkMode);
   };
 
-  const handleSaveSettings = (newKey) => {
-    setApiKey(newKey);
+  const handleSaveSettings = (newConfig) => {
+    setAiConfig(prev => ({ ...prev, ...newConfig }));
+  };
+
+  const isAiConfigured = () => {
+    if (aiConfig.aiProvider === 'gemini') return !!aiConfig.geminiApiKey;
+    if (aiConfig.aiProvider === 'ai-sdk') return !!aiConfig.aiSdkApiKey;
+    return false;
   };
 
   return (
@@ -63,7 +80,7 @@ function App() {
 
       <TrendingTopics />
 
-      {!apiKey && (
+      {!isAiConfigured() && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded-md">
             <div className="flex">
@@ -74,7 +91,7 @@ function App() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700 dark:text-yellow-200">
-                  Por favor configure sua Chave de API Gemini para habilitar os resumos inteligentes.
+                  Por favor configure seu Provedor de IA e Chave de API nas configurações para habilitar os resumos inteligentes.
                   <button
                     onClick={() => setIsSettingsOpen(true)}
                     className="font-medium underline hover:text-yellow-600 dark:hover:text-yellow-100 ml-2"
@@ -89,7 +106,7 @@ function App() {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Feed apiKey={apiKey} />
+        <Feed aiConfig={aiConfig} />
       </main>
 
       <Settings
