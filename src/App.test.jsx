@@ -46,18 +46,18 @@ describe('App', () => {
         expect(screen.queryByText(/Por favor configure seu Provedor de IA e Chave de API/)).not.toBeInTheDocument();
     });
 
-    it('opens settings modal when settings button in header is clicked', () => {
+    it('opens settings modal when settings button in header is clicked', async () => {
         render(<App />);
         const settingsButton = screen.getAllByRole('button', { name: /Configurações/i })[0];
         fireEvent.click(settingsButton);
-        expect(screen.getByTestId('settings-modal')).toBeInTheDocument();
+        expect(await screen.findByTestId('settings-modal')).toBeInTheDocument();
     });
 
-    it('opens settings modal when notification link is clicked', () => {
+    it('opens settings modal when notification link is clicked', async () => {
         render(<App />);
         const linkButton = screen.getAllByRole('button', { name: /Configurações/i })[1];
         fireEvent.click(linkButton);
-        expect(screen.getByTestId('settings-modal')).toBeInTheDocument();
+        expect(await screen.findByTestId('settings-modal')).toBeInTheDocument();
     });
 
     it('updates api key and closes modal on save', async () => {
@@ -67,8 +67,9 @@ describe('App', () => {
         const settingsButton = screen.getAllByRole('button', { name: /Configurações/i })[0];
         fireEvent.click(settingsButton);
 
-        // Simulate save in mock
-        fireEvent.click(screen.getByText('Save'));
+        // Wait for modal to render and simulate save
+        const saveButton = await screen.findByText('Save');
+        fireEvent.click(saveButton);
 
         // Check if modal is closed
         expect(screen.queryByTestId('settings-modal')).not.toBeInTheDocument();
@@ -80,14 +81,15 @@ describe('App', () => {
         expect(screen.queryByText(/Por favor configure seu Provedor de IA e Chave de API/)).not.toBeInTheDocument();
     });
 
-    it('closes modal on close', () => {
+    it('closes modal on close', async () => {
         render(<App />);
          // Open modal
         const settingsButton = screen.getAllByRole('button', { name: /Configurações/i })[0];
         fireEvent.click(settingsButton);
 
-        // Simulate close in mock
-        fireEvent.click(screen.getByText('Close'));
+        // Wait for modal to render and simulate close
+        const closeButton = await screen.findByText('Close');
+        fireEvent.click(closeButton);
 
         expect(screen.queryByTestId('settings-modal')).not.toBeInTheDocument();
     });

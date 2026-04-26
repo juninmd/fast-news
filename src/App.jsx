@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Feed from './components/Feed';
 import TrendingTopics from './components/TrendingTopics';
-import Settings from './components/Settings';
 import { Newspaper, Moon, Sun, Settings as SettingsIcon } from 'lucide-react';
+
+const Settings = lazy(() => import('./components/Settings'));
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -109,11 +110,21 @@ function App() {
         <Feed aiConfig={aiConfig} />
       </main>
 
-      <Settings
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onSave={handleSaveSettings}
-      />
+      {isSettingsOpen && (
+        <Suspense fallback={
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl flex items-center justify-center h-48">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+        }>
+          <Settings
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            onSave={handleSaveSettings}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
