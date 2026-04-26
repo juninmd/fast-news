@@ -87,8 +87,9 @@ export const FEED_SOURCES = [
     { url: 'https://www.lance.com.br/rss', category: 'Esportes' },
     { url: 'https://rss.uol.com.br/feed/esporte.xml', category: 'Esportes' },
 
-    // Entretenimento / Games
+    // Entretenimento / Games / Música
     { url: 'https://www.omelete.com.br/rss/rss.aspx', category: 'Entretenimento' },
+    { url: 'https://billboard.com.br/feed/', category: 'Música' },
     { url: 'https://rollingstone.uol.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://jovemnerd.com.br/feed/', category: 'Entretenimento' },
     { url: 'https://anmtv.com.br/feed/', category: 'Entretenimento' },
@@ -102,24 +103,52 @@ export const FEED_SOURCES = [
 
     // Saúde
     { url: 'https://www.metropoles.com/saude/feed', category: 'Saúde' },
-    { url: 'https://drauziovarella.uol.com.br/feed/', category: 'Saúde' }
+    { url: 'https://drauziovarella.uol.com.br/feed/', category: 'Saúde' },
+
+    // Automóveis
+    { url: 'https://quatrorodas.abril.com.br/feed/', category: 'Automóveis' },
+    { url: 'https://autoesporte.globo.com/rss/autoesporte/', category: 'Automóveis' },
+
+    // Turismo
+    { url: 'https://viagemeturismo.abril.com.br/feed/', category: 'Turismo' },
+
+    // Crypto
+    { url: 'https://cointelegraph.com.br/rss', category: 'Crypto' },
+    { url: 'https://livecoins.com.br/feed/', category: 'Crypto' }
 ];
+
+const cache = new Map();
+const CACHE_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes
 
 export const fetchNews = async (sources = FEED_SOURCES) => {
     // Determine the sources to fetch.
     // To respect API limits, the caller should slice FEED_SOURCES.
 
-    const promises = sources.map(source =>
-        fetch(`${RSS2JSON_API}${encodeURIComponent(source.url)}`)
-            .then(res => res.json())
-            .then(data => ({ ...data, category: source.category }))
-            .catch(err => {
-                console.error(`Error fetching ${source.url}:`, err);
-                return null;
-            })
-    );
+    const now = Date.now();
+    const results = await Promise.all(sources.map(async (source) => {
+        const cacheKey = source.url;
+        const cachedItem = cache.get(cacheKey);
 
-    const results = await Promise.all(promises);
+        if (cachedItem && (now - cachedItem.timestamp < CACHE_EXPIRATION_MS)) {
+            return cachedItem.data;
+        }
+
+        try {
+            const res = await fetch(`${RSS2JSON_API}${encodeURIComponent(source.url)}`);
+            const data = await res.json();
+            const resultData = { ...data, category: source.category };
+
+            cache.set(cacheKey, {
+                timestamp: now,
+                data: resultData
+            });
+
+            return resultData;
+        } catch (err) {
+            console.error(`Error fetching ${source.url}:`, err);
+            return null;
+        }
+    }));
 
     let allNews = [];
     results.forEach(result => {
