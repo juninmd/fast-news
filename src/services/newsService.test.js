@@ -32,13 +32,18 @@ describe('newsService', () => {
             ],
         };
 
-        fetch
-            .mockResolvedValueOnce({
-                json: () => Promise.resolve(mockResponse1),
-            })
-            .mockResolvedValueOnce({
-                json: () => Promise.resolve(mockResponse2),
-            });
+        fetch.mockImplementation((url) => {
+            if (url.includes('source1')) {
+                return Promise.resolve({
+                    json: () => Promise.resolve(mockResponse1),
+                });
+            } else if (url.includes('source2')) {
+                return Promise.resolve({
+                    json: () => Promise.resolve(mockResponse2),
+                });
+            }
+            return Promise.resolve({ json: () => Promise.resolve({ status: 'error' }) });
+        });
 
         const news = await fetchNews(mockSources);
 
@@ -55,10 +60,15 @@ describe('newsService', () => {
 
     it('should handle fetch errors gracefully', async () => {
          const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
+            { url: 'http://source-error-network.com/rss', category: 'Tech' },
         ];
 
-        fetch.mockRejectedValueOnce(new Error('Network Error'));
+        fetch.mockImplementation((url) => {
+            if (url.includes('source-error-network.com')) {
+                return Promise.reject(new Error('Network Error'));
+            }
+            return Promise.resolve({ json: () => Promise.resolve({ status: 'ok', items: [] }) });
+        });
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
         const news = await fetchNews(mockSources);
@@ -71,12 +81,12 @@ describe('newsService', () => {
 
     it('should ignore failed api responses (status != ok)', async () => {
         const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
+            { url: 'http://source-error.com/rss', category: 'Tech' },
         ];
 
-        fetch.mockResolvedValueOnce({
+        fetch.mockImplementation(() => Promise.resolve({
             json: () => Promise.resolve({ status: 'error' }),
-        });
+        }));
 
         const news = await fetchNews(mockSources);
 
@@ -85,7 +95,7 @@ describe('newsService', () => {
 
     it('should handle invalid dates in sorting', async () => {
          const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
+            { url: 'http://source-invalid-date.com/rss', category: 'Tech' },
         ];
 
         const mockResponse = {
@@ -97,9 +107,9 @@ describe('newsService', () => {
             ],
         };
 
-        fetch.mockResolvedValueOnce({
+        fetch.mockImplementation(() => Promise.resolve({
              json: () => Promise.resolve(mockResponse),
-        });
+        }));
 
         const news = await fetchNews(mockSources);
 
@@ -114,7 +124,7 @@ describe('newsService', () => {
 
     it('should use item link as id if guid is missing', async () => {
         const mockSources = [
-             { url: 'http://source1.com/rss', category: 'Tech' },
+             { url: 'http://source-no-guid.com/rss', category: 'Tech' },
         ];
 
         const mockResponse = {
@@ -125,9 +135,9 @@ describe('newsService', () => {
             ],
         };
 
-        fetch.mockResolvedValueOnce({
+        fetch.mockImplementation(() => Promise.resolve({
             json: () => Promise.resolve(mockResponse),
-        });
+        }));
 
         const news = await fetchNews(mockSources);
         expect(news[0].id).toBe('http://link.com/1');
@@ -135,7 +145,7 @@ describe('newsService', () => {
 
      it('should use invalid date if both are invalid', async () => {
         const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
+            { url: 'http://source-both-invalid.com/rss', category: 'Tech' },
         ];
 
         const mockResponse = {
@@ -147,9 +157,9 @@ describe('newsService', () => {
             ],
         };
 
-        fetch.mockResolvedValueOnce({
+        fetch.mockImplementation(() => Promise.resolve({
              json: () => Promise.resolve(mockResponse),
-        });
+        }));
 
         const news = await fetchNews(mockSources);
         // The sorting stability might depend on browser implementation if both return 1
@@ -159,9 +169,9 @@ describe('newsService', () => {
 
     it('should use default FEED_SOURCES if no sources provided', async () => {
         // We will mock fetch to return empty json to avoid real network calls
-        fetch.mockResolvedValue({
+        fetch.mockImplementation(() => Promise.resolve({
              json: () => Promise.resolve({ status: 'ok', feed: {}, items: [] }),
-        });
+        }));
 
         await fetchNews();
         expect(fetch).toHaveBeenCalledTimes(FEED_SOURCES.length);
@@ -169,7 +179,7 @@ describe('newsService', () => {
 
     it('should handle sorting when dateB is invalid', async () => {
         const mockSources = [
-             { url: 'http://source1.com/rss', category: 'Tech' },
+             { url: 'http://source-dateb-invalid.com/rss', category: 'Tech' },
         ];
 
          const mockResponse2 = {
@@ -181,9 +191,9 @@ describe('newsService', () => {
             ],
         };
 
-        fetch.mockResolvedValueOnce({
+        fetch.mockImplementation(() => Promise.resolve({
              json: () => Promise.resolve(mockResponse2),
-        });
+        }));
 
         const news = await fetchNews(mockSources);
         expect(news[0].title).toBe('News 2');
