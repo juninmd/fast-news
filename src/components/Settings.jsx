@@ -105,6 +105,7 @@ const Settings = ({ isOpen, onClose, onSave }) => {
                   <option value="anthropic">Anthropic</option>
                   <option value="google">Google</option>
                   <option value="mistral">Mistral</option>
+                  <option value="deepseek">DeepSeek</option>
                 </select>
               </div>
 

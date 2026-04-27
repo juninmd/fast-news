@@ -115,6 +115,12 @@ const Feed = ({ aiConfig }) => {
         : news.filter(item => item.category === selectedCategory);
   }, [news, selectedCategory]);
 
+  const renderedGridItems = useMemo(() => {
+      return filteredNews.map((item, index) => (
+          <NewsCard key={`${item.id}-${index}`} item={item} aiConfig={aiConfig} />
+      ));
+  }, [filteredNews, aiConfig]);
+
   return (
     <div>
       {/* Category Filter */}
@@ -138,9 +144,7 @@ const Feed = ({ aiConfig }) => {
 
       {/* News Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredNews.map((item, index) => (
-            <NewsCard key={`${item.id}-${index}`} item={item} aiConfig={aiConfig} />
-        ))}
+        {renderedGridItems}
       </div>
 
       {/* Empty State */}
