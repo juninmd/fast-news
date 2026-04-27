@@ -3,6 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createMistral } from '@ai-sdk/mistral';
+import { createDeepSeek } from '@ai-sdk/deepseek';
 
 export const summarizeTextAiSdk = async (text, config) => {
     if (!text) return '';
@@ -32,6 +33,10 @@ export const summarizeTextAiSdk = async (text, config) => {
         case 'mistral':
             aiProvider = createMistral({ apiKey });
             defaultModel = 'mistral-small-latest';
+            break;
+        case 'deepseek':
+            aiProvider = createDeepSeek({ apiKey });
+            defaultModel = 'deepseek-chat';
             break;
         default:
             throw new Error(`Unsupported provider: ${provider}`);
