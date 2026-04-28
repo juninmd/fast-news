@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS news_articles (
   url TEXT NOT NULL,
   source TEXT NOT NULL,
   category TEXT NOT NULL,
+  company TEXT,
   published_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   embedding vector(768),
@@ -21,8 +22,25 @@ CREATE TABLE IF NOT EXISTS news_articles (
 
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON news_articles(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_category ON news_articles(category);
+CREATE INDEX IF NOT EXISTS idx_articles_company ON news_articles(company);
 CREATE INDEX IF NOT EXISTS idx_articles_embedding ON news_articles
   USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+
+-- Source feeds management
+CREATE TABLE IF NOT EXISTS source_feeds (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(100) NOT NULL,
+  url TEXT NOT NULL UNIQUE,
+  category VARCHAR(50),
+  company VARCHAR(50),
+  is_active BOOLEAN DEFAULT true,
+  last_fetched TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_feeds_category ON source_feeds(category);
+CREATE INDEX IF NOT EXISTS idx_feeds_company ON source_feeds(company);
+CREATE INDEX IF NOT EXISTS idx_feeds_active ON source_feeds(is_active);
 
 -- Tracked topics (e.g., "Guerra EUA vs Irã", "Petróleo")
 CREATE TABLE IF NOT EXISTS tracked_topics (
