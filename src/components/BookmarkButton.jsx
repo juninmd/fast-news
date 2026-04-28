@@ -1,31 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Bookmark, BookmarkCheck, Loader } from 'lucide-react';
-
-const STORAGE_KEY = 'newsai_bookmarks';
-
-const getBookmarks = () => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveBookmarks = (bookmarks) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
-};
+import { getBookmarks, saveBookmarks } from '../utils/bookmarks';
 
 const BookmarkButton = ({ item, className = '' }) => {
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(() => {
+    const bookmarks = getBookmarks();
+    return bookmarks.some(b => b.id === item.id);
+  });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const bookmarks = getBookmarks();
-    setIsBookmarked(bookmarks.some(b => b.id === item.id));
-  }, [item.id]);
-
-  const toggleBookmark = (e) => {
+  const toggleBookmark = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setLoading(true);
@@ -50,7 +34,7 @@ const BookmarkButton = ({ item, className = '' }) => {
     saveBookmarks(updated);
     setIsBookmarked(!isBookmarked);
     setLoading(false);
-  };
+  }, [isBookmarked, item]);
 
   return (
     <button
@@ -68,5 +52,4 @@ const BookmarkButton = ({ item, className = '' }) => {
   );
 };
 
-export { getBookmarks };
 export default BookmarkButton;
