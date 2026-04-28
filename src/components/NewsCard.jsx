@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
 import { summarizeWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
-import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper } from 'lucide-react';
+import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import BookmarkButton from './BookmarkButton';
 
-const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
+const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize, allArticles }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sendingTelegram, setSendingTelegram] = useState(false);
@@ -119,6 +120,17 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
     }
   };
 
+  const estimateReadTime = (text) => {
+    const words = text?.split(/\s+/).length || 0;
+    return Math.max(1, Math.ceil(words / 200));
+  };
+
+  const getRelatedArticles = () => {
+    if (!item.title) return [];
+    const keywords = item.title.toLowerCase().split(/\s+/).filter(w => w.length > 4);
+    return keywords.slice(0, 3);
+  };
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
       <div className="relative p-3">
@@ -148,9 +160,12 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
           )}
 
           {/* Source and Date on Image Bottom */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 text-[11px] font-medium text-white/90 drop-shadow-md z-10">
-            <span className="bg-blue-600/80 backdrop-blur-sm px-2.5 py-1 rounded-md">{item.source}</span>
-            <span className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">{formatDate(item.pubDate)}</span>
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
+            <div className="flex items-center gap-2 text-[11px] font-medium text-white/90 drop-shadow-md">
+              <span className="bg-blue-600/80 backdrop-blur-sm px-2.5 py-1 rounded-md">{item.source}</span>
+              <span className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">{formatDate(item.pubDate)}</span>
+            </div>
+            <BookmarkButton item={item} className="!bg-black/40 backdrop-blur-sm !rounded-md p-1.5" />
           </div>
         </div>
       </div>
@@ -161,6 +176,17 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             {item.title}
           </a>
         </h3>
+
+        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mb-3">
+          <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+            <Clock size={12} />{estimateReadTime(item.title)} min
+          </span>
+          <span className="flex items-center gap-1">
+            {getRelatedArticles().map((kw, i) => (
+              <span key={i} className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full text-[10px]">#{kw}</span>
+            ))}
+          </span>
+        </div>
 
         <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4 flex-grow">
           {summary ? (

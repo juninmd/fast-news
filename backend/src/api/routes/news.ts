@@ -3,7 +3,7 @@ import { query } from '../../database/client.js';
 import { searchSimilarArticles } from '../../services/rag.js';
 import { cacheGet, cacheSet } from '../../services/cache.js';
 
-export const newsRouter = Router();
+export const newsRouter: Router = Router();
 
 newsRouter.get('/', async (req: Request, res: Response) => {
   const page = parseInt(req.query['page'] as string ?? '1', 10);

@@ -12,6 +12,9 @@ const CATEGORY_EMOJI: Record<string, string> = {
 };
 
 export function getBot(): Telegraf {
+  if (!config.telegramBotToken) {
+    throw new Error('TELEGRAM_BOT_TOKEN is not configured');
+  }
   if (!bot) {
     bot = new Telegraf(config.telegramBotToken);
     setupCommands(bot);
@@ -118,7 +121,7 @@ function escapeHtml(text: string): string {
 export async function postNewArticles(
   articles: Array<{ id: string; title: string; url: string; source: string; category: string }>
 ): Promise<void> {
-  if (!config.telegramChatIds.length) return;
+  if (!config.telegramEnabled || !config.telegramBotToken || !config.telegramChatIds.length) return;
 
   const eligible = articles
     .filter((a) => config.telegramNewsCategories.includes(a.category))
@@ -137,6 +140,7 @@ export async function postNewArticles(
 }
 
 export async function sendDigest(content: string): Promise<void> {
+  if (!config.telegramEnabled || !config.telegramBotToken || !config.telegramChatIds.length) return;
   const chunks = content.match(/[\s\S]{1,4000}/g) ?? [];
   for (const chatId of config.telegramChatIds) {
     for (const chunk of chunks) {
@@ -159,6 +163,10 @@ function sleep(ms: number): Promise<void> {
 }
 
 export async function startBot(): Promise<void> {
+  if (!config.telegramEnabled || !config.telegramBotToken) {
+    console.log('[Telegram] Bot is disabled or missing token. Skipping start.');
+    return;
+  }
   const b = getBot();
   await b.launch();
   console.log('[Telegram] Bot started.');

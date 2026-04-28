@@ -3,7 +3,7 @@ import { query } from '../../database/client.js';
 import { analyzeTopicWithRAG, getAllTrackedTopics, getTopicLatestAnalysis } from '../../services/analysis.js';
 import { cacheGet, cacheSet } from '../../services/cache.js';
 
-export const topicsRouter = Router();
+export const topicsRouter: Router = Router();
 
 topicsRouter.get('/', async (_req: Request, res: Response) => {
   const cached = await cacheGet('topics:all');
