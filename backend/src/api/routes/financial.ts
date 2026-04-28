@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { query } from '../../database/client.js';
 import { getActiveOpportunities } from '../../services/financial.js';
 
-export const financialRouter = Router();
+export const financialRouter: Router = Router();
 
 financialRouter.get('/', async (_req: Request, res: Response) => {
   const opportunities = await getActiveOpportunities();

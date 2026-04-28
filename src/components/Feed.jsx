@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { fetchNews, FEED_SOURCES } from '../services/newsService';
 import NewsCard from './NewsCard';
 import HeroSection from './HeroSection';
 import SkeletonCard from './SkeletonCard';
+import RelatedArticles from './RelatedArticles';
 import { RefreshCw, PlusCircle, AlertCircle } from 'lucide-react';
 
 const DEFAULT_FEEDS = [];
@@ -148,7 +149,11 @@ const Feed = ({
                     ollamaModel={ollamaModel}
                     telegramBotToken={telegramBotToken}
                     telegramChatId={telegramChatId}
+                    allArticles={filteredNews}
                   />
+                  {item === gridItems[gridItems.length - 1] && filteredNews.length > 3 && (
+                    <RelatedArticles currentArticle={item} allArticles={filteredNews} />
+                  )}
               </div>
             ))}
          </div>

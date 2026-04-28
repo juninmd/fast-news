@@ -30,7 +30,8 @@ export const config = {
   openaiApiKey: optional('OPENAI_API_KEY', ''),
   anthropicApiKey: optional('ANTHROPIC_API_KEY', ''),
 
-  telegramBotToken: required('TELEGRAM_BOT_TOKEN'),
+  telegramBotToken: optional('TELEGRAM_BOT_TOKEN', ''),
+  telegramEnabled: optional('TELEGRAM_ENABLED', 'false') === 'true',
   telegramChatIds: optional('TELEGRAM_CHAT_IDS', '').split(',').filter(Boolean),
   // Categorias de notícias para postar automaticamente
   telegramNewsCategories: optional('TELEGRAM_NEWS_CATEGORIES', 'Mundo,Negócios,Brasil')
