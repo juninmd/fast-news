@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { newsRouter } from './routes/news.js';
 import { topicsRouter } from './routes/topics.js';
 import { financialRouter } from './routes/financial.js';
+import { healthHandler } from './health.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,9 +16,8 @@ export function createApp(): express.Application {
   app.use(cors({ origin: '*' }));
   app.use(express.json());
 
-  app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
+  app.get('/health', healthHandler);
+  app.head('/health', healthHandler);
 
   app.use('/api/news', newsRouter);
   app.use('/api/topics', topicsRouter);
