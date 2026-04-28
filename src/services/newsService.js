@@ -87,6 +87,9 @@ export const FEED_SOURCES = [
     { url: 'https://www.lance.com.br/rss', category: 'Esportes' },
     { url: 'https://rss.uol.com.br/feed/esporte.xml', category: 'Esportes' },
 
+    // Educação
+    { url: 'https://jornal.usp.br/feed/', category: 'Educação' },
+
     // Entretenimento / Games / Música
     { url: 'https://www.omelete.com.br/rss/rss.aspx', category: 'Entretenimento' },
     { url: 'https://billboard.com.br/feed/', category: 'Música' },
