@@ -1,8 +1,11 @@
 {
-  "name": "app",
+  "name": "fast-news",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "node": ">=18.0.0"
   },
@@ -14,7 +17,9 @@
     "lint": "eslint . --no-warn-ignored",
     "preview": "vite preview",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "dev:api": "pnpm --filter @fast-news/api dev",
+    "dev:mcp": "pnpm --filter @fast-news/mcp dev"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
