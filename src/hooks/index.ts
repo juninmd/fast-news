@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
-export const useDebounce = (value, delay = 300) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+export const useDebounce = <T>(value: T, delay = 300): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedValue(value), delay);
@@ -11,8 +11,8 @@ export const useDebounce = (value, delay = 300) => {
   return debouncedValue;
 };
 
-export const useIntersectionObserver = (callback, options = {}) => {
-  const observerRef = useRef(null);
+export const useIntersectionObserver = (callback: IntersectionObserverCallback, options = {}) => {
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(callback, {
@@ -29,7 +29,7 @@ export const useIntersectionObserver = (callback, options = {}) => {
 
 export const useInView = (threshold = 0.1) => {
   const [isInView, setIsInView] = useState(false);
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -41,12 +41,16 @@ export const useInView = (threshold = 0.1) => {
     return () => observer.disconnect();
   }, [threshold]);
 
-  return [ref, isInView];
+  return [ref, isInView] as const;
 };
 
-export const useKeyboardShortcut = (key, callback, modifiers = {}) => {
+export const useKeyboardShortcut = (
+  key: string,
+  callback: (e: KeyboardEvent) => void,
+  modifiers: { ctrl?: boolean; meta?: boolean; shift?: boolean; alt?: boolean } = {}
+) => {
   useEffect(() => {
-    const handler = (e) => {
+    const handler = (e: KeyboardEvent) => {
       const ctrlOrCmd = modifiers.ctrl || modifiers.meta;
       const ctrlHeld = e.ctrlKey || e.metaKey;
 
@@ -66,8 +70,8 @@ export const useKeyboardShortcut = (key, callback, modifiers = {}) => {
   }, [key, callback, modifiers]);
 };
 
-export const useLocalStorage = (key, initialValue) => {
-  const [storedValue, setStoredValue] = useState(() => {
+export const useLocalStorage = <T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
@@ -76,7 +80,7 @@ export const useLocalStorage = (key, initialValue) => {
     }
   });
 
-  const setValue = (value) => {
+  const setValue = (value: T | ((prev: T) => T)) => {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
@@ -89,7 +93,7 @@ export const useLocalStorage = (key, initialValue) => {
   return [storedValue, setValue];
 };
 
-export const useReadingProgress = (contentRef) => {
+export const useReadingProgress = (contentRef: React.RefObject<HTMLElement>) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -106,3 +110,6 @@ export const useReadingProgress = (contentRef) => {
 
   return progress;
 };
+
+export { useTheme } from './useTheme';
+export { useNews } from './useNews';
