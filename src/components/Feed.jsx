@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { fetchNews, FEED_SOURCES } from '../services/newsService';
 import NewsCard from './NewsCard';
 import HeroSection from './HeroSection';
@@ -10,6 +10,15 @@ import { withRetry } from '../utils/retry';
 const DEFAULT_FEEDS = [];
 const MAX_RETRIES = 2;
 const RETRY_DELAY = 1000;
+
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 const Feed = ({
     apiKey,
@@ -28,37 +37,30 @@ const Feed = ({
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [shuffledSources, setShuffledSources] = useState([]);
   const [nextBatchIndex, setNextBatchIndex] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [init, setInit] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  const shuffledSourcesMemo = useMemo(() => {
-    let sources = [...FEED_SOURCES, ...customFeeds];
-
+  const shuffledSources = useMemo(() => {
+    let filtered = [...FEED_SOURCES, ...customFeeds];
     if (selectedCategory !== 'Todas') {
-        sources = sources.filter(s => s.category === selectedCategory);
+      filtered = filtered.filter(s => s.category === selectedCategory);
     }
-
-    // Fisher-Yates shuffle
-    for (let i = sources.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [sources[i], sources[j]] = [sources[j], sources[i]];
-    }
-
-    return sources;
+    return shuffleArray(filtered);
   }, [customFeeds, selectedCategory]);
 
+  const sourcesRef = useRef(shuffledSources);
+
   useEffect(() => {
-    setShuffledSources(shuffledSourcesMemo);
+    sourcesRef.current = shuffledSources;
     setNews([]);
     setNextBatchIndex(0);
-    setHasMore(shuffledSourcesMemo.length > 0);
+    setHasMore(shuffledSources.length > 0);
     setError(null);
     setInit(true);
-  }, [shuffledSourcesMemo]);
+  }, [shuffledSources]);
 
   const loadMoreNews = useCallback(async (isRetry = false) => {
     if (loading || !hasMore || !init) return;
@@ -68,9 +70,10 @@ const Feed = ({
     }
 
     const batchSize = rss2jsonApiKey ? 12 : 9;
+    const currentSources = sourcesRef.current;
 
     try {
-        const nextSources = shuffledSources.slice(nextBatchIndex, nextBatchIndex + batchSize);
+        const nextSources = currentSources.slice(nextBatchIndex, nextBatchIndex + batchSize);
         if (nextSources.length === 0) {
             setHasMore(false);
             setLoading(false);
@@ -99,7 +102,7 @@ const Feed = ({
         });
 
         setNextBatchIndex(prev => prev + batchSize);
-        setHasMore(nextBatchIndex + batchSize < shuffledSources.length);
+        setHasMore(nextBatchIndex + batchSize < currentSources.length);
         setError(null);
         setLastUpdate(new Date());
 
@@ -111,7 +114,7 @@ const Feed = ({
     } finally {
         setLoading(false);
     }
-  }, [loading, hasMore, init, shuffledSources, nextBatchIndex, rss2jsonApiKey, onError]);
+  }, [loading, hasMore, init, nextBatchIndex, rss2jsonApiKey, onError]);
 
   const refreshNews = useCallback(async () => {
     if (isRefreshing || loading) return;
@@ -122,10 +125,11 @@ const Feed = ({
     try {
         setNews([]);
         setNextBatchIndex(0);
-        setHasMore(shuffledSources.length > 0);
+        const currentSources = sourcesRef.current;
+        setHasMore(currentSources.length > 0);
 
         const batchSize = rss2jsonApiKey ? 12 : 9;
-        const nextSources = shuffledSources.slice(0, batchSize);
+        const nextSources = currentSources.slice(0, batchSize);
 
         const newNews = await withRetry(
             () => fetchNews(nextSources, rss2jsonApiKey),
@@ -145,7 +149,7 @@ const Feed = ({
         });
 
         setNextBatchIndex(batchSize);
-        setHasMore(batchSize < shuffledSources.length);
+        setHasMore(batchSize < currentSources.length);
         setLastUpdate(new Date());
 
     } catch (err) {
@@ -156,13 +160,13 @@ const Feed = ({
     } finally {
         setIsRefreshing(false);
     }
-  }, [isRefreshing, loading, shuffledSources, rss2jsonApiKey, onError]);
+  }, [isRefreshing, loading, rss2jsonApiKey, onError]);
 
   useEffect(() => {
     if (init && shuffledSources.length > 0 && news.length === 0 && !loading) {
         loadMoreNews();
     }
-  }, [shuffledSources, init]);
+  }, [init, shuffledSources.length, news.length, loading]);
 
   const filteredNews = useMemo(() => {
       let filtered = news;
@@ -186,7 +190,6 @@ const Feed = ({
 
   return (
     <div>
-      {/* Refresh indicator */}
       {lastUpdate && (
         <div className="flex items-center justify-between mb-4 text-xs text-gray-500 dark:text-gray-400">
           <span>Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}</span>
@@ -201,7 +204,6 @@ const Feed = ({
         </div>
       )}
 
-      {/* Error banner */}
       {error && (
         <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -225,7 +227,6 @@ const Feed = ({
           />
       )}
 
-      {/* Masonry Grid */}
       {isLoadingInitial ? (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
              {Array.from({ length: 6 }).map((_, i) => (
@@ -247,7 +248,6 @@ const Feed = ({
                      ollamaModel={ollamaModel}
                      telegramBotToken={telegramBotToken}
                      telegramChatId={telegramChatId}
-                     allArticles={filteredNews}
                    />
                    {item === gridItems[gridItems.length - 1] && filteredNews.length > 3 && (
                      <RelatedArticles currentArticle={item} allArticles={filteredNews} />
@@ -257,7 +257,6 @@ const Feed = ({
           </div>
        )}
 
-      {/* Empty State */}
       {!loading && !isLoadingInitial && filteredNews.length === 0 && (
         <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 animate-in fade-in zoom-in duration-300">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
@@ -280,7 +279,6 @@ const Feed = ({
         </div>
       )}
 
-      {/* Load More */}
       <div className="mt-12 text-center pb-8">
         {loading && !isLoadingInitial ? (
              <div className="flex flex-col items-center justify-center">

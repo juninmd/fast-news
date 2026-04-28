@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { X, BookmarkCheck, Trash2, ExternalLink, Clock, Calendar } from 'lucide-react';
-import { getBookmarks } from './BookmarkButton';
+import { getBookmarks } from '../utils/bookmarks';
 
 const BookmarkPanel = ({ isOpen, onClose }) => {
   const [bookmarks, setBookmarks] = useState([]);
 
+  const refreshBookmarks = useCallback(() => {
+    setBookmarks(getBookmarks());
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
-      setBookmarks(getBookmarks());
+      refreshBookmarks();
     }
-  }, [isOpen]);
+  }, [isOpen, refreshBookmarks]);
 
   if (!isOpen) return null;
 
