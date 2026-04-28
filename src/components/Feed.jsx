@@ -45,11 +45,14 @@ const Feed = ({ aiConfig }) => {
         setNews(prev => {
             const combined = [...prev, ...newNews];
             // Unique by ID
-            const unique = combined.filter((item, index, self) =>
-                index === self.findIndex((t) => (
-                    t.id === item.id
-                ))
-            );
+            const uniqueMap = new Map();
+            combined.forEach(item => {
+                if (!uniqueMap.has(item.id)) {
+                    uniqueMap.set(item.id, item);
+                }
+            });
+            const unique = Array.from(uniqueMap.values());
+
             // Sort by date desc
             unique.sort((a, b) => {
                 const dateA = new Date(a.pubDate);

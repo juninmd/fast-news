@@ -3,6 +3,7 @@ const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 export const FEED_SOURCES = [
     // Tecnologia
+    { url: 'https://www.techtudo.com.br/rss', category: 'Tecnologia' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml', category: 'Tecnologia' },
     { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', category: 'Tecnologia' },
     { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
@@ -65,6 +66,7 @@ export const FEED_SOURCES = [
     { url: 'https://feeds.npr.org/1001/rss.xml', category: 'Mundo' },
 
     // Negócios
+    { url: 'https://valor.globo.com/rss/', category: 'Negócios' },
     { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negócios' },
     { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html', category: 'Negócios' },
     { url: 'https://epocanegocios.globo.com/rss/ultimas/feed.xml', category: 'Negócios' },
@@ -109,6 +111,7 @@ export const FEED_SOURCES = [
     { url: 'https://drauziovarella.uol.com.br/feed/', category: 'Saúde' },
 
     // Automóveis
+    { url: 'https://g1.globo.com/rss/g1/carros/', category: 'Automóveis' },
     { url: 'https://quatrorodas.abril.com.br/feed/', category: 'Automóveis' },
     { url: 'https://autoesporte.globo.com/rss/autoesporte/', category: 'Automóveis' },
 
