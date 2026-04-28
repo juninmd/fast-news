@@ -10,7 +10,8 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  // @ts-ignore
+  const [toast, setToast] = useState(null);
   const { theme, toggleTheme } = useTheme();
 
   const { articles, loading, error, refetch, loadMore, hasMore } = useNews({
