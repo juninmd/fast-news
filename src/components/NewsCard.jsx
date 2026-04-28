@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
 import { summarizeWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
@@ -6,36 +6,22 @@ import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper, Clock } f
 import ReactMarkdown from 'react-markdown';
 import BookmarkButton from './BookmarkButton';
 
-const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize, allArticles }) => {
+const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sendingTelegram, setSendingTelegram] = useState(false);
-  const [telegramStatus, setTelegramStatus] = useState(null); // success, error
+  const [telegramStatus, setTelegramStatus] = useState(null);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
 
-  useEffect(() => {
-    if (autoSummarize && !summary && !loading && !error) {
-      if (aiProvider === 'gemini' && apiKey) {
-        handleSummarize();
-      } else if ((!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
-        handleSummarize();
-      }
+  const handleSummarize = useCallback(async () => {
+    if (aiProvider === 'gemini' && !apiKey) {
+      setError("Configure API Key do Gemini.");
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSummarize, ollamaUrl, apiKey, aiProvider]);
-
-  const handleSummarize = async () => {
-    if (aiProvider === 'gemini') {
-      if (!apiKey) {
-        setError("Configure API Key do Gemini.");
-        return;
-      }
-    } else {
-      if (!ollamaUrl) {
-        setError("Configure Ollama.");
-        return;
-      }
+    if ((!aiProvider || aiProvider === 'ollama') && !ollamaUrl) {
+      setError("Configure Ollama.");
+      return;
     }
 
     setLoading(true);
@@ -51,15 +37,15 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       }
 
       setSummary(result);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       setError("Falha ao gerar resumo.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [aiProvider, apiKey, ollamaUrl, ollamaModel, item]);
 
-  const handleSendToTelegram = async () => {
+  const handleSendToTelegram = useCallback(async () => {
     if (!telegramBotToken || !telegramChatId) {
       setTelegramStatus('error');
       setTimeout(() => setTelegramStatus(null), 3000);
@@ -88,7 +74,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       setSendingTelegram(false);
       setTimeout(() => setTelegramStatus(null), 3000);
     }
-  };
+  }, [aiProvider, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, item, summary]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(item.link);
@@ -148,18 +134,16 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
             </div>
           ) : (
             <div className="aspect-[16/10] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
-              <Newspaper className="text-indigo-400 dark:text-indigo-500 w-16 h-16 opacity-50" />
+                <Newspaper className="text-indigo-400 dark:text-indigo-500 w-16 h-16 opacity-50" />
             </div>
           )}
 
-          {/* Category Badge */}
           {item.category && (
             <div className="absolute top-3 left-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider z-10">
-              {item.category}
+                {item.category}
             </div>
           )}
 
-          {/* Source and Date on Image Bottom */}
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[11px] font-medium text-white/90 drop-shadow-md">
               <span className="bg-blue-600/80 backdrop-blur-sm px-2.5 py-1 rounded-md">{item.source}</span>
@@ -191,12 +175,12 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
         <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4 flex-grow">
           {summary ? (
             <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-900/20 dark:to-blue-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2">
-              <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
-                <Sparkles size={14} className="fill-current" /> Resumo IA
-              </div>
-              <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
-                <ReactMarkdown>{summary}</ReactMarkdown>
-              </div>
+                <div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
+                  <Sparkles size={14} className="fill-current" /> Resumo IA
+                </div>
+                <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
+                  <ReactMarkdown>{summary}</ReactMarkdown>
+                </div>
             </div>
           ) : (
             <p className="line-clamp-3">{cleanDescription}</p>
@@ -205,7 +189,6 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
         </div>
       </div>
 
-      {/* Footer link */}
       <div className="px-5 pb-5 mt-auto bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-3">
         <div className="flex gap-2 w-full justify-between items-center mb-2">
           <div className="flex gap-2">

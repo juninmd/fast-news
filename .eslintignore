@@ -1,0 +1,13 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+
+# Backend compiled files
+backend/dist
+
+# OS files
+.DS_Store
+Thumbs.db
