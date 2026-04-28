@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useToast } from './Toast';
+import { useToast } from '../hooks/useToast';
 
 export const GlobalErrorHandler = ({ children }) => {
   const toast = useToast();

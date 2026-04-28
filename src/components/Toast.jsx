@@ -1,12 +1,9 @@
-import React, { useContext, useState, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { useState, useCallback } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { ToastContext } from '../context/ToastContext';
-
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) throw new Error('useToast must be used within ToastProvider');
-  return context;
-};
+import { useToast as useToastHook } from '../hooks/useToast';
+export const useToast = useToastHook;
 
 const TOAST_ICONS = {
   success: CheckCircle,
