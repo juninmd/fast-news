@@ -1,0 +1,14 @@
+{
+  "name": "@fast-news/shared",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sources": "./src/sources.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
