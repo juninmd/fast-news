@@ -7,6 +7,7 @@ export async function getRedis(): Promise<RedisClientType> {
   if (!client) {
     client = createClient({ url: config.redisUrl }) as RedisClientType;
     client.on('error', (err) => console.error('[Redis] Error:', err.message));
+    client.on('reconnecting', () => console.log('[Redis] Reconnecting...'));
     await client.connect();
     console.log('[Redis] Connected.');
   }
@@ -14,10 +15,15 @@ export async function getRedis(): Promise<RedisClientType> {
 }
 
 export async function cacheGet<T>(key: string): Promise<T | null> {
-  const redis = await getRedis();
-  const value = await redis.get(key);
-  if (!value) return null;
-  return JSON.parse(value) as T;
+  try {
+    const redis = await getRedis();
+    const value = await redis.get(key);
+    if (!value) return null;
+    return JSON.parse(value) as T;
+  } catch (error) {
+    console.error(`[Redis] Failed to parse cache key "${key}":`, error);
+    return null;
+  }
 }
 
 export async function cacheSet(
@@ -25,24 +31,38 @@ export async function cacheSet(
   value: unknown,
   ttlSeconds = 3600
 ): Promise<void> {
-  const redis = await getRedis();
-  await redis.set(key, JSON.stringify(value), { EX: ttlSeconds });
+  try {
+    const redis = await getRedis();
+    await redis.set(key, JSON.stringify(value), { EX: ttlSeconds });
+  } catch (error) {
+    console.error(`[Redis] Failed to set cache key "${key}":`, error);
+  }
 }
 
 export async function cacheDel(key: string): Promise<void> {
-  const redis = await getRedis();
-  await redis.del(key);
+  try {
+    const redis = await getRedis();
+    await redis.del(key);
+  } catch (error) {
+    console.error(`[Redis] Failed to delete cache key "${key}":`, error);
+  }
 }
 
 export async function cacheKeys(pattern: string): Promise<string[]> {
-  const redis = await getRedis();
-  return redis.keys(pattern);
+  try {
+    const redis = await getRedis();
+    return redis.keys(pattern);
+  } catch (error) {
+    console.error(`[Redis] Failed to get keys with pattern "${pattern}":`, error);
+    return [];
+  }
 }
 
 export async function closeRedis(): Promise<void> {
   if (client) {
     await client.quit();
     client = null;
+    console.log('[Redis] Connection closed.');
   }
 }
 
@@ -67,6 +87,7 @@ export const newsCache = {
     if (keys.length > 0) {
       const redis = await getRedis();
       await redis.del(keys);
+      console.log(`[Redis] Invalidated ${keys.length} news cache keys`);
     }
   },
 };
