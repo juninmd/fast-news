@@ -79,27 +79,28 @@ const NewsCard = React.memo(({ item, aiConfig }) => {
     };
   }, [aiConfig, summary, loading, error, handleSummarize]);
 
-  const getImage = () => {
+  const imageUrl = React.useMemo(() => {
     if (item.enclosure && item.enclosure.link) return item.enclosure.link;
     if (item.thumbnail) return item.thumbnail;
     const imgMatch = item.description?.match(/<img[^>]+src="([^">]+)"/);
     if (imgMatch) return imgMatch[1];
     return null;
-  };
+  }, [item]);
 
-  const imageUrl = getImage();
   // Remove HTML tags for clean description preview
-  const cleanDescription = item.description?.replace(/<[^>]+>/g, '').substring(0, 150) + '...';
+  const cleanDescription = React.useMemo(() => {
+    return item.description?.replace(/<[^>]+>/g, '').substring(0, 150) + '...';
+  }, [item.description]);
 
-  const formatDate = (dateString) => {
+  const formattedDate = React.useMemo(() => {
     try {
-      const date = new Date(dateString);
+      const date = new Date(item.pubDate);
       if (isNaN(date)) return '';
       return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch {
       return '';
     }
-  };
+  }, [item.pubDate]);
 
   return (
     <div ref={cardRef} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
@@ -126,7 +127,7 @@ const NewsCard = React.memo(({ item, aiConfig }) => {
             </span>
             <div className="flex items-center text-xs text-gray-400 dark:text-gray-500">
                 <Calendar size={12} className="mr-1" />
-                {formatDate(item.pubDate)}
+                {formattedDate}
             </div>
         </div>
 
