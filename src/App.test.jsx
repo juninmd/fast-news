@@ -7,6 +7,10 @@ vi.mock('./components/Feed', () => ({
     default: ({ aiConfig }) => <div data-testid="feed">Feed Component (Provider: {aiConfig?.aiProvider}, Key: {aiConfig?.geminiApiKey || aiConfig?.aiSdkApiKey})</div>
 }));
 
+vi.mock('./components/TrendingTopics', () => ({
+    default: () => <div data-testid="trending-topics">Trending Topics Mock</div>
+}));
+
 vi.mock('./components/Settings', () => ({
     default: ({ isOpen, onClose, onSave }) => (
         isOpen ? (
