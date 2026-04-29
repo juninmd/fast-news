@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { summarizeText } from '../services/geminiService';
 import { summarizeTextAiSdk } from '../services/aiSdkService';
 import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
 
-const NewsCard = React.memo(({ item, aiConfig }) => {
+const NewsCard = memo(({ item, aiConfig }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -17,14 +17,14 @@ const NewsCard = React.memo(({ item, aiConfig }) => {
         return;
     }
 
-    const { aiProvider, geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel } = aiConfig;
+    const { geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel } = aiConfig;
 
-    if (aiProvider === 'gemini' && !geminiApiKey) {
+    if (aiConfig.aiProvider === 'gemini' && !geminiApiKey) {
       setError("Por favor adicione sua chave de API Gemini nas configurações.");
       return;
     }
 
-    if (aiProvider === 'ai-sdk' && !aiSdkApiKey) {
+    if (aiConfig.aiProvider === 'ai-sdk' && !aiSdkApiKey) {
       setError("Por favor adicione sua chave de API AI SDK nas configurações.");
       return;
     }
@@ -35,9 +35,9 @@ const NewsCard = React.memo(({ item, aiConfig }) => {
       const textToSummarize = item.content || item.description || item.title;
       let result = '';
 
-      if (aiProvider === 'gemini') {
+      if (aiConfig.aiProvider === 'gemini') {
          result = await summarizeText(textToSummarize, geminiApiKey);
-      } else if (aiProvider === 'ai-sdk') {
+      } else if (aiConfig.aiProvider === 'ai-sdk') {
          result = await summarizeTextAiSdk(textToSummarize, {
              provider: aiSdkProvider,
              apiKey: aiSdkApiKey,
@@ -79,7 +79,7 @@ const NewsCard = React.memo(({ item, aiConfig }) => {
     };
   }, [aiConfig, summary, loading, error, handleSummarize]);
 
-  const imageUrl = React.useMemo(() => {
+  const imageUrl = useMemo(() => {
     if (item.enclosure && item.enclosure.link) return item.enclosure.link;
     if (item.thumbnail) return item.thumbnail;
     const imgMatch = item.description?.match(/<img[^>]+src="([^">]+)"/);
@@ -88,11 +88,11 @@ const NewsCard = React.memo(({ item, aiConfig }) => {
   }, [item]);
 
   // Remove HTML tags for clean description preview
-  const cleanDescription = React.useMemo(() => {
+  const cleanDescription = useMemo(() => {
     return item.description?.replace(/<[^>]+>/g, '').substring(0, 150) + '...';
   }, [item.description]);
 
-  const formattedDate = React.useMemo(() => {
+  const formattedDate = useMemo(() => {
     try {
       const date = new Date(item.pubDate);
       if (isNaN(date)) return '';
