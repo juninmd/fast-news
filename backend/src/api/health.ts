@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { query } from '../../database/client.js';
-import { getRedis } from '../../services/cache.js';
-import { config } from '../../config/env.js';
+import { query } from '../database/client.js';
+import { getRedis } from '../services/cache.js';
+import { config } from '../config/env.js';
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
