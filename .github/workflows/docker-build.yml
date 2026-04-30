@@ -2,7 +2,7 @@ name: Build & Push Backend
 
 on:
   push:
-    branches: [Master-17706024571739050006]
+    branches: [main]
     paths:
       - 'backend/**'
       - 'src/**'
