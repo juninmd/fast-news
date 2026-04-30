@@ -1,27 +1,30 @@
 # ─── Stage 1: Build Frontend ──────────────────────────────────────────────────
 FROM node:22-alpine AS frontend-builder
+RUN npm install -g pnpm
 WORKDIR /app
-COPY package*.json ./
-RUN npm install --ignore-scripts
+COPY pnpm-lock.yaml package.json ./
+RUN pnpm install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # ─── Stage 2: Build Backend ───────────────────────────────────────────────────
 FROM node:22-alpine AS backend-builder
+RUN npm install -g pnpm
 WORKDIR /app
-COPY backend/package*.json ./
-RUN npm install --ignore-scripts
+COPY backend/pnpm-lock.yaml backend/package.json ./
+RUN pnpm install --frozen-lockfile
 COPY backend/ ./
-RUN npm run build
+RUN pnpm run build
 
 # ─── Stage 3: Runtime ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runtime
 RUN apk add --no-cache curl
+RUN npm install -g pnpm
 WORKDIR /app
 
 # Copy backend dependencies and build
-COPY backend/package*.json ./
-RUN npm install --omit=dev --ignore-scripts
+COPY backend/pnpm-lock.yaml backend/package.json ./
+RUN pnpm install --prod --frozen-lockfile
 COPY --from=backend-builder /app/dist ./dist
 
 # Copy frontend build
