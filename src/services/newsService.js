@@ -54,6 +54,7 @@ export const FEED_SOURCES = [
     { url: 'https://catracalivre.com.br/feed/', category: 'Brasil' },
     { url: 'https://www.brasildefato.com.br/rss2.xml', category: 'Brasil' },
     { url: 'https://oglobo.globo.com/rss.xml', category: 'Brasil' },
+    { url: 'https://www.conjur.com.br/feed/', category: 'Brasil' },
 
     // Mundo
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
