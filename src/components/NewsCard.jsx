@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
 import { summarizeWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
@@ -6,13 +6,14 @@ import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper, Clock } f
 import ReactMarkdown from 'react-markdown';
 import BookmarkButton from './BookmarkButton';
 
-const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId }) => {
+const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sendingTelegram, setSendingTelegram] = useState(false);
   const [telegramStatus, setTelegramStatus] = useState(null);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const autoSummarizeAttempted = useRef(false);
 
   const handleSummarize = useCallback(async () => {
     if (aiProvider === 'gemini' && !apiKey) {
@@ -44,6 +45,13 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       setLoading(false);
     }
   }, [aiProvider, apiKey, ollamaUrl, ollamaModel, item]);
+
+  useEffect(() => {
+    if (autoSummarize && !summary && !loading && !error && !autoSummarizeAttempted.current) {
+      autoSummarizeAttempted.current = true;
+      handleSummarize();
+    }
+  }, [autoSummarize, summary, loading, error, handleSummarize]);
 
   const handleSendToTelegram = useCallback(async () => {
     if (!telegramBotToken || !telegramChatId) {
