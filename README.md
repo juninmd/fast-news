@@ -13,7 +13,7 @@ O **Fast News** é um agregador de notícias moderno que utiliza Inteligência A
 ## 🛠️ Pré-requisitos & Tecnologias
 
 1.  **Node.js** (v18 ou superior).
-2.  **Ollama** instalado e rodando com o modelo gemma4:e4b (ou configurado para outro provedor).
+2.  **Ollama** instalado e rodando com o modelo gemma4:e2b (ou configurado para outro provedor).
 3.  **PostgreSQL** e **Redis** para armazenamento de embeddings, RAG e cache.
 4.  **React + Vite + Tailwind** no Frontend.
 
