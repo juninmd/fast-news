@@ -54,9 +54,10 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
       if (!response.ok) throw new Error('Failed to fetch articles');
 
       const data = await response.json();
+      const newArticles = data.articles || data.data || [];
 
-      setArticles((prev) => append ? [...prev, ...data.articles] : data.articles);
-      setHasMore(data.hasMore);
+      setArticles((prev) => append ? [...prev, ...newArticles] : newArticles);
+      setHasMore(data.hasMore ?? (newArticles.length > 0));
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
