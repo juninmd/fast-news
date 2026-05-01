@@ -24,15 +24,38 @@ newsRouter.get('/', async (req: Request, res: Response) => {
   }
 
   const where = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
-  const result = await query(
-    `SELECT id, title, summary, url, source, category, published_at, sentiment, importance_score
+  const result = await query<{
+    id: string;
+    title: string;
+    summary: string;
+    url: string;
+    source: string;
+    category: string;
+    published_at: string;
+    sentiment: string;
+    importance_score: number;
+    total_count: string;
+  }>(
+    `SELECT id, title, summary, url, source, category, published_at, sentiment, importance_score,
+            COUNT(*) OVER() AS total_count
      FROM news_articles ${where}
      ORDER BY published_at DESC NULLS LAST
      LIMIT $1 OFFSET $2`,
     params
   );
 
-  const response = { data: result.rows, page, limit, total: result.rowCount };
+  const total = result.rows[0]?.total_count ? parseInt(result.rows[0].total_count, 10) : 0;
+  const hasMore = offset + limit < total;
+
+  const response = { 
+    data: result.rows, 
+    articles: result.rows, // Add this for frontend compatibility
+    page, 
+    limit, 
+    total,
+    hasMore 
+  };
+
   await cacheSet(cacheKey, response, 300);
   return res.json(response);
 });
