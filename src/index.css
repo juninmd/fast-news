@@ -23,6 +23,22 @@
 }
 
 @layer utilities {
+  .neo-icon {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-300 transition-colors hover:border-cyan-300/50 hover:text-cyan-200;
+  }
+
+  .neo-action {
+    @apply inline-flex items-center gap-2 rounded-lg border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-sm font-bold text-cyan-100 transition-colors hover:border-cyan-300/60 hover:bg-cyan-300/20;
+  }
+
+  .neo-chip {
+    @apply shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-zinc-300 transition-colors hover:border-cyan-300/50 hover:text-white;
+  }
+
+  .neo-tile {
+    @apply overflow-hidden rounded-lg bg-zinc-900 transition-transform duration-200 hover:-translate-y-1 hover:border-cyan-300/50;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
