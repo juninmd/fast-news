@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArticleGrid, ReaderPanel, SignalBoard, SourcesModal, TopBar } from './components/NeoPulse';
+import { ArticleGrid, InsightRail, ReaderPanel, SignalBoard, SourcesModal, TopBar } from './components/NeoPulse';
 import { FEED_SOURCES } from './services/newsService';
 import { fetchIntelBatch } from './services/intelNews';
 import { analyzeArticleWithOllama } from './services/ollamaIntel';
@@ -128,7 +128,7 @@ export default function App() {
   }, [articles, query]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-canvas text-strong">
       <TopBar
         query={query}
         setQuery={setQuery}
@@ -148,7 +148,10 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <ArticleGrid articles={visible} analyses={analyses} selected={reader} onOpen={openArticle} onAnalyze={analyze} loading={loading} />
+        <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+          <ArticleGrid articles={visible} analyses={analyses} selected={reader} onOpen={openArticle} onAnalyze={analyze} loading={loading} />
+          <InsightRail articles={visible} analyses={analyses} onFilter={setQuery} />
+        </div>
         {hasMore && <button onClick={() => load()} className="neo-action mx-auto flex">{loading ? 'Lendo fontes...' : 'Carregar mais fontes'}</button>}
       </main>
       <ReaderPanel

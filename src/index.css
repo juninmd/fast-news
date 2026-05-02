@@ -4,39 +4,59 @@
 
 @layer base {
   :root {
-    --bg-primary: #FAFAFA;
-    --bg-secondary: #FFFFFF;
-    --bg-tertiary: #F4F4F5;
-    --text-primary: #0A0A0B;
-    --text-secondary: #71717A;
-    --border-subtle: rgba(0, 0, 0, 0.06);
+    --canvas: #f7f4ed;
+    --panel: rgba(255, 255, 255, 0.72);
+    --strong: #15130f;
+    --muted: #625d52;
+    --faint: #8c8578;
+    --ink: rgba(21, 19, 15, 0.12);
+    --bg-primary: var(--canvas);
+    --bg-secondary: var(--panel);
+    --bg-tertiary: #eee7da;
+    --text-primary: var(--strong);
+    --text-secondary: var(--muted);
+    --border-subtle: var(--ink);
   }
 
   .dark {
-    --bg-primary: #0A0A0B;
-    --bg-secondary: #141416;
-    --bg-tertiary: #1C1C1F;
-    --text-primary: #FAFAFA;
-    --text-secondary: #A1A1A6;
-    --border-subtle: rgba(255, 255, 255, 0.06);
+    --canvas: #09090b;
+    --panel: rgba(255, 255, 255, 0.045);
+    --strong: #fafafa;
+    --muted: #a1a1aa;
+    --faint: #71717a;
+    --ink: rgba(255, 255, 255, 0.10);
+    --bg-primary: var(--canvas);
+    --bg-secondary: var(--panel);
+    --bg-tertiary: #18181b;
+    --text-primary: var(--strong);
+    --text-secondary: var(--muted);
+    --border-subtle: var(--ink);
+  }
+
+  body {
+    background:
+      linear-gradient(90deg, rgba(20, 184, 166, 0.05) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(20, 184, 166, 0.04) 1px, transparent 1px),
+      var(--canvas);
+    background-size: 48px 48px;
   }
 }
 
 @layer utilities {
   .neo-icon {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-300 transition-colors hover:border-cyan-300/50 hover:text-cyan-200;
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-ink bg-panel text-muted transition-colors hover:border-cyan-300/50 hover:text-cyan-500 dark:hover:text-cyan-200;
   }
 
   .neo-action {
-    @apply inline-flex items-center gap-2 rounded-lg border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-sm font-bold text-cyan-100 transition-colors hover:border-cyan-300/60 hover:bg-cyan-300/20;
+    @apply inline-flex items-center gap-2 rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-bold text-cyan-700 transition-colors hover:border-cyan-300/60 hover:bg-cyan-300/20 dark:text-cyan-100;
   }
 
   .neo-chip {
-    @apply shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-zinc-300 transition-colors hover:border-cyan-300/50 hover:text-white;
+    @apply shrink-0 rounded-lg border border-ink bg-panel px-3 py-2 text-sm font-bold text-muted transition-colors hover:border-cyan-300/50 hover:text-strong;
   }
 
   .neo-tile {
-    @apply overflow-hidden rounded-lg bg-zinc-900 transition-transform duration-200 hover:-translate-y-1 hover:border-cyan-300/50;
+    @apply overflow-hidden rounded-lg border bg-panel transition-transform duration-200 hover:-translate-y-1 hover:border-cyan-300/50;
   }
 
   .scrollbar-hide {
