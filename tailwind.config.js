@@ -8,6 +8,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        canvas: 'var(--canvas)',
+        panel: 'var(--panel)',
+        strong: 'var(--strong)',
+        muted: 'var(--muted)',
+        faint: 'var(--faint)',
+        ink: 'var(--ink)',
         bg: {
           primary: 'var(--bg-primary)',
           secondary: 'var(--bg-secondary)',
