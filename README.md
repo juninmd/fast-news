@@ -17,12 +17,28 @@ Curadoria avançada e navegação intuitiva:
 *   **CategoryTabs**: Organização temática fluida para acesso rápido aos seus tópicos favoritos.
 *   **Refined Sidebar**: Navegação lateral aprimorada para uma gestão de contexto superior.
 
+### 💰 Financial Intelligence (Novo!)
+Extração automatizada de oportunidades de investimento:
+*   **Market Monitoring**: Identificação de tendências em Ações (BR/Global), Commodities, Cripto e Forex.
+*   **AI Reasoning**: Justificativas técnicas e horizontes de tempo (curto, médio, longo prazo).
+*   **Confidence Scoring**: Classificação de oportunidades baseada na força dos sinais detectados.
+
+### 🎯 Dynamic Topic Tracking (Novo!)
+Monitoramento personalizado de temas específicos:
+*   **RAG-Powered Pipelines**: Análise profunda de tópicos rastreados usando Retrieval-Augmented Generation.
+*   **Historical Analysis**: Acompanhamento da evolução de temas ao longo do tempo com memória persistente.
+
+### 🔌 Fast News MCP Server (Novo!)
+Integração via **Model Context Protocol**:
+*   **AI Agent Ready**: Permite que ferramentas como Claude Desktop consumam e pesquisem notícias do sistema nativamente.
+*   **Semantic Search**: Ferramentas de busca e sumarização expostas via MCP.
+
 ### 🤖 AI Backend & Automation
 O "cérebro" autônomo do sistema:
 *   **Autonomous Ingestion**: `ingestionJob` monitora e processa feeds RSS e outras fontes 24/7.
 *   **Continuous Learning**: `learningJob` refina continuamente o entendimento do contexto e relevância.
 *   **Daily Digests**: `digestJob` gera resumos inteligentes e personalizados automaticamente.
-*   **RAG-based Analysis**: Utiliza Retrieval-Augmented Generation para análises contextuais precisas e busca semântica.
+*   **Semantic RAG**: Utiliza **pgvector** para buscas semânticas ultra-rápidas e análise de contexto precisa.
 
 ### 📱 Telegram Integration
 *   **Automated Delivery**: Bot dedicado para envio de notícias resumidas e categorizadas diretamente para canais ou grupos.
@@ -31,8 +47,8 @@ O "cérebro" autônomo do sistema:
 ## 🛠️ Pré-requisitos & Tecnologias
 
 1.  **Node.js** (v18 ou superior).
-2.  **Ollama** instalado e rodando com o modelo gemma4:e2b (ou configurado para outro provedor).
-3.  **PostgreSQL** e **Redis** para armazenamento de embeddings, RAG e cache.
+2.  **Ollama** instalado e rodando com o modelo gemma4:e2b (ou configurado para outro provedor via AI SDK).
+3.  **PostgreSQL (com pgvector)** e **Redis** para armazenamento de embeddings, RAG e cache.
 4.  **React + Vite + Tailwind** no Frontend.
 
 ## ⚙️ Configuração
