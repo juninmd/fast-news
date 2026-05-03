@@ -4,11 +4,29 @@ O **Fast News** é um agregador de notícias moderno que utiliza Inteligência A
 
 ## ✨ Funcionalidades / Features
 
-*   **Interface Web Moderna:** Layout responsivo com Sidebar, Dark Mode, Grid Masonry e transições suaves.
-*   **IA Local (Ollama):** Resumos privados e classificados automaticamente (Tecnologia, Política, Esportes, etc.) rodando diretamente na sua máquina.
-*   **Integração com Telegram:** Envie notícias resumidas e categorizadas (com emojis) diretamente para seu canal ou grupo.
-*   **Agente Autônomo:** Backend Node.js que monitora feeds RSS, resume com IA e envia para o Telegram automaticamente.
-*   **High Performance**: Otimizado para velocidade e baixo uso de recursos.
+### 🧠 NeoPulse Intelligence Interface
+Uma experiência de leitura imersiva e orientada a dados:
+*   **SignalBoard**: Monitoramento de sinais e tendências em tempo real.
+*   **InsightRail**: Painel lateral com insights profundos gerados por IA sobre as notícias.
+*   **ReaderPanel**: Ambiente de leitura focado, livre de distrações e altamente legível.
+*   **ArticleGrid**: Layout dinâmico e otimizado para consumo rápido de informação.
+
+### ✍️ NeoEditorial System
+Curadoria avançada e navegação intuitiva:
+*   **SearchModal**: Busca global poderosa com filtros inteligentes.
+*   **CategoryTabs**: Organização temática fluida para acesso rápido aos seus tópicos favoritos.
+*   **Refined Sidebar**: Navegação lateral aprimorada para uma gestão de contexto superior.
+
+### 🤖 AI Backend & Automation
+O "cérebro" autônomo do sistema:
+*   **Autonomous Ingestion**: `ingestionJob` monitora e processa feeds RSS e outras fontes 24/7.
+*   **Continuous Learning**: `learningJob` refina continuamente o entendimento do contexto e relevância.
+*   **Daily Digests**: `digestJob` gera resumos inteligentes e personalizados automaticamente.
+*   **RAG-based Analysis**: Utiliza Retrieval-Augmented Generation para análises contextuais precisas e busca semântica.
+
+### 📱 Telegram Integration
+*   **Automated Delivery**: Bot dedicado para envio de notícias resumidas e categorizadas diretamente para canais ou grupos.
+*   **Smart Formatting**: Notificações ricas com emojis, sumários e links diretos.
 
 ## 🛠️ Pré-requisitos & Tecnologias
 
