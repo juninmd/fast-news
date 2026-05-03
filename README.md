@@ -6,10 +6,16 @@ O **Fast News** é um agregador de notícias moderno que utiliza Inteligência A
 
 ### 🧠 NeoPulse Intelligence Interface
 Uma experiência de leitura imersiva e orientada a dados:
-*   **SignalBoard**: Monitoramento de sinais e tendências em tempo real.
-*   **InsightRail**: Painel lateral com insights profundos gerados por IA sobre as notícias.
+*   **SignalBoard**: Monitoramento de estatísticas e sinais vitais do feed em tempo real.
+*   **InsightRail**: Painel lateral com rastreamento de tendências e insights profundos gerados por IA.
+*   **Heuristic Scoring System**: Mecanismo de pontuação local (`src/services/intelNews.js`) que prioriza notícias de "alto sinal" antes mesmo do processamento por IA, utilizando critérios de frescor, palavras-chave estratégicas e densidade de informação.
 *   **ReaderPanel**: Ambiente de leitura focado, livre de distrações e altamente legível.
 *   **ArticleGrid**: Layout dinâmico e otimizado para consumo rápido de informação.
+
+### 🧹 Extração & Limpeza de Artigos (Novo!)
+Motor avançado para uma experiência de leitura premium:
+*   **Jina Reader Integration**: Integração nativa com `r.jina.ai` para extração de conteúdo limpo em Markdown e bypass de paywalls simples.
+*   **Noise Removal Engine**: Algoritmo proprietário (`src/services/fullArticle.js`) que remove ruídos, anúncios, links sociais e seções irrelevantes, garantindo que apenas o conteúdo central do artigo seja exibido.
 
 ### ✍️ NeoEditorial System
 Curadoria avançada e navegação intuitiva:
@@ -30,11 +36,16 @@ Monitoramento personalizado de temas específicos:
 
 ### 🔌 Fast News MCP Server (Novo!)
 Integração via **Model Context Protocol**:
+*   **Status: Prototype/Skeleton**: Implementação inicial com ferramentas mockadas para validação de integração.
 *   **AI Agent Ready**: Permite que ferramentas como Claude Desktop consumam e pesquisem notícias do sistema nativamente.
-*   **Semantic Search**: Ferramentas de busca e sumarização expostas via MCP.
+*   **Semantic Search**: Ferramentas de busca, sumarização e descoberta de tendências expostas via MCP.
 
 ### 🤖 AI Backend & Automation
 O "cérebro" autônomo do sistema:
+*   **Multi-Provider AI**: Alimentado pelo **Vercel AI SDK**, com suporte nativo a **Google Gemini (1.5 Pro/Flash), OpenAI (GPT-4o), Anthropic (Claude 3.5)** e **Ollama** para processamento local.
+*   **Dual Ingestion Paths**:
+    - **Real-time Frontend Ingestion**: Via `rss2json` para atualizações imediatas na interface sem dependência direta do backend.
+    - **Scheduled Backend Ingestion**: Via `rss-parser` para armazenamento em banco de dados, indexação vetorial (RAG) e análise de longo prazo.
 *   **Autonomous Ingestion**: `ingestionJob` monitora e processa feeds RSS e outras fontes 24/7.
 *   **Continuous Learning**: `learningJob` refina continuamente o entendimento do contexto e relevância.
 *   **Daily Digests**: `digestJob` gera resumos inteligentes e personalizados automaticamente.
