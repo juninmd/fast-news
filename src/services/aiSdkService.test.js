@@ -71,6 +71,10 @@ describe('aiSdkService', () => {
         createOpenAI.mockReturnValue(mockProviderFn);
         generateText.mockRejectedValue(new Error('Generation Error'));
 
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
         await expect(summarizeTextAiSdk('original text', { provider: 'openai', apiKey: 'test-key' })).rejects.toThrow('Generation Error');
+
+        consoleSpy.mockRestore();
     });
 });
