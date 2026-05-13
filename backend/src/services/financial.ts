@@ -20,14 +20,17 @@ const FINANCIAL_PROMPT = `Com base na análise abaixo, extraia oportunidades fin
 ANÁLISE:
 {analysis}
 
-Exemplos de ativos:
-- Ações BR: PETR4, VALE3, ITUB4, BBDC4, ABEV3, WEGE3, PRIO3
-- Commodities: Ouro, Prata, Petróleo Brent, Minério de Ferro
-- Forex: USD/BRL, EUR/BRL
-- Cripto: Bitcoin, Ethereum
-- ETFs: BOVA11, IVVB11, GOLD11, HASH11
+Exemplos de ativos e seus tipos EXATOS (use apenas os valores em inglês):
+- assetType "stock": PETR4, VALE3, ITUB4, BBDC4, ABEV3, WEGE3, PRIO3
+- assetType "commodity": Ouro, Prata, Petróleo Brent, Minério de Ferro
+- assetType "forex": USD/BRL, EUR/BRL
+- assetType "crypto": Bitcoin, Ethereum
+- assetType "etf": BOVA11, IVVB11, GOLD11, HASH11
 
-timeHorizon: short = dias, medium = semanas, long = meses`;
+IMPORTANTE: os campos assetType, direction e timeHorizon devem ser EXATAMENTE os valores do schema em inglês.
+assetType: stock | commodity | crypto | forex | etf
+direction: buy | sell | watch
+timeHorizon: short | medium | long  (short = dias, medium = semanas, long = meses)`;
 
 export interface FinancialOpportunity {
   asset: string;
