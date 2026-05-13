@@ -79,6 +79,13 @@ spec:
         - name: wait-ollama
           image: busybox:latest
           command: ['sh', '-c', 'until wget -qO- http://{{ .Release.Name }}-ollama:{{ .Values.ollama.port }}/; do echo waiting; sleep 5; done']
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
       containers:
         - name: pull-models
           image: curlimages/curl:latest
@@ -93,4 +100,11 @@ spec:
               curl -s http://{{ .Release.Name }}-ollama:{{ .Values.ollama.port }}/api/pull \
                 -d '{"name":"{{ .Values.ollama.embeddingModel }}"}' &&
               echo "Models ready!"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
 {{- end }}
