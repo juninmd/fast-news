@@ -34,8 +34,8 @@ async function bootstrap(): Promise<void> {
       shutdown();
     });
 
-    // Start Telegram bot
-    await startBot();
+    // Start Telegram bot (non-fatal — network may be unavailable at startup)
+    await startBot().catch((err) => console.error('[Telegram] Bot failed to start:', err.message));
 
     // Start scheduled jobs
     startIngestionJob();
