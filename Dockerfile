@@ -19,13 +19,12 @@ RUN pnpm run build
 # ─── Stage 3: Runtime ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runtime
 RUN apk add --no-cache curl
-RUN npm install -g pnpm
 WORKDIR /app
 
-# Copy backend dependencies and build
-COPY backend/pnpm-lock.yaml backend/package.json ./
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm rebuild better-sqlite3
+# Copy pre-built node_modules (includes compiled native binaries) and dist
+COPY --from=backend-builder /app/node_modules ./node_modules
 COPY --from=backend-builder /app/dist ./dist
+COPY backend/package.json ./
 
 # Copy frontend build
 COPY --from=frontend-builder /app/dist ./client
