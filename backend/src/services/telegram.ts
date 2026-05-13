@@ -133,7 +133,7 @@ export async function postNewArticles(
       await getBot().telegram.sendMessage(chatId, message, {
         parse_mode: 'HTML',
         link_preview_options: { is_disabled: true },
-      }).catch(console.error);
+      }).catch((err) => console.error(`[Telegram] Failed to send to ${chatId}:`, err.message));
     }
     await sleep(1500); // respeita rate limit Telegram (30 msg/seg)
   }
