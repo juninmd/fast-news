@@ -3,11 +3,10 @@ import { config } from './config/env.js';
 import { getPool, closePool } from './database/client.js';
 import { getRedis, closeRedis } from './services/cache.js';
 import { createApp } from './api/app.js';
-import { startIngestionJob, stopIngestionJob } from './jobs/ingestionJob.js';
+import { startIngestionJob, stopIngestionJob, runIngestionAndPost } from './jobs/ingestionJob.js';
 import { startLearningJob, stopLearningJob } from './jobs/learningJob.js';
 import { startDigestJob, stopDigestJob } from './jobs/digestJob.js';
 import { startBot, stopBot } from './services/telegram.js';
-import { runIngestion } from './services/ingestion.js';
 import { runLearningCycle } from './jobs/learningJob.js';
 
 let isShuttingDown = false;
@@ -45,7 +44,7 @@ async function bootstrap(): Promise<void> {
     // Run initial ingestion on startup (if needed)
     if (process.env['SKIP_INITIAL_INGESTION'] !== 'true') {
       console.log('🔄 Running initial ingestion...');
-      await runIngestion().catch(console.error);
+      await runIngestionAndPost().catch(console.error);
       await runLearningCycle().catch(console.error);
     }
 
