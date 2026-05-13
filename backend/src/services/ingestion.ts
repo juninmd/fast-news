@@ -1,5 +1,6 @@
 import Parser from 'rss-parser';
 import { query } from '../database/client.js';
+import { upsertArticleToSqlite } from '../database/sqliteStore.js';
 import { embedDocument, vectorToSQL } from './embeddings.js';
 import { config } from '../config/env.js';
 
@@ -113,7 +114,27 @@ async function upsertArticle(article: RawArticle): Promise<string | null> {
     [article.guid, article.title, article.content, article.url, article.source,
      article.category, article.company ?? null, article.publishedAt, vectorToSQL(embedding)]
   );
-  return result.rows[0]?.id ?? null;
+
+  const newId = result.rows[0]?.id ?? null;
+  if (newId) {
+    try {
+      upsertArticleToSqlite({
+        id: newId,
+        guid: article.guid,
+        title: article.title,
+        content: article.content,
+        url: article.url,
+        source: article.source,
+        category: article.category,
+        company: article.company,
+        publishedAt: article.publishedAt?.toISOString() ?? undefined,
+      }, embedding);
+    } catch (e) {
+      console.warn('[sqlite] upsert failed:', (e as Error).message);
+    }
+  }
+
+  return newId;
 }
 
 export interface IngestionResult {

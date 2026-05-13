@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArticleGrid, InsightRail, ReaderPanel, SignalBoard, SourcesModal, TopBar } from './components/NeoPulse';
+import { ArticleGrid, InsightRail, RagSearch, ReaderPanel, SignalBoard, SourcesModal, TopBar } from './components/NeoPulse';
 import { FEED_SOURCES } from './services/newsService';
 import { fetchIntelBatch } from './services/intelNews';
 import { analyzeArticleWithOllama } from './services/ollamaIntel';
 import { fetchFullArticle } from './services/fullArticle';
+import { ragStats } from './services/ragService';
 import './styles/animations.css';
 
 const CATEGORIES = ['Todas', ...new Set(FEED_SOURCES.map((item) => item.category))].sort();
@@ -45,6 +46,7 @@ export default function App() {
   const [reader, setReader] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [ragOpen, setRagOpen] = useState(false);
   const [fullArticles, setFullArticles] = useState({});
   const [fullLoading, setFullLoading] = useState({});
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
@@ -54,6 +56,7 @@ export default function App() {
     rssKey: localStorage.getItem('rss2json_api_key') || '',
   }));
   const [meta, setMeta] = useState({ totalSources: FEED_SOURCES.length });
+  const [indexed, setIndexed] = useState(0);
   const booted = useRef(false);
 
   const setSettings = (next) => {
@@ -90,6 +93,7 @@ export default function App() {
     if (booted.current) return;
     booted.current = true;
     load({ reset: true });
+    ragStats().then((s) => setIndexed(s.total)).catch(() => {});
   }, [load]);
 
   const changeCategory = (nextCategory) => {
@@ -138,9 +142,10 @@ export default function App() {
         loading={loading}
         settings={() => setSettingsOpen(true)}
         sources={() => setSourcesOpen(true)}
+        onRagSearch={() => setRagOpen(true)}
       />
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
-        <SignalBoard articles={visible} analyzed={Object.keys(analyses).length} totalSources={meta.totalSources} />
+        <SignalBoard articles={visible} analyzed={Object.keys(analyses).length} totalSources={meta.totalSources} indexed={indexed} />
         <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 py-2 sm:mx-0 sm:px-0">
           {CATEGORIES.map((item) => (
             <button key={item} onClick={() => changeCategory(item)} className={`neo-chip ${category === item ? 'bg-cyan-300 text-zinc-950' : ''}`}>
@@ -164,6 +169,7 @@ export default function App() {
       />
       {settingsOpen && <SettingsPanel settings={settings} setSettings={setSettings} onClose={() => setSettingsOpen(false)} />}
       {sourcesOpen && <SourcesModal sources={FEED_SOURCES} onClose={() => setSourcesOpen(false)} />}
+      {ragOpen && <RagSearch onClose={() => setRagOpen(false)} />}
     </div>
   );
 }
