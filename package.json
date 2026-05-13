@@ -50,5 +50,8 @@
     "jsdom": "^27.4.0",
     "msw": "^2.12.7",
     "vitest": "^4.0.17"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "msw"]
   }
 }
