@@ -1,5 +1,36 @@
 import { ExternalLink, Eye, Sparkles } from 'lucide-react';
 
+function SkeletonTile() {
+  return (
+    <div className="neo-tile animate-pulse">
+      <div className="h-40 bg-zinc-800/60" />
+      <div className="flex min-h-72 flex-col p-4">
+        <div className="mb-3 flex gap-2">
+          <div className="h-5 w-20 rounded-md bg-zinc-800" />
+          <div className="ml-auto h-5 w-10 rounded-full bg-zinc-800" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-5 w-full rounded bg-zinc-800" />
+          <div className="h-5 w-4/5 rounded bg-zinc-800" />
+        </div>
+        <div className="mt-3 h-1 rounded-full bg-zinc-800" />
+        <div className="mt-3 space-y-1.5">
+          <div className="h-3 w-full rounded bg-zinc-800/60" />
+          <div className="h-3 w-5/6 rounded bg-zinc-800/60" />
+          <div className="h-3 w-3/4 rounded bg-zinc-800/60" />
+        </div>
+        <div className="mt-auto pt-4">
+          <div className="mb-3 h-3 w-32 rounded bg-zinc-800/60" />
+          <div className="flex gap-2">
+            <div className="h-7 w-16 rounded-lg bg-zinc-800" />
+            <div className="h-7 w-7 rounded-lg bg-zinc-800" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const fmt = (date) => {
   const hours = Math.floor((Date.now() - new Date(date).getTime()) / 36e5);
   if (Number.isNaN(hours)) return 'sem data';
@@ -47,7 +78,15 @@ function Tile({ article, analysis, selected, onOpen, onAnalyze }) {
 }
 
 export function ArticleGrid({ articles, analyses, selected, onOpen, onAnalyze, loading }) {
-  if (!articles.length && !loading) {
+  if (!articles.length && loading) {
+    return (
+      <section className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: 6 }).map((_, i) => <SkeletonTile key={i} />)}
+      </section>
+    );
+  }
+
+  if (!articles.length) {
     return <div className="rounded-lg border border-ink p-10 text-center text-muted">Nenhuma noticia encontrada.</div>;
   }
 
@@ -63,6 +102,7 @@ export function ArticleGrid({ articles, analyses, selected, onOpen, onAnalyze, l
           onAnalyze={onAnalyze}
         />
       ))}
+      {loading && Array.from({ length: 2 }).map((_, i) => <SkeletonTile key={`skel-${i}`} />)}
     </section>
   );
 }
