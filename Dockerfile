@@ -3,7 +3,7 @@ FROM node:22-alpine AS frontend-builder
 RUN npm install -g pnpm
 WORKDIR /app
 COPY pnpm-lock.yaml package.json ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild esbuild
 COPY . .
 RUN pnpm run build
 
