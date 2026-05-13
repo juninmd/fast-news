@@ -12,7 +12,7 @@ FROM node:22-alpine AS backend-builder
 RUN npm install -g pnpm
 WORKDIR /app
 COPY backend/pnpm-lock.yaml backend/package.json ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild better-sqlite3 esbuild
 COPY backend/ ./
 RUN pnpm run build
 
@@ -24,7 +24,7 @@ WORKDIR /app
 
 # Copy backend dependencies and build
 COPY backend/pnpm-lock.yaml backend/package.json ./
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm rebuild better-sqlite3
 COPY --from=backend-builder /app/dist ./dist
 
 # Copy frontend build
