@@ -60,19 +60,6 @@ newsRouter.get('/', async (req: Request, res: Response) => {
   return res.json(response);
 });
 
-newsRouter.get('/:id/related', async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const article = await query<{ title: string; content: string }>(
-    'SELECT title, content FROM news_articles WHERE id = $1',
-    [id]
-  );
-  if (!article.rows[0]) return res.status(404).json({ error: 'Article not found' });
-
-  const { title, content } = article.rows[0];
-  const related = await searchSimilarArticles(`${title} ${content}`, 30, 8);
-  return res.json({ data: related.filter((a) => a.id !== id) });
-});
-
 newsRouter.get('/search', async (req: Request, res: Response) => {
   const q = req.query['q'] as string;
   if (!q || q.trim().length < 3) return res.status(400).json({ error: 'Query too short' });
@@ -90,4 +77,17 @@ newsRouter.get('/categories', async (_req: Request, res: Response) => {
   );
   await cacheSet('news:categories', result.rows, 3600);
   return res.json(result.rows);
+});
+
+newsRouter.get('/:id/related', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const article = await query<{ title: string; content: string }>(
+    'SELECT title, content FROM news_articles WHERE id = $1',
+    [id]
+  );
+  if (!article.rows[0]) return res.status(404).json({ error: 'Article not found' });
+
+  const { title, content } = article.rows[0];
+  const related = await searchSimilarArticles(`${title} ${content}`, 30, 8);
+  return res.json({ data: related.filter((a) => a.id !== id) });
 });

@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { newsRouter } from './routes/news.js';
 import { topicsRouter } from './routes/topics.js';
 import { financialRouter } from './routes/financial.js';
+import { ragRouter } from './routes/rag.js';
 import { healthHandler } from './health.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,16 +24,17 @@ export function createApp(): express.Application {
   app.use('/api/news', newsRouter);
   app.use('/api/topics', topicsRouter);
   app.use('/api/financial', financialRouter);
+  app.use('/api/rag', ragRouter);
 
-  // Serve static files from frontend
+  // Serve static files from frontend build (optional — only when built)
   const clientPath = path.join(__dirname, '../../client');
-  app.use(express.static(clientPath));
-
-  // Catch-all route for SPA
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api/')) return next();
-    res.sendFile(path.join(clientPath, 'index.html'));
-  });
+  if (fs.existsSync(clientPath)) {
+    app.use(express.static(clientPath));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/')) return next();
+      res.sendFile(path.join(clientPath, 'index.html'));
+    });
+  }
 
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error('[API] Error:', err.message);

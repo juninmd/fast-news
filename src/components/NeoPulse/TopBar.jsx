@@ -1,6 +1,6 @@
-import { Database, Moon, RefreshCcw, Search, Settings, Sun, Zap } from 'lucide-react';
+import { Brain, Database, Moon, RefreshCcw, Search, Settings, Sun, Zap } from 'lucide-react';
 
-export function TopBar({ query, setQuery, theme, toggleTheme, refresh, loading, settings, sources }) {
+export function TopBar({ query, setQuery, theme, toggleTheme, refresh, loading, settings, sources, onRagSearch }) {
   return (
     <header className="sticky top-0 z-40 border-b border-ink bg-canvas/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
@@ -23,6 +23,9 @@ export function TopBar({ query, setQuery, theme, toggleTheme, refresh, loading, 
         <button onClick={refresh} className="neo-icon" title="Atualizar fontes">
           <RefreshCcw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
         </button>
+        <button onClick={onRagSearch} className="neo-icon" title="Busca semântica RAG">
+          <Brain className="h-5 w-5" />
+        </button>
         <button onClick={sources} className="neo-icon" title="Ver todas as fontes">
           <Database className="h-5 w-5" />
         </button>
@@ -34,12 +37,17 @@ export function TopBar({ query, setQuery, theme, toggleTheme, refresh, loading, 
         </button>
       </div>
       <div className="px-4 pb-3 md:hidden">
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar noticias"
-          className="w-full rounded-lg border border-ink bg-panel px-3 py-2 text-sm text-strong outline-none"
-        />
+        <div className="flex gap-2">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar noticias"
+            className="flex-1 rounded-lg border border-ink bg-panel px-3 py-2 text-sm text-strong outline-none"
+          />
+          <button onClick={onRagSearch} className="neo-icon shrink-0" title="Busca RAG">
+            <Brain className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </header>
   );

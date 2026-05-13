@@ -1,4 +1,4 @@
-import { Activity, BadgeCheck, Radio, ShieldAlert, TrendingUp } from 'lucide-react';
+import { Activity, BadgeCheck, Brain, Radio, ShieldAlert, TrendingUp } from 'lucide-react';
 
 const stat = (label, value, Icon, tone) => (
   <div className="rounded-lg border border-ink bg-panel p-3">
@@ -10,7 +10,7 @@ const stat = (label, value, Icon, tone) => (
   </div>
 );
 
-export function SignalBoard({ articles, analyzed, totalSources }) {
+export function SignalBoard({ articles, analyzed, totalSources, indexed = 0 }) {
   const useful = articles.filter((item) => item.isUseful).length;
   const hot = articles.slice(0, 8).map((item) => item.category);
   const lead = articles.find((item) => item.usefulScore > 70) || articles[0];
@@ -48,6 +48,7 @@ export function SignalBoard({ articles, analyzed, totalSources }) {
         {stat('uteis', useful, BadgeCheck, 'bg-emerald-400 text-zinc-950')}
         {stat('ollama', analyzed, Activity, 'bg-fuchsia-400 text-zinc-950')}
         {stat('fontes', totalSources, ShieldAlert, 'bg-amber-300 text-zinc-950')}
+        {indexed > 0 && stat('indexadas', indexed, Brain, 'bg-violet-400 text-zinc-950')}
         <div className="col-span-2 rounded-lg border border-ink bg-panel p-4">
           <p className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-faint">
             <TrendingUp className="h-4 w-4" /> Radar
