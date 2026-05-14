@@ -51,13 +51,16 @@ async function bootstrap(): Promise<void> {
     // Start Telegram bot (non-fatal — network may be unavailable at startup)
     await startBot().catch((err) => console.error('[Telegram] Bot failed to start:', err.message));
 
-    // Start scheduled jobs
-    startIngestionJob();
-    startLearningJob();
-    startDigestJob();
+    // Cron jobs run as separate K8s CronJob pods — not scheduled here.
+    // Set ENABLE_INTERNAL_CRONS=true only for local dev without k8s.
+    if (process.env['ENABLE_INTERNAL_CRONS'] === 'true') {
+      startIngestionJob();
+      startLearningJob();
+      startDigestJob();
+    }
 
     // Run initial ingestion on startup (if needed)
-    if (process.env['SKIP_INITIAL_INGESTION'] !== 'true') {
+    if (process.env['SKIP_INITIAL_INGESTION'] !== 'true' && process.env['ENABLE_INTERNAL_CRONS'] === 'true') {
       console.log('🔄 Running initial ingestion...');
       await runIngestionAndPost().catch(console.error);
       await runLearningCycle().catch(console.error);
