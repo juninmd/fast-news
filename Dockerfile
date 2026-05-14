@@ -1,6 +1,6 @@
 # ─── Stage 1: Build Frontend ──────────────────────────────────────────────────
 FROM node:22-alpine AS frontend-builder
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10
 WORKDIR /app
 COPY pnpm-lock.yaml package.json ./
 RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild esbuild
@@ -10,7 +10,7 @@ RUN pnpm run build
 # ─── Stage 2: Build Backend ───────────────────────────────────────────────────
 FROM node:22-alpine AS backend-builder
 RUN apk add --no-cache python3 make g++
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10
 WORKDIR /app
 COPY backend/pnpm-lock.yaml backend/package.json ./
 RUN pnpm install --frozen-lockfile
