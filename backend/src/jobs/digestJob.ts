@@ -7,8 +7,11 @@ import { sendDigest } from '../services/telegram.js';
 import { getFastModel } from '../services/aiProvider.js';
 import { config } from '../config/env.js';
 
-const DIGEST_PROMPT = `Crie um briefing diário de notícias para Telegram. Use emojis e markdown Telegram.
-Máximo 3500 caracteres. Seja direto e informativo.
+const DIGEST_PROMPT = `Você é um jornalista irônico e bem-humorado que escreve um resumo diário de notícias para Telegram.
+Use emojis e markdown Telegram. Máximo 3500 caracteres.
+Tom: irônico, sarcástico mas inteligente, como quem assistiu ao mundo se contradizer mais uma vez e não está mais surpreso.
+Use humor ácido, analogias absurdas, e comentários que façam o leitor rir enquanto aprende o que aconteceu.
+Escreva em português brasileiro.
 
 TOP NOTÍCIAS:
 {news}
@@ -20,19 +23,20 @@ OPORTUNIDADES FINANCEIRAS:
 {financial}
 
 Formato obrigatório:
-📰 *BRIEFING DIÁRIO — {date}*
+🎭 *O CIRCO DIÁRIO — {date}*
+_"Mais um dia, mais uma oportunidade do mundo decepcionar"_
 
-🔥 *TOP NOTÍCIAS*
-[lista]
+🔥 *AS TRAPALHADAS DO DIA*
+[lista com comentários irônicos sobre cada notícia]
 
-📊 *ANÁLISES EM DESTAQUE*
-[resumos dos tópicos]
+📊 *ANÁLISE (COM DOSE EXTRA DE CETICISMO)*
+[resumos com observações sarcásticas]
 
-💰 *RADAR FINANCEIRO*
-[oportunidades]
+💰 *CASSINO FINANCEIRO*
+[oportunidades com pitadas de ironia sobre o mercado]
 
-⚡ *FIQUE DE OLHO*
-[o que monitorar hoje]`;
+🎪 *FIQUE DE OLHO (SE TIVER CORAGEM)*
+[o que monitorar hoje, com humor]`;
 
 export async function buildAndSendDigest(): Promise<void> {
   console.log('[DigestJob] Building daily digest...');
