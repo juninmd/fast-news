@@ -1,8 +1,19 @@
 import 'dotenv/config';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { join, dirname } from 'path';
 import { config } from './config/env.js';
 import { getPool, closePool } from './database/client.js';
 import { getRedis, closeRedis } from './services/cache.js';
 import { createApp } from './api/app.js';
+
+const __dir = dirname(fileURLToPath(import.meta.url));
+
+async function runMigrations(): Promise<void> {
+  const sql = readFileSync(join(__dir, 'database/schema.sql'), 'utf-8');
+  await getPool().query(sql);
+  console.log('✅ Migrations applied');
+}
 import { startIngestionJob, stopIngestionJob, runIngestionAndPost } from './jobs/ingestionJob.js';
 import { startLearningJob, stopLearningJob } from './jobs/learningJob.js';
 import { startDigestJob, stopDigestJob } from './jobs/digestJob.js';
@@ -18,6 +29,10 @@ async function bootstrap(): Promise<void> {
     // Verify DB + Redis connections
     await getPool().query('SELECT 1');
     console.log('✅ PostgreSQL connected');
+
+    // Apply schema migrations on every startup (idempotent — all IF NOT EXISTS)
+    await runMigrations();
+
     await getRedis();
     console.log('✅ Redis connected');
 
