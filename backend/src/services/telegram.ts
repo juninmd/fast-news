@@ -5,6 +5,7 @@ import { getAllTrackedTopics, analyzeTopicWithRAG } from './analysis.js';
 import { getActiveOpportunities } from './financial.js';
 import { searchSimilarArticles } from './rag.js';
 import { getFastModel } from './aiProvider.js';
+import { listActiveStories } from './correlation.js';
 
 const FAST_NEWS_URL = 'https://fast-news.antonio-code.duckdns.org';
 
@@ -13,6 +14,16 @@ let bot: Telegraf | null = null;
 const CATEGORY_EMOJI: Record<string, string> = {
   'Mundo': '🌍', 'Negócios': '💼', 'Brasil': '🇧🇷', 'Tecnologia': '💻',
   'Ciência': '🔬', 'Esportes': '⚽', 'Entretenimento': '🎬', 'Games': '🎮', 'Saúde': '🏥',
+  'AI Frontier': '🤖', 'Big Techs': '🏢', 'Dev Tools': '🛠', 'Gaming': '🎮',
+  'Negocios': '💼', 'Ciencia': '🔬',
+};
+
+const IMPACT_EMOJI: Record<string, string> = {
+  critical: '🚨', high: '⚠️', medium: '📊', low: '📌',
+};
+
+const SIGNAL_EMOJI: Record<string, string> = {
+  bullish: '📈', bearish: '📉', neutral: '➡️',
 };
 
 export function getBot(): Telegraf {
@@ -34,9 +45,10 @@ function setupCommands(bot: Telegraf): void {
       `Bem-vindo ao centro de inteligência financeira.\n\n` +
       `📌 <b>Comandos:</b>\n` +
       `• /news — Principais notícias\n` +
+      `• /stories — Histórias correlacionadas\n` +
       `• /topics — Tópicos monitorados\n` +
       `• /analysis — Análise profunda\n` +
-      `• /financial — Oportunidades\n` +
+      `• /financial — Oportunidades de mercado\n` +
       `• /ask — Perguntar à IA\n\n` +
       `──────────────────────\n` +
       `<i>Sempre à frente do mercado.</i>`
@@ -93,6 +105,26 @@ function setupCommands(bot: Telegraf): void {
     await sendLongMessage(ctx, analysis);
   });
 
+  bot.command('stories', async (ctx: Context) => {
+    const stories = await listActiveStories(8);
+    if (!stories.length) return ctx.reply('📭 Nenhuma história ativa no momento.');
+    const text = stories.map((s) => {
+      const impact = IMPACT_EMOJI[s.impactLevel] ?? '📊';
+      const signal = s.financialSignal ? ` ${SIGNAL_EMOJI[s.financialSignal] ?? ''}` : '';
+      const assets = s.affectedAssets?.length
+        ? `\n   <code>${s.affectedAssets.slice(0, 3).join(' · ')}</code>` : '';
+      return `${impact}${signal} <b>${escapeHtml(s.title)}</b>${assets}\n   ${s.articleCount} artigos · ${escapeHtml(s.category)}`;
+    }).join('\n\n');
+    await ctx.replyWithHTML(
+      `🔗 <b>HISTÓRIAS EM ANDAMENTO</b>\n` +
+      `──────────────────────\n` +
+      `${text}\n` +
+      `──────────────────────\n` +
+      `<a href="${FAST_NEWS_URL}/?view=stories">Ver grafo completo</a>`,
+      { link_preview_options: { is_disabled: true } }
+    );
+  });
+
   bot.command('ask', async (ctx: Context) => {
     const message = ctx.message as { text?: string } | undefined;
     const question = (message?.text ?? '').split(' ').slice(1).join(' ').trim();
@@ -137,7 +169,7 @@ async function generateSummary(title: string, content: string): Promise<string> 
 
 /** Posta novas notícias no Telegram após ingestion */
 export async function postNewArticles(
-  articles: Array<{ id: string; title: string; url: string; source: string; category: string; content: string }>
+  articles: Array<{ id: string; title: string; url: string; source: string; category: string; content: string; storyId?: string | null }>
 ): Promise<void> {
   if (!config.telegramEnabled || !config.telegramBotToken || !config.telegramChatIds.length) return;
 
@@ -145,25 +177,52 @@ export async function postNewArticles(
     .filter((a) => config.telegramNewsCategories.includes(a.category))
     .slice(0, config.telegramMaxNewsPerRun);
 
+  // Fetch active stories once for enrichment
+  const activeStories = await listActiveStories(50).catch(() => []);
+  const storyMap = new Map(activeStories.map((s) => [s.id, s]));
+
   for (const article of eligible) {
     const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
     const summary = await generateSummary(article.title, article.content);
 
+    // Find story by matching category and recent stories (best effort)
+    const matchedStory = article.storyId
+      ? storyMap.get(article.storyId)
+      : activeStories.find((s) => s.category === article.category && s.articleCount > 1);
+
+    let storyBlock = '';
+    if (matchedStory) {
+      const impact = IMPACT_EMOJI[matchedStory.impactLevel] ?? '';
+      const signal = matchedStory.financialSignal ? `${SIGNAL_EMOJI[matchedStory.financialSignal]} ` : '';
+      const assets = matchedStory.affectedAssets?.length
+        ? `\n💹 <code>${matchedStory.affectedAssets.slice(0, 4).join(' · ')}</code>` : '';
+      storyBlock =
+        `\n\n${impact} <b>História:</b> ${escapeHtml(matchedStory.title.slice(0, 80))}` +
+        `\n${signal}${matchedStory.articleCount} artigos correlacionados${assets}`;
+      if (matchedStory.worldImpact) {
+        storyBlock += `\n🌍 <i>${escapeHtml(matchedStory.worldImpact.slice(0, 150))}...</i>`;
+      }
+    }
+
     const message =
       `${emoji} <b>${escapeHtml(article.title.slice(0, 200))}</b>\n` +
-      (summary ? `\n💡 <i>${escapeHtml(summary)}</i>\n` : '') +
-      `\n📌 <b>${escapeHtml(article.source)}</b> · ${article.category}`;
+      (summary ? `\n💡 <i>${escapeHtml(summary)}</i>` : '') +
+      `\n\n📌 <b>${escapeHtml(article.source)}</b> · ${article.category}` +
+      storyBlock;
+
+    const inlineButtons = [[
+      { text: '🔗 Ler notícia', url: article.url },
+      { text: '📱 Fast-News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
+    ]];
+    if (matchedStory) {
+      inlineButtons.push([{ text: '🕸 Ver história completa', url: `${FAST_NEWS_URL}/?view=stories&story=${matchedStory.id}` }]);
+    }
 
     for (const chatId of config.telegramChatIds) {
       await getBot().telegram.sendMessage(chatId, message, {
         parse_mode: 'HTML',
         link_preview_options: { url: article.url, prefer_large_media: true, show_above_text: false },
-        reply_markup: {
-          inline_keyboard: [[
-            { text: '🔗 Ler notícia', url: article.url },
-            { text: '📱 Fast-News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
-          ]],
-        },
+        reply_markup: { inline_keyboard: inlineButtons },
       }).catch((err) => console.error(`[Telegram] Failed to send to ${chatId}:`, err.message));
     }
     await sleep(2000);
