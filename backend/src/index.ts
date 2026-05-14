@@ -2,7 +2,8 @@ import 'dotenv/config';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { join, dirname } from 'path';
-import { config } from './config/env.js';
+import { config, validateConfig } from './config/env.js';
+validateConfig();
 import { getPool, closePool } from './database/client.js';
 import { getRedis, closeRedis } from './services/cache.js';
 import { createApp } from './api/app.js';
@@ -21,6 +22,7 @@ import { startBot, stopBot } from './services/telegram.js';
 import { runLearningCycle } from './jobs/learningJob.js';
 
 let isShuttingDown = false;
+let httpServer: ReturnType<ReturnType<typeof createApp>['listen']> | null = null;
 
 async function bootstrap(): Promise<void> {
   console.log('🚀 Fast News Backend starting...');
@@ -41,6 +43,7 @@ async function bootstrap(): Promise<void> {
     const server = app.listen(config.port, () => {
       console.log(`✅ API server running on port ${config.port}`);
     });
+    httpServer = server;
 
     // Handle server errors
     server.on('error', (err) => {
@@ -82,11 +85,15 @@ async function shutdown(signal?: string): Promise<void> {
   isShuttingDown = true;
   console.log(`\n🛑 Shutting down (${signal || 'manual'})...`);
 
+  // Force-exit after 10s so pods don't hang indefinitely
+  setTimeout(() => { console.error('❌ Shutdown timeout — forcing exit'); process.exit(1); }, 10_000).unref();
+
   const cleanup: Array<() => Promise<void>> = [];
 
   // Stop accepting new connections
   cleanup.push(async () => {
     console.log('📤 Stopping HTTP server...');
+    if (httpServer) await new Promise<void>((res) => httpServer!.close(() => res()));
   });
 
   // Stop scheduled jobs gracefully

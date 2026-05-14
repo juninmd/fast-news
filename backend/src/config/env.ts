@@ -60,3 +60,14 @@ export const config = {
     embeddingModel: optional('EMBEDDING_MODEL', ''),
   },
 } as const;
+
+export function validateConfig(): void {
+  // DATABASE_URL is required — required() already throws if missing, this makes it explicit at startup
+  if (!process.env['DATABASE_URL']) throw new Error('Missing required env var: DATABASE_URL');
+  if (config.telegramEnabled && !config.telegramBotToken) {
+    console.warn('[config] TELEGRAM_ENABLED=true but TELEGRAM_BOT_TOKEN is not set — Telegram will be disabled');
+  }
+  if (config.telegramEnabled && !config.telegramChatIds.length) {
+    console.warn('[config] TELEGRAM_ENABLED=true but TELEGRAM_CHAT_IDS is empty — no messages will be sent');
+  }
+}
