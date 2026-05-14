@@ -3,6 +3,7 @@ import { query } from '../database/client.js';
 import { upsertArticleToSqlite } from '../database/sqliteStore.js';
 import { embedDocument, vectorToSQL } from './embeddings.js';
 import { config } from '../config/env.js';
+import { buildArticleRelations, assignArticleToStory } from './correlation.js';
 
 const parser = new Parser({ timeout: 10_000, headers: { 'User-Agent': 'FastNews/1.0' } });
 
@@ -158,11 +159,16 @@ export async function runIngestion(): Promise<IngestionResult> {
       for (const article of result.value) {
         try {
           const id = await upsertArticle(article);
-          if (id) newArticles.push({
-            id, title: article.title, url: article.url,
-            source: article.source, category: article.category, company: article.company,
-            content: article.content,
-          });
+          if (id) {
+            newArticles.push({
+              id, title: article.title, url: article.url,
+              source: article.source, category: article.category, company: article.company,
+              content: article.content,
+            });
+            // Fire-and-forget correlation (don't block ingestion)
+            buildArticleRelations(id).catch(() => {});
+            assignArticleToStory(id).catch(() => {});
+          }
         } catch { /* skip individual failures */ }
       }
     }

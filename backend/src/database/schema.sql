@@ -100,7 +100,66 @@ CREATE TABLE IF NOT EXISTS financial_opportunities (
 CREATE INDEX IF NOT EXISTS idx_financial_created ON financial_opportunities(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_financial_active ON financial_opportunities(is_active);
 
+-- Story clusters: groups of related articles covering the same evolving news story
+CREATE TABLE IF NOT EXISTS news_stories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  summary TEXT,
+  category TEXT NOT NULL,
+  status TEXT DEFAULT 'active', -- 'active', 'resolved', 'archived'
+  impact_level TEXT DEFAULT 'medium', -- 'low', 'medium', 'high', 'critical'
+  world_impact TEXT, -- LLM-generated world impact summary
+  financial_signal TEXT, -- 'bullish', 'bearish', 'neutral'
+  affected_assets TEXT[], -- tickers/assets affected
+  first_seen_at TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at TIMESTAMPTZ DEFAULT NOW(),
+  article_count INT DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_stories_category ON news_stories(category);
+CREATE INDEX IF NOT EXISTS idx_stories_updated ON news_stories(last_updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_stories_status ON news_stories(status);
+
+-- Many-to-many: articles belonging to a story
+CREATE TABLE IF NOT EXISTS story_articles (
+  story_id UUID REFERENCES news_stories(id) ON DELETE CASCADE,
+  article_id UUID REFERENCES news_articles(id) ON DELETE CASCADE,
+  role TEXT DEFAULT 'update', -- 'origin', 'update', 'reaction', 'resolution'
+  added_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (story_id, article_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_story_articles_story ON story_articles(story_id, added_at DESC);
+CREATE INDEX IF NOT EXISTS idx_story_articles_article ON story_articles(article_id);
+
+-- Pairwise article similarity edges for the graph
+CREATE TABLE IF NOT EXISTS article_relations (
+  article_a UUID REFERENCES news_articles(id) ON DELETE CASCADE,
+  article_b UUID REFERENCES news_articles(id) ON DELETE CASCADE,
+  similarity FLOAT NOT NULL,
+  relation_type TEXT DEFAULT 'similar', -- 'similar', 'continuation', 'reaction', 'contradiction'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (article_a, article_b)
+);
+
+CREATE INDEX IF NOT EXISTS idx_relations_a ON article_relations(article_a, similarity DESC);
+CREATE INDEX IF NOT EXISTS idx_relations_b ON article_relations(article_b, similarity DESC);
+
+-- Story timeline events: what changed in this story over time
+CREATE TABLE IF NOT EXISTS story_timeline (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  story_id UUID REFERENCES news_stories(id) ON DELETE CASCADE,
+  article_id UUID REFERENCES news_articles(id) ON DELETE SET NULL,
+  event_type TEXT NOT NULL, -- 'new_development', 'contradiction', 'resolution', 'escalation', 'impact_update'
+  headline TEXT NOT NULL,
+  what_changed TEXT, -- LLM diff: what's new vs previous state
+  occurred_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_timeline_story ON story_timeline(story_id, occurred_at ASC);
+
 -- Seed default tracked topics
+
 INSERT INTO tracked_topics (name, description, keywords) VALUES
   ('Guerra EUA vs Irã', 'Conflito geopolítico entre Estados Unidos e Irã', ARRAY['eua', 'irã', 'iran', 'guerra', 'conflito', 'oriente médio', 'sanções', 'nuclear']),
   ('Petróleo e Energia', 'Mercado de petróleo, gás e energia global', ARRAY['petróleo', 'oil', 'opep', 'brent', 'wti', 'energia', 'gás', 'combustível']),
