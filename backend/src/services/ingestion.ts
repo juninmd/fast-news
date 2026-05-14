@@ -140,7 +140,7 @@ async function upsertArticle(article: RawArticle): Promise<string | null> {
 export interface IngestionResult {
   fetched: number;
   stored: number;
-  newArticles: Array<{ id: string; title: string; url: string; source: string; category: string; company?: string }>;
+  newArticles: Array<{ id: string; title: string; url: string; source: string; category: string; company?: string; content: string }>;
 }
 
 export async function runIngestion(): Promise<IngestionResult> {
@@ -160,7 +160,8 @@ export async function runIngestion(): Promise<IngestionResult> {
           const id = await upsertArticle(article);
           if (id) newArticles.push({
             id, title: article.title, url: article.url,
-            source: article.source, category: article.category, company: article.company
+            source: article.source, category: article.category, company: article.company,
+            content: article.content,
           });
         } catch { /* skip individual failures */ }
       }
