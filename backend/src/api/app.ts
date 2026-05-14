@@ -7,6 +7,7 @@ import { newsRouter } from './routes/news.js';
 import { topicsRouter } from './routes/topics.js';
 import { financialRouter } from './routes/financial.js';
 import { ragRouter } from './routes/rag.js';
+import { storiesRouter } from './routes/stories.js';
 import { healthHandler } from './health.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,6 +26,7 @@ export function createApp(): express.Application {
   app.use('/api/topics', topicsRouter);
   app.use('/api/financial', financialRouter);
   app.use('/api/rag', ragRouter);
+  app.use('/api/stories', storiesRouter);
 
   // Serve static files from frontend build (optional — only when built)
   const clientPath = path.join(__dirname, '../../client');
