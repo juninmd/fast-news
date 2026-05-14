@@ -1,8 +1,12 @@
 import { Telegraf, Context } from 'telegraf';
+import { generateText } from 'ai';
 import { config } from '../config/env.js';
-import { getAllTrackedTopics, analyzeTopicWithRAG, getTopicLatestAnalysis } from './analysis.js';
+import { getAllTrackedTopics, analyzeTopicWithRAG } from './analysis.js';
 import { getActiveOpportunities } from './financial.js';
 import { searchSimilarArticles } from './rag.js';
+import { getFastModel } from './aiProvider.js';
+
+const FAST_NEWS_URL = 'https://fast-news.antonio-code.duckdns.org';
 
 let bot: Telegraf | null = null;
 
@@ -117,9 +121,23 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
+async function generateSummary(title: string, content: string): Promise<string> {
+  try {
+    const model = await getFastModel();
+    const { text } = await generateText({
+      model,
+      prompt: `Resuma esta notícia em 2 frases diretas em português. Seja objetivo e informativo.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 1000)}`,
+      maxTokens: 120,
+    });
+    return text.trim();
+  } catch {
+    return '';
+  }
+}
+
 /** Posta novas notícias no Telegram após ingestion */
 export async function postNewArticles(
-  articles: Array<{ id: string; title: string; url: string; source: string; category: string }>
+  articles: Array<{ id: string; title: string; url: string; source: string; category: string; content: string }>
 ): Promise<void> {
   if (!config.telegramEnabled || !config.telegramBotToken || !config.telegramChatIds.length) return;
 
@@ -128,14 +146,27 @@ export async function postNewArticles(
     .slice(0, config.telegramMaxNewsPerRun);
 
   for (const article of eligible) {
-    const message = formatArticle(article);
+    const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
+    const summary = await generateSummary(article.title, article.content);
+
+    const message =
+      `${emoji} <b>${escapeHtml(article.title.slice(0, 200))}</b>\n` +
+      (summary ? `\n💡 <i>${escapeHtml(summary)}</i>\n` : '') +
+      `\n📌 <b>${escapeHtml(article.source)}</b> · ${article.category}`;
+
     for (const chatId of config.telegramChatIds) {
       await getBot().telegram.sendMessage(chatId, message, {
         parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true },
+        link_preview_options: { url: article.url, prefer_large_media: true, show_above_text: false },
+        reply_markup: {
+          inline_keyboard: [[
+            { text: '🔗 Ler notícia', url: article.url },
+            { text: '📱 Fast-News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
+          ]],
+        },
       }).catch((err) => console.error(`[Telegram] Failed to send to ${chatId}:`, err.message));
     }
-    await sleep(1500); // respeita rate limit Telegram (30 msg/seg)
+    await sleep(2000);
   }
 }
 
