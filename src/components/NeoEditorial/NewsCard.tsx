@@ -22,9 +22,36 @@ interface NewsCardProps {
   publishedAt: Date | string;
   imageUrl?: string;
   variant?: 'compact' | 'standard' | 'featured';
+  // Credibility
+  fake_news_score?: number | null;
+  political_bias?: string | null;
+  is_militant?: boolean;
+  has_incoherence?: boolean;
+  credibility_flags?: string[];
   onBookmark?: (id: string) => void;
   onShare?: (id: string) => void;
   onSummarize?: (id: string) => void;
+}
+
+const BIAS_CONFIG: Record<string, { label: string; color: string }> = {
+  left:     { label: 'Esq',      color: 'bg-blue-500/20 text-blue-400 border-blue-500/40' },
+  far_left: { label: 'Esq+',     color: 'bg-blue-600/30 text-blue-300 border-blue-500/60' },
+  right:    { label: 'Dir',      color: 'bg-red-500/20 text-red-400 border-red-500/40' },
+  far_right:{ label: 'Dir+',     color: 'bg-red-600/30 text-red-300 border-red-500/60' },
+  neutral:  { label: 'Neutro',   color: 'bg-gray-500/20 text-gray-400 border-gray-500/40' },
+};
+
+function fakeNewsColor(score: number): string {
+  if (score <= 3) return 'bg-green-500/15 text-green-400 border-green-500/40';
+  if (score <= 6) return 'bg-yellow-500/15 text-yellow-400 border-yellow-500/40';
+  return 'bg-red-500/15 text-red-400 border-red-500/40';
+}
+
+function fakeNewsLabel(score: number): string {
+  if (score <= 2) return '✓ Confiável';
+  if (score <= 4) return '⚠ Verificar';
+  if (score <= 7) return '⚠ Suspeito';
+  return '✗ Fake News';
 }
 
 export function NewsCard({
@@ -37,6 +64,11 @@ export function NewsCard({
   publishedAt,
   imageUrl,
   variant = 'standard',
+  fake_news_score,
+  political_bias,
+  is_militant,
+  has_incoherence,
+  credibility_flags,
   onBookmark,
   onShare,
   onSummarize,
@@ -84,13 +116,46 @@ export function NewsCard({
       )}
 
       <div className="p-5">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
           <span className={`px-2 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider ${getCategoryClass(category)}`}>
             {category}
           </span>
           {company && (
             <span className="text-xs text-text-secondary font-numbers">
               {company}
+            </span>
+          )}
+          {/* Credibility badges */}
+          {fake_news_score != null && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${fakeNewsColor(fake_news_score)}`}
+              title={`Score de credibilidade: ${fake_news_score}/10`}
+            >
+              {fakeNewsLabel(fake_news_score)} {fake_news_score}/10
+            </span>
+          )}
+          {political_bias && political_bias !== 'neutral' && BIAS_CONFIG[political_bias] && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${BIAS_CONFIG[political_bias].color}`}
+              title={`Viés político: ${political_bias}`}
+            >
+              {BIAS_CONFIG[political_bias].label}
+            </span>
+          )}
+          {is_militant && (
+            <span
+              className="px-2 py-0.5 rounded-full text-xs font-semibold border bg-orange-500/15 text-orange-400 border-orange-500/40"
+              title="Conteúdo de cunho militante/panfletário"
+            >
+              📢 Militante
+            </span>
+          )}
+          {has_incoherence && (
+            <span
+              className="px-2 py-0.5 rounded-full text-xs font-semibold border bg-yellow-500/15 text-yellow-400 border-yellow-500/40"
+              title={`Inconsistências detectadas: ${(credibility_flags ?? []).join(', ')}`}
+            >
+              ⚡ Incoerente
             </span>
           )}
         </div>
