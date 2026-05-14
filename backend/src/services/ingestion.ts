@@ -4,6 +4,7 @@ import { upsertArticleToSqlite } from '../database/sqliteStore.js';
 import { embedDocument, vectorToSQL } from './embeddings.js';
 import { config } from '../config/env.js';
 import { buildArticleRelations, assignArticleToStory } from './correlation.js';
+import { analyzeCredibility } from './credibility.js';
 
 const parser = new Parser({ timeout: 10_000, headers: { 'User-Agent': 'FastNews/1.0' } });
 
@@ -165,9 +166,10 @@ export async function runIngestion(): Promise<IngestionResult> {
               source: article.source, category: article.category, company: article.company,
               content: article.content,
             });
-            // Fire-and-forget correlation (don't block ingestion)
+            // Fire-and-forget (don't block ingestion)
             buildArticleRelations(id).catch(() => {});
             assignArticleToStory(id).catch(() => {});
+            analyzeCredibility(id, article.title, article.content, article.source, article.category).catch(() => {});
           }
         } catch { /* skip individual failures */ }
       }

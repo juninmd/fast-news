@@ -17,7 +17,12 @@ CREATE TABLE IF NOT EXISTS news_articles (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   embedding vector(768),
   sentiment FLOAT DEFAULT 0,
-  importance_score FLOAT DEFAULT 0.5
+  importance_score FLOAT DEFAULT 0.5,
+  fake_news_score FLOAT DEFAULT NULL,         -- 1 (credível) a 10 (muito suspeito)
+  political_bias TEXT DEFAULT NULL,           -- 'neutral' | 'left' | 'far_left' | 'right' | 'far_right'
+  is_militant BOOLEAN DEFAULT FALSE,          -- post de cunho militante/panfletário
+  has_incoherence BOOLEAN DEFAULT FALSE,      -- contém informações incoerentes/contraditórias
+  credibility_flags TEXT[] DEFAULT '{}'       -- flags: 'misleading_headline', 'missing_sources', 'emotional_language', etc.
 );
 
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON news_articles(published_at DESC);

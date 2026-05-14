@@ -167,9 +167,40 @@ async function generateSummary(title: string, content: string): Promise<string> 
   }
 }
 
+function buildCredibilityBlock(article: {
+  fakeNewsScore?: number | null;
+  politicalBias?: string | null;
+  isMilitant?: boolean;
+  hasIncoherence?: boolean;
+}): string {
+  const parts: string[] = [];
+  if (article.fakeNewsScore != null) {
+    const icon = article.fakeNewsScore <= 3 ? '✅' : article.fakeNewsScore <= 6 ? '⚠️' : '🚨';
+    parts.push(`${icon} Credibilidade: ${article.fakeNewsScore}/10`);
+  }
+  const biasMap: Record<string, string> = {
+    left: '🔵 Esquerda', far_left: '🔵🔵 Esq. radical',
+    right: '🔴 Direita', far_right: '🔴🔴 Dir. radical',
+    neutral: '⚪ Neutro',
+  };
+  if (article.politicalBias && article.politicalBias !== 'neutral') {
+    parts.push(biasMap[article.politicalBias] ?? '');
+  }
+  if (article.isMilitant) parts.push('📢 Militante');
+  if (article.hasIncoherence) parts.push('⚡ Incoerências detectadas');
+  return parts.length ? `\n${parts.join(' · ')}` : '';
+}
+
 /** Posta novas notícias no Telegram após ingestion */
 export async function postNewArticles(
-  articles: Array<{ id: string; title: string; url: string; source: string; category: string; content: string; storyId?: string | null }>
+  articles: Array<{
+    id: string; title: string; url: string; source: string; category: string; content: string;
+    storyId?: string | null;
+    fakeNewsScore?: number | null;
+    politicalBias?: string | null;
+    isMilitant?: boolean;
+    hasIncoherence?: boolean;
+  }>
 ): Promise<void> {
   if (!config.telegramEnabled || !config.telegramBotToken || !config.telegramChatIds.length) return;
 
@@ -204,10 +235,13 @@ export async function postNewArticles(
       }
     }
 
+    const credibilityBlock = buildCredibilityBlock(article);
+
     const message =
       `${emoji} <b>${escapeHtml(article.title.slice(0, 200))}</b>\n` +
       (summary ? `\n💡 <i>${escapeHtml(summary)}</i>` : '') +
       `\n\n📌 <b>${escapeHtml(article.source)}</b> · ${article.category}` +
+      (credibilityBlock ? `\n${credibilityBlock}` : '') +
       storyBlock;
 
     const inlineButtons = [[
