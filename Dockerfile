@@ -13,7 +13,7 @@ RUN apk add --no-cache python3 make g++
 RUN npm install -g pnpm
 WORKDIR /app
 COPY backend/pnpm-lock.yaml backend/package.json ./
-RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild better-sqlite3 esbuild
+RUN pnpm install --frozen-lockfile
 COPY backend/ ./
 RUN pnpm run build
 
