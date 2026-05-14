@@ -11,6 +11,7 @@ interface HealthStatus {
   dependencies: {
     database: DependencyStatus;
     redis: DependencyStatus;
+    ollama: DependencyStatus;
   };
 }
 
@@ -55,21 +56,31 @@ async function checkRedis(): Promise<DependencyStatus> {
   }
 }
 
+async function checkOllama(): Promise<DependencyStatus> {
+  const start = Date.now();
+  try {
+    const baseUrl = config.ollama.baseUrl.replace(/\/v1\/?$/, '');
+    const res = await fetch(`${baseUrl}/api/tags`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) return { status: 'up', latencyMs: Date.now() - start };
+    return { status: 'degraded', latencyMs: Date.now() - start, error: `HTTP ${res.status}` };
+  } catch (error) {
+    return { status: 'down', latencyMs: Date.now() - start, error: (error as Error).message };
+  }
+}
+
 export async function getHealthStatus(): Promise<HealthStatus> {
-  const [dbStatus, redisStatus] = await Promise.all([
+  const [dbStatus, redisStatus, ollamaStatus] = await Promise.all([
     checkDatabase(),
     checkRedis(),
+    checkOllama(),
   ]);
 
-  const allUp = dbStatus.status === 'up' && redisStatus.status === 'up';
-  const allDown = dbStatus.status === 'down' && redisStatus.status === 'down';
+  const criticalDown = dbStatus.status === 'down' && redisStatus.status === 'down';
+  const anyDegraded = dbStatus.status !== 'up' || redisStatus.status !== 'up';
 
   let overallStatus: HealthStatus['status'] = 'healthy';
-  if (allDown) {
-    overallStatus = 'unhealthy';
-  } else if (!allUp) {
-    overallStatus = 'degraded';
-  }
+  if (criticalDown) overallStatus = 'unhealthy';
+  else if (anyDegraded) overallStatus = 'degraded';
 
   return {
     status: overallStatus,
@@ -79,6 +90,7 @@ export async function getHealthStatus(): Promise<HealthStatus> {
     dependencies: {
       database: dbStatus,
       redis: redisStatus,
+      ollama: ollamaStatus,
     },
   };
 }

@@ -8,6 +8,17 @@ import { analyzeCredibility } from './credibility.js';
 
 const parser = new Parser({ timeout: 10_000, headers: { 'User-Agent': 'FastNews/1.0' } });
 
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try { return await fn(); } catch (err) {
+      lastErr = err;
+      if (attempt < retries) await new Promise(r => setTimeout(r, delayMs * attempt));
+    }
+  }
+  throw lastErr;
+}
+
 export const FEED_SOURCES = [
   // ── Big Techs ───────────────────────────────────────────────────────────────
   { url: 'https://github.blog/feed/', category: 'Big Techs', company: 'GitHub' },
@@ -180,7 +191,7 @@ export interface RawArticle {
 
 async function fetchFeed(source: { url: string; category: string; company?: string }): Promise<RawArticle[]> {
   try {
-    const feed = await parser.parseURL(source.url);
+    const feed = await withRetry(() => parser.parseURL(source.url));
     return (feed.items ?? []).slice(0, config.ingestion.maxArticlesPerFeed).map((item) => ({
       guid: item.guid ?? item.link ?? item.title ?? '',
       title: item.title ?? '',
@@ -191,7 +202,8 @@ async function fetchFeed(source: { url: string; category: string; company?: stri
       company: source.company,
       publishedAt: item.pubDate ? new Date(item.pubDate) : null,
     }));
-  } catch {
+  } catch (err) {
+    console.warn('[ingestion] feed failed:', source.url, (err as Error).message);
     return [];
   }
 }
@@ -265,12 +277,13 @@ export async function runIngestion(): Promise<IngestionResult> {
               source: article.source, category: article.category, company: article.company,
               content: article.content,
             });
-            // Fire-and-forget (don't block ingestion)
-            buildArticleRelations(id).catch(() => {});
-            assignArticleToStory(id).catch(() => {});
-            analyzeCredibility(id, article.title, article.content, article.source, article.category).catch(() => {});
+            buildArticleRelations(id).catch((err: Error) => console.error('[ingestion] buildArticleRelations failed:', err.message));
+            assignArticleToStory(id).catch((err: Error) => console.error('[ingestion] assignArticleToStory failed:', err.message));
+            analyzeCredibility(id, article.title, article.content, article.source, article.category).catch((err: Error) => console.error('[ingestion] analyzeCredibility failed:', err.message));
           }
-        } catch { /* skip individual failures */ }
+        } catch (err) {
+          console.error('[ingestion] article failed:', (err as Error).message, { url: article.url });
+        }
       }
     }
   }
