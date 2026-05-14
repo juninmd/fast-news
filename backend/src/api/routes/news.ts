@@ -34,9 +34,15 @@ newsRouter.get('/', async (req: Request, res: Response) => {
     published_at: string;
     sentiment: string;
     importance_score: number;
+    fake_news_score: number | null;
+    political_bias: string | null;
+    is_militant: boolean;
+    has_incoherence: boolean;
+    credibility_flags: string[];
     total_count: string;
   }>(
     `SELECT id, title, summary, url, source, category, published_at, sentiment, importance_score,
+            fake_news_score, political_bias, is_militant, has_incoherence, credibility_flags,
             COUNT(*) OVER() AS total_count
      FROM news_articles ${where}
      ORDER BY published_at DESC NULLS LAST
