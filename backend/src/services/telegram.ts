@@ -14,8 +14,9 @@ let bot: Telegraf | null = null;
 const CATEGORY_EMOJI: Record<string, string> = {
   'Mundo': '🌍', 'Negócios': '💼', 'Brasil': '🇧🇷', 'Tecnologia': '💻',
   'Ciência': '🔬', 'Esportes': '⚽', 'Entretenimento': '🎬', 'Games': '🎮', 'Saúde': '🏥',
-  'AI Frontier': '🤖', 'Big Techs': '🏢', 'Dev Tools': '🛠', 'Gaming': '🎮',
-  'Negocios': '💼', 'Ciencia': '🔬',
+  'AI Frontier': '🤖', 'Big Techs': '🏢', 'Dev Tools': '🛠️', 'Gaming': '🎮',
+  'Negocios': '💼', 'Ciencia': '🔬', 'Engenharia': '⚙️', 'Open Source': '🐧',
+  'Segurança': '🔐', 'Startups': '🚀',
 };
 
 const IMPACT_EMOJI: Record<string, string> = {

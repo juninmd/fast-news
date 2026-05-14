@@ -1,14 +1,22 @@
 import { useState } from 'react';
 import { Clock, Bookmark, Share2, Sparkles } from 'lucide-react';
 
-const categoryColors = {
-  'AI Frontier': 'bg-accent-primary/20 text-accent-primary',
-  'Big Techs': 'bg-accent-secondary/20 text-accent-secondary',
-  'Gaming': 'bg-accent-tertiary/20 text-accent-tertiary',
-  'Dev Tools': 'bg-emerald-500/20 text-emerald-400',
-  'Tecnologia': 'bg-blue-500/20 text-blue-400',
-  'IA': 'bg-purple-500/20 text-purple-400',
-  default: 'bg-bg-tertiary text-text-secondary',
+const categoryColors: Record<string, string> = {
+  'AI Frontier':  'bg-violet-500/20 text-violet-400',
+  'Big Techs':    'bg-blue-500/20 text-blue-400',
+  'Dev Tools':    'bg-emerald-500/20 text-emerald-400',
+  'Engenharia':   'bg-cyan-500/20 text-cyan-400',
+  'Open Source':  'bg-orange-500/20 text-orange-400',
+  'Segurança':    'bg-red-500/20 text-red-400',
+  'Startups':     'bg-pink-500/20 text-pink-400',
+  'Gaming':       'bg-yellow-500/20 text-yellow-400',
+  'Tecnologia':   'bg-sky-500/20 text-sky-400',
+  'Mundo':        'bg-teal-500/20 text-teal-400',
+  'Negocios':     'bg-amber-500/20 text-amber-400',
+  'Brasil':       'bg-green-500/20 text-green-400',
+  'Ciencia':      'bg-purple-500/20 text-purple-400',
+  'IA':           'bg-violet-500/20 text-violet-400',
+  default:        'bg-bg-tertiary text-text-secondary',
 };
 
 interface NewsCardProps {

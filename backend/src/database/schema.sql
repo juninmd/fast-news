@@ -170,5 +170,9 @@ INSERT INTO tracked_topics (name, description, keywords) VALUES
   ('Petróleo e Energia', 'Mercado de petróleo, gás e energia global', ARRAY['petróleo', 'oil', 'opep', 'brent', 'wti', 'energia', 'gás', 'combustível']),
   ('Política Brasileira', 'Cenário político no Brasil', ARRAY['lula', 'congresso', 'stf', 'política', 'governo', 'brasil', 'câmara', 'senado']),
   ('Economia Global', 'Tendências econômicas mundiais e mercados', ARRAY['economia', 'inflação', 'juros', 'fed', 'dólar', 'recessão', 'pib', 'mercado']),
-  ('Inteligência Artificial', 'Avanços e impactos da IA', ARRAY['inteligência artificial', 'ia', 'chatgpt', 'openai', 'gemini', 'llm', 'machine learning'])
+  ('Inteligência Artificial', 'Avanços e impactos da IA', ARRAY['inteligência artificial', 'ia', 'chatgpt', 'openai', 'gemini', 'llm', 'machine learning']),
+  ('Engenharia de Software', 'Arquitetura, sistemas distribuídos e boas práticas', ARRAY['microservices', 'kubernetes', 'docker', 'arquitetura', 'backend', 'frontend', 'distributed systems', 'engineering']),
+  ('Open Source', 'Projetos e comunidades open source', ARRAY['open source', 'rust', 'golang', 'typescript', 'linux', 'nodejs', 'github', 'contribuição']),
+  ('Segurança', 'Cibersegurança, vulnerabilidades e privacidade', ARRAY['segurança', 'vulnerability', 'cve', 'hack', 'privacy', 'exploit', 'breach', 'zero-day']),
+  ('Startups & VC', 'Ecossistema de startups e venture capital', ARRAY['startup', 'funding', 'series a', 'ipo', 'venture capital', 'unicorn', 'vc'])
 ON CONFLICT DO NOTHING;
