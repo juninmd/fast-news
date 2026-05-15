@@ -1,4 +1,6 @@
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
   const prompt = `
 Atue como um editor de um canal de notícias no Telegram.
@@ -23,7 +25,7 @@ Diretrizes:
 `;
 
   try {
-    const response = await fetch(`${baseUrl}/api/generate`, {
+    const response = await fetch(`${API_BASE}/api/ai/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,13 +40,13 @@ Diretrizes:
     if (!response.ok) {
       // Handle specific Ollama errors or network issues
       const errorText = await response.text();
-      throw new Error(`Ollama Error: ${response.status} - ${errorText}`);
+      throw new Error(`AI API Error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
     return data.response.trim();
   } catch (error) {
-    console.error('Error summarizing with Ollama:', error);
+    console.error('Error summarizing with AI:', error);
     throw error;
   }
 };
@@ -64,7 +66,7 @@ Se você não tiver certeza de qual categoria escolher ou se nenhuma for exata, 
 Categoria:`;
 
   try {
-    const response = await fetch(`${baseUrl}/api/generate`, {
+    const response = await fetch(`${API_BASE}/api/ai/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model, prompt, stream: false })
