@@ -87,9 +87,15 @@ const RelatedArticles = ({ currentArticle, allArticles, maxResults = 3 }) => {
       ) : (
         <div className="flex flex-wrap gap-2">
           {related.map((article) => (
-            <span key={article.id} className="text-xs px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 rounded-full border border-slate-200/50 dark:border-slate-700/50">
+            <a
+              key={article.id}
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 rounded-full border border-slate-200/50 dark:border-slate-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
               {article.title.substring(0, 40)}...
-            </span>
+            </a>
           ))}
         </div>
       )}
