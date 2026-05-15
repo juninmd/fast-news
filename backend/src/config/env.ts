@@ -58,6 +58,8 @@ export const config = {
     analysisModel: optional('ANALYSIS_MODEL', ''),
     fastModel: optional('FAST_MODEL', ''),
     embeddingModel: optional('EMBEDDING_MODEL', ''),
+    embeddingTimeoutMs: parseInt(optional('EMBEDDING_TIMEOUT_MS', '45000'), 10),
+    backgroundTaskTimeoutMs: parseInt(optional('AI_BACKGROUND_TASK_TIMEOUT_MS', '90000'), 10),
   },
 } as const;
 
