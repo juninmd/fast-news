@@ -231,7 +231,13 @@ async function upsertArticle(article: RawArticle): Promise<string | null> {
   if (existing.rowCount && existing.rowCount > 0) return null;
 
   const textToEmbed = `${article.title}. ${article.content}`.slice(0, 2000);
-  const embedding = await embedDocument(textToEmbed);
+  // Embedding is best-effort — if Ollama is unavailable, store without vector
+  let embedding: number[] | null = null;
+  try {
+    embedding = await embedDocument(textToEmbed);
+  } catch (e) {
+    console.warn('[ingestion] embed failed, storing without vector:', (e as Error).message.slice(0, 80));
+  }
 
   const result = await query<{ id: string }>(
     `INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding)
@@ -239,11 +245,12 @@ async function upsertArticle(article: RawArticle): Promise<string | null> {
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
     [article.guid, article.title, article.content, article.url, article.source,
-     article.category, article.company ?? null, article.publishedAt, vectorToSQL(embedding)]
+     article.category, article.company ?? null, article.publishedAt,
+     embedding ? vectorToSQL(embedding) : null]
   );
 
   const newId = result.rows[0]?.id ?? null;
-  if (newId) {
+  if (newId && embedding) {
     try {
       upsertArticleToSqlite({
         id: newId,
