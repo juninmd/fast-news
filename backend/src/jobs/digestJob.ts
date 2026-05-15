@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { generateText } from 'ai';
+import { generateText, streamText } from 'ai';
 import { getAllTrackedTopics, getTopicLatestAnalysis } from '../services/analysis.js';
 import { getActiveOpportunities } from '../services/financial.js';
 import { searchSimilarArticles } from '../services/rag.js';
@@ -91,15 +91,16 @@ export async function buildAndSendDigest(): Promise<void> {
     ).join('\n');
 
   const model = await getFastModel();
-  const { text } = await generateText({
-    model,
-    prompt: DIGEST_PROMPT
-      .replace('{news}', newsSection || 'Sem notícias.')
-      .replace('{analyses}', analysisSection.join('\n\n') || 'Sem análises.')
-      .replace('{financial}', financialSection || 'Sem oportunidades.')
-      .replace('{date}', new Date().toLocaleDateString('pt-BR')),
-    maxTokens: 1200,
-  });
+  const fullPrompt = DIGEST_PROMPT
+    .replace('{news}', newsSection || 'Sem notícias.')
+    .replace('{analyses}', analysisSection.join('\n\n') || 'Sem análises.')
+    .replace('{financial}', financialSection || 'Sem oportunidades.')
+    .replace('{date}', new Date().toLocaleDateString('pt-BR'));
+
+  // streamText evita timeout do SDK ao receber tokens incrementalmente
+  const { textStream } = streamText({ model, prompt: fullPrompt, maxTokens: 600 });
+  let text = '';
+  for await (const chunk of textStream) { text += chunk; }
 
   const topUrl = topArticles[0]?.url;
   await sendDigest(text, topUrl);
