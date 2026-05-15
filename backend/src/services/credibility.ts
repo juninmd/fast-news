@@ -65,6 +65,7 @@ export async function analyzeCredibility(
   content: string,
   source: string,
   category: string,
+  abortSignal?: AbortSignal,
 ): Promise<CredibilityResult | null> {
   try {
     const model = await getFastModel();
@@ -76,6 +77,7 @@ export async function analyzeCredibility(
         .replace('{source}', source)
         .replace('{category}', category)
         .replace('{content}', (content ?? '').slice(0, 1200)),
+      abortSignal,
     });
 
     await query(
