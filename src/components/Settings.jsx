@@ -187,17 +187,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
                         <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                             <Info size={16} className="shrink-0 mt-0.5" />
-                            <p>O Ollama precisa estar rodando localmente.</p>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">URL do Ollama</label>
-                            <input
-                                type="text"
-                                value={ollamaUrl}
-                                onChange={(e) => setOllamaUrl(e.target.value)}
-                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
-                                placeholder="http://localhost:11434"
-                            />
+                            <p>O processamento de IA é realizado através da API do servidor.</p>
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Modelo</label>
@@ -206,7 +196,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
                                 value={ollamaModel}
                                 onChange={(e) => setOllamaModel(e.target.value)}
                                 className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
-                                placeholder="llama3"
+                                placeholder="qwen2.5:1.5b"
                             />
                         </div>
                         <div className="flex items-center justify-between">
