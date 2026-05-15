@@ -56,7 +56,6 @@ export const FEED_SOURCES = [
   { url: 'https://engineering.atspotify.com/feed/', category: 'Big Techs', company: 'Spotify' },
   { url: 'https://dropbox.tech/feed', category: 'Big Techs', company: 'Dropbox' },
   { url: 'https://slack.engineering/feed/', category: 'Big Techs', company: 'Slack' },
-  { url: 'https://shopify.engineering/articles.atom', category: 'Big Techs', company: 'Shopify' },
   { url: 'https://engineeringblog.yelp.com/feed.xml', category: 'Big Techs', company: 'Yelp' },
   { url: 'https://medium.com/pinterest-engineering/feed', category: 'Big Techs', company: 'Pinterest' },
   { url: 'https://medium.com/paypal-tech/feed', category: 'Big Techs', company: 'PayPal' },
@@ -76,13 +75,12 @@ export const FEED_SOURCES = [
   { url: 'https://arxiv.org/rss/cs.AI', category: 'AI Frontier', company: 'arXiv' },
   { url: 'https://paperswithcode.com/latest.xml', category: 'AI Frontier', company: 'Papers With Code' },
   { url: 'https://sebastianraschka.com/rss_feed.xml', category: 'AI Frontier', company: 'Sebastian Raschka' },
-  { url: 'https://www.deeplearning.ai/the-batch/feed/', category: 'AI Frontier', company: 'DeepLearning.AI' },
   { url: 'https://jack-clark.net/feed/', category: 'AI Frontier', company: 'Import AI' },
 
   // ── Cloud & Infraestrutura ───────────────────────────────────────────────────
   { url: 'https://azure.microsoft.com/en-us/blog/feed/', category: 'Dev Tools', company: 'Azure' },
   { url: 'https://cloud.google.com/blog/rss', category: 'Dev Tools', company: 'Google Cloud' },
-  { url: 'https://www.digitalocean.com/blog/rss.xml', category: 'Dev Tools', company: 'DigitalOcean' },
+  { url: 'https://www.digitalocean.com/community/tutorials/feed', category: 'Dev Tools', company: 'DigitalOcean' },
   { url: 'https://www.pulumi.com/blog/rss.xml', category: 'Dev Tools', company: 'Pulumi' },
   { url: 'https://www.cncf.io/blog/feed/', category: 'Dev Tools', company: 'CNCF' },
 
@@ -99,7 +97,7 @@ export const FEED_SOURCES = [
   { url: 'https://blog.postman.com/feed/', category: 'Dev Tools', company: 'Postman' },
   { url: 'https://www.nginx.com/blog/feed/', category: 'Dev Tools', company: 'Nginx' },
   { url: 'https://blog.jetbrains.com/feed/', category: 'Dev Tools', company: 'JetBrains' },
-  { url: 'https://octopus.com/blog/rss.xml', category: 'Dev Tools', company: 'Octopus Deploy' },
+  { url: 'https://octopus.com/blog/feed.xml', category: 'Dev Tools', company: 'Octopus Deploy' },
   { url: 'https://blog.logrocket.com/feed/', category: 'Dev Tools', company: 'LogRocket' },
 
   // ── Engenharia de Software ───────────────────────────────────────────────────
@@ -137,7 +135,7 @@ export const FEED_SOURCES = [
   { url: 'https://googleprojectzero.blogspot.com/feeds/posts/default', category: 'Segurança', company: 'Project Zero' },
   { url: 'https://unit42.paloaltonetworks.com/feed/', category: 'Segurança', company: 'Unit 42' },
   { url: 'https://www.crowdstrike.com/blog/feed/', category: 'Segurança', company: 'CrowdStrike' },
-  { url: 'https://www.rapid7.com/blog/rss.xml', category: 'Segurança', company: 'Rapid7' },
+  { url: 'https://www.rapid7.com/blog/rss/', category: 'Segurança', company: 'Rapid7' },
   { url: 'https://blog.malwarebytes.com/feed/', category: 'Segurança', company: 'Malwarebytes' },
   { url: 'https://isc.sans.edu/rssfeed.xml', category: 'Segurança', company: 'SANS ISC' },
   { url: 'https://www.darkreading.com/rss.xml', category: 'Segurança', company: 'Dark Reading' },
@@ -172,7 +170,7 @@ export const FEED_SOURCES = [
   { url: 'https://css-tricks.com/feed/', category: 'Tecnologia', company: 'CSS-Tricks' },
   { url: 'https://web.dev/feed.xml', category: 'Tecnologia', company: 'web.dev' },
   { url: 'https://hacks.mozilla.org/feed/', category: 'Tecnologia', company: 'Mozilla' },
-  { url: 'https://www.theatlantic.com/technology/feed/', category: 'Tecnologia', company: 'The Atlantic' },
+  { url: 'https://www.theatlantic.com/feed/all/', category: 'Tecnologia', company: 'The Atlantic' },
   { url: 'https://www.vox.com/rss/technology/index.xml', category: 'Tecnologia', company: 'Vox' },
 
   // ── Mundo ────────────────────────────────────────────────────────────────────
@@ -190,7 +188,7 @@ export const FEED_SOURCES = [
   { url: 'https://www.forbes.com/business/feed/', category: 'Negocios' },
   { url: 'https://fortune.com/feed/', category: 'Negocios', company: 'Fortune' },
   { url: 'https://hbr.org/feed', category: 'Negocios', company: 'Harvard Business Review' },
-  { url: 'https://www.coindesk.com/feed/', category: 'Negocios', company: 'CoinDesk' },
+  { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', category: 'Negocios', company: 'CoinDesk' },
   { url: 'https://cointelegraph.com/rss', category: 'Negocios', company: 'CoinTelegraph' },
   { url: 'https://decrypt.co/feed', category: 'Negocios', company: 'Decrypt' },
   { url: 'https://blockworks.co/feed', category: 'Negocios', company: 'Blockworks' },
@@ -207,7 +205,6 @@ export const FEED_SOURCES = [
   { url: 'https://www.startups.com.br/feed/', category: 'Brasil', company: 'Startups.com.br' },
   { url: 'https://exame.com/feed/', category: 'Brasil', company: 'Exame' },
   { url: 'https://manualdousuario.net/feed/', category: 'Brasil', company: 'Manual do Usuário' },
-  { url: 'https://br.cointelegraph.com/rss', category: 'Brasil', company: 'CoinTelegraph BR' },
   { url: 'https://braziljournal.com/feed/', category: 'Brasil', company: 'Brazil Journal' },
 
   // ── Ciencia ──────────────────────────────────────────────────────────────────
