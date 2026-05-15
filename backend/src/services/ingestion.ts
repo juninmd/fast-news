@@ -49,52 +49,58 @@ export const FEED_SOURCES = [
   { url: 'https://devblogs.microsoft.com/feed/', category: 'Big Techs', company: 'Microsoft' },
   { url: 'https://about.fb.com/news/rss/', category: 'Big Techs', company: 'Meta' },
   { url: 'https://engineering.fb.com/feed/', category: 'Big Techs', company: 'Meta' },
-  { url: 'https://press.aboutamazon.com/news/press-releases', category: 'Big Techs', company: 'Amazon' },
   { url: 'https://aws.amazon.com/blogs/aws/feed/', category: 'Big Techs', company: 'AWS' },
+  { url: 'https://aws.amazon.com/blogs/opensource/feed/', category: 'Big Techs', company: 'AWS' },
   { url: 'https://blogs.nvidia.com/feed/', category: 'Big Techs', company: 'Nvidia' },
   { url: 'https://developer.nvidia.com/blog/feed/', category: 'Big Techs', company: 'Nvidia' },
-  { url: 'https://engineering.linkedin.com/blog.rss', category: 'Big Techs', company: 'LinkedIn' },
-  { url: 'https://netflixtechblog.com/feed', category: 'Big Techs', company: 'Netflix' },
   { url: 'https://engineering.atspotify.com/feed/', category: 'Big Techs', company: 'Spotify' },
   { url: 'https://dropbox.tech/feed', category: 'Big Techs', company: 'Dropbox' },
-  { url: 'https://blog.discord.com/feed', category: 'Big Techs', company: 'Discord' },
   { url: 'https://slack.engineering/feed/', category: 'Big Techs', company: 'Slack' },
-  { url: 'https://uber.com/en-US/blog/engineering/rss/', category: 'Big Techs', company: 'Uber' },
-  { url: 'https://medium.com/airbnb-engineering/feed', category: 'Big Techs', company: 'Airbnb' },
+  { url: 'https://shopify.engineering/articles.atom', category: 'Big Techs', company: 'Shopify' },
+  { url: 'https://engineeringblog.yelp.com/feed.xml', category: 'Big Techs', company: 'Yelp' },
+  { url: 'https://medium.com/pinterest-engineering/feed', category: 'Big Techs', company: 'Pinterest' },
+  { url: 'https://medium.com/paypal-tech/feed', category: 'Big Techs', company: 'PayPal' },
 
   // ── AI Frontier ─────────────────────────────────────────────────────────────
   { url: 'https://openai.com/blog/rss.xml', category: 'AI Frontier', company: 'OpenAI' },
-  { url: 'https://x.ai/blog/rss', category: 'AI Frontier', company: 'xAI' },
-  { url: 'https://mistral.ai/news/rss/', category: 'AI Frontier', company: 'Mistral' },
   { url: 'https://huggingface.co/blog/feed.xml', category: 'AI Frontier', company: 'HuggingFace' },
-  { url: 'https://cohere.com/blog/rss.xml', category: 'AI Frontier', company: 'Cohere' },
-  { url: 'https://www.perplexity.ai/blog/rss.xml', category: 'AI Frontier', company: 'Perplexity' },
   { url: 'https://www.together.ai/blog/rss.xml', category: 'AI Frontier', company: 'Together AI' },
   { url: 'https://research.google/blog/rss/', category: 'AI Frontier', company: 'Google Research' },
-  { url: 'https://ai.meta.com/blog/rss.xml', category: 'AI Frontier', company: 'Meta AI' },
   { url: 'https://bair.berkeley.edu/blog/feed.xml', category: 'AI Frontier', company: 'BAIR' },
   { url: 'https://lilianweng.github.io/index.xml', category: 'AI Frontier', company: 'Lilian Weng' },
+  { url: 'https://www.fast.ai/index.xml', category: 'AI Frontier', company: 'fast.ai' },
+  { url: 'https://eugeneyan.com/rss/', category: 'AI Frontier', company: 'Eugene Yan' },
+  { url: 'https://huyenchip.com/feed.xml', category: 'AI Frontier', company: 'Chip Huyen' },
+  { url: 'https://www.interconnects.ai/feed', category: 'AI Frontier', company: 'Interconnects AI' },
+  { url: 'https://www.semianalysis.com/feed', category: 'AI Frontier', company: 'SemiAnalysis' },
+  { url: 'https://arxiv.org/rss/cs.AI', category: 'AI Frontier', company: 'arXiv' },
+  { url: 'https://paperswithcode.com/latest.xml', category: 'AI Frontier', company: 'Papers With Code' },
+  { url: 'https://sebastianraschka.com/rss_feed.xml', category: 'AI Frontier', company: 'Sebastian Raschka' },
+  { url: 'https://www.deeplearning.ai/the-batch/feed/', category: 'AI Frontier', company: 'DeepLearning.AI' },
+  { url: 'https://jack-clark.net/feed/', category: 'AI Frontier', company: 'Import AI' },
+
+  // ── Cloud & Infraestrutura ───────────────────────────────────────────────────
+  { url: 'https://azure.microsoft.com/en-us/blog/feed/', category: 'Dev Tools', company: 'Azure' },
+  { url: 'https://cloud.google.com/blog/rss', category: 'Dev Tools', company: 'Google Cloud' },
+  { url: 'https://www.digitalocean.com/blog/rss.xml', category: 'Dev Tools', company: 'DigitalOcean' },
+  { url: 'https://www.pulumi.com/blog/rss.xml', category: 'Dev Tools', company: 'Pulumi' },
+  { url: 'https://www.cncf.io/blog/feed/', category: 'Dev Tools', company: 'CNCF' },
 
   // ── Dev Tools & Plataformas ──────────────────────────────────────────────────
   { url: 'https://blog.cloudflare.com/rss/', category: 'Dev Tools', company: 'Cloudflare' },
-  { url: 'https://supabase.com/blog/rss.xml', category: 'Dev Tools', company: 'Supabase' },
-  { url: 'https://linear.app/blog/rss.xml', category: 'Dev Tools', company: 'Linear' },
-  { url: 'https://stripe.com/blog/rss.xml', category: 'Dev Tools', company: 'Stripe' },
   { url: 'https://fly.io/blog/feed.xml', category: 'Dev Tools', company: 'Fly.io' },
-  { url: 'https://render.com/blog/rss.xml', category: 'Dev Tools', company: 'Render' },
   { url: 'https://www.docker.com/blog/feed/', category: 'Dev Tools', company: 'Docker' },
   { url: 'https://kubernetes.io/feed.xml', category: 'Dev Tools', company: 'Kubernetes' },
   { url: 'https://hashicorp.com/blog/feed.xml', category: 'Dev Tools', company: 'HashiCorp' },
   { url: 'https://grafana.com/blog/index.xml', category: 'Dev Tools', company: 'Grafana' },
-  { url: 'https://www.datadoghq.com/blog/feed', category: 'Dev Tools', company: 'Datadog' },
-  { url: 'https://turso.tech/blog/rss.xml', category: 'Dev Tools', company: 'Turso' },
   { url: 'https://neon.tech/blog/rss.xml', category: 'Dev Tools', company: 'Neon' },
-  { url: 'https://planetscale.com/blog/feed.xml', category: 'Dev Tools', company: 'PlanetScale' },
-  { url: 'https://blog.railway.app/rss.xml', category: 'Dev Tools', company: 'Railway' },
-  { url: 'https://resend.com/blog/rss.xml', category: 'Dev Tools', company: 'Resend' },
-  { url: 'https://www.val.town/blog/rss.xml', category: 'Dev Tools', company: 'Val Town' },
   { url: 'https://deno.com/feed', category: 'Dev Tools', company: 'Deno' },
   { url: 'https://bun.sh/blog.rss', category: 'Dev Tools', company: 'Bun' },
+  { url: 'https://blog.postman.com/feed/', category: 'Dev Tools', company: 'Postman' },
+  { url: 'https://www.nginx.com/blog/feed/', category: 'Dev Tools', company: 'Nginx' },
+  { url: 'https://blog.jetbrains.com/feed/', category: 'Dev Tools', company: 'JetBrains' },
+  { url: 'https://octopus.com/blog/rss.xml', category: 'Dev Tools', company: 'Octopus Deploy' },
+  { url: 'https://blog.logrocket.com/feed/', category: 'Dev Tools', company: 'LogRocket' },
 
   // ── Engenharia de Software ───────────────────────────────────────────────────
   { url: 'https://martinfowler.com/feed.atom', category: 'Engenharia', company: 'Martin Fowler' },
@@ -108,6 +114,8 @@ export const FEED_SOURCES = [
   { url: 'https://www.bytebytego.com/feed', category: 'Engenharia', company: 'ByteByteGo' },
   { url: 'https://medium.com/feed/better-programming', category: 'Engenharia', company: 'Better Programming' },
   { url: 'https://blog.quastor.org/feed', category: 'Engenharia', company: 'Quastor' },
+  { url: 'https://www.smashingmagazine.com/feed/', category: 'Engenharia', company: 'Smashing Magazine' },
+  { url: 'https://dev.to/feed', category: 'Engenharia', company: 'DEV.to' },
 
   // ── Open Source ──────────────────────────────────────────────────────────────
   { url: 'https://www.linux.com/feed/', category: 'Open Source', company: 'Linux' },
@@ -127,6 +135,13 @@ export const FEED_SOURCES = [
   { url: 'https://portswigger.net/daily-swig/rss', category: 'Segurança', company: 'PortSwigger' },
   { url: 'https://snyk.io/blog/feed/', category: 'Segurança', company: 'Snyk' },
   { url: 'https://googleprojectzero.blogspot.com/feeds/posts/default', category: 'Segurança', company: 'Project Zero' },
+  { url: 'https://unit42.paloaltonetworks.com/feed/', category: 'Segurança', company: 'Unit 42' },
+  { url: 'https://www.crowdstrike.com/blog/feed/', category: 'Segurança', company: 'CrowdStrike' },
+  { url: 'https://www.rapid7.com/blog/rss.xml', category: 'Segurança', company: 'Rapid7' },
+  { url: 'https://blog.malwarebytes.com/feed/', category: 'Segurança', company: 'Malwarebytes' },
+  { url: 'https://isc.sans.edu/rssfeed.xml', category: 'Segurança', company: 'SANS ISC' },
+  { url: 'https://www.darkreading.com/rss.xml', category: 'Segurança', company: 'Dark Reading' },
+  { url: 'https://www.securityweek.com/feed/', category: 'Segurança', company: 'SecurityWeek' },
 
   // ── Startups & VC ────────────────────────────────────────────────────────────
   { url: 'https://a16z.com/feed/', category: 'Startups', company: 'a16z' },
@@ -157,6 +172,8 @@ export const FEED_SOURCES = [
   { url: 'https://css-tricks.com/feed/', category: 'Tecnologia', company: 'CSS-Tricks' },
   { url: 'https://web.dev/feed.xml', category: 'Tecnologia', company: 'web.dev' },
   { url: 'https://hacks.mozilla.org/feed/', category: 'Tecnologia', company: 'Mozilla' },
+  { url: 'https://www.theatlantic.com/technology/feed/', category: 'Tecnologia', company: 'The Atlantic' },
+  { url: 'https://www.vox.com/rss/technology/index.xml', category: 'Tecnologia', company: 'Vox' },
 
   // ── Mundo ────────────────────────────────────────────────────────────────────
   { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
@@ -164,6 +181,8 @@ export const FEED_SOURCES = [
   { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },
   { url: 'https://feeds.reuters.com/reuters/worldNews', category: 'Mundo' },
   { url: 'https://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
+  { url: 'https://feeds.feedburner.com/time/world', category: 'Mundo', company: 'TIME' },
+  { url: 'https://www.foreignaffairs.com/rss.xml', category: 'Mundo', company: 'Foreign Affairs' },
 
   // ── Negocios & Mercados ──────────────────────────────────────────────────────
   { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negocios' },
@@ -171,6 +190,11 @@ export const FEED_SOURCES = [
   { url: 'https://www.forbes.com/business/feed/', category: 'Negocios' },
   { url: 'https://fortune.com/feed/', category: 'Negocios', company: 'Fortune' },
   { url: 'https://hbr.org/feed', category: 'Negocios', company: 'Harvard Business Review' },
+  { url: 'https://www.coindesk.com/feed/', category: 'Negocios', company: 'CoinDesk' },
+  { url: 'https://cointelegraph.com/rss', category: 'Negocios', company: 'CoinTelegraph' },
+  { url: 'https://decrypt.co/feed', category: 'Negocios', company: 'Decrypt' },
+  { url: 'https://blockworks.co/feed', category: 'Negocios', company: 'Blockworks' },
+  { url: 'https://www.theblock.co/rss.xml', category: 'Negocios', company: 'The Block' },
 
   // ── Brasil ───────────────────────────────────────────────────────────────────
   { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
@@ -180,6 +204,11 @@ export const FEED_SOURCES = [
   { url: 'https://www.infomoney.com.br/feed/', category: 'Brasil', company: 'InfoMoney' },
   { url: 'https://olhardigital.com.br/feed/', category: 'Brasil', company: 'Olhar Digital' },
   { url: 'https://canaltech.com.br/rss/', category: 'Brasil', company: 'Canaltech' },
+  { url: 'https://www.startups.com.br/feed/', category: 'Brasil', company: 'Startups.com.br' },
+  { url: 'https://exame.com/feed/', category: 'Brasil', company: 'Exame' },
+  { url: 'https://manualdousuario.net/feed/', category: 'Brasil', company: 'Manual do Usuário' },
+  { url: 'https://br.cointelegraph.com/rss', category: 'Brasil', company: 'CoinTelegraph BR' },
+  { url: 'https://braziljournal.com/feed/', category: 'Brasil', company: 'Brazil Journal' },
 
   // ── Ciencia ──────────────────────────────────────────────────────────────────
   { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/', category: 'Ciencia' },
@@ -188,6 +217,7 @@ export const FEED_SOURCES = [
   { url: 'https://feeds.newscientist.com/science-news', category: 'Ciencia', company: 'New Scientist' },
   { url: 'https://phys.org/rss-feed/', category: 'Ciencia', company: 'Phys.org' },
   { url: 'https://www.quantamagazine.org/feed/', category: 'Ciencia', company: 'Quanta Magazine' },
+  { url: 'https://www.economist.com/science-and-technology/rss.xml', category: 'Ciencia', company: 'The Economist' },
 ];
 
 export interface RawArticle {
@@ -280,7 +310,7 @@ async function upsertArticle(article: RawArticle, ollamaUp: boolean): Promise<st
 export interface IngestionResult {
   fetched: number;
   stored: number;
-  newArticles: Array<{ id: string; title: string; url: string; source: string; category: string; company?: string; content: string; imageUrl?: string }>;
+  newArticles: Array<{ id: string; title: string; url: string; source: string; category: string; company?: string; content: string; imageUrl?: string; publishedAt?: Date | null }>;
 }
 
 async function isOllamaAvailable(): Promise<boolean> {
@@ -317,11 +347,13 @@ export async function runIngestion(): Promise<IngestionResult> {
             newArticles.push({
               id, title: article.title, url: article.url,
               source: article.source, category: article.category, company: article.company,
-              content: article.content, imageUrl: article.imageUrl,
+              content: article.content, imageUrl: article.imageUrl, publishedAt: article.publishedAt,
             });
-            buildArticleRelations(id).catch((err: Error) => console.error('[ingestion] buildArticleRelations failed:', err.message));
-            assignArticleToStory(id).catch((err: Error) => console.error('[ingestion] assignArticleToStory failed:', err.message));
-            analyzeCredibility(id, article.title, article.content, article.source, article.category).catch((err: Error) => console.error('[ingestion] analyzeCredibility failed:', err.message));
+            const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
+              Promise.race([p, new Promise<T>((_, r) => setTimeout(() => r(new Error('timeout')), ms))]);
+            withTimeout(buildArticleRelations(id), 30_000).catch((err: Error) => console.error('[ingestion] buildArticleRelations failed:', err.message));
+            withTimeout(assignArticleToStory(id), 30_000).catch((err: Error) => console.error('[ingestion] assignArticleToStory failed:', err.message));
+            withTimeout(analyzeCredibility(id, article.title, article.content, article.source, article.category), 30_000).catch((err: Error) => console.error('[ingestion] analyzeCredibility failed:', err.message));
           }
         } catch (err) {
           console.error('[ingestion] article failed:', (err as Error).message, { url: article.url });

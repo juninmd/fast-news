@@ -148,6 +148,16 @@ function formatArticle(article: { title: string; url: string; source: string; ca
          `🔗 <a href="${article.url}">Ler notícia completa</a>`;
 }
 
+function timeAgo(date: Date | null | undefined): string {
+  if (!date) return '';
+  const diff = Date.now() - new Date(date).getTime();
+  const min = Math.floor(diff / 60_000);
+  if (min < 60) return `há ${min}m`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h}h`;
+  return `há ${Math.floor(h / 24)}d`;
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -229,6 +239,8 @@ async function fetchRelatedArticles(
 export async function postNewArticles(
   articles: Array<{
     id: string; title: string; url: string; source: string; category: string; content: string;
+    company?: string;
+    publishedAt?: Date | null;
     imageUrl?: string;
     storyId?: string | null;
     fakeNewsScore?: number | null;
@@ -295,15 +307,24 @@ export async function postNewArticles(
       : '';
 
     const credibilityBlock = buildCredibilityBlock(article);
+    const ago = timeAgo(article.publishedAt);
+    const companyLine = article.company && article.company !== article.source
+      ? `${escapeHtml(article.company)} · ` : '';
 
-    const message =
+    let message =
       `${emoji} <b>${escapeHtml(article.title.slice(0, 200))}</b>` +
       `\n\n💡 <i>${escapeHtml(displaySummary)}</i>` +
       `\n\n─────────────────────\n` +
-      `📰 <b>${escapeHtml(article.source)}</b>  ·  ${article.category}` +
+      `📰 <b>${companyLine}${escapeHtml(article.source)}</b>  ·  ${article.category}` +
+      (ago ? `  ·  <i>${ago}</i>` : '') +
       (credibilityBlock ? `\n${credibilityBlock}` : '') +
       storyBlock +
       relatedBlock;
+
+    // Telegram max is 4096 chars — truncate gracefully
+    if (message.length > 3800) {
+      message = message.slice(0, 3780) + '…';
+    }
 
     const inlineButtons = [[
       { text: '🔗 Ler notícia', url: article.url },

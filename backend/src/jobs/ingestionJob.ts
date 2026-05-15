@@ -6,9 +6,16 @@ import { config } from '../config/env.js';
 
 let task: cron.ScheduledTask | null = null;
 
+const JOB_TIMEOUT_MS = 25 * 60 * 1_000;
+
 export async function runIngestionAndPost(): Promise<void> {
   console.log(`[IngestionJob] Running at ${new Date().toISOString()}`);
-  const result = await runIngestion();
+  const result = await Promise.race([
+    runIngestion(),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('ingestion job timeout after 25min')), JOB_TIMEOUT_MS)
+    ),
+  ]);
   console.log(`[IngestionJob] Stored ${result.stored} new articles.`);
 
   if (result.newArticles.length > 0) {
