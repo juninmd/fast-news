@@ -222,7 +222,7 @@ async function fetchFeed(source: { url: string; category: string; company?: stri
   }
 }
 
-async function upsertArticle(article: RawArticle): Promise<string | null> {
+async function upsertArticle(article: RawArticle, ollamaUp: boolean): Promise<string | null> {
   if (!article.guid || !article.title || !article.url) return null;
 
   const existing = await query<{ id: string }>(
@@ -233,14 +233,15 @@ async function upsertArticle(article: RawArticle): Promise<string | null> {
   const textToEmbed = `${article.title}. ${article.content}`.slice(0, 2000);
   // Embedding is best-effort — if Ollama is unavailable, store without vector
   let embedding: number[] | null = null;
-  try {
-    const EMBED_TIMEOUT_MS = 20_000;
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('embed timeout')), EMBED_TIMEOUT_MS)
-    );
-    embedding = await Promise.race([embedDocument(textToEmbed), timeout]);
-  } catch (e) {
-    console.warn('[ingestion] embed failed, storing without vector:', (e as Error).message.slice(0, 80));
+  if (ollamaUp) {
+    try {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('embed timeout')), 10_000)
+      );
+      embedding = await Promise.race([embedDocument(textToEmbed), timeout]);
+    } catch (e) {
+      console.warn('[ingestion] embed failed, storing without vector:', (e as Error).message.slice(0, 80));
+    }
   }
 
   const result = await query<{ id: string }>(
@@ -282,8 +283,23 @@ export interface IngestionResult {
   newArticles: Array<{ id: string; title: string; url: string; source: string; category: string; company?: string; content: string; imageUrl?: string }>;
 }
 
+async function isOllamaAvailable(): Promise<boolean> {
+  const base = config.ollama.baseUrl.replace(/\/v1\/?$/, '');
+  try {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), 3_000);
+    const res = await fetch(`${base}/api/tags`, { signal: ac.signal });
+    clearTimeout(t);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function runIngestion(): Promise<IngestionResult> {
   console.log('[ingestion] Starting news ingestion...');
+  const ollamaUp = await isOllamaAvailable();
+  if (!ollamaUp) console.warn('[ingestion] Ollama unavailable — embeddings will be skipped');
   let fetched = 0;
   const newArticles: IngestionResult['newArticles'] = [];
 
@@ -296,7 +312,7 @@ export async function runIngestion(): Promise<IngestionResult> {
       fetched += result.value.length;
       for (const article of result.value) {
         try {
-          const id = await upsertArticle(article);
+          const id = await upsertArticle(article, ollamaUp);
           if (id) {
             newArticles.push({
               id, title: article.title, url: article.url,
