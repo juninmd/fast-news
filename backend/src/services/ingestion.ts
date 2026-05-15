@@ -212,6 +212,7 @@ export const FEED_SOURCES = [
   { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
   { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Brasil' },
   { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
+  { url: 'https://www.tabnews.com.br/recentes/rss', category: 'Brasil', company: 'TabNews' },
   { url: 'https://tecnoblog.net/feed/', category: 'Brasil', company: 'Tecnoblog' },
   { url: 'https://www.infomoney.com.br/feed/', category: 'Brasil', company: 'InfoMoney' },
   { url: 'https://olhardigital.com.br/feed/', category: 'Brasil', company: 'Olhar Digital' },
