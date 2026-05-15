@@ -234,7 +234,11 @@ async function upsertArticle(article: RawArticle): Promise<string | null> {
   // Embedding is best-effort — if Ollama is unavailable, store without vector
   let embedding: number[] | null = null;
   try {
-    embedding = await embedDocument(textToEmbed);
+    const EMBED_TIMEOUT_MS = 20_000;
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('embed timeout')), EMBED_TIMEOUT_MS)
+    );
+    embedding = await Promise.race([embedDocument(textToEmbed), timeout]);
   } catch (e) {
     console.warn('[ingestion] embed failed, storing without vector:', (e as Error).message.slice(0, 80));
   }
