@@ -175,9 +175,9 @@ function buildCredibilityBlock(article: {
   hasIncoherence?: boolean;
 }): string {
   const parts: string[] = [];
-  if (article.fakeNewsScore != null) {
-    const icon = article.fakeNewsScore <= 3 ? '✅' : article.fakeNewsScore <= 6 ? '⚠️' : '🚨';
-    parts.push(`${icon} Credibilidade: ${article.fakeNewsScore}/10`);
+  if (article.fakeNewsScore != null && article.fakeNewsScore > 4) {
+    const icon = article.fakeNewsScore <= 6 ? '⚠️' : '🚨';
+    parts.push(`${icon} Risco fake: ${article.fakeNewsScore}/10`);
   }
   const biasMap: Record<string, string> = {
     left: '🔵 Esquerda', far_left: '🔵🔵 Esq. radical',
@@ -196,6 +196,7 @@ function buildCredibilityBlock(article: {
 export async function postNewArticles(
   articles: Array<{
     id: string; title: string; url: string; source: string; category: string; content: string;
+    imageUrl?: string;
     storyId?: string | null;
     fakeNewsScore?: number | null;
     politicalBias?: string | null;
@@ -239,9 +240,10 @@ export async function postNewArticles(
     const credibilityBlock = buildCredibilityBlock(article);
 
     const message =
-      `${emoji} <b>${escapeHtml(article.title.slice(0, 200))}</b>\n` +
-      (summary ? `\n💡 <i>${escapeHtml(summary)}</i>` : '') +
-      `\n\n📌 <b>${escapeHtml(article.source)}</b> · ${article.category}` +
+      `${emoji} <b>${escapeHtml(article.title.slice(0, 200))}</b>` +
+      (summary ? `\n\n💡 <i>${escapeHtml(summary)}</i>` : '') +
+      `\n\n─────────────────────\n` +
+      `📰 <b>${escapeHtml(article.source)}</b>  ·  ${article.category}` +
       (credibilityBlock ? `\n${credibilityBlock}` : '') +
       storyBlock;
 
@@ -253,10 +255,11 @@ export async function postNewArticles(
       inlineButtons.push([{ text: '🕸 Ver história completa', url: `${FAST_NEWS_URL}/?view=stories&story=${matchedStory.id}` }]);
     }
 
+    const previewUrl = article.imageUrl ?? article.url;
     for (const chatId of config.telegramChatIds) {
       await getBot().telegram.sendMessage(chatId, message, {
         parse_mode: 'HTML',
-        link_preview_options: { url: article.url, prefer_large_media: true, show_above_text: false },
+        link_preview_options: { url: previewUrl, prefer_large_media: true, show_above_text: true },
         reply_markup: { inline_keyboard: inlineButtons },
       }).catch((err) => console.error(`[Telegram] Failed to send to ${chatId}:`, err.message));
     }
@@ -264,16 +267,37 @@ export async function postNewArticles(
   }
 }
 
-export async function sendDigest(content: string): Promise<void> {
+export async function sendDigest(content: string, topArticleUrl?: string): Promise<void> {
   if (!config.telegramEnabled || !config.telegramBotToken || !config.telegramChatIds.length) return;
-  const chunks = content.match(/[\s\S]{1,4000}/g) ?? [];
+  const chunks = splitMarkdown(content);
   for (const chatId of config.telegramChatIds) {
-    for (const chunk of chunks) {
-      await getBot().telegram.sendMessage(chatId, chunk, { parse_mode: 'HTML' })
-        .catch(() => getBot().telegram.sendMessage(chatId, chunk));
+    for (let i = 0; i < chunks.length; i++) {
+      const isFirst = i === 0;
+      const opts: Record<string, unknown> = { parse_mode: 'Markdown' };
+      if (isFirst && topArticleUrl) {
+        opts.link_preview_options = { url: topArticleUrl, prefer_large_media: true, show_above_text: true };
+      }
+      await getBot().telegram.sendMessage(chatId, chunks[i], opts)
+        .catch(() => getBot().telegram.sendMessage(chatId, chunks[i]));
       await sleep(500);
     }
   }
+}
+
+/** Split at paragraph boundaries to avoid breaking Markdown formatting mid-sentence */
+function splitMarkdown(text: string, limit = 3800): string[] {
+  if (text.length <= limit) return [text];
+  const chunks: string[] = [];
+  let remaining = text;
+  while (remaining.length > limit) {
+    let cut = remaining.lastIndexOf('\n\n', limit);
+    if (cut < limit / 2) cut = remaining.lastIndexOf('\n', limit);
+    if (cut < 1) cut = limit;
+    chunks.push(remaining.slice(0, cut).trimEnd());
+    remaining = remaining.slice(cut).trimStart();
+  }
+  if (remaining) chunks.push(remaining);
+  return chunks;
 }
 
 async function sendLongMessage(ctx: Context, text: string): Promise<void> {

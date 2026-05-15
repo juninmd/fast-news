@@ -37,11 +37,13 @@ export function getSqliteDb(): Database.Database {
         company   TEXT,
         published_at TEXT,
         embedding TEXT,
+        image_url TEXT,
         indexed_at TEXT DEFAULT (datetime('now'))
       );
       CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category);
       CREATE INDEX IF NOT EXISTS idx_articles_published ON articles(published_at DESC);
     `);
+    try { db.exec('ALTER TABLE articles ADD COLUMN image_url TEXT'); } catch { /* already exists */ }
     console.log('[sqlite] DB ready at', DB_PATH);
   }
   return db;
@@ -57,13 +59,14 @@ export interface SqliteArticle {
   category: string;
   company?: string;
   publishedAt?: string;
+  imageUrl?: string;
 }
 
 export function upsertArticleToSqlite(article: SqliteArticle, embedding: number[]): void {
   const store = getSqliteDb();
   store.prepare(`
-    INSERT INTO articles (id, guid, title, content, url, source, category, company, published_at, embedding)
-    VALUES (@id, @guid, @title, @content, @url, @source, @category, @company, @publishedAt, @embedding)
+    INSERT INTO articles (id, guid, title, content, url, source, category, company, published_at, embedding, image_url)
+    VALUES (@id, @guid, @title, @content, @url, @source, @category, @company, @publishedAt, @embedding, @imageUrl)
     ON CONFLICT(guid) DO NOTHING
   `).run({
     id: article.id,
@@ -76,6 +79,7 @@ export function upsertArticleToSqlite(article: SqliteArticle, embedding: number[
     company: article.company || null,
     publishedAt: article.publishedAt || null,
     embedding: JSON.stringify(embedding),
+    imageUrl: article.imageUrl || null,
   });
 }
 
@@ -86,19 +90,19 @@ export interface SearchResult extends SqliteArticle {
 export function searchSimilarInSqlite(queryEmbedding: number[], limit = 10): SearchResult[] {
   const store = getSqliteDb();
   const rows = store.prepare(`
-    SELECT id, guid, title, content, url, source, category, company, published_at, embedding
+    SELECT id, guid, title, content, url, source, category, company, published_at, embedding, image_url
     FROM articles WHERE embedding IS NOT NULL
-  `).all() as Array<SqliteArticle & { embedding: string; published_at: string }>;
+  `).all() as Array<SqliteArticle & { embedding: string; published_at: string; image_url: string | null }>;
 
   const scored = rows.map((row) => {
     const emb: number[] = JSON.parse(row.embedding);
-    return { ...row, publishedAt: row.published_at, similarity: cosineSim(queryEmbedding, emb) };
+    return { ...row, publishedAt: row.published_at, imageUrl: row.image_url ?? undefined, similarity: cosineSim(queryEmbedding, emb) };
   });
 
   return scored
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, limit)
-    .map(({ embedding: _e, published_at: _p, ...rest }) => rest as SearchResult);
+    .map(({ embedding: _e, published_at: _p, image_url: _i, ...rest }) => rest as SearchResult);
 }
 
 export function getSqliteStats(): { total: number; categories: Array<{ category: string; count: number }> } {
