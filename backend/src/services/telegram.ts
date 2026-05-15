@@ -5,7 +5,8 @@ import { getAllTrackedTopics, analyzeTopicWithRAG } from './analysis.js';
 import { getActiveOpportunities } from './financial.js';
 import { searchSimilarArticles } from './rag.js';
 import { getFastModel } from './aiProvider.js';
-import { listActiveStories } from './correlation.js';
+import { listActiveStories, getStoryGraph } from './correlation.js';
+import { query } from '../database/client.js';
 
 const FAST_NEWS_URL = 'https://fast-news.antonio-code.duckdns.org';
 
@@ -192,6 +193,38 @@ function buildCredibilityBlock(article: {
   return parts.length ? `\n${parts.join(' · ')}` : '';
 }
 
+async function fetchRelatedArticles(
+  articleId: string,
+  category: string,
+  limit = 2
+): Promise<Array<{ title: string; url: string; source: string }>> {
+  try {
+    // Try vector similarity first
+    const byVector = await query<{ title: string; url: string; source: string }>(
+      `SELECT na.title, na.url, na.source
+       FROM article_relations ar
+       JOIN news_articles na ON na.id = CASE WHEN ar.article_a = $1 THEN ar.article_b ELSE ar.article_a END
+       WHERE (ar.article_a = $1 OR ar.article_b = $1)
+       ORDER BY ar.similarity DESC
+       LIMIT $2`,
+      [articleId, limit]
+    );
+    if (byVector.rows.length > 0) return byVector.rows;
+
+    // Fallback: recent articles in same category
+    const byCategory = await query<{ title: string; url: string; source: string }>(
+      `SELECT title, url, source FROM news_articles
+       WHERE category = $1 AND id != $2
+         AND published_at > NOW() - INTERVAL '24 hours'
+       ORDER BY published_at DESC LIMIT $3`,
+      [category, articleId, limit]
+    );
+    return byCategory.rows;
+  } catch {
+    return [];
+  }
+}
+
 /** Posta novas notícias no Telegram após ingestion */
 export async function postNewArticles(
   articles: Array<{
@@ -217,35 +250,60 @@ export async function postNewArticles(
   for (const article of eligible) {
     const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
     const summary = await generateSummary(article.title, article.content);
+    // Fallback: first 220 chars of content when AI summary unavailable
+    const displaySummary = summary || article.content.replace(/\s+/g, ' ').trim().slice(0, 220);
 
-    // Find story by matching category and recent stories (best effort)
+    // Prefer storyId from enriched article, then search active stories
     const matchedStory = article.storyId
-      ? storyMap.get(article.storyId)
-      : activeStories.find((s) => s.category === article.category && s.articleCount > 1);
+      ? storyMap.get(article.storyId) ?? activeStories.find((s) => s.id === article.storyId)
+      : activeStories.find((s) => s.category === article.category && s.articleCount > 2);
+
+    // Fetch story graph for timeline events if story matched
+    const storyGraph = matchedStory
+      ? await getStoryGraph(matchedStory.id).catch(() => null)
+      : null;
 
     let storyBlock = '';
     if (matchedStory) {
       const impact = IMPACT_EMOJI[matchedStory.impactLevel] ?? '';
-      const signal = matchedStory.financialSignal ? `${SIGNAL_EMOJI[matchedStory.financialSignal]} ` : '';
+      const signal = matchedStory.financialSignal && matchedStory.financialSignal !== 'neutral'
+        ? `${SIGNAL_EMOJI[matchedStory.financialSignal] ?? ''} ` : '';
       const assets = matchedStory.affectedAssets?.length
         ? `\n💹 <code>${matchedStory.affectedAssets.slice(0, 4).join(' · ')}</code>` : '';
-      storyBlock =
-        `\n\n${impact} <b>História:</b> ${escapeHtml(matchedStory.title.slice(0, 80))}` +
-        `\n${signal}${matchedStory.articleCount} artigos correlacionados${assets}`;
-      if (matchedStory.worldImpact) {
-        storyBlock += `\n🌍 <i>${escapeHtml(matchedStory.worldImpact.slice(0, 150))}...</i>`;
+
+      storyBlock = `\n\n${impact} <b>História em andamento:</b> ${escapeHtml(matchedStory.title.slice(0, 80))}` +
+        `\n${signal}<i>${matchedStory.articleCount} artigos correlacionados</i>${assets}`;
+
+      if (matchedStory.summary) {
+        storyBlock += `\n📋 <i>${escapeHtml(matchedStory.summary.slice(0, 180))}</i>`;
+      } else if (matchedStory.worldImpact) {
+        storyBlock += `\n🌍 <i>${escapeHtml(matchedStory.worldImpact.slice(0, 150))}</i>`;
+      }
+
+      // Latest timeline event (what changed)
+      const lastEvent = storyGraph?.timeline.at(-1);
+      if (lastEvent?.whatChanged) {
+        storyBlock += `\n🔄 <i>${escapeHtml(lastEvent.whatChanged.slice(0, 120))}</i>`;
       }
     }
+
+    // Related articles block
+    const related = await fetchRelatedArticles(article.id, article.category);
+    const relatedBlock = related.length
+      ? `\n\n🔗 <b>Veja também:</b>\n` +
+        related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 70))}</a> <i>(${escapeHtml(r.source)})</i>`).join('\n')
+      : '';
 
     const credibilityBlock = buildCredibilityBlock(article);
 
     const message =
       `${emoji} <b>${escapeHtml(article.title.slice(0, 200))}</b>` +
-      (summary ? `\n\n💡 <i>${escapeHtml(summary)}</i>` : '') +
+      `\n\n💡 <i>${escapeHtml(displaySummary)}</i>` +
       `\n\n─────────────────────\n` +
       `📰 <b>${escapeHtml(article.source)}</b>  ·  ${article.category}` +
       (credibilityBlock ? `\n${credibilityBlock}` : '') +
-      storyBlock;
+      storyBlock +
+      relatedBlock;
 
     const inlineButtons = [[
       { text: '🔗 Ler notícia', url: article.url },
