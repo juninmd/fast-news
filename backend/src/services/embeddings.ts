@@ -1,11 +1,12 @@
 import { embed, embedMany } from 'ai';
 import { getEmbeddingModel } from './aiProvider.js';
 
-export async function embedDocument(text: string): Promise<number[]> {
+export async function embedDocument(text: string, abortSignal?: AbortSignal): Promise<number[]> {
   const model = await getEmbeddingModel();
   const { embedding } = await embed({
     model,
     value: text.slice(0, 2048),
+    abortSignal,
   });
   return embedding;
 }
