@@ -9,9 +9,11 @@ export function getPool(): pg.Pool {
   if (!pool) {
     pool = new Pool({
       connectionString: config.databaseUrl,
-      max: 20,
+      max: 10,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
+      query_timeout: 15_000,      // abort query if Postgres hangs >15s
+      statement_timeout: 15_000,  // server-side timeout
     });
 
     pool.on('error', (err) => {
