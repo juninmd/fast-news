@@ -14,6 +14,16 @@ const parser = new Parser({
 
 const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif)(\?.*)?$/i;
 
+function timeoutSignal(ms: number): AbortSignal {
+  return AbortSignal.timeout(ms);
+}
+
+function runBackground(label: string, task: () => Promise<unknown>): void {
+  task().catch((err: Error) => {
+    console.error(`[ingestion] ${label} failed:`, err.message);
+  });
+}
+
 function extractImageUrl(item: Record<string, unknown>): string | undefined {
   const candidates = [
     (item['mediaContent'] as Record<string, unknown> | undefined)?.['$'] &&
@@ -177,10 +187,15 @@ export const FEED_SOURCES = [
   { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
   { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },
-  { url: 'https://feeds.reuters.com/reuters/worldNews', category: 'Mundo' },
+  { url: 'https://www.reuters.com/world/rss', category: 'Mundo' },
   { url: 'https://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
   { url: 'https://feeds.feedburner.com/time/world', category: 'Mundo', company: 'TIME' },
   { url: 'https://www.foreignaffairs.com/rss.xml', category: 'Mundo', company: 'Foreign Affairs' },
+  { url: 'https://www.theguardian.com/world/rss', category: 'Mundo', company: 'The Guardian' },
+  { url: 'https://www.dw.com/en/top-stories/s-9097/rss', category: 'Mundo', company: 'DW' },
+  { url: 'https://www.lemonde.fr/rss/une.xml', category: 'Mundo', company: 'Le Monde' },
+  { url: 'https://www.economist.com/sections/international/rss.xml', category: 'Mundo', company: 'The Economist' },
+  { url: 'https://www.scmp.com/rss/91/feed', category: 'Mundo', company: 'SCMP' },
 
   // ── Negocios & Mercados ──────────────────────────────────────────────────────
   { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negocios' },
@@ -188,11 +203,10 @@ export const FEED_SOURCES = [
   { url: 'https://www.forbes.com/business/feed/', category: 'Negocios' },
   { url: 'https://fortune.com/feed/', category: 'Negocios', company: 'Fortune' },
   { url: 'https://hbr.org/feed', category: 'Negocios', company: 'Harvard Business Review' },
+  { url: 'https://www.wsj.com/xml/rss/3_7014.xml', category: 'Negocios', company: 'WSJ' },
+  { url: 'https://www.ft.com/?format=rss', category: 'Negocios', company: 'Financial Times' },
   { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', category: 'Negocios', company: 'CoinDesk' },
   { url: 'https://cointelegraph.com/rss', category: 'Negocios', company: 'CoinTelegraph' },
-  { url: 'https://decrypt.co/feed', category: 'Negocios', company: 'Decrypt' },
-  { url: 'https://blockworks.co/feed', category: 'Negocios', company: 'Blockworks' },
-  { url: 'https://www.theblock.co/rss.xml', category: 'Negocios', company: 'The Block' },
 
   // ── Brasil ───────────────────────────────────────────────────────────────────
   { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
@@ -204,6 +218,12 @@ export const FEED_SOURCES = [
   { url: 'https://canaltech.com.br/rss/', category: 'Brasil', company: 'Canaltech' },
   { url: 'https://www.startups.com.br/feed/', category: 'Brasil', company: 'Startups.com.br' },
   { url: 'https://exame.com/feed/', category: 'Brasil', company: 'Exame' },
+  { url: 'https://valor.globo.com/rss/valor/', category: 'Brasil', company: 'Valor Econômico' },
+  { url: 'https://www.moneytimes.com.br/feed/', category: 'Brasil', company: 'Money Times' },
+  { url: 'https://www.folha.uol.com.br/rss/online/tecnologia/index.xml', category: 'Brasil', company: 'Folha de S.Paulo' },
+  { url: 'https://noticias.r7.com/brasil/feed.xml', category: 'Brasil', company: 'R7' },
+  { url: 'https://www.cartacapital.com.br/feed/', category: 'Brasil', company: 'Carta Capital' },
+  { url: 'https://www.metropoles.com/feed', category: 'Brasil', company: 'Metrópoles' },
   { url: 'https://manualdousuario.net/feed/', category: 'Brasil', company: 'Manual do Usuário' },
   { url: 'https://braziljournal.com/feed/', category: 'Brasil', company: 'Brazil Journal' },
 
@@ -262,10 +282,7 @@ async function upsertArticle(article: RawArticle, ollamaUp: boolean): Promise<st
   let embedding: number[] | null = null;
   if (ollamaUp) {
     try {
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('embed timeout')), 10_000)
-      );
-      embedding = await Promise.race([embedDocument(textToEmbed), timeout]);
+      embedding = await embedDocument(textToEmbed, timeoutSignal(config.ai.embeddingTimeoutMs));
     } catch (e) {
       console.warn('[ingestion] embed failed, storing without vector:', (e as Error).message.slice(0, 80));
     }
@@ -346,11 +363,12 @@ export async function runIngestion(): Promise<IngestionResult> {
               source: article.source, category: article.category, company: article.company,
               content: article.content, imageUrl: article.imageUrl, publishedAt: article.publishedAt,
             });
-            const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
-              Promise.race([p, new Promise<T>((_, r) => setTimeout(() => r(new Error('timeout')), ms))]);
-            withTimeout(buildArticleRelations(id), 30_000).catch((err: Error) => console.error('[ingestion] buildArticleRelations failed:', err.message));
-            withTimeout(assignArticleToStory(id), 30_000).catch((err: Error) => console.error('[ingestion] assignArticleToStory failed:', err.message));
-            withTimeout(analyzeCredibility(id, article.title, article.content, article.source, article.category), 30_000).catch((err: Error) => console.error('[ingestion] analyzeCredibility failed:', err.message));
+            const signal = () => timeoutSignal(config.ai.backgroundTaskTimeoutMs);
+            runBackground('buildArticleRelations', () => buildArticleRelations(id));
+            runBackground('assignArticleToStory', () => assignArticleToStory(id));
+            runBackground('analyzeCredibility', () =>
+              analyzeCredibility(id, article.title, article.content, article.source, article.category, signal())
+            );
           }
         } catch (err) {
           console.error('[ingestion] article failed:', (err as Error).message, { url: article.url });
