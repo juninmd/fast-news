@@ -1,8 +1,10 @@
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const fallback = (article, error) => ({
   summary: article.excerpt || 'Sem texto suficiente para resumir.',
   useful: article.isUseful,
   score: article.usefulScore,
-  why: error ? `Ollama indisponivel: ${error.message}` : 'Triagem heuristica local.',
+  why: error ? `AI API indisponivel: ${error.message}` : 'Triagem heuristica local.',
   actions: ['Abrir fonte original', 'Comparar com outra cobertura'],
   risks: ['Resumo limitado ao conteudo do RSS'],
 });
@@ -30,7 +32,7 @@ Texto: ${article.body || article.excerpt}
 `;
 
   try {
-    const response = await fetch(`${baseUrl}/api/generate`, {
+    const response = await fetch(`${API_BASE}/api/ai/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model, prompt, stream: false }),
@@ -42,7 +44,7 @@ Texto: ${article.body || article.excerpt}
       summary: parsed.summary || article.excerpt,
       useful: Boolean(parsed.useful),
       score: Number(parsed.score || article.usefulScore),
-      why: parsed.why || 'Analise Ollama concluida.',
+      why: parsed.why || 'Analise AI concluida.',
       actions: Array.isArray(parsed.actions) ? parsed.actions.slice(0, 2) : [],
       risks: Array.isArray(parsed.risks) ? parsed.risks.slice(0, 2) : [],
     };

@@ -27,6 +27,7 @@ export function createApp(): express.Application {
   app.use('/api/financial', financialRouter);
   app.use('/api/rag', ragRouter);
   app.use('/api/stories', storiesRouter);
+  app.use('/api/ai', aiRouter);
 
   // Serve static files from frontend build (optional — only when built)
   const clientPath = path.join(__dirname, '../../client');
@@ -44,4 +45,6 @@ export function createApp(): express.Application {
   });
 
   return app;
+}
+n app;
 }
