@@ -6,7 +6,26 @@ import { config } from '../config/env.js';
 import { buildArticleRelations, assignArticleToStory } from './correlation.js';
 import { analyzeCredibility } from './credibility.js';
 
-const parser = new Parser({ timeout: 10_000, headers: { 'User-Agent': 'FastNews/1.0' } });
+const parser = new Parser({
+  timeout: 10_000,
+  headers: { 'User-Agent': 'FastNews/1.0' },
+  customFields: { item: [['media:content', 'mediaContent'], 'enclosure'] },
+});
+
+const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif)(\?.*)?$/i;
+
+function extractImageUrl(item: Record<string, unknown>): string | undefined {
+  const candidates = [
+    (item['mediaContent'] as Record<string, unknown> | undefined)?.['$'] &&
+      ((item['mediaContent'] as Record<string, Record<string, string>>)['$']['url']),
+    (item['mediaContent'] as Record<string, string> | undefined)?.['url'],
+    (item['enclosure'] as Record<string, string> | undefined)?.['url'],
+  ];
+  for (const url of candidates) {
+    if (typeof url === 'string' && IMAGE_EXT_RE.test(url)) return url;
+  }
+  return undefined;
+}
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): Promise<T> {
   let lastErr: unknown;
@@ -187,6 +206,7 @@ export interface RawArticle {
   category: string;
   company?: string;
   publishedAt: Date | null;
+  imageUrl?: string;
 }
 
 async function fetchFeed(source: { url: string; category: string; company?: string }): Promise<RawArticle[]> {
@@ -201,6 +221,7 @@ async function fetchFeed(source: { url: string; category: string; company?: stri
       category: source.category,
       company: source.company,
       publishedAt: item.pubDate ? new Date(item.pubDate) : null,
+      imageUrl: extractImageUrl(item as unknown as Record<string, unknown>),
     }));
   } catch (err) {
     console.warn('[ingestion] feed failed:', source.url, (err as Error).message);
@@ -241,6 +262,7 @@ async function upsertArticle(article: RawArticle): Promise<string | null> {
         category: article.category,
         company: article.company,
         publishedAt: article.publishedAt?.toISOString() ?? undefined,
+        imageUrl: article.imageUrl,
       }, embedding);
     } catch (e) {
       console.warn('[sqlite] upsert failed:', (e as Error).message);
@@ -253,7 +275,7 @@ async function upsertArticle(article: RawArticle): Promise<string | null> {
 export interface IngestionResult {
   fetched: number;
   stored: number;
-  newArticles: Array<{ id: string; title: string; url: string; source: string; category: string; company?: string; content: string }>;
+  newArticles: Array<{ id: string; title: string; url: string; source: string; category: string; company?: string; content: string; imageUrl?: string }>;
 }
 
 export async function runIngestion(): Promise<IngestionResult> {
@@ -275,7 +297,7 @@ export async function runIngestion(): Promise<IngestionResult> {
             newArticles.push({
               id, title: article.title, url: article.url,
               source: article.source, category: article.category, company: article.company,
-              content: article.content,
+              content: article.content, imageUrl: article.imageUrl,
             });
             buildArticleRelations(id).catch((err: Error) => console.error('[ingestion] buildArticleRelations failed:', err.message));
             assignArticleToStory(id).catch((err: Error) => console.error('[ingestion] assignArticleToStory failed:', err.message));
