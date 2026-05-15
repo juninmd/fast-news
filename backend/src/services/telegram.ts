@@ -330,7 +330,14 @@ export async function postNewArticles(
       { text: '🔗 Ler notícia', url: article.url },
       { text: '📱 Fast-News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
     ]];
-    if (matchedStory) {
+
+    // If exactly 1 other article exists in the story, add a direct button
+    if (matchedStory && matchedStory.articleCount === 2 && storyGraph) {
+      const otherArticle = storyGraph.nodes.find(n => n.id !== article.id);
+      if (otherArticle) {
+        inlineButtons.push([{ text: '🔗 Artigo correlacionado', url: otherArticle.url }]);
+      }
+    } else if (matchedStory) {
       inlineButtons.push([{ text: '🕸 Ver história completa', url: `${FAST_NEWS_URL}/?view=stories&story=${matchedStory.id}` }]);
     }
 
