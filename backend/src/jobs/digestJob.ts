@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { generateText, streamText } from 'ai';
 import { getAllTrackedTopics, getTopicLatestAnalysis } from '../services/analysis.js';
+import { listActiveStories } from '../services/correlation.js';
 import { getActiveOpportunities } from '../services/financial.js';
 import { searchSimilarArticles } from '../services/rag.js';
 import { sendDigest } from '../services/telegram.js';
@@ -21,6 +22,9 @@ REGRAS IMPORTANTES:
 
 TOP NOTÍCIAS:
 {news}
+
+HISTÓRIAS EM DESTAQUE (correlações entre notícias):
+{stories}
 
 ANÁLISES DE TÓPICOS:
 {analyses}
@@ -58,10 +62,11 @@ _"Mais um dia, mais uma oportunidade do mundo decepcionar"_
 export async function buildAndSendDigest(): Promise<void> {
   console.log('[DigestJob] Building daily digest...');
 
-  const [topics, opportunities, topArticles] = await Promise.all([
-    getAllTrackedTopics(),
-    getActiveOpportunities() as Promise<Record<string, unknown>[]>,
+  const [topics, opportunities, topArticles, activeStories] = await Promise.all([
+    getAllTrackedTopics().catch(() => []),
+    getActiveOpportunities().catch(() => []) as Promise<Record<string, unknown>[]>,
     searchSimilarArticles('principais notícias do dia', 1, 10),
+    listActiveStories(5).catch(() => []),
   ]);
 
   const newsSection = topArticles.slice(0, 5)
@@ -90,9 +95,19 @@ export async function buildAndSendDigest(): Promise<void> {
       `${o['direction'] === 'buy' ? '📈' : o['direction'] === 'sell' ? '📉' : '👀'} *${o['asset']}*: ${String(o['reasoning']).slice(0, 100)}`
     ).join('\n');
 
+  const storiesSection = activeStories
+    .filter((s) => s.articleCount > 1)
+    .slice(0, 4)
+    .map((s) => {
+      const impact = s.impactLevel === 'critical' ? '🚨' : s.impactLevel === 'high' ? '⚠️' : '📊';
+      const assets = s.affectedAssets?.length ? ` [${s.affectedAssets.slice(0, 3).join(', ')}]` : '';
+      return `${impact} ${s.title}${assets} — ${s.articleCount} artigos`;
+    }).join('\n') || 'Sem histórias ativas.';
+
   const model = await getFastModel();
   const fullPrompt = DIGEST_PROMPT
     .replace('{news}', newsSection || 'Sem notícias.')
+    .replace('{stories}', storiesSection)
     .replace('{analyses}', analysisSection.join('\n\n') || 'Sem análises.')
     .replace('{financial}', financialSection || 'Sem oportunidades.')
     .replace('{date}', new Date().toLocaleDateString('pt-BR'));
