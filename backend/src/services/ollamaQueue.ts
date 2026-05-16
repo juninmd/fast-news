@@ -26,10 +26,17 @@ function getQueue(): Bull.Queue<CredibilityJob> {
     queue.process(2, async (job) => {
       const { article } = job.data;
 
-      await analyzeCredibility(
-        article.id, article.title, article.content, article.source, article.category,
-        AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
-      );
+      try {
+        await analyzeCredibility(
+          article.id, article.title, article.content, article.source, article.category,
+          AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
+        );
+      } catch (err) {
+        console.warn(`[OllamaQueue] Credibility failed for ${article.id}, sending without scores: ${(err as Error).message}`);
+        // Still send to Telegram — credibility is best-effort, not a blocker
+        await enqueueTelegramPosts([article]);
+        return;
+      }
 
       // Re-read credibility scores from DB before sending to Telegram
       const res = await query<{
@@ -46,12 +53,11 @@ function getQueue(): Bull.Queue<CredibilityJob> {
 
       const scores = res.rows[0];
       const enriched: TelegramArticle = scores ? { ...article, ...scores } : article;
-
       await enqueueTelegramPosts([enriched]);
     });
 
     queue.on('failed', (job, err) => {
-      console.error(`[OllamaQueue] Job ${job?.id ?? 'unknown'} failed: ${err.message}`);
+      console.error(`[OllamaQueue] Job ${job?.id ?? 'unknown'} failed after all retries: ${err.message}`);
     });
 
     console.log('[OllamaQueue] Credibility worker started (concurrency: 2).');
