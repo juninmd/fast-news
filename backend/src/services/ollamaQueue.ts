@@ -38,6 +38,11 @@ function getQueue(): Bull.Queue<CredibilityJob> {
   return queue;
 }
 
+export async function startOllamaQueueWorker(): Promise<void> {
+  getQueue();
+  console.log('[OllamaQueue] Worker ready.');
+}
+
 export async function enqueueCredibilityAnalysis(
   articleId: string,
   title: string,
