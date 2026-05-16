@@ -8,7 +8,7 @@ const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
   const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
-  const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
+  const [ollamaUrl, _setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState(() => localStorage.getItem('ollama_model') || 'llama3');
   const [telegramBotToken, setTelegramBotToken] = useState(() => localStorage.getItem('telegram_bot_token') || '');
   const [telegramChatId, setTelegramChatId] = useState(() => localStorage.getItem('telegram_chat_id') || '');
