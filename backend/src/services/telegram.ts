@@ -6,6 +6,7 @@ import { getActiveOpportunities } from './financial.js';
 import { searchSimilarArticles } from './rag.js';
 import { getFastModel } from './aiProvider.js';
 import { listActiveStories, getStoryGraph } from './correlation.js';
+import { generateGlobalPulse } from './intelligence.js';
 import { query } from '../database/client.js';
 
 const FAST_NEWS_URL = 'https://fast-news.antonio-code.duckdns.org';
@@ -42,20 +43,31 @@ export function getBot(): Telegraf {
 function setupCommands(bot: Telegraf): void {
   bot.start((ctx: Context) =>
     ctx.replyWithHTML(
-      `📰 <b>FAST NEWS AI</b>\n` +
+      `🌌 <b>NEO-EDITORIAL INTEL</b>\n` +
       `──────────────────────\n` +
-      `Bem-vindo ao centro de inteligência financeira.\n\n` +
+      `O futuro do jornalismo financeiro está aqui.\n\n` +
       `📌 <b>Comandos:</b>\n` +
+      `• /pulse — Estado Global (IA)\n` +
       `• /news — Principais notícias\n` +
       `• /stories — Histórias correlacionadas\n` +
       `• /topics — Tópicos monitorados\n` +
       `• /analysis — Análise profunda\n` +
-      `• /financial — Oportunidades de mercado\n` +
+      `• /financial — Oportunidades\n` +
       `• /ask — Perguntar à IA\n\n` +
       `──────────────────────\n` +
       `<i>Sempre à frente do mercado.</i>`
     )
   );
+
+  bot.command('pulse', async (ctx: Context) => {
+    await ctx.reply('🌌 Gerando Neo-Pulse Global...');
+    try {
+      const pulse = await generateGlobalPulse();
+      await ctx.reply(pulse, { parse_mode: 'Markdown' });
+    } catch (err: any) {
+      await ctx.reply(`❌ Falha ao gerar Pulse: ${err.message}`);
+    }
+  });
 
   bot.command('topics', async (ctx: Context) => {
     const topics = await getAllTrackedTopics();
@@ -143,9 +155,10 @@ function formatArticle(article: { title: string; url: string; source: string; ca
   const title = article.title.slice(0, 200);
   return `${emoji} <b>${escapeHtml(title)}</b>\n` +
          `──────────────────────\n` +
-         `📌 <b>Fonte:</b> ${escapeHtml(article.source)}\n` +
-         `🏷️ <b>Categoria:</b> ${article.category}\n` +
-         `🔗 <a href="${article.url}">Ler notícia completa</a>`;
+         `<b>FONTE:</b> ${escapeHtml(article.source).toUpperCase()}\n` +
+         `<b>EDITORIA:</b> ${article.category.toUpperCase()}\n` +
+         `──────────────────────\n` +
+         `🔗 <a href="${article.url}">ACESSAR REPORTAGEM COMPLETA</a>`;
 }
 
 function timeAgo(date: Date | null | undefined): string {
@@ -170,8 +183,9 @@ async function generateSummary(title: string, content: string): Promise<string> 
     const model = await getFastModel();
     const { text } = await generateText({
       model,
-      prompt: `Resuma esta notícia em 2 frases diretas em português. Seja objetivo e informativo.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 1000)}`,
-      maxTokens: 120,
+      prompt: `Você é um editor sênior. Resuma esta notícia em 2-3 frases impactantes e profissionais em português (PT-BR). 
+      Foque nos fatos e no impacto. Não use "Esta notícia fala sobre...". Vá direto ao ponto.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 1500)}`,
+      maxTokens: 180,
     });
     return text.trim();
   } catch {
@@ -188,19 +202,19 @@ function buildCredibilityBlock(article: {
   const parts: string[] = [];
   if (article.fakeNewsScore != null && article.fakeNewsScore > 4) {
     const icon = article.fakeNewsScore <= 6 ? '⚠️' : '🚨';
-    parts.push(`${icon} Risco fake: ${article.fakeNewsScore}/10`);
+    parts.push(`${icon} <b>INTEGRIDADE:</b> ${article.fakeNewsScore}/10`);
   }
   const biasMap: Record<string, string> = {
-    left: '🔵 Esquerda', far_left: '🔵🔵 Esq. radical',
-    right: '🔴 Direita', far_right: '🔴🔴 Dir. radical',
-    neutral: '⚪ Neutro',
+    left: '🔵 ESQUERDA', far_left: '🔵🔵 ESQ. RADICAL',
+    right: '🔴 DIREITA', far_right: '🔴🔴 DIR. RADICAL',
+    neutral: '⚪ NEUTRO',
   };
   if (article.politicalBias && article.politicalBias !== 'neutral') {
-    parts.push(biasMap[article.politicalBias] ?? '');
+    parts.push(`⚖️ <b>VIÉS:</b> ${biasMap[article.politicalBias] ?? article.politicalBias.toUpperCase()}`);
   }
-  if (article.isMilitant) parts.push('📢 Militante');
-  if (article.hasIncoherence) parts.push('⚡ Incoerências detectadas');
-  return parts.length ? `\n${parts.join(' · ')}` : '';
+  if (article.isMilitant) parts.push('📢 <b>CONTEÚDO MILITANTE</b>');
+  if (article.hasIncoherence) parts.push('⚡ <b>INCOERÊNCIAS DETECTADAS</b>');
+  return parts.length ? `\n\n${parts.join('\n')}` : '';
 }
 
 async function fetchRelatedArticles(
@@ -225,7 +239,7 @@ async function fetchRelatedArticles(
     const byCategory = await query<{ title: string; url: string; source: string }>(
       `SELECT title, url, source FROM news_articles
        WHERE category = $1 AND id != $2
-         AND published_at > NOW() - INTERVAL '24 hours'
+         AND published_at > NOW() - INTERVAL '48 hours'
        ORDER BY published_at DESC LIMIT $3`,
       [category, articleId, limit]
     );
@@ -281,43 +295,43 @@ export async function postNewArticles(
       const signal = matchedStory.financialSignal && matchedStory.financialSignal !== 'neutral'
         ? `${SIGNAL_EMOJI[matchedStory.financialSignal] ?? ''} ` : '';
       const assets = matchedStory.affectedAssets?.length
-        ? `\n💹 <code>${matchedStory.affectedAssets.slice(0, 4).join(' · ')}</code>` : '';
+        ? `\n💹 <b>ATIVOS:</b> <code>${matchedStory.affectedAssets.slice(0, 4).join(' · ')}</code>` : '';
 
-      storyBlock = `\n\n${impact} <b>História em andamento:</b> ${escapeHtml(matchedStory.title.slice(0, 80))}` +
-        `\n${signal}<i>${matchedStory.articleCount} artigos correlacionados</i>${assets}`;
+      storyBlock = `\n\n${impact} <b>DESDOBRAMENTO:</b> ${escapeHtml(matchedStory.title.toUpperCase())}` +
+        `\n${signal}<i>Contexto consolidado de ${matchedStory.articleCount} reportagens</i>${assets}`;
 
       if (matchedStory.summary) {
-        storyBlock += `\n📋 <i>${escapeHtml(matchedStory.summary.slice(0, 180))}</i>`;
-      } else if (matchedStory.worldImpact) {
-        storyBlock += `\n🌍 <i>${escapeHtml(matchedStory.worldImpact.slice(0, 150))}</i>`;
+        storyBlock += `\n\n📝 <b>ANÁLISE:</b> <i>${escapeHtml(matchedStory.summary.slice(0, 250))}</i>`;
       }
 
       // Latest timeline event (what changed)
       const lastEvent = storyGraph?.timeline.at(-1);
       if (lastEvent?.whatChanged) {
-        storyBlock += `\n🔄 <i>${escapeHtml(lastEvent.whatChanged.slice(0, 120))}</i>`;
+        storyBlock += `\n\n🔄 <b>ÚLTIMA ATUALIZAÇÃO:</b> <i>${escapeHtml(lastEvent.whatChanged.slice(0, 150))}</i>`;
       }
     }
 
     // Related articles block
     const related = await fetchRelatedArticles(article.id, article.category);
     const relatedBlock = related.length
-      ? `\n\n🔗 <b>Veja também:</b>\n` +
+      ? `\n\n─────────────────────\n` +
+        `🔗 <b>PERSPECTIVAS RELACIONADAS:</b>\n` +
         related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 70))}</a> <i>(${escapeHtml(r.source)})</i>`).join('\n')
       : '';
 
     const credibilityBlock = buildCredibilityBlock(article);
     const ago = timeAgo(article.publishedAt);
     const companyLine = article.company && article.company !== article.source
-      ? `${escapeHtml(article.company)} · ` : '';
+      ? `${escapeHtml(article.company).toUpperCase()} · ` : '';
 
     let message =
-      `${emoji} <b>${escapeHtml(article.title.slice(0, 200))}</b>` +
-      `\n\n💡 <i>${escapeHtml(displaySummary)}</i>` +
+      `${emoji} <b>${escapeHtml(article.title.toUpperCase())}</b>` +
+      `\n\n${escapeHtml(displaySummary)}` +
       `\n\n─────────────────────\n` +
-      `📰 <b>${companyLine}${escapeHtml(article.source)}</b>  ·  ${article.category}` +
+      `🏛️ <b>EDITORIA:</b> ${article.category.toUpperCase()}` +
+      `\n📰 <b>FONTE:</b> ${companyLine}${escapeHtml(article.source).toUpperCase()}` +
       (ago ? `  ·  <i>${ago}</i>` : '') +
-      (credibilityBlock ? `\n${credibilityBlock}` : '') +
+      credibilityBlock +
       storyBlock +
       relatedBlock;
 
@@ -327,18 +341,12 @@ export async function postNewArticles(
     }
 
     const inlineButtons = [[
-      { text: '🔗 Ler notícia', url: article.url },
-      { text: '📱 Fast-News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
+      { text: '📖 LER REPORTAGEM', url: article.url },
+      { text: '📱 NEO-PULSE', url: `${FAST_NEWS_URL}/?id=${article.id}` },
     ]];
 
-    // If exactly 1 other article exists in the story, add a direct button
-    if (matchedStory && matchedStory.articleCount === 2 && storyGraph) {
-      const otherArticle = storyGraph.nodes.find(n => n.id !== article.id);
-      if (otherArticle) {
-        inlineButtons.push([{ text: '🔗 Artigo correlacionado', url: otherArticle.url }]);
-      }
-    } else if (matchedStory) {
-      inlineButtons.push([{ text: '🕸 Ver história completa', url: `${FAST_NEWS_URL}/?view=stories&story=${matchedStory.id}` }]);
+    if (matchedStory) {
+      inlineButtons.push([{ text: '🕸 EXPLORAR GRAFO DA HISTÓRIA', url: `${FAST_NEWS_URL}/?view=stories&story=${matchedStory.id}` }]);
     }
 
     const previewUrl = article.imageUrl ?? article.url;
