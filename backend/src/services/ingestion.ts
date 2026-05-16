@@ -4,7 +4,7 @@ import { upsertArticleToSqlite } from '../database/sqliteStore.js';
 import { embedDocument, vectorToSQL } from './embeddings.js';
 import { config } from '../config/env.js';
 import { buildArticleRelations, assignArticleToStory } from './correlation.js';
-import { analyzeCredibility } from './credibility.js';
+import { enqueueCredibilityAnalysis } from './ollamaQueue.js';
 
 const parser = new Parser({
   timeout: 10_000,
@@ -194,20 +194,45 @@ export const FEED_SOURCES = [
   { url: 'https://www.dw.com/en/top-stories/s-9097/rss', category: 'Mundo', company: 'DW' },
 
   // ── Brasil ───────────────────────────────────────────────────────────────────
-  { url: 'https://g1.globo.com/rss/g1/brasil/', category: 'Brasil' },
-  { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
-  { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Brasil' },
-  { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
-  { url: 'https://noticias.uol.com.br/rss.xml', category: 'Brasil' },
+  { url: 'https://g1.globo.com/rss/g1/brasil/', category: 'Brasil', company: 'G1' },
+  { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil', company: 'G1' },
+  { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Brasil', company: 'G1' },
+  { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil', company: 'CNN Brasil' },
+  { url: 'https://noticias.uol.com.br/rss.xml', category: 'Brasil', company: 'UOL' },
   { url: 'https://www.metropoles.com/feed', category: 'Brasil', company: 'Metrópoles' },
   { url: 'https://braziljournal.com/feed/', category: 'Brasil', company: 'Brazil Journal' },
   { url: 'https://tecnoblog.net/feed/', category: 'Brasil', company: 'Tecnoblog' },
+  { url: 'https://feeds.folha.uol.com.br/poder/rss091.xml', category: 'Brasil', company: 'Folha de S.Paulo' },
+  { url: 'https://feeds.folha.uol.com.br/mercado/rss091.xml', category: 'Brasil', company: 'Folha de S.Paulo' },
+  { url: 'https://feeds.folha.uol.com.br/mundo/rss091.xml', category: 'Mundo', company: 'Folha de S.Paulo' },
+  { url: 'https://www.poder360.com.br/feed/', category: 'Brasil', company: 'Poder360' },
+  { url: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', category: 'Brasil', company: 'Agência Brasil' },
+  { url: 'https://veja.abril.com.br/feed/', category: 'Brasil', company: 'Veja' },
+  { url: 'https://istoe.com.br/feed', category: 'Brasil', company: 'IstoÉ' },
+  { url: 'https://www.cartacapital.com.br/feed/', category: 'Brasil', company: 'Carta Capital' },
+  { url: 'https://oglobo.globo.com/rss.xml', category: 'Brasil', company: 'O Globo' },
+  { url: 'https://exame.com/feed/', category: 'Negócios', company: 'Exame' },
+  { url: 'https://www.infomoney.com.br/feed/', category: 'Negócios', company: 'InfoMoney' },
 
-  // ── Tecnologia & Big Techs ───────────────────────────────────────────────────
+  // ── Games & Entretenimento ────────────────────────────────────────────────────
+  { url: 'https://pt.ign.com/feed.xml', category: 'Gaming', company: 'IGN Brasil' },
+  { url: 'https://www.gameblast.com.br/feeds/posts/default', category: 'Gaming', company: 'GameBlast' },
+  { url: 'https://www.nintendoblast.com.br/feeds/posts/default', category: 'Gaming', company: 'NintendoBlast' },
+  { url: 'https://www.adrenaline.com.br/feed/', category: 'Gaming', company: 'Adrenaline' },
+  { url: 'https://drops.games/feed/', category: 'Gaming', company: 'Drops de Jogos' },
+  { url: 'https://kotaku.com/rss', category: 'Gaming', company: 'Kotaku' },
+  { url: 'https://www.destructoid.com/feed', category: 'Gaming', company: 'Destructoid' },
+  { url: 'https://www.eurogamer.net/feed', category: 'Gaming', company: 'Eurogamer' },
+
+  // ── Anime ─────────────────────────────────────────────────────────────────────
+  { url: 'https://www.animenewsnetwork.com/newsroom/rss.xml', category: 'Anime', company: 'Anime News Network' },
+  { url: 'https://www.myanimelist.net/rss/news.xml', category: 'Anime', company: 'MyAnimeList' },
+  { url: 'https://saikoanimes.net/feed/', category: 'Anime', company: 'Saiko Animes' },
+  { url: 'https://animeszone.net/feed/', category: 'Anime', company: 'AnimesZone' },
+
+  // ── Tecnologia Geral ─────────────────────────────────────────────────────────
   { url: 'https://techcrunch.com/feed/', category: 'Tecnologia', company: 'TechCrunch' },
   { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia', company: 'The Verge' },
-  { url: 'https://github.blog/feed/', category: 'Big Techs', company: 'GitHub' },
-  { url: 'https://openai.com/blog/rss.xml', category: 'AI Frontier', company: 'OpenAI' },
   { url: 'https://dev.to/feed', category: 'Engenharia', company: 'DEV.to' },
 ];
 
@@ -343,12 +368,9 @@ export async function runIngestion(): Promise<IngestionResult> {
               source: article.source, category: article.category, company: article.company,
               content: article.content, imageUrl: article.imageUrl, publishedAt: article.publishedAt,
             });
-            const signal = () => timeoutSignal(config.ai.backgroundTaskTimeoutMs);
             runBackground('buildArticleRelations', () => buildArticleRelations(id));
             runBackground('assignArticleToStory', () => assignArticleToStory(id));
-            runBackground('analyzeCredibility', () =>
-              analyzeCredibility(id, article.title, article.content, article.source, article.category, signal())
-            );
+            enqueueCredibilityAnalysis(id, article.title, article.content, article.source, article.category);
           }
         } catch (err) {
           console.error('[ingestion] article failed:', (err as Error).message, { url: article.url });
