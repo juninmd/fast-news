@@ -155,6 +155,7 @@ export const FEED_SOURCES = [
   { url: 'https://www.nintendolife.com/feed', category: 'Gaming', company: 'Nintendo' },
   { url: 'https://www.eurogamer.net/feed', category: 'Gaming', company: 'Eurogamer' },
   { url: 'https://www.rockpapershotgun.com/feed', category: 'Gaming', company: 'Rock Paper Shotgun' },
+  { url: 'https://www.pcgamer.com/rss/', category: 'Gaming', company: 'PC Gamer' },
 
   // ── Tecnologia Geral ─────────────────────────────────────────────────────────
   { url: 'https://techcrunch.com/feed/', category: 'Tecnologia', company: 'TechCrunch' },
@@ -177,7 +178,7 @@ export const FEED_SOURCES = [
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo', company: 'BBC' },
   { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo', company: 'Al Jazeera' },
   { url: 'https://www.theguardian.com/world/rss', category: 'Mundo', company: 'The Guardian' },
-  { url: 'https://rss.dw.com/xml/rss-pt-br-bra', category: 'Mundo', company: 'DW Brasil' },
+  { url: 'https://rss.dw.com/rdf/rss-br-bra', category: 'Mundo', company: 'DW Brasil' },
 
   // ── Brasil ───────────────────────────────────────────────────────────────────
   { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil', company: 'CNN Brasil' },
@@ -201,21 +202,15 @@ export const FEED_SOURCES = [
   { url: 'https://www.gameblast.com.br/feeds/posts/default', category: 'Gaming', company: 'GameBlast' },
   { url: 'https://www.nintendoblast.com.br/feeds/posts/default', category: 'Gaming', company: 'NintendoBlast' },
   { url: 'https://www.adrenaline.com.br/feed/', category: 'Gaming', company: 'Adrenaline' },
-  { url: 'https://drops.games/feed/', category: 'Gaming', company: 'Drops de Jogos' },
+  { url: 'https://www.gameinformer.com/rss.xml', category: 'Gaming', company: 'Game Informer' },
   { url: 'https://kotaku.com/rss', category: 'Gaming', company: 'Kotaku' },
   { url: 'https://www.destructoid.com/feed', category: 'Gaming', company: 'Destructoid' },
-  { url: 'https://www.eurogamer.net/feed', category: 'Gaming', company: 'Eurogamer' },
 
   // ── Anime ─────────────────────────────────────────────────────────────────────
   { url: 'https://www.animenewsnetwork.com/newsroom/rss.xml', category: 'Anime', company: 'Anime News Network' },
   { url: 'https://www.myanimelist.net/rss/news.xml', category: 'Anime', company: 'MyAnimeList' },
   { url: 'https://saikoanimes.net/feed/', category: 'Anime', company: 'Saiko Animes' },
-  { url: 'https://animeszone.net/feed/', category: 'Anime', company: 'AnimesZone' },
-
-  // ── Tecnologia Geral ─────────────────────────────────────────────────────────
-  { url: 'https://techcrunch.com/feed/', category: 'Tecnologia', company: 'TechCrunch' },
-  { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia', company: 'The Verge' },
-  { url: 'https://dev.to/feed', category: 'Engenharia', company: 'DEV.to' },
+  { url: 'https://www.animenewsnetwork.com/all/rss.xml?ann-edition=br', category: 'Anime', company: 'ANN Brasil' },
 ];
 
 export interface RawArticle {
