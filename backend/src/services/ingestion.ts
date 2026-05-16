@@ -178,7 +178,7 @@ export const FEED_SOURCES = [
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo', company: 'BBC' },
   { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo', company: 'Al Jazeera' },
   { url: 'https://www.theguardian.com/world/rss', category: 'Mundo', company: 'The Guardian' },
-  { url: 'https://rss.dw.com/rdf/rss-br-bra', category: 'Mundo', company: 'DW Brasil' },
+  { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml', category: 'Mundo', company: 'BBC Brasil' },
 
   // ── Brasil ───────────────────────────────────────────────────────────────────
   { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil', company: 'CNN Brasil' },
