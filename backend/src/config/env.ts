@@ -37,6 +37,14 @@ export const config = {
   telegramNewsCategories: optional('TELEGRAM_NEWS_CATEGORIES', 'Mundo,Negócios,Brasil,Tecnologia,Ciência,AI Frontier,Big Techs,Startups,Engenharia')
     .split(',').filter(Boolean),
   telegramMaxNewsPerRun: parseInt(optional('TELEGRAM_MAX_NEWS_PER_RUN', '5'), 10),
+  telegramQueue: {
+    name: optional('TELEGRAM_QUEUE_NAME', 'telegram:posts'),
+    attempts: parseInt(optional('TELEGRAM_QUEUE_ATTEMPTS', '5'), 10),
+    backoffMs: parseInt(optional('TELEGRAM_QUEUE_BACKOFF_MS', '15000'), 10),
+    // 1 message every ~2.5s to avoid Telegram throttle and reduce Ollama load.
+    rateLimitMax: parseInt(optional('TELEGRAM_QUEUE_RATE_LIMIT_MAX', '1'), 10),
+    rateLimitDurationMs: parseInt(optional('TELEGRAM_QUEUE_RATE_LIMIT_DURATION_MS', '2500'), 10),
+  },
 
   cron: {
     ingestion: optional('CRON_INGESTION', '*/30 * * * *'),
