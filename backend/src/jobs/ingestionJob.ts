@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { runIngestion } from '../services/ingestion.js';
 import { enqueueTelegramPosts } from '../services/telegramQueue.js';
+import { enqueueCredibilityAnalysis } from '../services/ollamaQueue.js';
 import { config } from '../config/env.js';
 import { query } from '../database/client.js';
 import type { TelegramArticle } from '../services/telegram.js';
@@ -9,12 +10,16 @@ let task: cron.ScheduledTask | null = null;
 
 const JOB_TIMEOUT_MS = 25 * 60 * 1_000;
 
-async function fetchUnsentRecentArticles(): Promise<TelegramArticle[]> {
+/**
+ * Articles from previous ingestion runs that already have credibility scores
+ * and were never sent to Telegram. Safe to send directly without re-evaluation.
+ */
+async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
   try {
     const res = await query<{
       id: string; title: string; url: string; source: string; category: string;
       company?: string; content: string; publishedAt?: Date | null;
-      fakeNewsScore?: number | null; politicalBias?: string | null;
+      fakeNewsScore: number | null; politicalBias: string | null;
       isMilitant: boolean; hasIncoherence: boolean; storyId: string | null;
     }>(
       `SELECT na.id, na.title, na.url, na.source, na.category, na.company,
@@ -27,13 +32,14 @@ async function fetchUnsentRecentArticles(): Promise<TelegramArticle[]> {
          SELECT story_id FROM story_articles WHERE article_id = na.id LIMIT 1
        ) sa ON true
        WHERE na.telegram_sent_at IS NULL
+         AND na.fake_news_score IS NOT NULL
          AND na.created_at > NOW() - INTERVAL '24 hours'
        ORDER BY na.published_at DESC NULLS LAST
-       LIMIT 150`
+       LIMIT 100`,
     );
     return res.rows;
   } catch (err) {
-    console.error('[IngestionJob] Failed to fetch unsent articles:', (err as Error).message);
+    console.error('[IngestionJob] Failed to fetch unsent evaluated articles:', (err as Error).message);
     return [];
   }
 }
@@ -46,16 +52,16 @@ export async function runIngestionAndPost(): Promise<void> {
       setTimeout(() => reject(new Error('ingestion job timeout after 25min')), JOB_TIMEOUT_MS)
     ),
   ]);
-  console.log(`[IngestionJob] Stored ${result.stored} new articles.`);
+  console.log(`[IngestionJob] Stored ${result.stored} new articles — queued for credibility evaluation.`);
 
-  // Fetch all unsent articles from last 24h (not just newly ingested ones)
-  // This ensures all sources appear in Telegram, not just high-frequency ones like dev.to
-  const unsentArticles = await fetchUnsentRecentArticles();
-  console.log(`[IngestionJob] Found ${unsentArticles.length} unsent articles from last 24h.`);
+  // New articles: credibility first → Telegram (handled by ollamaQueue worker)
+  // Already logged inside runIngestion via enqueueCredibilityAnalysis
 
-  if (unsentArticles.length > 0) {
-    const queued = await enqueueTelegramPosts(unsentArticles);
-    console.log(`[IngestionJob] Queued ${queued} articles for Telegram.`);
+  // Articles from previous runs already evaluated: send directly to Telegram
+  const evaluated = await fetchUnsentEvaluatedArticles();
+  if (evaluated.length > 0) {
+    const queued = await enqueueTelegramPosts(evaluated);
+    console.log(`[IngestionJob] Queued ${queued} previously-evaluated articles for Telegram.`);
   }
 }
 

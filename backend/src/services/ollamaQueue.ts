@@ -1,13 +1,12 @@
 import Bull from 'bull';
 import { config } from '../config/env.js';
 import { analyzeCredibility } from './credibility.js';
+import { enqueueTelegramPosts } from './telegramQueue.js';
+import { query } from '../database/client.js';
+import type { TelegramArticle } from './telegram.js';
 
 interface CredibilityJob {
-  articleId: string;
-  title: string;
-  content: string;
-  source: string;
-  category: string;
+  article: TelegramArticle;
 }
 
 let queue: Bull.Queue<CredibilityJob> | null = null;
@@ -16,23 +15,45 @@ function getQueue(): Bull.Queue<CredibilityJob> {
   if (!queue) {
     queue = new Bull<CredibilityJob>('ollama:credibility', config.redisUrl, {
       defaultJobOptions: {
-        attempts: 2,
-        backoff: { type: 'fixed', delay: 5_000 },
-        removeOnComplete: 200,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 10_000 },
+        removeOnComplete: 500,
         removeOnFail: 100,
       },
     });
-    // Max 2 concurrent Ollama calls — avoids overloading the model server
+
+    // Max 2 concurrent Ollama calls to avoid hammering the model server
     queue.process(2, async (job) => {
-      const { articleId, title, content, source, category } = job.data;
+      const { article } = job.data;
+
       await analyzeCredibility(
-        articleId, title, content, source, category,
-        AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs)
+        article.id, article.title, article.content, article.source, article.category,
+        AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
       );
+
+      // Re-read credibility scores from DB before sending to Telegram
+      const res = await query<{
+        fakeNewsScore: number | null;
+        politicalBias: string | null;
+        isMilitant: boolean;
+        hasIncoherence: boolean;
+      }>(
+        `SELECT fake_news_score AS "fakeNewsScore", political_bias AS "politicalBias",
+                is_militant AS "isMilitant", has_incoherence AS "hasIncoherence"
+         FROM news_articles WHERE id = $1`,
+        [article.id],
+      );
+
+      const scores = res.rows[0];
+      const enriched: TelegramArticle = scores ? { ...article, ...scores } : article;
+
+      await enqueueTelegramPosts([enriched]);
     });
+
     queue.on('failed', (job, err) => {
-      console.error(`[OllamaQueue] Credibility job ${job?.id ?? 'unknown'} failed:`, err.message);
+      console.error(`[OllamaQueue] Job ${job?.id ?? 'unknown'} failed: ${err.message}`);
     });
+
     console.log('[OllamaQueue] Credibility worker started (concurrency: 2).');
   }
   return queue;
@@ -40,22 +61,15 @@ function getQueue(): Bull.Queue<CredibilityJob> {
 
 export async function startOllamaQueueWorker(): Promise<void> {
   getQueue();
-  console.log('[OllamaQueue] Worker ready.');
 }
 
-export async function enqueueCredibilityAnalysis(
-  articleId: string,
-  title: string,
-  content: string,
-  source: string,
-  category: string,
-): Promise<void> {
+export async function enqueueCredibilityAnalysis(article: TelegramArticle): Promise<void> {
   try {
     const q = getQueue();
     await q.isReady();
-    await q.add({ articleId, title, content, source, category }, { jobId: `cred:${articleId}` });
+    await q.add({ article }, { jobId: `cred:${article.id}` });
   } catch (err) {
-    console.warn('[OllamaQueue] Failed to enqueue credibility analysis:', (err as Error).message);
+    console.warn('[OllamaQueue] Failed to enqueue:', (err as Error).message);
   }
 }
 

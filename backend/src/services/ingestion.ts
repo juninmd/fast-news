@@ -363,14 +363,16 @@ export async function runIngestion(): Promise<IngestionResult> {
         try {
           const id = await upsertArticle(article, ollamaUp);
           if (id) {
-            newArticles.push({
+            const newArticle = {
               id, title: article.title, url: article.url,
               source: article.source, category: article.category, company: article.company,
               content: article.content, imageUrl: article.imageUrl, publishedAt: article.publishedAt,
-            });
+            };
+            newArticles.push(newArticle);
             runBackground('buildArticleRelations', () => buildArticleRelations(id));
             runBackground('assignArticleToStory', () => assignArticleToStory(id));
-            enqueueCredibilityAnalysis(id, article.title, article.content, article.source, article.category);
+            // Credibility runs first; worker enqueues Telegram after evaluation
+            enqueueCredibilityAnalysis(newArticle);
           }
         } catch (err) {
           console.error('[ingestion] article failed:', (err as Error).message, { url: article.url });
