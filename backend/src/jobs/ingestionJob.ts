@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { runIngestion } from '../services/ingestion.js';
-import { postNewArticles } from '../services/telegram.js';
+import { enqueueTelegramPosts } from '../services/telegramQueue.js';
 import { buildArticleRelations, assignArticleToStory } from '../services/correlation.js';
 import { config } from '../config/env.js';
 
@@ -20,17 +20,16 @@ export async function runIngestionAndPost(): Promise<void> {
 
   if (result.newArticles.length > 0) {
     // Enrich the articles that will be posted with correlation data before sending
-    const toPost = result.newArticles.slice(0, config.telegramMaxNewsPerRun);
     const enriched = await Promise.all(
-      toPost.map(async (article) => {
+      result.newArticles.map(async (article) => {
         const storyId = await assignArticleToStory(article.id)
           .catch(() => null);
         await buildArticleRelations(article.id).catch(() => null);
         return { ...article, storyId };
       })
     );
-    await postNewArticles(enriched);
-    console.log(`[IngestionJob] Posted ${toPost.length} to Telegram.`);
+    const queued = await enqueueTelegramPosts(enriched);
+    console.log(`[IngestionJob] Queued ${queued} articles for Telegram.`);
   }
 }
 
