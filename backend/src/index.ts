@@ -20,6 +20,7 @@ import { startLearningJob, stopLearningJob } from './jobs/learningJob.js';
 import { startDigestJob, stopDigestJob } from './jobs/digestJob.js';
 import { startBot, stopBot } from './services/telegram.js';
 import { startTelegramQueueWorker, stopTelegramQueueWorker } from './services/telegramQueue.js';
+import { stopOllamaQueueWorker } from './services/ollamaQueue.js';
 import { runLearningCycle } from './jobs/learningJob.js';
 
 let isShuttingDown = false;
@@ -108,11 +109,12 @@ async function shutdown(signal?: string): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 2000));
   });
 
-  // Stop Telegram bot
+  // Stop Telegram bot and queues
   cleanup.push(async () => {
     console.log('📱 Stopping Telegram bot...');
     stopBot();
     await stopTelegramQueueWorker();
+    await stopOllamaQueueWorker();
   });
 
   // Close Redis

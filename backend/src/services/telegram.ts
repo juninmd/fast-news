@@ -9,6 +9,8 @@ import { listActiveStories, getStoryGraph } from './correlation.js';
 import { generateGlobalPulse } from './intelligence.js';
 import { query } from '../database/client.js';
 
+const SEPARATOR = '──────────────────────';
+
 const FAST_NEWS_URL = 'https://fast-news.antonio-code.duckdns.org';
 const MESSAGE_SEPARATOR = '\n\n--------------------';
 const FALLBACK_SUMMARY_MAX_LEN = 280;
@@ -20,7 +22,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   'Ciência': '🔬', 'Esportes': '⚽', 'Entretenimento': '🎬', 'Games': '🎮', 'Saúde': '🏥',
   'AI Frontier': '🤖', 'Big Techs': '🏢', 'Dev Tools': '🛠️', 'Gaming': '🎮',
   'Negocios': '💼', 'Ciencia': '🔬', 'Engenharia': '⚙️', 'Open Source': '🐧',
-  'Segurança': '🔐', 'Startups': '🚀',
+  'Segurança': '🔐', 'Startups': '🚀', 'Anime': '🍜',
 };
 
 const IMPACT_EMOJI: Record<string, string> = {
@@ -330,13 +332,15 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
   const companyLine = article.company && article.company !== article.source
     ? `${escapeHtml(article.company)} · ` : '';
 
+  const sourceHeader = `${emoji} <b>${escapeHtml(article.category).toUpperCase()}</b>` +
+    `  ·  ${companyLine}${escapeHtml(article.source)}` +
+    (ago ? `  ·  <i>${ago}</i>` : '');
+
   let message =
-    `${emoji} <b>${escapeHtml(article.title)}</b>` +
-    `\n\n🧠 <b>Resumo Inteligente</b>\n${escapeHtml(displaySummary)}` +
-    MESSAGE_SEPARATOR +
-    `\n🏛️ <b>Editoria:</b> ${escapeHtml(article.category)}` +
-    `\n📰 <b>Fonte:</b> ${companyLine}${escapeHtml(article.source)}` +
-    (ago ? `  ·  <i>${ago}</i>` : '') +
+    sourceHeader +
+    `\n${SEPARATOR}\n` +
+    `<b>${escapeHtml(article.title)}</b>` +
+    `\n\n<i>${escapeHtml(displaySummary)}</i>` +
     credibilityBlock +
     storyBlock +
     relatedBlock;
@@ -355,12 +359,24 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
   }
 
   const previewUrl = article.imageUrl ?? article.url;
+  let sentCount = 0;
   for (const chatId of config.telegramChatIds) {
-    await getBot().telegram.sendMessage(chatId, message, {
+    const ok = await getBot().telegram.sendMessage(chatId, message, {
       parse_mode: 'HTML',
       link_preview_options: { url: previewUrl, prefer_large_media: true, show_above_text: true },
       reply_markup: { inline_keyboard: inlineButtons },
-    }).catch((err) => console.error(`[Telegram] Failed to send to ${chatId}:`, err.message));
+    }).then(() => true).catch((err) => {
+      console.error(`[Telegram] Failed to send to ${chatId}:`, err.message);
+      return false;
+    });
+    if (ok) sentCount++;
+  }
+
+  if (sentCount > 0) {
+    await query(
+      `UPDATE news_articles SET telegram_sent_at = NOW() WHERE id = $1`,
+      [article.id]
+    ).catch((err) => console.error('[Telegram] Failed to mark article as sent:', err.message));
   }
 }
 
