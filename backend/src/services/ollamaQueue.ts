@@ -25,33 +25,27 @@ function getQueue(): Bull.Queue<CredibilityJob> {
     queue.process(2, async (job) => {
       const { article } = job.data;
 
-      try {
-        await analyzeCredibility(
-          article.id, article.title, article.content, article.source, article.category,
-          AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
-        );
-      } catch (err) {
-        console.warn(`[OllamaQueue] Credibility failed for ${article.id}, sending without scores: ${(err as Error).message}`);
-        // Still send to Telegram — credibility is best-effort, not a blocker
-        await enqueueTelegramPosts([article]);
-        return;
-      }
-
-      // Re-read credibility scores from DB before sending to Telegram
-      const res = await query<{
-        fakeNewsScore: number | null;
-        politicalBias: string | null;
-        isMilitant: boolean;
-        hasIncoherence: boolean;
-      }>(
-        `SELECT fake_news_score AS "fakeNewsScore", political_bias AS "politicalBias",
-                is_militant AS "isMilitant", has_incoherence AS "hasIncoherence"
-         FROM news_articles WHERE id = $1`,
-        [article.id],
+      const result = await analyzeCredibility(
+        article.id, article.title, article.content, article.source, article.category,
+        AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
       );
 
-      const scores = res.rows[0];
-      const enriched: TelegramArticle = scores ? { ...article, ...scores } : article;
+      let enriched: TelegramArticle = article;
+
+      if (result) {
+        // Credibility succeeded — use fresh scores from result
+        enriched = {
+          ...article,
+          fakeNewsScore: result.fakeNewsScore,
+          politicalBias: result.politicalBias,
+          isMilitant: result.isMilitant,
+          hasIncoherence: result.hasIncoherence,
+        };
+        console.log(`[OllamaQueue] Credibility done for ${article.id} (score: ${result.fakeNewsScore})`);
+      } else {
+        console.warn(`[OllamaQueue] Credibility returned null for ${article.id} — sending without scores`);
+      }
+
       await enqueueTelegramPosts([enriched]);
     });
 
