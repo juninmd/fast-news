@@ -438,7 +438,8 @@ export async function startBot(): Promise<void> {
     return;
   }
   const b = getBot();
-  await b.launch();
+  // launch() runs indefinitely (long-polling loop) — must NOT be awaited
+  b.launch().catch((err) => console.error('[Telegram] Bot crashed:', err.message));
   console.log('[Telegram] Bot started.');
 }
 
