@@ -150,6 +150,10 @@ CREATE TABLE IF NOT EXISTS article_relations (
 CREATE INDEX IF NOT EXISTS idx_relations_a ON article_relations(article_a, similarity DESC);
 CREATE INDEX IF NOT EXISTS idx_relations_b ON article_relations(article_b, similarity DESC);
 
+-- Track which articles have been sent to Telegram (prevents flooding from one source)
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS telegram_sent_at TIMESTAMPTZ DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_telegram_unsent ON news_articles(created_at DESC) WHERE telegram_sent_at IS NULL;
+
 -- Story timeline events: what changed in this story over time
 CREATE TABLE IF NOT EXISTS story_timeline (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
