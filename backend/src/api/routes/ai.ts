@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { generateText } from 'ai';
 import { getLanguageModel } from '../../services/aiProvider.js';
 
-export const aiRouter = Router();
+export const aiRouter: Router = Router();
 
 /**
  * Proxy for AI text generation.

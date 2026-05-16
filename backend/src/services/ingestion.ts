@@ -184,58 +184,31 @@ export const FEED_SOURCES = [
   { url: 'https://www.vox.com/rss/technology/index.xml', category: 'Tecnologia', company: 'Vox' },
 
   // ── Mundo ────────────────────────────────────────────────────────────────────
+  { url: 'https://g1.globo.com/rss/g1/mundo/', category: 'Mundo' },
   { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: 'Mundo' },
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo' },
   { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo' },
   { url: 'https://www.reuters.com/world/rss', category: 'Mundo' },
   { url: 'https://rss.cnn.com/rss/edition.rss', category: 'Mundo' },
-  { url: 'https://feeds.feedburner.com/time/world', category: 'Mundo', company: 'TIME' },
-  { url: 'https://www.foreignaffairs.com/rss.xml', category: 'Mundo', company: 'Foreign Affairs' },
   { url: 'https://www.theguardian.com/world/rss', category: 'Mundo', company: 'The Guardian' },
   { url: 'https://www.dw.com/en/top-stories/s-9097/rss', category: 'Mundo', company: 'DW' },
-  { url: 'https://www.lemonde.fr/rss/une.xml', category: 'Mundo', company: 'Le Monde' },
-  { url: 'https://www.economist.com/sections/international/rss.xml', category: 'Mundo', company: 'The Economist' },
-  { url: 'https://www.scmp.com/rss/91/feed', category: 'Mundo', company: 'SCMP' },
-
-  // ── Negocios & Mercados ──────────────────────────────────────────────────────
-  { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Negocios' },
-  { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html', category: 'Negocios' },
-  { url: 'https://www.forbes.com/business/feed/', category: 'Negocios' },
-  { url: 'https://fortune.com/feed/', category: 'Negocios', company: 'Fortune' },
-  { url: 'https://hbr.org/feed', category: 'Negocios', company: 'Harvard Business Review' },
-  { url: 'https://www.wsj.com/xml/rss/3_7014.xml', category: 'Negocios', company: 'WSJ' },
-  { url: 'https://www.ft.com/?format=rss', category: 'Negocios', company: 'Financial Times' },
-  { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', category: 'Negocios', company: 'CoinDesk' },
-  { url: 'https://cointelegraph.com/rss', category: 'Negocios', company: 'CoinTelegraph' },
 
   // ── Brasil ───────────────────────────────────────────────────────────────────
+  { url: 'https://g1.globo.com/rss/g1/brasil/', category: 'Brasil' },
   { url: 'https://g1.globo.com/rss/g1/politica/', category: 'Brasil' },
   { url: 'https://g1.globo.com/rss/g1/economia/', category: 'Brasil' },
   { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil' },
-  { url: 'https://www.tabnews.com.br/recentes/rss', category: 'Brasil', company: 'TabNews' },
-  { url: 'https://tecnoblog.net/feed/', category: 'Brasil', company: 'Tecnoblog' },
-  { url: 'https://www.infomoney.com.br/feed/', category: 'Brasil', company: 'InfoMoney' },
-  { url: 'https://olhardigital.com.br/feed/', category: 'Brasil', company: 'Olhar Digital' },
-  { url: 'https://canaltech.com.br/rss/', category: 'Brasil', company: 'Canaltech' },
-  { url: 'https://www.startups.com.br/feed/', category: 'Brasil', company: 'Startups.com.br' },
-  { url: 'https://exame.com/feed/', category: 'Brasil', company: 'Exame' },
-  { url: 'https://valor.globo.com/rss/valor/', category: 'Brasil', company: 'Valor Econômico' },
-  { url: 'https://www.moneytimes.com.br/feed/', category: 'Brasil', company: 'Money Times' },
-  { url: 'https://www.folha.uol.com.br/rss/online/tecnologia/index.xml', category: 'Brasil', company: 'Folha de S.Paulo' },
-  { url: 'https://noticias.r7.com/brasil/feed.xml', category: 'Brasil', company: 'R7' },
-  { url: 'https://www.cartacapital.com.br/feed/', category: 'Brasil', company: 'Carta Capital' },
+  { url: 'https://noticias.uol.com.br/rss.xml', category: 'Brasil' },
   { url: 'https://www.metropoles.com/feed', category: 'Brasil', company: 'Metrópoles' },
-  { url: 'https://manualdousuario.net/feed/', category: 'Brasil', company: 'Manual do Usuário' },
   { url: 'https://braziljournal.com/feed/', category: 'Brasil', company: 'Brazil Journal' },
+  { url: 'https://tecnoblog.net/feed/', category: 'Brasil', company: 'Tecnoblog' },
 
-  // ── Ciencia ──────────────────────────────────────────────────────────────────
-  { url: 'https://g1.globo.com/rss/g1/ciencia-e-saude/', category: 'Ciencia' },
-  { url: 'https://www.sciencedaily.com/rss/top.xml', category: 'Ciencia', company: 'Science Daily' },
-  { url: 'https://www.nature.com/nature.rss', category: 'Ciencia', company: 'Nature' },
-  { url: 'https://feeds.newscientist.com/science-news', category: 'Ciencia', company: 'New Scientist' },
-  { url: 'https://phys.org/rss-feed/', category: 'Ciencia', company: 'Phys.org' },
-  { url: 'https://www.quantamagazine.org/feed/', category: 'Ciencia', company: 'Quanta Magazine' },
-  { url: 'https://www.economist.com/science-and-technology/rss.xml', category: 'Ciencia', company: 'The Economist' },
+  // ── Tecnologia & Big Techs ───────────────────────────────────────────────────
+  { url: 'https://techcrunch.com/feed/', category: 'Tecnologia', company: 'TechCrunch' },
+  { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia', company: 'The Verge' },
+  { url: 'https://github.blog/feed/', category: 'Big Techs', company: 'GitHub' },
+  { url: 'https://openai.com/blog/rss.xml', category: 'AI Frontier', company: 'OpenAI' },
+  { url: 'https://dev.to/feed', category: 'Engenharia', company: 'DEV.to' },
 ];
 
 export interface RawArticle {
@@ -253,17 +226,23 @@ export interface RawArticle {
 async function fetchFeed(source: { url: string; category: string; company?: string }): Promise<RawArticle[]> {
   try {
     const feed = await withRetry(() => parser.parseURL(source.url));
-    return (feed.items ?? []).slice(0, config.ingestion.maxArticlesPerFeed).map((item) => ({
-      guid: item.guid ?? item.link ?? item.title ?? '',
-      title: item.title ?? '',
-      content: item.contentSnippet ?? item.summary ?? item.content ?? '',
-      url: item.link ?? '',
-      source: feed.title ?? source.url,
-      category: source.category,
-      company: source.company,
-      publishedAt: item.pubDate ? new Date(item.pubDate) : null,
-      imageUrl: extractImageUrl(item as unknown as Record<string, unknown>),
-    }));
+    return (feed.items ?? []).slice(0, config.ingestion.maxArticlesPerFeed).map((item) => {
+      // Robust date parsing
+      const dateStr = item.isoDate ?? item.pubDate;
+      const publishedAt = dateStr ? new Date(dateStr) : null;
+
+      return {
+        guid: item.guid ?? item.link ?? item.title ?? Math.random().toString(36),
+        title: item.title ?? 'Sem título',
+        content: item.contentSnippet ?? item.summary ?? item.content ?? '',
+        url: item.link ?? '',
+        source: feed.title?.trim() || source.company || source.url,
+        category: source.category,
+        company: source.company,
+        publishedAt: publishedAt && !isNaN(publishedAt.getTime()) ? publishedAt : null,
+        imageUrl: extractImageUrl(item as unknown as Record<string, unknown>),
+      };
+    });
   } catch (err) {
     console.warn('[ingestion] feed failed:', source.url, (err as Error).message);
     return [];

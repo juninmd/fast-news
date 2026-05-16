@@ -34,7 +34,7 @@ export const config = {
   telegramEnabled: optional('TELEGRAM_ENABLED', 'false') === 'true',
   telegramChatIds: optional('TELEGRAM_CHAT_IDS', '').split(',').filter(Boolean),
   // Categorias de notícias para postar automaticamente
-  telegramNewsCategories: optional('TELEGRAM_NEWS_CATEGORIES', 'Mundo,Negócios,Brasil')
+  telegramNewsCategories: optional('TELEGRAM_NEWS_CATEGORIES', 'Mundo,Negócios,Brasil,Tecnologia,Ciência,AI Frontier,Big Techs,Startups,Engenharia')
     .split(',').filter(Boolean),
   telegramMaxNewsPerRun: parseInt(optional('TELEGRAM_MAX_NEWS_PER_RUN', '5'), 10),
 

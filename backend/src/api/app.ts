@@ -8,6 +8,7 @@ import { topicsRouter } from './routes/topics.js';
 import { financialRouter } from './routes/financial.js';
 import { ragRouter } from './routes/rag.js';
 import { storiesRouter } from './routes/stories.js';
+import { aiRouter } from './routes/ai.js';
 import { healthHandler } from './health.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -45,6 +46,4 @@ export function createApp(): express.Application {
   });
 
   return app;
-}
-n app;
 }
