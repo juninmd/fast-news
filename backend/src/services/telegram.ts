@@ -10,6 +10,8 @@ import { generateGlobalPulse } from './intelligence.js';
 import { query } from '../database/client.js';
 
 const FAST_NEWS_URL = 'https://fast-news.antonio-code.duckdns.org';
+const MESSAGE_SEPARATOR = '\n\n--------------------';
+const FALLBACK_SUMMARY_MAX_LEN = 280;
 
 let bot: Telegraf | null = null;
 
@@ -258,115 +260,115 @@ async function fetchRelatedArticles(
   }
 }
 
-/** Posta novas notícias no Telegram após ingestion */
-export async function postNewArticles(
-  articles: Array<{
-    id: string; title: string; url: string; source: string; category: string; content: string;
-    company?: string;
-    publishedAt?: Date | null;
-    imageUrl?: string;
-    storyId?: string | null;
-    fakeNewsScore?: number | null;
-    politicalBias?: string | null;
-    isMilitant?: boolean;
-    hasIncoherence?: boolean;
-  }>
-): Promise<void> {
-  if (!config.telegramEnabled || !config.telegramBotToken || !config.telegramChatIds.length) return;
+export interface TelegramArticle {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  category: string;
+  content: string;
+  company?: string;
+  publishedAt?: Date | null;
+  imageUrl?: string;
+  storyId?: string | null;
+  fakeNewsScore?: number | null;
+  politicalBias?: string | null;
+  isMilitant?: boolean;
+  hasIncoherence?: boolean;
+}
 
-  const eligible = articles
-    .filter((a) => config.telegramNewsCategories.includes(a.category))
-    .slice(0, config.telegramMaxNewsPerRun);
+export async function postArticleToTelegram(article: TelegramArticle): Promise<void> {
+  if (!config.telegramEnabled || !config.telegramBotToken || !config.telegramChatIds.length) return;
 
   // Fetch active stories once for enrichment
   const activeStories = await listActiveStories(50).catch(() => []);
   const storyMap = new Map(activeStories.map((s) => [s.id, s]));
+  const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
+  const summary = await generateSummary(article.title, article.content);
+  const displaySummary = summary || article.content.replace(/\s+/g, ' ').trim().slice(0, FALLBACK_SUMMARY_MAX_LEN);
 
-  for (const article of eligible) {
-    const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
-    const summary = await generateSummary(article.title, article.content);
-    // Fallback: first 220 chars of content when AI summary unavailable
-    const displaySummary = summary || article.content.replace(/\s+/g, ' ').trim().slice(0, 220);
+  // Prefer storyId from enriched article, then search active stories
+  const matchedStory = article.storyId
+    ? storyMap.get(article.storyId) ?? activeStories.find((s) => s.id === article.storyId)
+    : activeStories.find((s) => s.category === article.category && s.articleCount > 2);
 
-    // Prefer storyId from enriched article, then search active stories
-    const matchedStory = article.storyId
-      ? storyMap.get(article.storyId) ?? activeStories.find((s) => s.id === article.storyId)
-      : activeStories.find((s) => s.category === article.category && s.articleCount > 2);
+  // Fetch story graph for timeline events if story matched
+  const storyGraph = matchedStory
+    ? await getStoryGraph(matchedStory.id).catch(() => null)
+    : null;
 
-    // Fetch story graph for timeline events if story matched
-    const storyGraph = matchedStory
-      ? await getStoryGraph(matchedStory.id).catch(() => null)
-      : null;
+  let storyBlock = '';
+  if (matchedStory) {
+    const impact = IMPACT_EMOJI[matchedStory.impactLevel] ?? '';
+    const signal = matchedStory.financialSignal && matchedStory.financialSignal !== 'neutral'
+      ? `${SIGNAL_EMOJI[matchedStory.financialSignal] ?? ''} ` : '';
+    const assets = matchedStory.affectedAssets?.length
+      ? `\n💹 <b>Ativos:</b> <code>${matchedStory.affectedAssets.slice(0, 4).join(' · ')}</code>` : '';
 
-    let storyBlock = '';
-    if (matchedStory) {
-      const impact = IMPACT_EMOJI[matchedStory.impactLevel] ?? '';
-      const signal = matchedStory.financialSignal && matchedStory.financialSignal !== 'neutral'
-        ? `${SIGNAL_EMOJI[matchedStory.financialSignal] ?? ''} ` : '';
-      const assets = matchedStory.affectedAssets?.length
-        ? `\n💹 <b>ATIVOS:</b> <code>${matchedStory.affectedAssets.slice(0, 4).join(' · ')}</code>` : '';
+    storyBlock = `\n\n${impact} <b>Desdobramento:</b> ${escapeHtml(matchedStory.title)}` +
+      `\n${signal}<i>Contexto consolidado de ${matchedStory.articleCount} reportagens</i>${assets}`;
 
-      storyBlock = `\n\n${impact} <b>DESDOBRAMENTO:</b> ${escapeHtml(matchedStory.title.toUpperCase())}` +
-        `\n${signal}<i>Contexto consolidado de ${matchedStory.articleCount} reportagens</i>${assets}`;
-
-      if (matchedStory.summary) {
-        storyBlock += `\n\n📝 <b>ANÁLISE:</b> <i>${escapeHtml(matchedStory.summary.slice(0, 250))}</i>`;
-      }
-
-      // Latest timeline event (what changed)
-      const lastEvent = storyGraph?.timeline.at(-1);
-      if (lastEvent?.whatChanged) {
-        storyBlock += `\n\n🔄 <b>ÚLTIMA ATUALIZAÇÃO:</b> <i>${escapeHtml(lastEvent.whatChanged.slice(0, 150))}</i>`;
-      }
+    if (matchedStory.summary) {
+      storyBlock += `\n\n📝 <b>Análise:</b> <i>${escapeHtml(matchedStory.summary.slice(0, 280))}</i>`;
     }
 
-    // Related articles block
-    const related = await fetchRelatedArticles(article.id, article.category);
-    const relatedBlock = related.length
-      ? `\n\n─────────────────────\n` +
-        `🔗 <b>PERSPECTIVAS RELACIONADAS:</b>\n` +
-        related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 70))}</a> <i>(${escapeHtml(r.source)})</i>`).join('\n')
-      : '';
-
-    const credibilityBlock = buildCredibilityBlock(article);
-    const ago = timeAgo(article.publishedAt);
-    const companyLine = article.company && article.company !== article.source
-      ? `${escapeHtml(article.company).toUpperCase()} · ` : '';
-
-    let message =
-      `${emoji} <b>${escapeHtml(article.title.toUpperCase())}</b>` +
-      `\n\n${escapeHtml(displaySummary)}` +
-      `\n\n─────────────────────\n` +
-      `🏛️ <b>EDITORIA:</b> ${article.category.toUpperCase()}` +
-      `\n📰 <b>FONTE:</b> ${companyLine}${escapeHtml(article.source).toUpperCase()}` +
-      (ago ? `  ·  <i>${ago}</i>` : '') +
-      credibilityBlock +
-      storyBlock +
-      relatedBlock;
-
-    // Telegram max is 4096 chars — truncate gracefully
-    if (message.length > 3800) {
-      message = message.slice(0, 3780) + '…';
+    const lastEvent = storyGraph?.timeline.at(-1);
+    if (lastEvent?.whatChanged) {
+      storyBlock += `\n\n🔄 <b>Última atualização:</b> <i>${escapeHtml(lastEvent.whatChanged.slice(0, 180))}</i>`;
     }
+  }
 
-    const inlineButtons = [[
-      { text: '📖 LER REPORTAGEM', url: article.url },
-      { text: '📱 NEO-PULSE', url: `${FAST_NEWS_URL}/?id=${article.id}` },
-    ]];
+  const related = await fetchRelatedArticles(article.id, article.category);
+  const relatedBlock = related.length
+    ? `${MESSAGE_SEPARATOR}\n` +
+      `🔗 <b>Perspectivas relacionadas</b>\n` +
+      related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 72))}</a> <i>(${escapeHtml(r.source)})</i>`).join('\n')
+    : '';
 
-    if (matchedStory) {
-      inlineButtons.push([{ text: '🕸 EXPLORAR GRAFO DA HISTÓRIA', url: `${FAST_NEWS_URL}/?view=stories&story=${matchedStory.id}` }]);
-    }
+  const credibilityBlock = buildCredibilityBlock(article);
+  const ago = timeAgo(article.publishedAt);
+  const companyLine = article.company && article.company !== article.source
+    ? `${escapeHtml(article.company)} · ` : '';
 
-    const previewUrl = article.imageUrl ?? article.url;
-    for (const chatId of config.telegramChatIds) {
-      await getBot().telegram.sendMessage(chatId, message, {
-        parse_mode: 'HTML',
-        link_preview_options: { url: previewUrl, prefer_large_media: true, show_above_text: true },
-        reply_markup: { inline_keyboard: inlineButtons },
-      }).catch((err) => console.error(`[Telegram] Failed to send to ${chatId}:`, err.message));
-    }
-    await sleep(2000);
+  let message =
+    `${emoji} <b>${escapeHtml(article.title)}</b>` +
+    `\n\n🧠 <b>Resumo Inteligente</b>\n${escapeHtml(displaySummary)}` +
+    MESSAGE_SEPARATOR +
+    `\n🏛️ <b>Editoria:</b> ${escapeHtml(article.category)}` +
+    `\n📰 <b>Fonte:</b> ${companyLine}${escapeHtml(article.source)}` +
+    (ago ? `  ·  <i>${ago}</i>` : '') +
+    credibilityBlock +
+    storyBlock +
+    relatedBlock;
+
+  if (message.length > 3800) {
+    message = message.slice(0, 3780) + '…';
+  }
+
+  const inlineButtons = [[
+    { text: '📖 Ler reportagem', url: article.url },
+    { text: '📱 Abrir no Fast News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
+  ]];
+
+  if (matchedStory) {
+    inlineButtons.push([{ text: '🕸 Ver grafo da história', url: `${FAST_NEWS_URL}/?view=stories&story=${matchedStory.id}` }]);
+  }
+
+  const previewUrl = article.imageUrl ?? article.url;
+  for (const chatId of config.telegramChatIds) {
+    await getBot().telegram.sendMessage(chatId, message, {
+      parse_mode: 'HTML',
+      link_preview_options: { url: previewUrl, prefer_large_media: true, show_above_text: true },
+      reply_markup: { inline_keyboard: inlineButtons },
+    }).catch((err) => console.error(`[Telegram] Failed to send to ${chatId}:`, err.message));
+  }
+}
+
+/** Posta novas notícias no Telegram após ingestion */
+export async function postNewArticles(articles: TelegramArticle[]): Promise<void> {
+  for (const article of articles) {
+    await postArticleToTelegram(article);
+    await sleep(1500);
   }
 }
 

@@ -1,7 +1,9 @@
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
+const resolveModel = (baseUrlOrModel = 'llama3', explicitModel) => explicitModel || baseUrlOrModel;
 
-export const summarizeWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
+export const summarizeWithOllama = async (text, baseUrlOrModel = 'llama3', explicitModel) => {
+  const model = resolveModel(baseUrlOrModel, explicitModel);
   const prompt = `
 Atue como um editor de um canal de notícias no Telegram.
 Resuma a notícia de forma envolvente, fácil de ler no celular e direto ao ponto.
@@ -31,8 +33,8 @@ Diretrizes:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model,
-        prompt: prompt,
+        model,
+        prompt,
         stream: false,
       }),
     });
@@ -51,7 +53,8 @@ Diretrizes:
   }
 };
 
-export const classifyWithOllama = async (text, baseUrl = 'http://localhost:11434', model = 'llama3') => {
+export const classifyWithOllama = async (text, baseUrlOrModel = 'llama3', explicitModel) => {
+  const model = resolveModel(baseUrlOrModel, explicitModel);
   const categories = ['Tecnologia', 'IA', 'Brasil', 'Mundo', 'Negócios', 'Ciência', 'Esportes', 'Automóveis', 'Entretenimento', 'Games', 'Saúde', 'Cripto', 'Marketing', 'Moda', 'Música', 'Turismo', 'Geral'];
   const prompt = `Classifique a seguinte notícia em EXATAMENTE e APENAS uma das seguintes categorias: [${categories.join(', ')}].
 Retorne APENAS o nome da categoria, sem explicações ou pontuação adicional.

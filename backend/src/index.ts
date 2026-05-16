@@ -19,6 +19,7 @@ import { startIngestionJob, stopIngestionJob, runIngestionAndPost } from './jobs
 import { startLearningJob, stopLearningJob } from './jobs/learningJob.js';
 import { startDigestJob, stopDigestJob } from './jobs/digestJob.js';
 import { startBot, stopBot } from './services/telegram.js';
+import { startTelegramQueueWorker, stopTelegramQueueWorker } from './services/telegramQueue.js';
 import { runLearningCycle } from './jobs/learningJob.js';
 
 let isShuttingDown = false;
@@ -53,6 +54,7 @@ async function bootstrap(): Promise<void> {
 
     // Start Telegram bot (non-fatal — network may be unavailable at startup)
     await startBot().catch((err) => console.error('[Telegram] Bot failed to start:', err.message));
+    await startTelegramQueueWorker().catch((err) => console.error('[TelegramQueue] Failed to start:', err.message));
 
     // Cron jobs run as separate K8s CronJob pods — not scheduled here.
     // Set ENABLE_INTERNAL_CRONS=true only for local dev without k8s.
@@ -110,6 +112,7 @@ async function shutdown(signal?: string): Promise<void> {
   cleanup.push(async () => {
     console.log('📱 Stopping Telegram bot...');
     stopBot();
+    await stopTelegramQueueWorker();
   });
 
   // Close Redis
