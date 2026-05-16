@@ -67,7 +67,6 @@ export const FEED_SOURCES = [
   { url: 'https://dropbox.tech/feed', category: 'Big Techs', company: 'Dropbox' },
   { url: 'https://slack.engineering/feed/', category: 'Big Techs', company: 'Slack' },
   { url: 'https://engineeringblog.yelp.com/feed.xml', category: 'Big Techs', company: 'Yelp' },
-  { url: 'https://medium.com/pinterest-engineering/feed', category: 'Big Techs', company: 'Pinterest' },
 
   // ── AI Frontier ─────────────────────────────────────────────────────────────
   { url: 'https://openai.com/blog/rss.xml', category: 'AI Frontier', company: 'OpenAI' },
@@ -82,13 +81,12 @@ export const FEED_SOURCES = [
   { url: 'https://www.interconnects.ai/feed', category: 'AI Frontier', company: 'Interconnects AI' },
   { url: 'https://www.semianalysis.com/feed', category: 'AI Frontier', company: 'SemiAnalysis' },
   { url: 'https://arxiv.org/rss/cs.AI', category: 'AI Frontier', company: 'arXiv' },
-  { url: 'https://paperswithcode.com/newsletter/rss', category: 'AI Frontier', company: 'Papers With Code' },
   { url: 'https://sebastianraschka.com/rss_feed.xml', category: 'AI Frontier', company: 'Sebastian Raschka' },
   { url: 'https://jack-clark.net/feed/', category: 'AI Frontier', company: 'Import AI' },
 
   // ── Cloud & Infraestrutura ───────────────────────────────────────────────────
   { url: 'https://azure.microsoft.com/en-us/blog/feed/', category: 'Dev Tools', company: 'Azure' },
-  { url: 'https://cloud.google.com/blog/topics/developers-practitioners/rss', category: 'Dev Tools', company: 'Google Cloud' },
+  { url: 'https://cloudblog.withgoogle.com/rss/', category: 'Dev Tools', company: 'Google Cloud' },
   { url: 'https://www.digitalocean.com/community/tutorials/feed', category: 'Dev Tools', company: 'DigitalOcean' },
   { url: 'https://www.pulumi.com/blog/rss.xml', category: 'Dev Tools', company: 'Pulumi' },
   { url: 'https://www.cncf.io/blog/feed/', category: 'Dev Tools', company: 'CNCF' },
@@ -102,14 +100,12 @@ export const FEED_SOURCES = [
   { url: 'https://grafana.com/blog/index.xml', category: 'Dev Tools', company: 'Grafana' },
   { url: 'https://neon.tech/blog/rss.xml', category: 'Dev Tools', company: 'Neon' },
   { url: 'https://deno.com/feed', category: 'Dev Tools', company: 'Deno' },
-  { url: 'https://www.nginx.com/feed/', category: 'Dev Tools', company: 'Nginx' },
   { url: 'https://blog.jetbrains.com/feed/', category: 'Dev Tools', company: 'JetBrains' },
   { url: 'https://octopus.com/blog/feed.xml', category: 'Dev Tools', company: 'Octopus Deploy' },
   { url: 'https://blog.logrocket.com/feed/', category: 'Dev Tools', company: 'LogRocket' },
 
   // ── Engenharia de Software ───────────────────────────────────────────────────
   { url: 'https://martinfowler.com/feed.atom', category: 'Engenharia', company: 'Martin Fowler' },
-  { url: 'https://feed.infoq.com/', category: 'Engenharia', company: 'InfoQ' },
   { url: 'https://stackoverflow.blog/feed/', category: 'Engenharia', company: 'Stack Overflow' },
   { url: 'https://blog.pragmaticengineer.com/rss/', category: 'Engenharia', company: 'Pragmatic Engineer' },
   { url: 'https://highscalability.com/rss/', category: 'Engenharia', company: 'High Scalability' },
@@ -135,7 +131,6 @@ export const FEED_SOURCES = [
   { url: 'https://krebsonsecurity.com/feed/', category: 'Segurança', company: 'Krebs on Security' },
   { url: 'https://feeds.feedburner.com/TheHackersNews', category: 'Segurança', company: 'The Hacker News' },
   { url: 'https://www.bleepingcomputer.com/feed/', category: 'Segurança', company: 'BleepingComputer' },
-  { url: 'https://portswigger.net/daily-swig/rss.xml', category: 'Segurança', company: 'PortSwigger' },
   { url: 'https://snyk.io/blog/feed/', category: 'Segurança', company: 'Snyk' },
   { url: 'https://googleprojectzero.blogspot.com/feeds/posts/default', category: 'Segurança', company: 'Project Zero' },
   { url: 'https://unit42.paloaltonetworks.com/feed/', category: 'Segurança', company: 'Unit 42' },
@@ -147,7 +142,6 @@ export const FEED_SOURCES = [
   { url: 'https://www.securityweek.com/feed/', category: 'Segurança', company: 'SecurityWeek' },
 
   // ── Startups & VC ────────────────────────────────────────────────────────────
-  { url: 'https://a16z.com/feed/', category: 'Startups', company: 'a16z' },
   { url: 'https://www.ycombinator.com/blog/rss.xml', category: 'Startups', company: 'Y Combinator' },
   { url: 'https://www.sequoiacap.com/feed/', category: 'Startups', company: 'Sequoia' },
   { url: 'https://medium.com/feed/point-nine-news', category: 'Startups', company: 'Point Nine' },
@@ -183,7 +177,7 @@ export const FEED_SOURCES = [
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'Mundo', company: 'BBC' },
   { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'Mundo', company: 'Al Jazeera' },
   { url: 'https://www.theguardian.com/world/rss', category: 'Mundo', company: 'The Guardian' },
-  { url: 'https://rss.dw.com/rdf/rss-br-bra', category: 'Mundo', company: 'DW Brasil' },
+  { url: 'https://rss.dw.com/xml/rss-pt-br-bra', category: 'Mundo', company: 'DW Brasil' },
 
   // ── Brasil ───────────────────────────────────────────────────────────────────
   { url: 'https://www.cnnbrasil.com.br/feed/', category: 'Brasil', company: 'CNN Brasil' },

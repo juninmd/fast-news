@@ -15,8 +15,7 @@ function getQueue(): Bull.Queue<CredibilityJob> {
   if (!queue) {
     queue = new Bull<CredibilityJob>('ollama:credibility', config.redisUrl, {
       defaultJobOptions: {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 10_000 },
+        attempts: 1,   // no retry — timeout fallback sends article without score
         removeOnComplete: 500,
         removeOnFail: 100,
       },
