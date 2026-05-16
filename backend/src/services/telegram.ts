@@ -41,23 +41,32 @@ export function getBot(): Telegraf {
 }
 
 function setupCommands(bot: Telegraf): void {
+  const mainKeyboard = {
+    keyboard: [
+      [{ text: '🌌 Neo-Pulse' }, { text: '📰 Top Notícias' }],
+      [{ text: '🔗 Histórias' }, { text: '📊 Tópicos' }],
+      [{ text: '💰 Financeiro' }, { text: '❓ Ajuda' }],
+    ],
+    resize_keyboard: true,
+  };
+
   bot.start((ctx: Context) =>
     ctx.replyWithHTML(
       `🌌 <b>NEO-EDITORIAL INTEL</b>\n` +
       `──────────────────────\n` +
       `O futuro do jornalismo financeiro está aqui.\n\n` +
-      `📌 <b>Comandos:</b>\n` +
-      `• /pulse — Estado Global (IA)\n` +
-      `• /news — Principais notícias\n` +
-      `• /stories — Histórias correlacionadas\n` +
-      `• /topics — Tópicos monitorados\n` +
-      `• /analysis — Análise profunda\n` +
-      `• /financial — Oportunidades\n` +
-      `• /ask — Perguntar à IA\n\n` +
-      `──────────────────────\n` +
-      `<i>Sempre à frente do mercado.</i>`
+      `Explore o pulso do mercado através dos botões abaixo.\n\n` +
+      `<i>Sempre à frente do mercado.</i>`,
+      { reply_markup: mainKeyboard }
     )
   );
+
+  bot.hears('🌌 Neo-Pulse', (ctx) => (ctx as any).replyWithCommand('/pulse'));
+  bot.hears('📰 Top Notícias', (ctx) => (ctx as any).replyWithCommand('/news'));
+  bot.hears('🔗 Histórias', (ctx) => (ctx as any).replyWithCommand('/stories'));
+  bot.hears('📊 Tópicos', (ctx) => (ctx as any).replyWithCommand('/topics'));
+  bot.hears('💰 Financeiro', (ctx) => (ctx as any).replyWithCommand('/financial'));
+  bot.hears('❓ Ajuda', (ctx) => (ctx as any).replyWithCommand('/start'));
 
   bot.command('pulse', async (ctx: Context) => {
     await ctx.reply('🌌 Gerando Neo-Pulse Global...');
