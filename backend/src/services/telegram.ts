@@ -211,16 +211,25 @@ async function generateContext(title: string, content: string): Promise<string> 
     const model = await getFastModel();
     const { text } = await generateText({
       model,
-      prompt: `Você é um colunista irônico e bem-informado. Com base na notícia abaixo, escreva UMA frase curta em português (PT-BR) que:
-- Diga quem é a pessoa ou o que é o assunto principal (se não for óbvio), e/ou
-- Faça um comentário sarcástico, curioso ou revelador com base no seu conhecimento — algo que o leitor não vai encontrar na notícia.
-Seja direto, inteligente, sem explicar o que está fazendo. Sem prefixo como "Curiosidade:" ou "Comentário:".
+      prompt: `Você é um colunista brasileiro irônico e bem-informado. Com base na notícia abaixo, escreva UMA ou DUAS frases curtas em português (PT-BR) seguindo esta prioridade:
+
+1. Se houver uma pessoa pública: mencione o fato ou período mais marcante da carreira dela que seja RELEVANTE para esta notícia (ex: "Presidiu o julgamento do Mensalão no STF em 2012-2013..."). Use seu conhecimento prévio, não o que está no texto.
+2. Depois, se couber, adicione uma observação sarcástica, irônica ou curiosa — algo que o leitor não encontrará na notícia.
+
+Regras:
+- Máximo 2 frases.
+- Sem prefixo ("Curiosidade:", "Comentário:", "Contexto:").
+- Se não souber nada relevante sobre a pessoa/assunto, retorne string vazia.
+- Apenas português BR.
 
 Título: ${title}
 Conteúdo: ${content.slice(0, 800)}`,
-      maxTokens: 100,
+      maxTokens: 120,
     });
-    return text.trim();
+    const result = text.trim();
+    // Discard if LLM returned something in English or just restated the title
+    const looksPortuguese = /\b(do|da|de|em|com|que|foi|para|uma|um|no|na|seu|sua|ele|ela)\b/i.test(result);
+    return looksPortuguese ? result : '';
   } catch {
     return '';
   }
