@@ -33,7 +33,6 @@ export const FEED_SOURCES = [
     { url: 'https://feeds.feedburner.com/TechCrunch/startups', category: 'Tecnologia' },
     { url: 'https://www.smashingmagazine.com/feed', category: 'Tecnologia' },
     { url: 'https://hackernoon.com/feed', category: 'Tecnologia' },
-    { url: 'https://dev.to/feed', category: 'Tecnologia' },
     { url: 'https://www.sitepoint.com/feed', category: 'Tecnologia' },
     { url: 'https://www.sciencealert.com/feed', category: 'Tecnologia' },
     { url: 'https://www.theregister.com/headlines.atom', category: 'Tecnologia' },
