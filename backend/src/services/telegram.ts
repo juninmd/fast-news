@@ -196,9 +196,29 @@ async function generateSummary(title: string, content: string): Promise<string> 
     const model = await getFastModel();
     const { text } = await generateText({
       model,
-      prompt: `Você é um editor sênior. Resuma esta notícia em 2-3 frases impactantes e profissionais em português (PT-BR). 
+      prompt: `Você é um editor sênior. Resuma esta notícia em 2-3 frases impactantes e profissionais em português (PT-BR).
       Foque nos fatos e no impacto. Não use "Esta notícia fala sobre...". Vá direto ao ponto.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 1500)}`,
       maxTokens: 180,
+    });
+    return text.trim();
+  } catch {
+    return '';
+  }
+}
+
+async function generateContext(title: string, content: string): Promise<string> {
+  try {
+    const model = await getFastModel();
+    const { text } = await generateText({
+      model,
+      prompt: `Você é um colunista irônico e bem-informado. Com base na notícia abaixo, escreva UMA frase curta em português (PT-BR) que:
+- Diga quem é a pessoa ou o que é o assunto principal (se não for óbvio), e/ou
+- Faça um comentário sarcástico, curioso ou revelador com base no seu conhecimento — algo que o leitor não vai encontrar na notícia.
+Seja direto, inteligente, sem explicar o que está fazendo. Sem prefixo como "Curiosidade:" ou "Comentário:".
+
+Título: ${title}
+Conteúdo: ${content.slice(0, 800)}`,
+      maxTokens: 100,
     });
     return text.trim();
   } catch {
@@ -286,7 +306,10 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
   const activeStories = await listActiveStories(50).catch(() => []);
   const storyMap = new Map(activeStories.map((s) => [s.id, s]));
   const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
-  const summary = await generateSummary(article.title, article.content);
+  const [summary, context] = await Promise.all([
+    generateSummary(article.title, article.content),
+    generateContext(article.title, article.content),
+  ]);
   const displaySummary = summary || article.content.replace(/\s+/g, ' ').trim().slice(0, FALLBACK_SUMMARY_MAX_LEN);
 
   const { label: ago, isBreaking } = formatPublishedAt(article.publishedAt);
@@ -346,11 +369,14 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
 
   const hashtag = `#${article.category.replace(/[^a-zA-ZÀ-ÿ0-9]/g, '_').replace(/_+/g, '_')}`;
 
+  const contextLine = context ? `\n\n💡 <i>${escapeHtml(context)}</i>` : '';
+
   let message =
     sourceHeader +
     `\n${SEPARATOR}\n` +
     `<b>${escapeHtml(article.title)}</b>` +
     `\n\n<i>${escapeHtml(displaySummary)}</i>` +
+    contextLine +
     credibilityBlock +
     storyBlock +
     relatedBlock +
