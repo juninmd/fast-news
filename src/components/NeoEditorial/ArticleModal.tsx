@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { X, ExternalLink, Clock, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { X, ExternalLink, Clock, ShieldAlert, AlertTriangle, Focus, BookOpen } from 'lucide-react';
+import { useReadingHistory } from '../../hooks/useReadingHistory';
 
 interface Article {
   id: string;
@@ -55,13 +56,18 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
   const [related, setRelated] = useState<RelatedArticle[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [focusMode, setFocusMode] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { markRead } = useReadingHistory();
 
   useEffect(() => {
-    if (!articleId) { setArticle(null); setRelated([]); return; }
+    if (!articleId) { setArticle(null); setRelated([]); setProgress(0); return; }
     setLoading(true);
     setError(false);
     setArticle(null);
     setRelated([]);
+    setProgress(0);
 
     fetch(`/api/news/${articleId}`)
       .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
@@ -74,6 +80,19 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
       .catch(() => {});
   }, [articleId]);
 
+  // Track reading progress
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const pct = el.scrollTop / (el.scrollHeight - el.clientHeight);
+    setProgress(Math.min(100, Math.round(pct * 100)));
+  }, []);
+
+  // Mark read when 80% scrolled
+  useEffect(() => {
+    if (progress >= 80 && article) markRead(article.id, article.title);
+  }, [progress, article, markRead]);
+
   useEffect(() => {
     if (!articleId) return;
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -85,27 +104,55 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-bg-primary/80 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className={`absolute inset-0 backdrop-blur-sm transition-colors duration-300 ${focusMode ? 'bg-black/90' : 'bg-bg-primary/80'}`}
+        onClick={onClose}
+      />
 
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-bg-secondary border border-border-subtle rounded-2xl shadow-2xl overflow-hidden">
+      <div className={`relative w-full flex flex-col bg-bg-secondary border border-border-subtle rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${focusMode ? 'max-w-2xl max-h-[95vh]' : 'max-w-2xl max-h-[90vh]'}`}>
+        {/* Reading progress bar */}
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-bg-tertiary z-10">
+          <div
+            className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary transition-all duration-150"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-subtle flex-shrink-0">
-          <span className="text-xs text-text-secondary font-mono uppercase tracking-wider">
-            {loading ? 'Carregando...' : article?.category ?? ''}
-          </span>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-bg-tertiary text-text-secondary transition-colors">
-            <X className="w-4 h-4" />
-          </button>
+        <div className={`flex items-center justify-between px-5 py-3.5 border-b border-border-subtle flex-shrink-0 ${focusMode ? 'bg-bg-secondary/95' : ''}`}>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-text-secondary font-mono uppercase tracking-wider">
+              {loading ? 'Carregando...' : article?.category ?? ''}
+            </span>
+            {!loading && article && (
+              <span className="text-xs text-text-secondary font-numbers">
+                {progress > 0 && `${progress}%`}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setFocusMode((f) => !f)}
+              className={`p-1.5 rounded-lg transition-colors ${focusMode ? 'bg-accent-primary/20 text-accent-primary' : 'hover:bg-bg-tertiary text-text-secondary'}`}
+              title={focusMode ? 'Sair do modo foco' : 'Modo foco'}
+            >
+              <Focus className="w-4 h-4" />
+            </button>
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-bg-tertiary text-text-secondary transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1">
+        <div ref={scrollRef} onScroll={handleScroll} className="overflow-y-auto flex-1">
           {loading && (
             <div className="p-6 space-y-4 animate-pulse">
-              <div className="h-48 bg-bg-tertiary rounded-xl" />
-              <div className="h-6 bg-bg-tertiary rounded w-3/4" />
+              <div className="h-52 bg-bg-tertiary rounded-xl" />
+              <div className="h-7 bg-bg-tertiary rounded w-3/4" />
               <div className="h-4 bg-bg-tertiary rounded" />
               <div className="h-4 bg-bg-tertiary rounded w-5/6" />
+              <div className="h-4 bg-bg-tertiary rounded w-4/5" />
             </div>
           )}
 
@@ -118,14 +165,14 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 
           {article && (
             <>
-              {article.image_url && (
+              {article.image_url && !focusMode && (
                 <div className="h-52 overflow-hidden flex-shrink-0">
-                  <img src={article.image_url} alt="" className="w-full h-full object-cover" />
+                  <img src={article.image_url} alt="" loading="lazy" className="w-full h-full object-cover" />
                 </div>
               )}
 
-              <div className="p-6">
-                <h2 className="text-xl font-display font-bold text-text-primary leading-tight mb-3">
+              <div className={`p-6 ${focusMode ? 'py-8' : ''}`}>
+                <h2 className={`font-display font-bold text-text-primary leading-tight mb-4 ${focusMode ? 'text-2xl' : 'text-xl'}`}>
                   {article.title}
                 </h2>
 
@@ -139,11 +186,15 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
                     <Clock className="w-3 h-3" />
                     {formatDate(article.published_at)}
                   </span>
+                  <span className="flex items-center gap-1 text-text-secondary">
+                    <BookOpen className="w-3 h-3" />
+                    ~{Math.ceil((article.content || article.summary).split(' ').length / 200)} min
+                  </span>
                 </div>
 
                 {/* Credibility */}
                 {(article.fake_news_score != null || article.political_bias || article.is_militant || article.has_incoherence) && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-5 p-3 rounded-xl bg-bg-tertiary/50">
                     {article.fake_news_score != null && (
                       <span className={`text-xs font-semibold flex items-center gap-1 ${fakeNewsLabel(article.fake_news_score).color}`}>
                         <ShieldAlert className="w-3 h-3" />
@@ -159,7 +210,7 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
                 )}
 
                 {/* Content */}
-                <div className="prose prose-invert prose-sm max-w-none text-text-secondary leading-relaxed">
+                <div className={`text-text-secondary leading-relaxed whitespace-pre-line ${focusMode ? 'text-base' : 'text-sm'}`}>
                   {article.content || article.summary}
                 </div>
 
