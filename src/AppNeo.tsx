@@ -3,11 +3,13 @@ import { Header, CategoryTabs, NewsCard, Sidebar, SearchModal, SkeletonCard, Top
 import { StoryCard, CorrelationGraph, IntelligencePanel, StoryDetailModal } from './components/StoryIntelligence';
 import { useTheme, useNews } from './hooks';
 import { useStories, useStoryDetail, useGlobalGraph } from './hooks/useStories';
+import { useReadingHistory } from './hooks/useReadingHistory';
+import { useBookmarks } from './hooks/useBookmarks';
 import './styles/animations.css';
 
 function App() {
   const [activeCategory, setActiveCategory] = useState('Todas');
-  const [activeView, setActiveView] = useState<'feed' | 'stories' | 'graph' | 'intelligence'>('feed');
+  const [activeView, setActiveView] = useState<'feed' | 'stories' | 'graph' | 'intelligence' | 'bookmarks' | 'history'>('feed');
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<unknown[] | null>(null);
@@ -23,6 +25,8 @@ function App() {
   // @ts-ignore
   const [toast, setToast] = useState(null);
   const { theme, toggleTheme } = useTheme();
+  const { markRead, history: readHistory } = useReadingHistory();
+  const { bookmarks, isBookmarked } = useBookmarks();
 
   const { articles, loading, error, refetch, loadMore, hasMore } = useNews({
     category: activeCategory,
@@ -34,6 +38,11 @@ function App() {
     const id = new URLSearchParams(window.location.search).get('id');
     if (id) setSelectedArticleId(id);
   }, []);
+
+  const openArticle = useCallback((id: string, title?: string) => {
+    setSelectedArticleId(id);
+    if (title) markRead(id, title);
+  }, [markRead]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -103,7 +112,7 @@ function App() {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <TopNewsSection onArticleClick={setSelectedArticleId} />
+        <TopNewsSection onArticleClick={openArticle} />
 
         {articles.length > 0 && activeView === 'feed' && !searchResults && (
           <section className="mb-8">
@@ -112,26 +121,36 @@ function App() {
               variant="featured"
               onBookmark={handleBookmark}
               onShare={handleShare}
-              onSummarize={() => setSelectedArticleId(articles[0].id)}
+              onSummarize={() => openArticle(articles[0].id, articles[0].title)}
             />
           </section>
         )}
 
         <section className="mb-6">
           <div className="flex items-center gap-4 mb-4">
-            {(['feed', 'stories', 'graph', 'intelligence'] as const).map((v) => (
-              <button
-                key={v}
-                onClick={() => setActiveView(v)}
-                className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                  activeView === v
-                    ? 'bg-accent text-white'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-surface'
-                }`}
-              >
-                {v === 'feed' ? '📰 Feed' : v === 'stories' ? '🔗 Histórias' : v === 'graph' ? '🕸 Grafo' : '💡 Inteligência'}
-              </button>
-            ))}
+            {(['feed', 'stories', 'graph', 'intelligence', 'bookmarks', 'history'] as const).map((v) => {
+              const labels: Record<string, string> = {
+                feed: '📰 Feed',
+                stories: '🔗 Histórias',
+                graph: '🕸 Grafo',
+                intelligence: '💡 Inteligência',
+                bookmarks: `🔖 Salvos${bookmarks.length > 0 ? ` (${bookmarks.length})` : ''}`,
+                history: `📖 Lidos${readHistory.length > 0 ? ` (${readHistory.length})` : ''}`,
+              };
+              return (
+                <button
+                  key={v}
+                  onClick={() => setActiveView(v)}
+                  className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+                    activeView === v
+                      ? 'bg-accent-primary text-white'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'
+                  }`}
+                >
+                  {labels[v]}
+                </button>
+              );
+            })}
           </div>
           <CategoryTabs
             activeCategory={activeCategory}
@@ -141,6 +160,51 @@ function App() {
 
         <div className="flex gap-8">
           <div className="flex-1">
+            {/* Bookmarks view */}
+            {activeView === 'bookmarks' && (
+              <div>
+                {bookmarks.length === 0 ? (
+                  <p className="text-center py-16 text-text-secondary">Nenhum artigo salvo ainda. Clique em 🔖 nos cards para salvar.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {articles.filter((a) => isBookmarked(a.id)).map((article) => (
+                      <NewsCard
+                        key={article.id}
+                        {...article}
+                        onSummarize={() => openArticle(article.id, article.title)}
+                        onShare={handleShare}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* History view */}
+            {activeView === 'history' && (
+              <div>
+                {readHistory.length === 0 ? (
+                  <p className="text-center py-16 text-text-secondary">Nenhum artigo lido ainda. Artigos lidos (80%+) aparecem aqui.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {readHistory.map((h) => (
+                      <li key={h.id}>
+                        <button
+                          onClick={() => openArticle(h.id, h.title)}
+                          className="w-full text-left px-4 py-3 rounded-xl bg-bg-secondary border border-border-subtle hover:border-accent-primary/30 transition-colors"
+                        >
+                          <p className="text-sm text-text-primary line-clamp-1">{h.title}</p>
+                          <p className="text-xs text-text-secondary mt-1">
+                            {new Date(h.readAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
             {/* Stories view */}
             {activeView === 'stories' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -220,7 +284,7 @@ function App() {
                           {...(article as Parameters<typeof NewsCard>[0])}
                           onBookmark={handleBookmark}
                           onShare={handleShare}
-                          onSummarize={() => setSelectedArticleId(article.id as string)}
+                          onSummarize={() => openArticle(article.id as string, (article as { title?: string }).title)}
                         />
                       ))}
                 </div>
@@ -258,7 +322,7 @@ function App() {
 
       <ArticleModal
         articleId={selectedArticleId}
-        onClose={() => setSelectedArticleId(null)}
+        onClose={() => { setSelectedArticleId(null); window.history.replaceState({}, '', window.location.pathname); }}
       />
 
       {toast && (
