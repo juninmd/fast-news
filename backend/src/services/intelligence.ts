@@ -1,5 +1,4 @@
 import { generateText } from 'ai';
-import { query } from '../database/client.js';
 import { getLanguageModel } from './aiProvider.js';
 import { listActiveStories } from './correlation.js';
 import { searchSimilarArticles } from './rag.js';
@@ -28,6 +27,8 @@ ${recentNews.map(n => `- ${n.title} (${n.source})`).join('\n')}
   const prompt = `
 Você é o Chief Intelligence Officer do Fast-News AI. 
 Analise o contexto acima e gere um "Intelligence Pulse" estratégico para investidores e tomadores de decisão.
+
+${context}
 
 Use o seguinte formato Markdown do Telegram:
 
