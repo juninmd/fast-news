@@ -7,10 +7,27 @@ import { buildArticleRelations, assignArticleToStory } from './correlation.js';
 import { enqueueCredibilityAnalysis } from './ollamaQueue.js';
 
 const parser = new Parser({
-  timeout: 10_000,
-  headers: { 'User-Agent': 'FastNews/1.0' },
   customFields: { item: [['media:content', 'mediaContent'], 'enclosure'] },
 });
+
+/** Fetch feed XML with proper charset decoding (handles ISO-8859-1 / Windows-1252 Brazilian feeds) */
+async function fetchXml(url: string): Promise<string> {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 12_000);
+  try {
+    const resp = await fetch(url, { signal: ac.signal, headers: { 'User-Agent': 'FastNews/1.0' } });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const contentType = resp.headers.get('content-type') ?? '';
+    const charsetMatch = contentType.match(/charset=([^\s;'"]+)/i);
+    let charset = (charsetMatch?.[1] ?? 'utf-8').toLowerCase();
+    // Normalize: TextDecoder accepts 'windows-1252' as alias for latin-1 variants
+    if (['iso-8859-1', 'latin1', 'latin-1', 'cp1252'].includes(charset)) charset = 'windows-1252';
+    const buf = await resp.arrayBuffer();
+    try { return new TextDecoder(charset).decode(buf); } catch { return new TextDecoder('utf-8').decode(buf); }
+  } finally {
+    clearTimeout(t);
+  }
+}
 
 const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif)(\?.*)?$/i;
 
@@ -114,7 +131,6 @@ export const FEED_SOURCES = [
   { url: 'https://newsletter.systemdesign.one/feed', category: 'Engenharia', company: 'System Design' },
   { url: 'https://medium.com/feed/better-programming', category: 'Engenharia', company: 'Better Programming' },
   { url: 'https://www.smashingmagazine.com/feed/', category: 'Engenharia', company: 'Smashing Magazine' },
-  { url: 'https://dev.to/feed', category: 'Engenharia', company: 'DEV.to' },
 
   // ── Open Source ──────────────────────────────────────────────────────────────
   { url: 'https://www.linux.com/feed/', category: 'Open Source', company: 'Linux' },
@@ -227,7 +243,8 @@ export interface RawArticle {
 
 async function fetchFeed(source: { url: string; category: string; company?: string }): Promise<RawArticle[]> {
   try {
-    const feed = await withRetry(() => parser.parseURL(source.url));
+    const xml = await withRetry(() => fetchXml(source.url));
+    const feed = await parser.parseString(xml);
     return (feed.items ?? []).slice(0, config.ingestion.maxArticlesPerFeed).map((item) => {
       // Robust date parsing
       const dateStr = item.isoDate ?? item.pubDate;
