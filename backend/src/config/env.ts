@@ -29,6 +29,8 @@ export const config = {
   geminiApiKey: optional('GEMINI_API_KEY', ''),
   openaiApiKey: optional('OPENAI_API_KEY', ''),
   anthropicApiKey: optional('ANTHROPIC_API_KEY', ''),
+  openrouterApiKey: optional('OPENROUTER_API_KEY', ''),
+  openrouterModel: optional('OPENROUTER_MODEL', 'anthropic/claude-3-haiku'),
 
   telegramBotToken: optional('TELEGRAM_BOT_TOKEN', ''),
   telegramEnabled: optional('TELEGRAM_ENABLED', 'false') === 'true',

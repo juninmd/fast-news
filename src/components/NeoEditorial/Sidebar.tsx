@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrendingUp, Filter, BarChart3, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 
 const COMPANIES = [
@@ -27,18 +27,44 @@ interface SourceStats {
   percentage: number;
 }
 
-const TRENDING_TOPICS = [
-  'GitHub Copilot', 'Claude 4', 'Grok 3', 'Gemini Ultra', 'Steam Deck 2'
-];
+function TopStoryWidget() {
+  const [story, setStory] = useState<{ title: string; source: string; published_at: string } | null>(null);
+  useEffect(() => {
+    fetch('/api/news/top')
+      .then((r) => r.json())
+      .then((d) => setStory(d.data?.[0] ?? null))
+      .catch(() => {});
+  }, []);
+  if (!story) return <p className="text-text-secondary">Carregando...</p>;
+  return (
+    <>
+      <p className="mb-2">Top notícia agora:</p>
+      <p className="text-text-primary font-medium leading-snug line-clamp-3">{story.title}</p>
+      <p className="mt-2 text-text-secondary">— {story.source}</p>
+      <p className="mt-1 text-accent-primary flex items-center gap-1">
+        <Sparkles className="w-3 h-3" />
+        {new Date(story.published_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}
+      </p>
+    </>
+  );
+}
 
 export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
   const [filters, setFilters] = useState<SidebarFilters>({});
+  const [topics, setTopics] = useState<{ id: string; name: string }[]>([]);
   const [expandedSections, setExpandedSections] = useState({
     trending: true,
     filters: true,
     stats: false,
     ai: false,
   });
+
+  useEffect(() => {
+    fetch('/api/topics')
+      .then((r) => r.json())
+      .then((d) => setTopics((d.data ?? d).slice(0, 8)))
+      .catch(() => {});
+  }, []);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -69,14 +95,18 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
         </button>
         {expandedSections.trending && (
           <div className="px-4 pb-4 space-y-2">
-            {TRENDING_TOPICS.map((topic) => (
-              <button
-                key={topic}
-                className="block w-full text-left px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-accent-primary transition-colors"
-              >
-                #{topic}
-              </button>
-            ))}
+            {topics.length === 0
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-8 bg-bg-tertiary rounded-lg animate-pulse" />
+                ))
+              : topics.map((topic) => (
+                  <button
+                    key={topic.id}
+                    className="block w-full text-left px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-accent-primary transition-colors"
+                  >
+                    #{topic.name}
+                  </button>
+                ))}
           </div>
         )}
       </section>
@@ -187,14 +217,7 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
         {expandedSections.ai && (
           <div className="px-4 pb-4">
             <div className="p-3 rounded-lg bg-bg-tertiary text-xs text-text-secondary">
-              <p className="mb-2">Today top story:</p>
-              <p className="text-text-primary font-medium">
-                GitHub announces Copilot X with GPT-4 Turbo integration
-              </p>
-              <p className="mt-2 text-accent-primary flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                Updated 5 min ago
-              </p>
+              <TopStoryWidget />
             </div>
           </div>
         )}
