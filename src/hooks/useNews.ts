@@ -12,6 +12,21 @@ interface NewsArticle {
   imageUrl?: string;
 }
 
+type ApiArticle = {
+  id: string;
+  title: string;
+  summary?: string;
+  content?: string;
+  url: string;
+  source: string;
+  category: string;
+  company?: string | null;
+  published_at?: string;
+  publishedAt?: string;
+  image_url?: string | null;
+  imageUrl?: string | null;
+};
+
 interface UseNewsOptions {
   category?: string;
   company?: string;
@@ -54,7 +69,7 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
       if (!response.ok) throw new Error('Failed to fetch articles');
 
       const data = await response.json();
-      const newArticles = data.articles || data.data || [];
+      const newArticles = (data.articles || data.data || []).map(toNewsArticle);
 
       setArticles((prev) => append ? [...prev, ...newArticles] : newArticles);
       setHasMore(data.hasMore ?? (newArticles.length > 0));
@@ -83,4 +98,18 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
   }, [page, hasMore, loading, fetchArticles]);
 
   return { articles, loading, error, refetch, loadMore, hasMore };
+}
+
+function toNewsArticle(article: ApiArticle): NewsArticle {
+  return {
+    id: article.id,
+    title: article.title,
+    excerpt: article.summary ?? article.content?.slice(0, 220),
+    url: article.url,
+    source: article.source,
+    category: article.category,
+    company: article.company ?? undefined,
+    publishedAt: new Date(article.published_at ?? article.publishedAt ?? Date.now()),
+    imageUrl: article.image_url ?? article.imageUrl ?? undefined,
+  };
 }

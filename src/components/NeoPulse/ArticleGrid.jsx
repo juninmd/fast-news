@@ -64,7 +64,7 @@ function Tile({ article, analysis, selected, onOpen, onAnalyze }) {
             <button onClick={() => onOpen(article)} className="neo-action">
               <Eye className="h-4 w-4" /> Ler
             </button>
-            <button onClick={() => onAnalyze(article)} className="neo-icon" title="Analisar com Ollama">
+            <button onClick={() => onAnalyze(article)} className="neo-icon" title="Analisar via API backend">
               <Sparkles className="h-4 w-4" />
             </button>
             <a href={article.url} target="_blank" rel="noreferrer" className="neo-icon" title="Abrir fonte">

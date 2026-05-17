@@ -3,6 +3,7 @@ import { Header, CategoryTabs, NewsCard, Sidebar, SearchModal, SkeletonCard, Top
 import { StoryCard, CorrelationGraph, IntelligencePanel, StoryDetailModal } from './components/StoryIntelligence';
 import { useTheme, useNews } from './hooks';
 import { useStories, useStoryDetail, useGlobalGraph } from './hooks/useStories';
+import type { ArticleNode, GraphEdge } from './hooks/useStories';
 import { useReadingHistory } from './hooks/useReadingHistory';
 import { useBookmarks } from './hooks/useBookmarks';
 import './styles/animations.css';
@@ -13,13 +14,13 @@ function App() {
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<unknown[] | null>(null);
+  const [searchGraph, setSearchGraph] = useState<{ nodes: ArticleNode[]; edges: GraphEdge[] } | null>(null);
   const [filters, setFilters] = useState({});
 
   const { stories, loading: storiesLoading } = useStories(activeCategory);
   const { detail: storyDetail, loading: detailLoading } = useStoryDetail(selectedStoryId);
   const { graph, loading: graphLoading } = useGlobalGraph(activeCategory);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   // @ts-ignore
@@ -52,7 +53,6 @@ function App() {
       }
       if (e.key === 'Escape') {
         setSearchOpen(false);
-        setSettingsOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -61,9 +61,13 @@ function App() {
 
   const handleSearch = useCallback((query: string) => {
     setRecentSearches((prev) => [query, ...prev.filter((s) => s !== query)].slice(0, 5));
-    fetch(`/api/news/search?q=${encodeURIComponent(query)}`)
+    fetch(`/api/rag/search?q=${encodeURIComponent(query)}&limit=18`)
       .then((r) => r.json())
-      .then((d) => { setSearchResults(d.data ?? []); setActiveView('feed'); })
+      .then((d) => {
+        setSearchResults((d.results ?? []).map(toCardArticle));
+        setSearchGraph(d.graph ?? null);
+        setActiveView('feed');
+      })
       .catch(() => {});
   }, []);
 
@@ -104,7 +108,6 @@ function App() {
     <div className="min-h-screen bg-bg-primary text-text-primary">
       <Header
         onSearchOpen={() => setSearchOpen(true)}
-        onSettingsOpen={() => setSettingsOpen(true)}
         onMenuToggle={() => setMenuOpen(!menuOpen)}
         isMenuOpen={menuOpen}
         theme={theme}
@@ -152,14 +155,21 @@ function App() {
               );
             })}
           </div>
-          <CategoryTabs
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-          />
         </section>
 
-        <div className="flex gap-8">
-          <div className="flex-1">
+        <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)_280px]">
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <CategoryTabs
+              activeCategory={activeCategory}
+              onCategoryChange={(category) => {
+                setActiveCategory(category);
+                setSearchResults(null);
+                setSearchGraph(null);
+              }}
+            />
+          </aside>
+
+          <div className="min-w-0">
             {/* Bookmarks view */}
             {activeView === 'bookmarks' && (
               <div>
@@ -270,9 +280,20 @@ function App() {
                   </div>
                 )}
                 {searchResults !== null && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <p className="text-sm text-text-secondary">{(searchResults as unknown[]).length} resultados</p>
-                    <button onClick={() => setSearchResults(null)} className="text-xs text-accent-primary hover:underline">Limpar busca</button>
+                  <div className="mb-4 rounded-xl border border-accent-primary/20 bg-accent-primary/5 p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <p className="text-sm font-medium text-text-primary">{(searchResults as unknown[]).length} resultados semanticos</p>
+                      <button onClick={() => { setSearchResults(null); setSearchGraph(null); }} className="ml-auto text-xs text-accent-primary hover:underline">Limpar busca</button>
+                    </div>
+                    {searchGraph && searchGraph.nodes.length > 1 && (
+                      <CorrelationGraph
+                        nodes={searchGraph.nodes}
+                        edges={searchGraph.edges}
+                        stories={[]}
+                        height={260}
+                        onNodeClick={(n) => window.open(n.url, '_blank')}
+                      />
+                    )}
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-reveal">
@@ -342,3 +363,30 @@ function App() {
 }
 
 export default App;
+
+function toCardArticle(article: {
+  id: string;
+  title: string;
+  content?: string;
+  summary?: string;
+  url: string;
+  source: string;
+  category: string;
+  company?: string;
+  published_at?: string;
+  publishedAt?: string;
+  image_url?: string;
+  imageUrl?: string;
+}) {
+  return {
+    id: article.id,
+    title: article.title,
+    excerpt: article.summary ?? article.content?.slice(0, 220),
+    url: article.url,
+    source: article.source,
+    category: article.category,
+    company: article.company,
+    publishedAt: article.published_at ?? article.publishedAt ?? new Date().toISOString(),
+    imageUrl: article.image_url ?? article.imageUrl,
+  };
+}

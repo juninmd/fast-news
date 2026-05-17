@@ -46,7 +46,7 @@ export function SignalBoard({ articles, analyzed, totalSources, indexed = 0 }) {
       <div className="grid grid-cols-2 gap-3">
         {stat('lidas', articles.length, Radio, 'bg-cyan-400 text-zinc-950')}
         {stat('uteis', useful, BadgeCheck, 'bg-emerald-400 text-zinc-950')}
-        {stat('ollama', analyzed, Activity, 'bg-fuchsia-400 text-zinc-950')}
+        {stat('ia backend', analyzed, Activity, 'bg-fuchsia-400 text-zinc-950')}
         {stat('fontes', totalSources, ShieldAlert, 'bg-amber-300 text-zinc-950')}
         {indexed > 0 && stat('indexadas', indexed, Brain, 'bg-violet-400 text-zinc-950')}
         <div className="col-span-2 rounded-lg border border-ink bg-panel p-4">

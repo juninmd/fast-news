@@ -80,7 +80,7 @@ export function SearchModal({ isOpen, onClose, onSearch, recentSearches = [] }: 
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search news, topics, sources..."
+            placeholder="Buscar noticias por significado, tema ou impacto..."
             className="flex-1 bg-transparent text-text-primary placeholder-text-secondary outline-none font-sans"
           />
           {query && (
@@ -97,13 +97,13 @@ export function SearchModal({ isOpen, onClose, onSearch, recentSearches = [] }: 
         </div>
 
         <div className="flex items-center gap-4 p-3 border-b border-border-subtle bg-bg-primary/30">
-          <span className="text-xs text-text-secondary">Filters:</span>
+          <span className="text-xs text-text-secondary">Filtros:</span>
           <select
             value={filters.category || ''}
             onChange={(e) => setFilters({ ...filters, category: e.target.value || undefined })}
             className="bg-bg-tertiary text-text-primary text-xs rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-accent-primary"
           >
-            <option value="">All Categories</option>
+            <option value="">Todas categorias</option>
             {CATEGORIES.filter(c => c !== 'Todas').map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -113,7 +113,7 @@ export function SearchModal({ isOpen, onClose, onSearch, recentSearches = [] }: 
             onChange={(e) => setFilters({ ...filters, company: e.target.value || undefined })}
             className="bg-bg-tertiary text-text-primary text-xs rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-accent-primary"
           >
-            <option value="">All Companies</option>
+            <option value="">Todas empresas</option>
             {COMPANIES.filter(c => c !== 'Todas').map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -123,15 +123,15 @@ export function SearchModal({ isOpen, onClose, onSearch, recentSearches = [] }: 
         <div className="max-h-80 overflow-y-auto p-2">
           {query ? (
             <div className="p-3 text-center text-text-secondary text-sm">
-              Press Enter to search for "{query}"
+              Pressione Enter para buscar "{query}"
               <span className="block mt-1 flex items-center justify-center gap-1 text-accent-primary">
-                <Sparkles className="w-3 h-3" /> AI-powered semantic search
+                <Sparkles className="w-3 h-3" /> Busca semantica RAG via backend
               </span>
             </div>
           ) : recentSearches.length > 0 ? (
             <div className="space-y-1">
               <div className="px-3 py-2 text-xs text-text-secondary uppercase tracking-wider">
-                Recent Searches
+                Buscas recentes
               </div>
               {recentSearches.map((search, i) => (
                 <button
@@ -156,8 +156,8 @@ export function SearchModal({ isOpen, onClose, onSearch, recentSearches = [] }: 
           ) : (
             <div className="p-6 text-center text-text-secondary">
               <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>Start typing to search</p>
-              <p className="text-xs mt-1">Use filters to narrow results by category or company</p>
+              <p>Digite para pesquisar</p>
+              <p className="text-xs mt-1">A busca usa embeddings e retorna noticias relacionadas por contexto</p>
             </div>
           )}
         </div>
@@ -166,15 +166,15 @@ export function SearchModal({ isOpen, onClose, onSearch, recentSearches = [] }: 
           <div className="flex items-center gap-4 text-xs text-text-secondary">
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 rounded bg-bg-tertiary font-mono">↑↓</kbd>
-              Navigate
+              Navegar
             </span>
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 rounded bg-bg-tertiary font-mono">↵</kbd>
-              Select
+              Selecionar
             </span>
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 rounded bg-bg-tertiary font-mono">ESC</kbd>
-              Close
+              Fechar
             </span>
           </div>
         </div>
