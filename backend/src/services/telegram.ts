@@ -174,14 +174,14 @@ function formatArticle(article: { title: string; url: string; source: string; ca
          `🔗 <a href="${article.url}">ACESSAR REPORTAGEM COMPLETA</a>`;
 }
 
-function timeAgo(date: Date | null | undefined): string {
-  if (!date) return '';
-  const diff = Date.now() - new Date(date).getTime();
-  const min = Math.floor(diff / 60_000);
-  if (min < 60) return `há ${min}m`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `há ${h}h`;
-  return `há ${Math.floor(h / 24)}d`;
+function formatPublishedAt(date: Date | null | undefined): { label: string; isBreaking: boolean } {
+  if (!date) return { label: '', isBreaking: false };
+  const d = new Date(date);
+  const diffMin = Math.floor((Date.now() - d.getTime()) / 60_000);
+  const isBreaking = diffMin <= 30;
+  const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  const label = diffMin < 60 ? `${time} (há ${diffMin}m)` : time;
+  return { label, isBreaking };
 }
 
 function escapeHtml(text: string): string {
@@ -289,6 +289,8 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
   const summary = await generateSummary(article.title, article.content);
   const displaySummary = summary || article.content.replace(/\s+/g, ' ').trim().slice(0, FALLBACK_SUMMARY_MAX_LEN);
 
+  const { label: ago, isBreaking } = formatPublishedAt(article.publishedAt);
+
   // Prefer storyId from enriched article, then search active stories
   const matchedStory = article.storyId
     ? storyMap.get(article.storyId) ?? activeStories.find((s) => s.id === article.storyId)
@@ -328,13 +330,15 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
     : '';
 
   const credibilityBlock = buildCredibilityBlock(article);
-  const ago = timeAgo(article.publishedAt);
   const companyLine = article.company && article.company !== article.source
     ? `${escapeHtml(article.company)} · ` : '';
 
-  const sourceHeader = `${emoji} <b>${escapeHtml(article.category).toUpperCase()}</b>` +
+  const breakingLabel = isBreaking ? `🔴 <b>URGENTE</b>  ·  ` : '';
+  const sourceHeader = `${breakingLabel}${emoji} <b>${escapeHtml(article.category).toUpperCase()}</b>` +
     `  ·  ${companyLine}${escapeHtml(article.source)}` +
     (ago ? `  ·  <i>${ago}</i>` : '');
+
+  const hashtag = `#${article.category.replace(/[^a-zA-ZÀ-ÿ0-9]/g, '_').replace(/_+/g, '_')}`;
 
   let message =
     sourceHeader +
@@ -343,7 +347,8 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
     `\n\n<i>${escapeHtml(displaySummary)}</i>` +
     credibilityBlock +
     storyBlock +
-    relatedBlock;
+    relatedBlock +
+    `\n\n${hashtag}`;
 
   if (message.length > 3800) {
     message = message.slice(0, 3780) + '…';
