@@ -1,8 +1,6 @@
--- Enable pgvector extension
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- News articles with vector embeddings
 CREATE TABLE IF NOT EXISTS news_articles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   guid TEXT UNIQUE NOT NULL,
@@ -22,7 +20,8 @@ CREATE TABLE IF NOT EXISTS news_articles (
   political_bias TEXT DEFAULT NULL,           -- 'neutral' | 'left' | 'far_left' | 'right' | 'far_right'
   is_militant BOOLEAN DEFAULT FALSE,          -- post de cunho militante/panfletário
   has_incoherence BOOLEAN DEFAULT FALSE,      -- contém informações incoerentes/contraditórias
-  credibility_flags TEXT[] DEFAULT '{}'       -- flags: 'misleading_headline', 'missing_sources', 'emotional_language', etc.
+  credibility_flags TEXT[] DEFAULT '{}',      -- flags: 'fake_news', 'lie', 'hypocrisy', 'incoherence', etc.
+  credibility_reasoning TEXT DEFAULT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON news_articles(published_at DESC);
@@ -150,11 +149,10 @@ CREATE TABLE IF NOT EXISTS article_relations (
 CREATE INDEX IF NOT EXISTS idx_relations_a ON article_relations(article_a, similarity DESC);
 CREATE INDEX IF NOT EXISTS idx_relations_b ON article_relations(article_b, similarity DESC);
 
--- Track which articles have been sent to Telegram (prevents flooding from one source)
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS telegram_sent_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS credibility_reasoning TEXT DEFAULT NULL;
 CREATE INDEX IF NOT EXISTS idx_articles_telegram_unsent ON news_articles(created_at DESC) WHERE telegram_sent_at IS NULL;
 
--- Story timeline events: what changed in this story over time
 CREATE TABLE IF NOT EXISTS story_timeline (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   story_id UUID REFERENCES news_stories(id) ON DELETE CASCADE,
@@ -166,8 +164,6 @@ CREATE TABLE IF NOT EXISTS story_timeline (
 );
 
 CREATE INDEX IF NOT EXISTS idx_timeline_story ON story_timeline(story_id, occurred_at ASC);
-
--- Seed default tracked topics
 
 INSERT INTO tracked_topics (name, description, keywords) VALUES
   ('Guerra EUA vs Irã', 'Conflito geopolítico entre Estados Unidos e Irã', ARRAY['eua', 'irã', 'iran', 'guerra', 'conflito', 'oriente médio', 'sanções', 'nuclear']),

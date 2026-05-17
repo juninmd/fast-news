@@ -11,7 +11,10 @@ import { createApp } from './api/app.js';
 const __dir = dirname(fileURLToPath(import.meta.url));
 
 async function runMigrations(): Promise<void> {
-  const sql = readFileSync(join(__dir, 'database/schema.sql'), 'utf-8');
+  const files = ['schema.sql', 'telegram-feedback.sql'];
+  const sql = files.map((file) =>
+    readFileSync(join(__dir, 'database', file), 'utf-8')
+  ).join('\n');
   await getPool().query(sql);
   console.log('✅ Migrations applied');
 }

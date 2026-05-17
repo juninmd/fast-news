@@ -2,7 +2,6 @@ import Bull from 'bull';
 import { config } from '../config/env.js';
 import { analyzeCredibility } from './credibility.js';
 import { enqueueTelegramPosts } from './telegramQueue.js';
-import { query } from '../database/client.js';
 import type { TelegramArticle } from './telegram.js';
 
 interface CredibilityJob {
@@ -15,7 +14,8 @@ function getQueue(): Bull.Queue<CredibilityJob> {
   if (!queue) {
     queue = new Bull<CredibilityJob>('ollama:credibility', config.redisUrl, {
       defaultJobOptions: {
-        attempts: 1,   // no retry — timeout fallback sends article without score
+        attempts: 3,
+        backoff: { type: 'exponential', delay: config.telegramQueue.backoffMs },
         removeOnComplete: 500,
         removeOnFail: 100,
       },
@@ -40,10 +40,12 @@ function getQueue(): Bull.Queue<CredibilityJob> {
           politicalBias: result.politicalBias,
           isMilitant: result.isMilitant,
           hasIncoherence: result.hasIncoherence,
+          credibilityFlags: result.credibilityFlags,
+          credibilityReasoning: result.reasoning,
         };
         console.log(`[OllamaQueue] Credibility done for ${article.id} (score: ${result.fakeNewsScore})`);
       } else {
-        console.warn(`[OllamaQueue] Credibility returned null for ${article.id} — sending without scores`);
+        throw new Error(`Credibility analysis did not complete for ${article.id}`);
       }
 
       await enqueueTelegramPosts([enriched]);

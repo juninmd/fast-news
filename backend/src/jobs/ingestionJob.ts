@@ -20,12 +20,15 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
       id: string; title: string; url: string; source: string; category: string;
       company?: string; content: string; publishedAt?: Date | null;
       fakeNewsScore: number | null; politicalBias: string | null;
-      isMilitant: boolean; hasIncoherence: boolean; storyId: string | null;
+      isMilitant: boolean; hasIncoherence: boolean; credibilityFlags: string[];
+      credibilityReasoning: string | null; storyId: string | null;
     }>(
       `SELECT na.id, na.title, na.url, na.source, na.category, na.company,
               na.content, na.published_at AS "publishedAt",
               na.fake_news_score AS "fakeNewsScore", na.political_bias AS "politicalBias",
               na.is_militant AS "isMilitant", na.has_incoherence AS "hasIncoherence",
+              na.credibility_flags AS "credibilityFlags",
+              na.credibility_reasoning AS "credibilityReasoning",
               sa.story_id AS "storyId"
        FROM news_articles na
        LEFT JOIN LATERAL (
@@ -33,13 +36,33 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
        ) sa ON true
        WHERE na.telegram_sent_at IS NULL
          AND na.fake_news_score IS NOT NULL
-         AND na.created_at > NOW() - INTERVAL '24 hours'
        ORDER BY na.published_at DESC NULLS LAST
-       LIMIT 100`,
+       `,
     );
     return res.rows;
   } catch (err) {
     console.error('[IngestionJob] Failed to fetch unsent evaluated articles:', (err as Error).message);
+    return [];
+  }
+}
+
+async function fetchUnsentUnevaluatedArticles(): Promise<TelegramArticle[]> {
+  try {
+    const res = await query<TelegramArticle>(
+      `SELECT na.id, na.title, na.url, na.source, na.category, na.company,
+              na.content, na.published_at AS "publishedAt", sa.story_id AS "storyId"
+       FROM news_articles na
+       LEFT JOIN LATERAL (
+         SELECT story_id FROM story_articles WHERE article_id = na.id LIMIT 1
+       ) sa ON true
+       WHERE na.telegram_sent_at IS NULL
+         AND na.fake_news_score IS NULL
+         AND na.created_at < NOW() - INTERVAL '5 minutes'
+       ORDER BY na.published_at DESC NULLS LAST`,
+    );
+    return res.rows;
+  } catch (err) {
+    console.error('[IngestionJob] Failed to fetch unevaluated articles:', (err as Error).message);
     return [];
   }
 }
@@ -56,6 +79,11 @@ export async function runIngestionAndPost(): Promise<void> {
 
   // New articles: credibility first → Telegram (handled by ollamaQueue worker)
   // Already logged inside runIngestion via enqueueCredibilityAnalysis
+  const unevaluated = await fetchUnsentUnevaluatedArticles();
+  if (unevaluated.length > 0) {
+    await Promise.all(unevaluated.map(enqueueCredibilityAnalysis));
+    console.log(`[IngestionJob] Requeued ${unevaluated.length} unevaluated articles for Ollama.`);
+  }
 
   // Articles from previous runs already evaluated: send directly to Telegram
   const evaluated = await fetchUnsentEvaluatedArticles();
