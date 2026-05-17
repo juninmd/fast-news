@@ -29,8 +29,12 @@ const CredibilitySchema = z.object({
       'opinion_as_fact',
       'selective_data',
       'out_of_context',
+      'fake_news',
+      'lie',
+      'hypocrisy',
+      'incoherence',
     ]))
-    .describe('Flags de problemas de credibilidade detectados'),
+    .describe('Problemas detectados: incoerência, fake news, hipocrisia, mentira ou sinais editoriais'),
   reasoning: z.string().describe('Justificativa breve (1 frase) da pontuação atribuída'),
 });
 
@@ -45,8 +49,8 @@ Avalie:
 1. Score de fake news (1=confiável, 10=desinformação)
 2. Viés político do conteúdo (não da fonte, mas do texto em si)
 3. Se é panfletário/militante
-4. Se há incoerências internas
-5. Flags de problemas
+4. Se há incoerências internas, hipocrisia, mentiras ou alegações não sustentadas
+5. Flags de problemas, usando fake_news, lie, hypocrisy ou incoherence quando houver evidência
 
 Seja rigoroso mas justo. Notícias factuais de grandes veículos tendem a score 1-3.`;
 
@@ -83,11 +87,11 @@ export async function analyzeCredibility(
     await query(
       `UPDATE news_articles SET
          fake_news_score = $1, political_bias = $2, is_militant = $3,
-         has_incoherence = $4, credibility_flags = $5
-       WHERE id = $6`,
+         has_incoherence = $4, credibility_flags = $5, credibility_reasoning = $6
+       WHERE id = $7`,
       [
         object.fakeNewsScore, object.politicalBias, object.isMilitant,
-        object.hasIncoherence, object.credibilityFlags, articleId,
+        object.hasIncoherence, object.credibilityFlags, object.reasoning, articleId,
       ],
     );
 

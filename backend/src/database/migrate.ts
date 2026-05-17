@@ -8,8 +8,10 @@ const __dirname = dirname(__filename);
 
 async function migrate(): Promise<void> {
   const pool = getPool();
-  const schemaPath = join(__dirname, 'schema.sql');
-  const sql = readFileSync(schemaPath, 'utf-8');
+  const files = ['schema.sql', 'telegram-feedback.sql'];
+  const sql = files.map((file) =>
+    readFileSync(join(__dirname, file), 'utf-8')
+  ).join('\n');
 
   console.log('[migrate] Running schema migration...');
   try {

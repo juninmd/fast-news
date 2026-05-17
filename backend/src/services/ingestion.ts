@@ -365,14 +365,19 @@ export async function runIngestion(): Promise<IngestionResult> {
             newArticles.push(newArticle);
             runBackground('buildArticleRelations', () => buildArticleRelations(id));
             runBackground('assignArticleToStory', () => assignArticleToStory(id));
-            // Credibility runs first; worker enqueues Telegram after evaluation
-            enqueueCredibilityAnalysis(newArticle);
           }
         } catch (err) {
           console.error('[ingestion] article failed:', (err as Error).message, { url: article.url });
         }
       }
     }
+  }
+
+  const orderedArticles = [...newArticles].sort((a, b) =>
+    (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0)
+  );
+  for (const article of orderedArticles) {
+    await enqueueCredibilityAnalysis(article);
   }
 
   console.log(`[ingestion] Done. Fetched: ${fetched}, Stored: ${newArticles.length}`);

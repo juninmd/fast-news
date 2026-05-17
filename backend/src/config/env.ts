@@ -35,10 +35,6 @@ export const config = {
   telegramBotToken: optional('TELEGRAM_BOT_TOKEN', ''),
   telegramEnabled: optional('TELEGRAM_ENABLED', 'false') === 'true',
   telegramChatIds: optional('TELEGRAM_CHAT_IDS', '').split(',').filter(Boolean),
-  // Categorias de notícias para postar automaticamente
-  telegramNewsCategories: optional('TELEGRAM_NEWS_CATEGORIES', 'Mundo,Negócios,Brasil,Tecnologia,Ciência,AI Frontier,Big Techs,Startups,Engenharia')
-    .split(',').filter(Boolean),
-  telegramMaxNewsPerRun: parseInt(optional('TELEGRAM_MAX_NEWS_PER_RUN', '5'), 10),
   telegramQueue: {
     name: optional('TELEGRAM_QUEUE_NAME', 'telegram:posts'),
     attempts: parseInt(optional('TELEGRAM_QUEUE_ATTEMPTS', '5'), 10),

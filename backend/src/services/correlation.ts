@@ -1,8 +1,7 @@
-import { generateText, generateObject } from 'ai';
+import { generateObject } from 'ai';
 import { z } from 'zod';
 import { query } from '../database/client.js';
-import { embedDocument, vectorToSQL } from './embeddings.js';
-import { getLanguageModel, getFastModel } from './aiProvider.js';
+import { getFastModel } from './aiProvider.js';
 import { cacheGet, cacheSet } from './cache.js';
 
 const SIMILARITY_THRESHOLD = 0.75;

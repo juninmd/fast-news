@@ -71,6 +71,12 @@ function setupCommands(bot: Telegraf): void {
   bot.hears('📊 Tópicos', (ctx) => (ctx as any).replyWithCommand('/topics'));
   bot.hears('💰 Financeiro', (ctx) => (ctx as any).replyWithCommand('/financial'));
   bot.hears('❓ Ajuda', (ctx) => (ctx as any).replyWithCommand('/start'));
+  bot.action(/^fb:(like|dislike):([0-9a-f-]{36})$/i, async (ctx) => {
+    const match = (ctx.callbackQuery as { data?: string } | undefined)?.data?.match(/^fb:(like|dislike):(.+)$/i);
+    if (!match) return;
+    await saveFeedback(ctx, match[2], match[1] as 'like' | 'dislike');
+    await ctx.answerCbQuery(match[1] === 'like' ? 'Preferência registrada.' : 'Dislike registrado.');
+  });
 
   bot.command('pulse', async (ctx: Context) => {
     await ctx.reply('🌌 Gerando Neo-Pulse Global...');
@@ -84,7 +90,7 @@ function setupCommands(bot: Telegraf): void {
 
   bot.command('topics', async (ctx: Context) => {
     const topics = await getAllTrackedTopics();
-    const list = topics.map((t, i) => `• <b>${t.name}</b>`).join('\n');
+    const list = topics.map((t) => `• <b>${t.name}</b>`).join('\n');
     await ctx.replyWithHTML(
       `📊 <b>TÓPICOS MONITORADOS</b>\n` +
       `──────────────────────\n` +
@@ -163,24 +169,16 @@ function setupCommands(bot: Telegraf): void {
   });
 }
 
-function formatArticle(article: { title: string; url: string; source: string; category: string }): string {
-  const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
-  const title = article.title.slice(0, 200);
-  return `${emoji} <b>${escapeHtml(title)}</b>\n` +
-         `──────────────────────\n` +
-         `<b>FONTE:</b> ${escapeHtml(article.source).toUpperCase()}\n` +
-         `<b>EDITORIA:</b> ${article.category.toUpperCase()}\n` +
-         `──────────────────────\n` +
-         `🔗 <a href="${article.url}">ACESSAR REPORTAGEM COMPLETA</a>`;
-}
-
 function formatPublishedAt(date: Date | null | undefined): { label: string; isBreaking: boolean } {
   if (!date) return { label: '', isBreaking: false };
   const d = new Date(date);
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60_000);
   const isBreaking = diffMin <= 30;
-  const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
-  const label = diffMin < 60 ? `${time} (há ${diffMin}m)` : time;
+  const dateTime = d.toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
+  });
+  const label = diffMin < 60 ? `${dateTime} (há ${diffMin}m)` : dateTime;
   return { label, isBreaking };
 }
 
@@ -237,26 +235,32 @@ Conteúdo: ${content.slice(0, 800)}`,
 
 function buildCredibilityBlock(article: {
   fakeNewsScore?: number | null;
-  politicalBias?: string | null;
-  isMilitant?: boolean;
   hasIncoherence?: boolean;
+  credibilityFlags?: string[];
+  credibilityReasoning?: string | null;
 }): string {
   const parts: string[] = [];
-  if (article.fakeNewsScore != null && article.fakeNewsScore > 4) {
-    const icon = article.fakeNewsScore <= 6 ? '⚠️' : '🚨';
-    parts.push(`${icon} <b>INTEGRIDADE:</b> ${article.fakeNewsScore}/10`);
-  }
-  const biasMap: Record<string, string> = {
-    left: '🔵 ESQUERDA', far_left: '🔵🔵 ESQ. RADICAL',
-    right: '🔴 DIREITA', far_right: '🔴🔴 DIR. RADICAL',
-    neutral: '⚪ NEUTRO',
-  };
-  if (article.politicalBias && article.politicalBias !== 'neutral') {
-    parts.push(`⚖️ <b>VIÉS:</b> ${biasMap[article.politicalBias] ?? article.politicalBias.toUpperCase()}`);
-  }
-  if (article.isMilitant) parts.push('📢 <b>CONTEÚDO MILITANTE</b>');
-  if (article.hasIncoherence) parts.push('⚡ <b>INCOERÊNCIAS DETECTADAS</b>');
-  return parts.length ? `\n\n${parts.join('\n')}` : '';
+  const flags = new Set(article.credibilityFlags ?? []);
+  if (article.hasIncoherence || flags.has('incoherence')) parts.push('INCOERÊNCIAS');
+  if ((article.fakeNewsScore ?? 0) > 4 || flags.has('fake_news')) parts.push('FAKE NEWS');
+  if (flags.has('hypocrisy')) parts.push('HIPOCRISIA');
+  if (flags.has('lie')) parts.push('MENTIRAS');
+  if (!parts.length) return '';
+  const score = article.fakeNewsScore != null ? ` (${article.fakeNewsScore}/10)` : '';
+  const reason = article.credibilityReasoning ? `\n${escapeHtml(article.credibilityReasoning)}` : '';
+  return `\n\n⚠️ <b>INTEGRIDADE:</b> ${parts.join(' · ')}${score}${reason}`;
+}
+
+async function saveFeedback(ctx: Context, articleId: string, reaction: 'like' | 'dislike'): Promise<void> {
+  const from = ctx.from;
+  const chat = ctx.chat;
+  await query(
+    `INSERT INTO telegram_article_feedback (article_id, chat_id, user_id, username, reaction)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (article_id, chat_id, user_id)
+     DO UPDATE SET reaction = EXCLUDED.reaction, username = EXCLUDED.username, updated_at = NOW()`,
+    [articleId, String(chat?.id ?? ''), from?.id ? String(from.id) : '', from?.username ?? null, reaction],
+  ).catch((err) => console.error('[Telegram] Failed to save feedback:', err.message));
 }
 
 async function fetchRelatedArticles(
@@ -306,6 +310,8 @@ export interface TelegramArticle {
   politicalBias?: string | null;
   isMilitant?: boolean;
   hasIncoherence?: boolean;
+  credibilityFlags?: string[];
+  credibilityReasoning?: string | null;
 }
 
 export async function postArticleToTelegram(article: TelegramArticle): Promise<void> {
@@ -398,6 +404,9 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
   const inlineButtons = [[
     { text: '📖 Ler reportagem', url: article.url },
     { text: '📱 Abrir no Fast News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
+  ], [
+    { text: '👍 Curtir', callback_data: `fb:like:${article.id}` },
+    { text: '👎 Dislike', callback_data: `fb:dislike:${article.id}` },
   ]];
 
   if (matchedStory) {
