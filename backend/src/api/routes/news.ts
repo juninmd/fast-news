@@ -53,13 +53,13 @@ newsRouter.get('/', async (req: Request, res: Response) => {
   const total = result.rows[0]?.total_count ? parseInt(result.rows[0].total_count, 10) : 0;
   const hasMore = offset + limit < total;
 
-  const response = { 
-    data: result.rows, 
-    articles: result.rows, // Add this for frontend compatibility
-    page, 
-    limit, 
+  const response = {
+    data: result.rows,
+    articles: result.rows,
+    page,
+    limit,
     total,
-    hasMore 
+    hasMore,
   };
 
   await cacheSet(cacheKey, response, 300);
@@ -70,8 +70,14 @@ newsRouter.get('/search', async (req: Request, res: Response) => {
   const q = req.query['q'] as string;
   if (!q || q.trim().length < 3) return res.status(400).json({ error: 'Query too short' });
 
+  const cacheKey = `news:search:${q.toLowerCase().trim()}`;
+  const cached = await cacheGet(cacheKey);
+  if (cached) return res.json(cached);
+
   const results = await searchSimilarArticles(q, 30, 10);
-  return res.json({ data: results, query: q });
+  const response = { data: results, query: q };
+  await cacheSet(cacheKey, response, 300);
+  return res.json(response);
 });
 
 newsRouter.get('/categories', async (_req: Request, res: Response) => {
@@ -85,8 +91,41 @@ newsRouter.get('/categories', async (_req: Request, res: Response) => {
   return res.json(result.rows);
 });
 
+newsRouter.get('/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const cacheKey = `news:article:${id}`;
+  const cached = await cacheGet(cacheKey);
+  if (cached) return res.json(cached);
+
+  const result = await query<{
+    id: string; title: string; summary: string; content: string;
+    url: string; source: string; category: string; company: string | null;
+    published_at: string; image_url: string | null; sentiment: string;
+    importance_score: number; fake_news_score: number | null;
+    political_bias: string | null; is_militant: boolean;
+    has_incoherence: boolean; credibility_flags: string[];
+  }>(
+    `SELECT id, title, summary, content, url, source, category, company, published_at,
+            image_url, sentiment, importance_score, fake_news_score, political_bias,
+            is_militant, has_incoherence, credibility_flags
+     FROM news_articles WHERE id = $1`,
+    [id]
+  );
+
+  if (!result.rows[0]) return res.status(404).json({ error: 'Article not found' });
+
+  await cacheSet(cacheKey, result.rows[0], 600);
+  return res.json(result.rows[0]);
+});
+
 newsRouter.get('/:id/related', async (req: Request, res: Response) => {
   const { id } = req.params;
+
+  const cacheKey = `news:related:${id}`;
+  const cached = await cacheGet(cacheKey);
+  if (cached) return res.json(cached);
+
   const article = await query<{ title: string; content: string }>(
     'SELECT title, content FROM news_articles WHERE id = $1',
     [id]
@@ -95,5 +134,7 @@ newsRouter.get('/:id/related', async (req: Request, res: Response) => {
 
   const { title, content } = article.rows[0];
   const related = await searchSimilarArticles(`${title} ${content}`, 30, 8);
-  return res.json({ data: related.filter((a) => a.id !== id) });
+  const response = { data: related.filter((a) => a.id !== id) };
+  await cacheSet(cacheKey, response, 900);
+  return res.json(response);
 });
