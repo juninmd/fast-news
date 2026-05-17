@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Search, Settings, Moon, Sun, Menu, X } from 'lucide-react';
+import { Search, Moon, Sun, Menu, X } from 'lucide-react';
 
 interface HeaderProps {
   onSearchOpen: () => void;
-  onSettingsOpen: () => void;
   onMenuToggle: () => void;
   isMenuOpen: boolean;
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
 }
 
-export function Header({ onSearchOpen, onSettingsOpen, onMenuToggle, isMenuOpen, theme, onThemeToggle }: HeaderProps) {
+export function Header({ onSearchOpen, onMenuToggle, isMenuOpen, theme, onThemeToggle }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -72,13 +71,6 @@ export function Header({ onSearchOpen, onSettingsOpen, onMenuToggle, isMenuOpen,
               title="Toggle theme"
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-
-            <button
-              onClick={onSettingsOpen}
-              className="p-2 rounded-lg hover:bg-bg-tertiary text-text-secondary hover:text-accent-primary transition-colors"
-            >
-              <Settings className="w-5 h-5" />
             </button>
           </div>
         </div>

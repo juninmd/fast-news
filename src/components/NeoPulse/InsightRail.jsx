@@ -55,7 +55,7 @@ export function InsightRail({ articles, analyses, onFilter }) {
       <section className="rounded-lg border border-ink bg-panel p-4">
         {sectionTitle('leitura da IA', Brain)}
         <div className="space-y-3 text-sm leading-6 text-muted">
-          {insights.length ? insights.map((item) => <p key={item.why}>{item.why}</p>) : <p>Aguardando Ollama analisar os primeiros sinais uteis.</p>}
+          {insights.length ? insights.map((item) => <p key={item.why}>{item.why}</p>) : <p>Aguardando a API backend analisar os primeiros sinais uteis.</p>}
         </div>
       </section>
       <section className="rounded-lg border border-ink bg-panel p-4">

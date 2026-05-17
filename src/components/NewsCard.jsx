@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { summarizeWithOllama, classifyWithOllama } from '../services/ollamaService';
+import { classifyWithBackendAI, summarizeWithBackendAI } from '../services/aiService';
 import { summarizeWithGemini } from '../services/geminiService';
 import { sendToTelegram } from '../services/telegramService';
 import { ExternalLink, Sparkles, Loader, Send, Check, Copy, Newspaper, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import BookmarkButton from './BookmarkButton';
 
-const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, autoSummarize }) => {
+const NewsCard = ({ item, aiProvider, apiKey, aiModel, telegramBotToken, telegramChatId, autoSummarize }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sendingTelegram, setSendingTelegram] = useState(false);
@@ -20,11 +20,6 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       setError("Configure API Key do Gemini.");
       return;
     }
-    if ((!aiProvider || aiProvider === 'ollama') && !ollamaUrl) {
-      setError("Configure Ollama.");
-      return;
-    }
-
     setLoading(true);
     setError(null);
     try {
@@ -34,7 +29,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       if (aiProvider === 'gemini') {
         result = await summarizeWithGemini(textToSummarize, apiKey);
       } else {
-        result = await summarizeWithOllama(textToSummarize, ollamaUrl, ollamaModel);
+        result = await summarizeWithBackendAI(textToSummarize, aiModel);
       }
 
       setSummary(result);
@@ -44,7 +39,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
     } finally {
       setLoading(false);
     }
-  }, [aiProvider, apiKey, ollamaUrl, ollamaModel, item]);
+  }, [aiProvider, apiKey, aiModel, item]);
 
   useEffect(() => {
     if (autoSummarize && !summary && !loading && !error && !autoSummarizeAttempted.current) {
@@ -64,9 +59,9 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
     try {
       let finalCategory = item.category || 'Geral';
 
-      if ((!aiProvider || aiProvider === 'ollama') && ollamaUrl) {
+      if (!aiProvider || aiProvider === 'backend') {
         const textToClassify = item.content || item.description || item.title;
-        finalCategory = await classifyWithOllama(textToClassify, ollamaUrl, ollamaModel);
+        finalCategory = await classifyWithBackendAI(textToClassify, aiModel);
       }
 
       const categoryHashtag = finalCategory.replace(/\s+/g, '');
@@ -82,7 +77,7 @@ const NewsCard = ({ item, aiProvider, apiKey, ollamaUrl, ollamaModel, telegramBo
       setSendingTelegram(false);
       setTimeout(() => setTelegramStatus(null), 3000);
     }
-  }, [aiProvider, ollamaUrl, ollamaModel, telegramBotToken, telegramChatId, item, summary]);
+  }, [aiProvider, aiModel, telegramBotToken, telegramChatId, item, summary]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(item.link);

@@ -28,8 +28,7 @@ const Feed = ({
     autoSummarize,
     selectedCategory = 'Todas',
     searchQuery = '',
-    ollamaUrl,
-    ollamaModel,
+    aiModel,
     telegramBotToken,
     telegramChatId,
     onError
@@ -222,8 +221,7 @@ const Feed = ({
              item={heroItem}
              aiProvider={aiProvider}
              apiKey={apiKey}
-             ollamaUrl={ollamaUrl}
-             ollamaModel={ollamaModel}
+             aiModel={aiModel}
           />
       )}
 
@@ -244,8 +242,7 @@ const Feed = ({
                      aiProvider={aiProvider}
                      apiKey={apiKey}
                      autoSummarize={autoSummarize}
-                     ollamaUrl={ollamaUrl}
-                     ollamaModel={ollamaModel}
+                     aiModel={aiModel}
                      telegramBotToken={telegramBotToken}
                      telegramChatId={telegramChatId}
                    />

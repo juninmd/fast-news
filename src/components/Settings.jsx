@@ -1,364 +1,130 @@
 import React, { useState } from 'react';
-import { X, Save, Plus, Trash2, RotateCcw, MessageSquare, Bot, Rss, Info, Settings as SettingsIcon } from 'lucide-react';
-import { summarizeWithOllama } from '../services/ollamaService';
-import { testGeminiConnection } from '../services/geminiService';
+import { MessageSquare, Plus, RotateCcw, Rss, Save, Settings as SettingsIcon, Trash2, X } from 'lucide-react';
 
-const Settings = ({ isOpen, onClose, onSave, initialCustomFeeds = [] }) => {
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+const Settings = ({ isOpen, onClose, onSave = () => {}, initialCustomFeeds = [] }) => {
   const [rss2jsonApiKey, setRss2jsonApiKey] = useState(() => localStorage.getItem('rss2json_api_key') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => localStorage.getItem('auto_summarize') === 'true');
-  const [ollamaUrl, _setOllamaUrl] = useState(() => localStorage.getItem('ollama_url') || 'http://localhost:11434');
-  const [ollamaModel, setOllamaModel] = useState(() => localStorage.getItem('ollama_model') || 'llama3');
   const [telegramBotToken, setTelegramBotToken] = useState(() => localStorage.getItem('telegram_bot_token') || '');
   const [telegramChatId, setTelegramChatId] = useState(() => localStorage.getItem('telegram_chat_id') || '');
-
   const [customFeeds, setCustomFeeds] = useState(initialCustomFeeds);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedCategory, setNewFeedCategory] = useState('Geral');
-
-  const [activeTab, setActiveTab] = useState('geral'); // geral, feeds, ia, telegram
-  const [ollamaStatus, setOllamaStatus] = useState('idle');
-  const [geminiStatus, setGeminiStatus] = useState('idle');
+  const [activeTab, setActiveTab] = useState('geral');
 
   if (!isOpen) return null;
 
   const handleSave = () => {
-    localStorage.setItem('gemini_api_key', geminiApiKey);
-    localStorage.setItem('ai_provider', aiProvider);
     localStorage.setItem('custom_feeds', JSON.stringify(customFeeds));
     localStorage.setItem('rss2json_api_key', rss2jsonApiKey);
-    localStorage.setItem('auto_summarize', autoSummarize);
-    localStorage.setItem('ollama_url', ollamaUrl);
-    localStorage.setItem('ollama_model', ollamaModel);
+    localStorage.setItem('auto_summarize', String(autoSummarize));
     localStorage.setItem('telegram_bot_token', telegramBotToken);
     localStorage.setItem('telegram_chat_id', telegramChatId);
-
-    onSave({
-      geminiApiKey,
-      aiProvider,
-      customFeeds,
-      rss2jsonApiKey,
-      autoSummarize,
-      ollamaUrl,
-      ollamaModel,
-      telegramBotToken,
-      telegramChatId
-    });
-    onClose();
-  };
-
-  const testOllama = async () => {
-      setOllamaStatus('testing');
-      try {
-          await summarizeWithOllama('Teste', ollamaUrl, ollamaModel);
-          setOllamaStatus('success');
-      } catch (e) {
-          console.error(e);
-          setOllamaStatus('error');
-      }
-  };
-
-  const testGemini = async () => {
-      setGeminiStatus('testing');
-      try {
-          await testGeminiConnection(geminiApiKey);
-          setGeminiStatus('success');
-      } catch (e) {
-          console.error(e);
-          setGeminiStatus('error');
-      }
+    onSave({ customFeeds, rss2jsonApiKey, autoSummarize, telegramBotToken, telegramChatId });
+    onClose?.();
   };
 
   const addFeed = () => {
-    if (newFeedUrl) {
-      setCustomFeeds([...customFeeds, { url: newFeedUrl, category: newFeedCategory }]);
-      setNewFeedUrl('');
-      setNewFeedCategory('Geral');
-    }
+    if (!newFeedUrl.trim()) return;
+    setCustomFeeds([...customFeeds, { url: newFeedUrl.trim(), category: newFeedCategory }]);
+    setNewFeedUrl('');
+    setNewFeedCategory('Geral');
   };
 
   const removeFeed = (index) => {
-    const newFeeds = [...customFeeds];
-    newFeeds.splice(index, 1);
-    setCustomFeeds(newFeeds);
+    setCustomFeeds(customFeeds.filter((_, itemIndex) => itemIndex !== index));
   };
 
   const tabs = [
     { id: 'geral', label: 'Geral', icon: SettingsIcon },
-    { id: 'ia', label: 'Inteligência Artificial', icon: Bot },
     { id: 'telegram', label: 'Telegram', icon: MessageSquare },
     { id: 'feeds', label: 'Fontes', icon: Rss },
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
-
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            Configurações
-          </h2>
-          <button type="button" onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 p-6 dark:border-gray-700 dark:bg-gray-800/50">
+          <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">Configuracoes</h2>
+          <button type="button" onClick={onClose} className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700">
             <X size={20} />
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-100 dark:border-gray-700 px-6 pt-2 overflow-x-auto no-scrollbar">
-            {tabs.map(tab => (
-                <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`pb-3 px-4 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
-                        activeTab === tab.id
-                        ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                    }`}
-                >
-                    <tab.icon size={16} />
-                    {tab.label}
-                </button>
-            ))}
+        <div className="flex overflow-x-auto border-b border-gray-100 px-6 pt-2 dark:border-gray-700">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 pb-3 text-sm font-medium transition-colors ${
+                activeTab === tab.id ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+              }`}
+            >
+              <tab.icon size={16} />
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
+        <div className="flex-1 space-y-6 overflow-y-auto p-6">
           {activeTab === 'geral' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RSS2JSON API Key (Opcional)</label>
-                    <input
-                        type="text"
-                        value={rss2jsonApiKey}
-                        onChange={(e) => setRss2jsonApiKey(e.target.value)}
-                        className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                        placeholder="Melhora a performance e limites de requisição"
-                    />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <div>
-                        <span className="block text-sm font-medium text-gray-900 dark:text-white">Resumo Automático</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Tentar resumir notícias automaticamente</span>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked={autoSummarize} onChange={(e) => setAutoSummarize(e.target.checked)} className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-              </div>
-          )}
-
-          {activeTab === 'ia' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Provedor de IA</label>
-                    <div className="grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => setAiProvider('ollama')}
-                            className={`p-3 rounded-xl border text-sm font-medium transition-all ${
-                                aiProvider === 'ollama'
-                                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                                : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            Ollama (Local)
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setAiProvider('gemini')}
-                            className={`p-3 rounded-xl border text-sm font-medium transition-all ${
-                                aiProvider === 'gemini'
-                                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                                : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            Google Gemini
-                        </button>
-                    </div>
-                 </div>
-
-                 {aiProvider === 'ollama' ? (
-                     <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                            <Info size={16} className="shrink-0 mt-0.5" />
-                            <p>O processamento de IA é realizado através da API do servidor.</p>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Modelo</label>
-                            <input
-                                type="text"
-                                value={ollamaModel}
-                                onChange={(e) => setOllamaModel(e.target.value)}
-                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
-                                placeholder="qwen2.5:1.5b"
-                            />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={testOllama}
-                                disabled={ollamaStatus === 'testing'}
-                                className={`text-xs px-3 py-1 rounded border transition-colors ${
-                                    ollamaStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
-                                    ollamaStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
-                                    'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
-                                }`}
-                            >
-                                {ollamaStatus === 'testing' ? 'Testando...' : ollamaStatus === 'success' ? 'Conectado' : ollamaStatus === 'error' ? 'Erro' : 'Testar Conexão'}
-                            </button>
-                        </div>
-                     </div>
-                 ) : (
-                     <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg border border-indigo-100 dark:border-indigo-800 text-xs text-indigo-800 dark:text-indigo-300">
-                            <p className="flex items-center gap-1.5 font-medium mb-1"><Info size={14}/> Rodar via Cliente</p>
-                            <p>Sua API Key do Gemini fica salva apenas no seu navegador. Os resumos são processados diretamente do seu dispositivo para a Google.</p>
-                        </div>
-                        <div>
-                            <label className="flex justify-between items-end mb-1">
-                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Gemini API Key</span>
-                                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Obter API Key</a>
-                            </label>
-                            <input
-                                type="password"
-                                value={geminiApiKey}
-                                onChange={(e) => setGeminiApiKey(e.target.value)}
-                                className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-                                placeholder="Insira sua API Key do Google Gemini"
-                            />
-                        </div>
-                        <div className="flex justify-end pt-2">
-                            <button
-                                type="button"
-                                onClick={testGemini}
-                                disabled={geminiStatus === 'testing' || !geminiApiKey}
-                                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed ${ 
-                                    geminiStatus === 'success' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
-                                    geminiStatus === 'error' ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
-                                    'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'
-                                }`}
-                            >
-                                {geminiStatus === 'testing' ? 'Testando...' : geminiStatus === 'success' ? 'Conectado!' : geminiStatus === 'error' ? 'Falha na Conexão' : 'Testar Conexão'}
-                            </button>
-                        </div>
-                     </div>
-                 )}
-              </div>
+            <>
+              <Field label="RSS2JSON API Key (opcional)" value={rss2jsonApiKey} onChange={setRss2jsonApiKey} placeholder="Melhora limites de requisicao RSS" />
+              <label className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/30">
+                <span>
+                  <span className="block text-sm font-medium text-gray-900 dark:text-white">Resumo automatico</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Usa a API backend de IA configurada no servidor.</span>
+                </span>
+                <input type="checkbox" checked={autoSummarize} onChange={(e) => setAutoSummarize(e.target.checked)} className="h-4 w-4" />
+              </label>
+            </>
           )}
 
           {activeTab === 'telegram' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 text-sm text-indigo-800 dark:text-indigo-300">
-                      <h4 className="font-bold flex items-center gap-2 mb-2"><Bot size={16}/> Telegram Bot</h4>
-                      <p>Adicione o bot ao canal como administrador.</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot Token</label>
-                    <input
-                        type="password"
-                        value={telegramBotToken}
-                        onChange={(e) => setTelegramBotToken(e.target.value)}
-                        className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                        placeholder="Token"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chat ID</label>
-                    <input
-                        type="text"
-                        value={telegramChatId}
-                        onChange={(e) => setTelegramChatId(e.target.value)}
-                        className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                        placeholder="@canal"
-                    />
-                  </div>
-              </div>
+            <>
+              <Field label="Telegram Bot Token" type="password" value={telegramBotToken} onChange={setTelegramBotToken} placeholder="Configurado localmente" />
+              <Field label="Chat ID" value={telegramChatId} onChange={setTelegramChatId} placeholder="123456789" />
+            </>
           )}
 
           {activeTab === 'feeds' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newFeedUrl}
-                      onChange={(e) => setNewFeedUrl(e.target.value)}
-                      placeholder="https://exemplo.com/rss"
-                      className="flex-1 p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                    />
-                    <select
-                      value={newFeedCategory}
-                      onChange={(e) => setNewFeedCategory(e.target.value)}
-                      className="p-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                    >
-                        {['Geral', 'Tecnologia', 'Brasil', 'Mundo', 'Negócios', 'Ciência', 'Esportes', 'Automóveis', 'Entretenimento', 'Games', 'Saúde', 'Cripto'].map(c => (
-                            <option key={c} value={c}>{c}</option>
-                        ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={addFeed}
-                      disabled={!newFeedUrl}
-                      data-testid="add-feed-btn"
-                      className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-blue-500/30"
-                    >
-                      <Plus size={20} />
-                    </button>
-                  </div>
-
-                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                    {customFeeds.length === 0 && (
-                        <p className="text-center text-gray-400 text-sm py-4">Nenhum feed personalizado adicionado.</p>
-                    )}
-                    {customFeeds.map((feed, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700 group">
-                        <div className="flex flex-col min-w-0 pr-4">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{feed.url}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{feed.category}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFeed(index)}
-                          data-testid={`remove-feed-btn-${index}`}
-                          className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-[1fr_140px_auto]">
+                <input value={newFeedUrl} onChange={(e) => setNewFeedUrl(e.target.value)} placeholder="https://site.com/feed.xml" className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-600 dark:bg-gray-700/50" />
+                <input value={newFeedCategory} onChange={(e) => setNewFeedCategory(e.target.value)} className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-600 dark:bg-gray-700/50" />
+                <button type="button" onClick={addFeed} className="rounded-xl bg-blue-600 px-4 py-2 text-white"><Plus size={18} /></button>
               </div>
+              {customFeeds.map((feed, index) => (
+                <div key={`${feed.url}-${index}`} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-700/30">
+                  <span className="min-w-0 flex-1 truncate text-sm">{feed.url}</span>
+                  <span className="text-xs text-gray-500">{feed.category}</span>
+                  <button type="button" onClick={() => removeFeed(index)} className="text-red-500"><Trash2 size={16} /></button>
+                </div>
+              ))}
+            </div>
           )}
-
         </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium transition-colors text-sm"
-          >
-            Cancelar
+        <div className="flex justify-between border-t border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+          <button type="button" onClick={() => setCustomFeeds([])} className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700">
+            <RotateCcw size={16} /> Resetar
           </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all transform active:scale-95 text-sm flex items-center gap-2"
-          >
-            <Save size={18} />
-            Salvar Alterações
+          <button type="button" onClick={handleSave} className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700">
+            <Save size={16} /> Salvar
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+function Field({ label, value, onChange, placeholder, type = 'text' }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-600 dark:bg-gray-700/50" />
+    </label>
+  );
+}
 
 export default Settings;
