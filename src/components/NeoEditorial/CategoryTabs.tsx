@@ -1,5 +1,3 @@
-import { useState, useRef, useEffect } from 'react';
-
 const CATEGORIES = [
   'Todas',
   'Big Techs',
@@ -21,49 +19,29 @@ interface CategoryTabsProps {
 }
 
 export function CategoryTabs({ activeCategory, onCategoryChange }: CategoryTabsProps) {
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (activeRef.current && tabsRef.current) {
-      const activeRect = activeRef.current.getBoundingClientRect();
-      const parentRect = tabsRef.current.getBoundingClientRect();
-      setIndicatorStyle({
-        left: activeRect.left - parentRect.left,
-        width: activeRect.width,
-      });
-    }
-  }, [activeCategory]);
-
   return (
-    <div className="relative border-b border-border-subtle overflow-x-auto scrollbar-hide">
-      <div ref={tabsRef} className="flex items-center gap-1 min-w-max">
+    <nav aria-label="Categorias" className="rounded-xl border border-border-subtle bg-bg-secondary/80 p-2">
+      <div className="mb-2 px-2 text-xs font-mono uppercase tracking-wider text-text-secondary">
+        Categorias
+      </div>
+      <div className="grid gap-1">
         {CATEGORIES.map((category) => (
           <button
             key={category}
-            ref={category === activeCategory ? activeRef : null}
             onClick={() => onCategoryChange(category)}
             className={`
-              relative px-4 py-3 text-sm font-sans whitespace-nowrap transition-colors
+              flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors
               ${category === activeCategory
-                ? 'text-accent-primary font-medium'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'bg-accent-primary text-white shadow-sm'
+                : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
               }
             `}
           >
-            {category}
+            <span className="font-medium">{category}</span>
+            {category === activeCategory && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
           </button>
         ))}
       </div>
-
-      <div
-        className="absolute bottom-0 h-0.5 bg-accent-primary transition-all duration-300 ease-out"
-        style={{
-          left: indicatorStyle.left,
-          width: indicatorStyle.width,
-        }}
-      />
-    </div>
+    </nav>
   );
 }

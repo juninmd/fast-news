@@ -4,7 +4,7 @@ const fallback = (article, error) => ({
   summary: article.excerpt || 'Sem texto suficiente para resumir.',
   useful: article.isUseful,
   score: article.usefulScore,
-  why: error ? `AI API indisponivel: ${error.message}` : 'Triagem heuristica local.',
+  why: error ? `API de IA indisponivel: ${error.message}` : 'Triagem heuristica local.',
   actions: ['Abrir fonte original', 'Comparar com outra cobertura'],
   risks: ['Resumo limitado ao conteudo do RSS'],
 });
@@ -16,7 +16,7 @@ const parseJson = (text) => {
   return JSON.parse(text.slice(start, end + 1));
 };
 
-export async function analyzeArticleWithOllama(article, baseUrl, model) {
+export async function analyzeArticleWithBackendAI(article, model) {
   const prompt = `
 Analise esta noticia como editor de inteligencia. Responda apenas JSON valido.
 Campos: summary, useful, score, why, actions, risks.

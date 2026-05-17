@@ -12,7 +12,7 @@ export function ReaderPanel({ article, analysis, fullContent, fullLoading, onClo
           <X className="h-5 w-5" />
         </button>
         <button onClick={() => onAnalyze(article)} className="neo-action">
-          <Sparkles className="h-4 w-4" /> Ollama
+          <Sparkles className="h-4 w-4" /> IA backend
         </button>
         <a href={article.url} target="_blank" rel="noreferrer" className="neo-action ml-auto">
           Fonte <ExternalLink className="h-4 w-4" />
