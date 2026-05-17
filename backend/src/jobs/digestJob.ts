@@ -76,7 +76,7 @@ export async function buildAndSendDigest(): Promise<void> {
     const res = await query<{ id: string; title: string; url: string; source: string; category: string; content: string; published_at: string }>(
       `SELECT id, title, url, source, category, content, published_at
        FROM news_articles
-       WHERE created_at > NOW() - INTERVAL '24 hours'
+       WHERE created_at > NOW() - INTERVAL '8 hours'
        ORDER BY published_at DESC NULLS LAST
        LIMIT 10`,
     ).catch(() => ({ rows: [] }));
@@ -124,7 +124,7 @@ export async function buildAndSendDigest(): Promise<void> {
     .replace('{stories}', storiesSection)
     .replace('{analyses}', analysisSection.join('\n\n') || 'Sem análises.')
     .replace('{financial}', financialSection || 'Sem oportunidades.')
-    .replace('{date}', new Date().toLocaleDateString('pt-BR'));
+    .replace('{date}', new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }));
 
   const { textStream } = streamText({
     model,
