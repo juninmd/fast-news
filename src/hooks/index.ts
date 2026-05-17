@@ -113,3 +113,4 @@ export const useReadingProgress = (contentRef: React.RefObject<HTMLElement>) => 
 
 export { useTheme } from './useTheme';
 export { useNews } from './useNews';
+export { useTopNews } from './useTopNews';

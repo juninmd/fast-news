@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Header, CategoryTabs, NewsCard, Sidebar, SearchModal, SkeletonCard } from './components/NeoEditorial';
+import { Header, CategoryTabs, NewsCard, Sidebar, SearchModal, SkeletonCard, TopNewsSection, ArticleModal } from './components/NeoEditorial';
 import { StoryCard, CorrelationGraph, IntelligencePanel, StoryDetailModal } from './components/StoryIntelligence';
 import { useTheme, useNews } from './hooks';
 import { useStories, useStoryDetail, useGlobalGraph } from './hooks/useStories';
@@ -9,6 +9,8 @@ function App() {
   const [activeCategory, setActiveCategory] = useState('Todas');
   const [activeView, setActiveView] = useState<'feed' | 'stories' | 'graph' | 'intelligence'>('feed');
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<unknown[] | null>(null);
   const [filters, setFilters] = useState({});
 
   const { stories, loading: storiesLoading } = useStories(activeCategory);
@@ -27,6 +29,12 @@ function App() {
     ...filters,
   });
 
+  // Open article from Telegram deep link (?id=<uuid>)
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (id) setSelectedArticleId(id);
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -42,9 +50,12 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSearch = useCallback((query: string, searchFilters: object) => {
-    console.log('Searching:', query, searchFilters);
+  const handleSearch = useCallback((query: string) => {
     setRecentSearches((prev) => [query, ...prev.filter((s) => s !== query)].slice(0, 5));
+    fetch(`/api/news/search?q=${encodeURIComponent(query)}`)
+      .then((r) => r.json())
+      .then((d) => { setSearchResults(d.data ?? []); setActiveView('feed'); })
+      .catch(() => {});
   }, []);
 
   const handleBookmark = useCallback(() => {
@@ -92,14 +103,16 @@ function App() {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {articles.length > 0 && (
+        <TopNewsSection onArticleClick={setSelectedArticleId} />
+
+        {articles.length > 0 && activeView === 'feed' && !searchResults && (
           <section className="mb-8">
             <NewsCard
               {...articles[0]}
               variant="featured"
               onBookmark={handleBookmark}
               onShare={handleShare}
-              onSummarize={handleSummarize}
+              onSummarize={() => setSelectedArticleId(articles[0].id)}
             />
           </section>
         )}
@@ -192,16 +205,22 @@ function App() {
                     </button>
                   </div>
                 )}
+                {searchResults !== null && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <p className="text-sm text-text-secondary">{(searchResults as unknown[]).length} resultados</p>
+                    <button onClick={() => setSearchResults(null)} className="text-xs text-accent-primary hover:underline">Limpar busca</button>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-reveal">
                   {loading && articles.length === 0
                     ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-                    : articles.slice(1).map((article) => (
+                    : (searchResults !== null ? (searchResults as Array<{ id: string; [k: string]: unknown }>) : articles.slice(1)).map((article) => (
                         <NewsCard
-                          key={article.id}
-                          {...article}
+                          key={article.id as string}
+                          {...(article as Parameters<typeof NewsCard>[0])}
                           onBookmark={handleBookmark}
                           onShare={handleShare}
-                          onSummarize={handleSummarize}
+                          onSummarize={() => setSelectedArticleId(article.id as string)}
                         />
                       ))}
                 </div>
@@ -233,8 +252,13 @@ function App() {
       <SearchModal
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
-        onSearch={handleSearch}
+        onSearch={(q) => { handleSearch(q); setSearchOpen(false); }}
         recentSearches={recentSearches}
+      />
+
+      <ArticleModal
+        articleId={selectedArticleId}
+        onClose={() => setSelectedArticleId(null)}
       />
 
       {toast && (
