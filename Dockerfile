@@ -1,5 +1,5 @@
 # ─── Stage 1: Build Frontend ──────────────────────────────────────────────────
-FROM node:22-alpine AS frontend-builder
+FROM node:26-alpine AS frontend-builder
 RUN npm install -g pnpm@10
 WORKDIR /app
 COPY pnpm-lock.yaml package.json ./
@@ -8,7 +8,7 @@ COPY . .
 RUN pnpm run build
 
 # ─── Stage 2: Build Backend ───────────────────────────────────────────────────
-FROM node:22-alpine AS backend-builder
+FROM node:26-alpine AS backend-builder
 RUN apk add --no-cache python3 make g++
 RUN npm install -g pnpm@10
 WORKDIR /app
@@ -18,7 +18,7 @@ COPY backend/ ./
 RUN pnpm run build
 
 # ─── Stage 3: Runtime ──────────────────────────────────────────────────────────
-FROM node:22-alpine AS runtime
+FROM node:26-alpine AS runtime
 RUN apk add --no-cache curl
 WORKDIR /app
 
