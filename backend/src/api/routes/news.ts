@@ -80,6 +80,31 @@ newsRouter.get('/search', async (req: Request, res: Response) => {
   return res.json(response);
 });
 
+newsRouter.get('/top', async (_req: Request, res: Response) => {
+  const cached = await cacheGet('news:top');
+  if (cached) return res.json(cached);
+
+  const result = await query<{
+    id: string; title: string; summary: string; url: string; source: string;
+    category: string; company: string | null; published_at: string;
+    image_url: string | null; importance_score: number;
+    fake_news_score: number | null; political_bias: string | null; is_militant: boolean;
+  }>(
+    `SELECT id, title, summary, url, source, category, company,
+            published_at, image_url, importance_score,
+            fake_news_score, political_bias, is_militant
+     FROM news_articles
+     WHERE published_at > NOW() - INTERVAL '48 hours'
+       AND importance_score IS NOT NULL
+     ORDER BY importance_score DESC NULLS LAST, published_at DESC
+     LIMIT 10`
+  );
+
+  const response = { data: result.rows };
+  await cacheSet('news:top', response, 300);
+  return res.json(response);
+});
+
 newsRouter.get('/categories', async (_req: Request, res: Response) => {
   const cached = await cacheGet('news:categories');
   if (cached) return res.json(cached);

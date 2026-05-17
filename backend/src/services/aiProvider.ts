@@ -5,7 +5,7 @@
 import { config } from '../config/env.js';
 import type { LanguageModel, EmbeddingModel } from 'ai';
 
-type Provider = 'ollama' | 'google' | 'openai' | 'anthropic';
+type Provider = 'ollama' | 'google' | 'openai' | 'anthropic' | 'openrouter';
 
 const provider = (): Provider => config.aiProvider as Provider;
 
@@ -55,22 +55,34 @@ async function anthropicLanguageModel(modelId?: string): Promise<LanguageModel> 
   return anthropic(modelId ?? (config.ai.analysisModel || 'claude-3-5-haiku-20241022'));
 }
 
+// ── OpenRouter (OpenAI-compat) ────────────────────────────────────────────────
+async function openrouterLanguageModel(modelId?: string): Promise<LanguageModel> {
+  const { createOpenAI } = await import('@ai-sdk/openai');
+  const openrouter = createOpenAI({
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: config.openrouterApiKey,
+  });
+  return openrouter(modelId ?? config.openrouterModel);
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 export async function getLanguageModel(modelId?: string): Promise<LanguageModel> {
   switch (provider()) {
-    case 'google':    return googleLanguageModel(modelId);
-    case 'openai':    return openaiLanguageModel(modelId);
-    case 'anthropic': return anthropicLanguageModel(modelId);
-    default:          return ollamaLanguageModel(modelId);  // ollama
+    case 'google':      return googleLanguageModel(modelId);
+    case 'openai':      return openaiLanguageModel(modelId);
+    case 'anthropic':   return anthropicLanguageModel(modelId);
+    case 'openrouter':  return openrouterLanguageModel(modelId);
+    default:            return ollamaLanguageModel(modelId);
   }
 }
 
 export async function getFastModel(): Promise<LanguageModel> {
   switch (provider()) {
-    case 'google':    return googleLanguageModel(config.ai.fastModel || 'gemini-1.5-flash');
-    case 'openai':    return openaiLanguageModel(config.ai.fastModel || 'gpt-4o-mini');
-    case 'anthropic': return anthropicLanguageModel(config.ai.fastModel);
-    default:          return ollamaLanguageModel(config.ollama.model);  // ollama
+    case 'google':      return googleLanguageModel(config.ai.fastModel || 'gemini-1.5-flash');
+    case 'openai':      return openaiLanguageModel(config.ai.fastModel || 'gpt-4o-mini');
+    case 'anthropic':   return anthropicLanguageModel(config.ai.fastModel);
+    case 'openrouter':  return openrouterLanguageModel(config.ai.fastModel);
+    default:            return ollamaLanguageModel(config.ollama.model);
   }
 }
 
@@ -78,6 +90,6 @@ export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
   switch (provider()) {
     case 'google':  return googleEmbeddingModel();
     case 'openai':  return openaiEmbeddingModel();
-    default:        return ollamaEmbeddingModel();  // ollama + anthropic fallback
+    default:        return ollamaEmbeddingModel();  // ollama / anthropic / openrouter fallback
   }
 }
