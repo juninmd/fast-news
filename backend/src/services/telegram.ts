@@ -291,41 +291,47 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
 
   const { label: ago, isBreaking } = formatPublishedAt(article.publishedAt);
 
-  // Prefer storyId from enriched article, then search active stories
+  // Only match story when the article is explicitly linked — no category fallback
   const matchedStory = article.storyId
-    ? storyMap.get(article.storyId) ?? activeStories.find((s) => s.id === article.storyId)
-    : activeStories.find((s) => s.category === article.category && s.articleCount > 2);
+    ? (storyMap.get(article.storyId) ?? activeStories.find((s) => s.id === article.storyId))
+    : null;
 
-  // Fetch story graph for timeline events if story matched
   const storyGraph = matchedStory
     ? await getStoryGraph(matchedStory.id).catch(() => null)
     : null;
 
   let storyBlock = '';
   if (matchedStory) {
-    const impact = IMPACT_EMOJI[matchedStory.impactLevel] ?? '';
+    const impact = IMPACT_EMOJI[matchedStory.impactLevel] ?? '📊';
     const signal = matchedStory.financialSignal && matchedStory.financialSignal !== 'neutral'
-      ? `${SIGNAL_EMOJI[matchedStory.financialSignal] ?? ''} ` : '';
-    const assets = matchedStory.affectedAssets?.length
-      ? `\n💹 <b>Ativos:</b> <code>${matchedStory.affectedAssets.slice(0, 4).join(' · ')}</code>` : '';
+      ? ` ${SIGNAL_EMOJI[matchedStory.financialSignal] ?? ''}` : '';
 
-    storyBlock = `\n\n${impact} <b>Desdobramento:</b> ${escapeHtml(matchedStory.title)}` +
-      `\n${signal}<i>Contexto consolidado de ${matchedStory.articleCount} reportagens</i>${assets}`;
+    // Header line: impact + story title + article count
+    storyBlock = `\n\n${SEPARATOR}\n` +
+      `${impact}${signal} <b>${escapeHtml(matchedStory.title)}</b>\n` +
+      `<i>Parte de uma história com ${matchedStory.articleCount} reportagens</i>`;
+
+    if (matchedStory.affectedAssets?.length) {
+      storyBlock += `\n💹 <code>${matchedStory.affectedAssets.slice(0, 4).join(' · ')}</code>`;
+    }
 
     if (matchedStory.summary) {
-      storyBlock += `\n\n📝 <b>Análise:</b> <i>${escapeHtml(matchedStory.summary.slice(0, 280))}</i>`;
+      storyBlock += `\n\n${escapeHtml(matchedStory.summary.slice(0, 250))}`;
     }
 
     const lastEvent = storyGraph?.timeline.at(-1);
-    if (lastEvent?.whatChanged) {
-      storyBlock += `\n\n🔄 <b>Última atualização:</b> <i>${escapeHtml(lastEvent.whatChanged.slice(0, 180))}</i>`;
+    // Skip if the text appears to be in English (likely an AI artifact)
+    const whatChanged = lastEvent?.whatChanged ?? '';
+    const looksPortuguese = /\b(do|da|de|em|com|que|foi|para|uma|um|no|na)\b/i.test(whatChanged);
+    if (whatChanged && looksPortuguese) {
+      storyBlock += `\n🔄 <i>${escapeHtml(whatChanged.slice(0, 160))}</i>`;
     }
   }
 
   const related = await fetchRelatedArticles(article.id, article.category);
   const relatedBlock = related.length
-    ? `${MESSAGE_SEPARATOR}\n` +
-      `🔗 <b>Perspectivas relacionadas</b>\n` +
+    ? `\n\n${SEPARATOR}\n` +
+      `🔗 <b>Veja também</b>\n` +
       related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 72))}</a> <i>(${escapeHtml(r.source)})</i>`).join('\n')
     : '';
 
