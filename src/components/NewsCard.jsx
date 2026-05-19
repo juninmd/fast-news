@@ -91,6 +91,10 @@ const NewsCard = memo(({ item, aiConfig }) => {
     }
   }, [item.pubDate]);
 
+  let buttonText = 'Resumir';
+  if (loading) buttonText = 'Resumindo...';
+  else if (summary) buttonText = 'Resumido';
+
   return (
     <div ref={cardRef} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full border border-gray-100 dark:border-gray-700 group overflow-hidden">
       {imageUrl && (
@@ -144,6 +148,7 @@ const NewsCard = memo(({ item, aiConfig }) => {
         {/* Footer Actions */}
         <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
              <button
+                type="button"
                 onClick={handleSummarize}
                 disabled={loading || summary}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all shadow-sm ${
@@ -153,7 +158,7 @@ const NewsCard = memo(({ item, aiConfig }) => {
                 }`}
              >
                 {loading ? <Loader size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                {loading ? 'Resumindo...' : (summary ? 'Resumido' : 'Resumir')}
+                {buttonText}
              </button>
 
              <a
