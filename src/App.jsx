@@ -7,10 +7,7 @@ const Settings = lazy(() => import('./components/Settings'));
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return true;
-    }
-    return false;
+    return Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -20,7 +17,7 @@ function App() {
       aiSdkProvider: localStorage.getItem('ai_sdk_provider') || 'openai',
       aiSdkApiKey: localStorage.getItem('ai_sdk_api_key') || '',
       aiSdkModel: localStorage.getItem('ai_sdk_model') || '',
-      autoSummarize: autoSummarizeVal !== null ? autoSummarizeVal === 'true' : true
+      autoSummarize: autoSummarizeVal !== 'false'
     };
   });
 

@@ -32,8 +32,8 @@ describe('NewsCard', () => {
                     this.callback([{ isIntersecting: true, target }]);
                 };
             }
-            unobserve() {}
-            disconnect() {}
+            unobserve() { /* Intentionally empty mock */ }
+            disconnect() { /* Intentionally empty mock */ }
         }
         window.IntersectionObserver = SpecificMockIntersectionObserver;
     });
