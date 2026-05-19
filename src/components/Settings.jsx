@@ -7,7 +7,7 @@ const Settings = ({ isOpen, onClose, onSave }) => {
   const [aiSdkModel, setAiSdkModel] = useState(() => localStorage.getItem('ai_sdk_model') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => {
     const val = localStorage.getItem('auto_summarize');
-    return val !== null ? val === 'true' : true;
+    return val !== 'false';
   });
 
   const handleSave = () => {
