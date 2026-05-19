@@ -87,6 +87,7 @@ function App() {
                 <p className="text-sm text-yellow-700 dark:text-yellow-200">
                   Por favor configure seu Provedor de IA e Chave de API nas configurações para habilitar os resumos inteligentes.
                   <button
+                    type="button"
                     onClick={() => setIsSettingsOpen(true)}
                     className="font-medium underline hover:text-yellow-600 dark:hover:text-yellow-100 ml-2"
                   >
