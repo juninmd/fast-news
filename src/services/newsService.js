@@ -3,7 +3,7 @@ const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 export const FEED_SOURCES = [
     // Tecnologia
-    { url: 'https://www.techtudo.com.br/rss', category: 'Tecnologia' },
+    { url: 'https://www.theverge.com/rss/index.xml', category: 'Tecnologia' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml', category: 'Tecnologia' },
     { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', category: 'Tecnologia' },
     { url: 'https://techcrunch.com/feed/', category: 'Tecnologia' },
@@ -25,6 +25,7 @@ export const FEED_SOURCES = [
     { url: 'https://www.tudocelular.com/rss/', category: 'Tecnologia' },
     { url: 'https://macmagazine.com.br/feed/', category: 'Tecnologia' },
     { url: 'https://www.b9.com.br/feed/', category: 'Tecnologia' },
+    { url: 'https://www.techtudo.com.br/rss/', category: 'Tecnologia' },
 
     // Brasil / Política / Geral
     { url: 'https://www.opovo.com.br/rss/noticias/brasil/', category: 'Brasil' },
