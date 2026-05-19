@@ -214,7 +214,9 @@ describe('NewsCard', () => {
 
         const originalToLocaleDateString = Date.prototype.toLocaleDateString;
         // Mock to throw error
-        Date.prototype.toLocaleDateString = () => { throw new Error('Format Error'); };
+        Date.prototype.toLocaleDateString = () => {
+            throw new Error('Format Error');
+        };
 
         try {
             const itemValidDate = {

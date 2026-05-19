@@ -12,15 +12,22 @@ vi.mock('./components/TrendingTopics', () => ({
 }));
 
 vi.mock('./components/Settings', () => ({
-    default: ({ isOpen, onClose, onSave }) => (
-        isOpen ? (
+    default: ({ isOpen, onClose, onSave }) => {
+        if (!isOpen) return null;
+
+        const handleSave = () => {
+            onSave({ aiSdkApiKey: 'new-api-key', aiSdkProvider: 'openai' });
+            onClose();
+        };
+
+        return (
             <div data-testid="settings-modal">
                 Settings Modal
-                <button onClick={() => { onSave({ aiSdkApiKey: 'new-api-key', aiSdkProvider: 'openai' }); onClose(); }}>Save</button>
-                <button onClick={onClose}>Close</button>
+                <button type="button" onClick={handleSave}>Save</button>
+                <button type="button" onClick={onClose}>Close</button>
             </div>
-        ) : null
-    )
+        );
+    }
 }));
 
 describe('App', () => {
