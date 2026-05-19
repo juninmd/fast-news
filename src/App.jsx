@@ -17,8 +17,6 @@ function App() {
   const [aiConfig, setAiConfig] = useState(() => {
     const autoSummarizeVal = localStorage.getItem('auto_summarize');
     return {
-      geminiApiKey: localStorage.getItem('gemini_api_key') || '',
-      aiProvider: localStorage.getItem('ai_provider') || 'gemini',
       aiSdkProvider: localStorage.getItem('ai_sdk_provider') || 'openai',
       aiSdkApiKey: localStorage.getItem('ai_sdk_api_key') || '',
       aiSdkModel: localStorage.getItem('ai_sdk_model') || '',
@@ -43,9 +41,7 @@ function App() {
   };
 
   const isAiConfigured = () => {
-    if (aiConfig.aiProvider === 'gemini') return !!aiConfig.geminiApiKey;
-    if (aiConfig.aiProvider === 'ai-sdk') return !!aiConfig.aiSdkApiKey;
-    return false;
+    return !!aiConfig.aiSdkApiKey;
   };
 
   return (
