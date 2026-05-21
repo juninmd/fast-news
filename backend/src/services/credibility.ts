@@ -2,6 +2,7 @@ import { generateObject } from 'ai';
 import { z } from 'zod';
 import { query } from '../database/client.js';
 import { getFastModel } from './aiProvider.js';
+import { embedQuery, vectorToSQL } from './embeddings.js';
 
 const CredibilitySchema = z.object({
   fakeNewsScore: z
@@ -44,7 +45,7 @@ TÍTULO: {title}
 FONTE: {source}
 CATEGORIA: {category}
 CONTEÚDO: {content}
-
+{factCheckContext}
 Avalie:
 1. Score de fake news (1=confiável, 10=desinformação)
 2. Viés político do conteúdo (não da fonte, mas do texto em si)
@@ -53,6 +54,28 @@ Avalie:
 5. Flags de problemas, usando fake_news, lie, hypocrisy ou incoherence quando houver evidência
 
 Seja rigoroso mas justo. Notícias factuais de grandes veículos tendem a score 1-3.`;
+
+async function findRelatedFactChecks(title: string): Promise<string> {
+  try {
+    const embedding = await embedQuery(title);
+    const res = await query<{ title: string; source: string; content: string }>(
+      `SELECT title, source, content FROM news_articles
+       WHERE category = 'fact_check'
+         AND embedding IS NOT NULL
+         AND 1 - (embedding <=> $1::vector) >= 0.60
+       ORDER BY embedding <=> $1::vector
+       LIMIT 3`,
+      [vectorToSQL(embedding)]
+    );
+    if (!res.rows.length) return '';
+    const snippets = res.rows.map((r) =>
+      `• [${r.source}] ${r.title}: ${(r.content ?? '').slice(0, 200)}`
+    ).join('\n');
+    return `\nVERIFICAÇÕES DE FACT-CHECKERS BRASILEIROS RELACIONADAS:\n${snippets}\n`;
+  } catch {
+    return '';
+  }
+}
 
 export interface CredibilityResult {
   fakeNewsScore: number;
@@ -72,7 +95,10 @@ export async function analyzeCredibility(
   abortSignal?: AbortSignal,
 ): Promise<CredibilityResult | null> {
   try {
-    const model = await getFastModel();
+    const [model, factCheckContext] = await Promise.all([
+      getFastModel(),
+      findRelatedFactChecks(title),
+    ]);
     const { object } = await generateObject({
       model,
       schema: CredibilitySchema,
@@ -80,7 +106,8 @@ export async function analyzeCredibility(
         .replace('{title}', title)
         .replace('{source}', source)
         .replace('{category}', category)
-        .replace('{content}', (content ?? '').slice(0, 1200)),
+        .replace('{content}', (content ?? '').slice(0, 1200))
+        .replace('{factCheckContext}', factCheckContext),
       abortSignal,
     });
 

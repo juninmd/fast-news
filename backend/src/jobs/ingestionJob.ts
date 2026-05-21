@@ -36,8 +36,10 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
        ) sa ON true
        WHERE na.telegram_sent_at IS NULL
          AND na.fake_news_score IS NOT NULL
+         AND na.fake_news_score <= 6
+         AND na.category != 'fact_check'
        ORDER BY na.published_at DESC NULLS LAST
-       `,
+       LIMIT 50`,
     );
     return res.rows;
   } catch (err) {
@@ -57,8 +59,10 @@ async function fetchUnsentUnevaluatedArticles(): Promise<TelegramArticle[]> {
        ) sa ON true
        WHERE na.telegram_sent_at IS NULL
          AND na.fake_news_score IS NULL
+         AND na.category != 'fact_check'
          AND na.created_at < NOW() - INTERVAL '5 minutes'
-       ORDER BY na.published_at DESC NULLS LAST`,
+       ORDER BY na.published_at DESC NULLS LAST
+       LIMIT 30`,
     );
     return res.rows;
   } catch (err) {

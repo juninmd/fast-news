@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { query } from '../database/client.js';
 import { embedQuery, vectorToSQL } from './embeddings.js';
 import { cacheGet, cacheSet } from './cache.js';
@@ -28,7 +29,7 @@ export async function searchSimilarArticles(
   daysBack = 30,
   limit = config.rag.topK
 ): Promise<ArticleResult[]> {
-  const cacheKey = `rag:articles:${Buffer.from(queryText).toString('base64').slice(0, 32)}`;
+  const cacheKey = `rag:articles:${createHash('sha256').update(`${queryText}:${daysBack}:${limit}`).digest('hex').slice(0, 32)}`;
   const cached = await cacheGet<ArticleResult[]>(cacheKey);
   if (cached) return cached;
 
@@ -39,6 +40,7 @@ export async function searchSimilarArticles(
      FROM news_articles
      WHERE published_at > NOW() - INTERVAL '${daysBack} days'
        AND embedding IS NOT NULL
+       AND 1 - (embedding <=> $1::vector) >= 0.55
      ORDER BY embedding <=> $1::vector
      LIMIT $2`,
     [vectorToSQL(embedding), limit]
@@ -52,16 +54,22 @@ export async function searchSimilarInsights(
   queryText: string,
   limit = 5
 ): Promise<InsightResult[]> {
+  const cacheKey = `rag:insights:${createHash('sha256').update(`${queryText}:${limit}`).digest('hex').slice(0, 32)}`;
+  const cached = await cacheGet<InsightResult[]>(cacheKey);
+  if (cached) return cached;
+
   const embedding = await embedQuery(queryText);
   const result = await query<InsightResult>(
     `SELECT id, topic, insight, confidence, created_at,
        1 - (embedding <=> $1::vector) AS similarity
      FROM knowledge_insights
      WHERE embedding IS NOT NULL
+       AND 1 - (embedding <=> $1::vector) >= 0.55
      ORDER BY embedding <=> $1::vector
      LIMIT $2`,
     [vectorToSQL(embedding), limit]
   );
+  await cacheSet(cacheKey, result.rows, 1800);
   return result.rows;
 }
 
