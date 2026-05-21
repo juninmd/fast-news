@@ -1,13 +1,20 @@
-name: Build and Push Docker Image
+name: Deploy
+
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+      - master
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
@@ -19,11 +26,3 @@ jobs:
         with:
           image-name: ${{ github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Rollout restart in cluster
-        if: success()
-        uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBECONFIG }}
-        with:
-          args: rollout restart deployment/fast-news -n fast-news
