@@ -189,11 +189,11 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-async function generateSummary(title: string, content: string): Promise<string> {
+async function generateSummary(title: string, content: string, model?: Awaited<ReturnType<typeof getFastModel>>): Promise<string> {
   try {
-    const model = await getFastModel();
+    const m = model ?? await getFastModel();
     const { text } = await generateText({
-      model,
+      model: m,
       prompt: `Você é um editor sênior. Resuma esta notícia em 2-3 frases impactantes e profissionais em português (PT-BR).
       Foque nos fatos e no impacto. Não use "Esta notícia fala sobre...". Vá direto ao ponto.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 1500)}`,
       maxTokens: 180,
@@ -204,11 +204,11 @@ async function generateSummary(title: string, content: string): Promise<string> 
   }
 }
 
-async function generateContext(title: string, content: string): Promise<string> {
+async function generateContext(title: string, content: string, model?: Awaited<ReturnType<typeof getFastModel>>): Promise<string> {
   try {
-    const model = await getFastModel();
+    const m = model ?? await getFastModel();
     const { text } = await generateText({
-      model,
+      model: m,
       prompt: `Você é um colunista brasileiro irônico e bem-informado. Com base na notícia abaixo, escreva UMA ou DUAS frases curtas em português (PT-BR) seguindo esta prioridade:
 
 1. Se houver uma pessoa pública: mencione o fato ou período mais marcante da carreira dela que seja RELEVANTE para esta notícia (ex: "Presidiu o julgamento do Mensalão no STF em 2012-2013..."). Use seu conhecimento prévio, não o que está no texto.
@@ -233,22 +233,52 @@ Conteúdo: ${content.slice(0, 800)}`,
   }
 }
 
+const FLAG_LABEL: Record<string, string> = {
+  misleading_headline: '🔶 Título enganoso',
+  missing_sources: '📭 Sem fontes',
+  emotional_language: '🌡 Linguagem emocional',
+  unverified_claims: '❓ Alegações não verificadas',
+  conspiracy_theory: '🌀 Teoria conspiratória',
+  satire: '🎭 Sátira',
+  opinion_as_fact: '💬 Opinião como fato',
+  selective_data: '📊 Dados seletivos',
+  out_of_context: '✂️ Fora de contexto',
+  fake_news: '🚫 Fake news',
+  lie: '🤥 Mentira',
+  hypocrisy: '🎪 Hipocrisia',
+  incoherence: '⚡ Incoerência',
+};
+
+const BIAS_LABEL: Record<string, string> = {
+  neutral: '⚖️ Neutro', left: '🔵 Esquerda', far_left: '🔵🔵 Extrema esquerda',
+  right: '🔴 Direita', far_right: '🔴🔴 Extrema direita',
+};
+
+const SCORE_EMOJI = (s: number) =>
+  s <= 2 ? '✅' : s <= 4 ? '🟡' : s <= 6 ? '🟠' : '🔴';
+
 function buildCredibilityBlock(article: {
   fakeNewsScore?: number | null;
+  politicalBias?: string | null;
+  isMilitant?: boolean;
   hasIncoherence?: boolean;
   credibilityFlags?: string[];
   credibilityReasoning?: string | null;
 }): string {
-  const parts: string[] = [];
-  const flags = new Set(article.credibilityFlags ?? []);
-  if (article.hasIncoherence || flags.has('incoherence')) parts.push('INCOERÊNCIAS');
-  if ((article.fakeNewsScore ?? 0) > 4 || flags.has('fake_news')) parts.push('FAKE NEWS');
-  if (flags.has('hypocrisy')) parts.push('HIPOCRISIA');
-  if (flags.has('lie')) parts.push('MENTIRAS');
-  if (!parts.length) return '';
-  const score = article.fakeNewsScore != null ? ` (${article.fakeNewsScore}/10)` : '';
-  const reason = article.credibilityReasoning ? `\n${escapeHtml(article.credibilityReasoning)}` : '';
-  return `\n\n⚠️ <b>INTEGRIDADE:</b> ${parts.join(' · ')}${score}${reason}`;
+  if (article.fakeNewsScore == null) return '';
+
+  const score = article.fakeNewsScore;
+  const emoji = SCORE_EMOJI(score);
+  const bias = article.politicalBias ? (BIAS_LABEL[article.politicalBias] ?? article.politicalBias) : null;
+  const flags = (article.credibilityFlags ?? []).map((f) => FLAG_LABEL[f] ?? f);
+
+  const lines: string[] = [];
+  lines.push(`${emoji} <b>Credibilidade: ${score}/10</b>${article.isMilitant ? '  ·  📢 Panfletário' : ''}`);
+  if (bias && article.politicalBias !== 'neutral') lines.push(`${bias}`);
+  if (flags.length) lines.push(flags.join('  ·  '));
+  if (article.credibilityReasoning) lines.push(`<i>${escapeHtml(article.credibilityReasoning)}</i>`);
+
+  return `\n\n${SEPARATOR}\n${lines.join('\n')}`;
 }
 
 async function saveFeedback(ctx: Context, articleId: string, reaction: 'like' | 'dislike'): Promise<void> {
@@ -321,9 +351,10 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
   const activeStories = await listActiveStories(50).catch(() => []);
   const storyMap = new Map(activeStories.map((s) => [s.id, s]));
   const emoji = CATEGORY_EMOJI[article.category] ?? '📰';
+  const fastModel = await getFastModel();
   const [summary, context] = await Promise.all([
-    generateSummary(article.title, article.content),
-    generateContext(article.title, article.content),
+    generateSummary(article.title, article.content, fastModel),
+    generateContext(article.title, article.content, fastModel),
   ]);
   const displaySummary = summary || article.content.replace(/\s+/g, ' ').trim().slice(0, FALLBACK_SUMMARY_MAX_LEN);
 
@@ -402,11 +433,11 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
   }
 
   const inlineButtons = [[
-    { text: '📖 Ler reportagem', url: article.url },
-    { text: '📱 Abrir no Fast News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
-  ], [
     { text: '👍 Curtir', callback_data: `fb:like:${article.id}` },
-    { text: '👎 Dislike', callback_data: `fb:dislike:${article.id}` },
+    { text: '👎 Não curti', callback_data: `fb:dislike:${article.id}` },
+  ], [
+    { text: '📖 Ler reportagem', url: article.url },
+    { text: '📱 Fast News', url: `${FAST_NEWS_URL}/?id=${article.id}` },
   ]];
 
   if (matchedStory) {
@@ -414,17 +445,20 @@ export async function postArticleToTelegram(article: TelegramArticle): Promise<v
   }
 
   const previewUrl = article.imageUrl ?? article.url;
+  const sendOpts = {
+    parse_mode: 'HTML' as const,
+    link_preview_options: { url: previewUrl, prefer_large_media: true, show_above_text: true },
+    reply_markup: { inline_keyboard: inlineButtons },
+  };
+  const results = await Promise.allSettled(
+    config.telegramChatIds.map((chatId) =>
+      getBot().telegram.sendMessage(chatId, message, sendOpts)
+    )
+  );
   let sentCount = 0;
-  for (const chatId of config.telegramChatIds) {
-    const ok = await getBot().telegram.sendMessage(chatId, message, {
-      parse_mode: 'HTML',
-      link_preview_options: { url: previewUrl, prefer_large_media: true, show_above_text: true },
-      reply_markup: { inline_keyboard: inlineButtons },
-    }).then(() => true).catch((err) => {
-      console.error(`[Telegram] Failed to send to ${chatId}:`, err.message);
-      return false;
-    });
-    if (ok) sentCount++;
+  for (let i = 0; i < results.length; i++) {
+    if (results[i].status === 'fulfilled') { sentCount++; }
+    else { console.error(`[Telegram] Failed to send to ${config.telegramChatIds[i]}:`, (results[i] as PromiseRejectedResult).reason?.message); }
   }
 
   if (sentCount > 0) {

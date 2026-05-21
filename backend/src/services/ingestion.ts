@@ -227,6 +227,12 @@ export const FEED_SOURCES = [
   { url: 'https://www.myanimelist.net/rss/news.xml', category: 'Anime', company: 'MyAnimeList' },
   { url: 'https://saikoanimes.net/feed/', category: 'Anime', company: 'Saiko Animes' },
   { url: 'https://www.animenewsnetwork.com/all/rss.xml?ann-edition=br', category: 'Anime', company: 'ANN Brasil' },
+
+  // ── Fact-checkers brasileiros ──────────────────────────────────────────────
+  { url: 'https://lupa.uol.com.br/feed/', category: 'fact_check', company: 'Agência Lupa' },
+  { url: 'https://aosfatos.org/feed/', category: 'fact_check', company: 'Aos Fatos' },
+  { url: 'https://politica.estadao.com.br/blogs/estadao-verifica/feed/', category: 'fact_check', company: 'Estadão Verifica' },
+  { url: 'https://www.boatos.org/feed', category: 'fact_check', company: 'Boatos.org' },
 ];
 
 export interface RawArticle {
@@ -272,7 +278,7 @@ async function upsertArticle(article: RawArticle, ollamaUp: boolean): Promise<st
   if (!article.guid || !article.title || !article.url) return null;
 
   const existing = await query<{ id: string }>(
-    'SELECT id FROM news_articles WHERE guid = $1', [article.guid]
+    'SELECT id FROM news_articles WHERE guid = $1 OR url = $2', [article.guid, article.url]
   );
   if (existing.rowCount && existing.rowCount > 0) return null;
 

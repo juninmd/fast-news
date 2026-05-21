@@ -25,6 +25,8 @@ function getQueue(): Bull.Queue<CredibilityJob> {
     queue.process(2, async (job) => {
       const { article } = job.data;
 
+      if (article.category === 'fact_check') return;
+
       const result = await analyzeCredibility(
         article.id, article.title, article.content, article.source, article.category,
         AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),

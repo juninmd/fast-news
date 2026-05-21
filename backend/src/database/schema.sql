@@ -152,6 +152,9 @@ CREATE INDEX IF NOT EXISTS idx_relations_b ON article_relations(article_b, simil
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS telegram_sent_at TIMESTAMPTZ DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS credibility_reasoning TEXT DEFAULT NULL;
 CREATE INDEX IF NOT EXISTS idx_articles_telegram_unsent ON news_articles(created_at DESC) WHERE telegram_sent_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_unsent_credible ON news_articles(published_at DESC) WHERE telegram_sent_at IS NULL AND fake_news_score IS NOT NULL AND fake_news_score <= 6;
+CREATE INDEX IF NOT EXISTS idx_articles_url ON news_articles(url);
+CREATE INDEX IF NOT EXISTS idx_articles_fake_news ON news_articles(fake_news_score) WHERE fake_news_score IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS story_timeline (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
