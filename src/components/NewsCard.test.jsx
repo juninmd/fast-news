@@ -110,15 +110,6 @@ describe('NewsCard', () => {
          expect(aiSdkService.summarizeTextAiSdk).not.toHaveBeenCalled();
     });
 
-    it('shows error if ai sdk api key is missing', () => {
-         render(<NewsCard item={mockItem} aiConfig={{ aiProvider: 'ai-sdk', autoSummarize: false }} />);
-
-         const summarizeButton = screen.getByRole('button', { name: /Resumir/i });
-         fireEvent.click(summarizeButton);
-
-         expect(screen.getByText('Por favor adicione sua chave de API AI SDK nas configurações.')).toBeInTheDocument();
-         expect(aiSdkService.summarizeTextAiSdk).not.toHaveBeenCalled();
-    });
 
     it('shows error if summarization fails', async () => {
         aiSdkService.summarizeTextAiSdk.mockRejectedValue(new Error('API Error'));

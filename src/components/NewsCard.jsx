@@ -145,7 +145,7 @@ const NewsCard = memo(({ item, aiConfig }) => {
 
         {/* Footer Actions */}
         <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-             <button
+             <button type="button"
                 onClick={handleSummarize}
                 disabled={loading || summary}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all shadow-sm ${
@@ -177,3 +177,5 @@ const NewsCard = memo(({ item, aiConfig }) => {
 });
 
 export default NewsCard;
+
+NewsCard.displayName = 'NewsCard';
