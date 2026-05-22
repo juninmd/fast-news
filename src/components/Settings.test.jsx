@@ -16,17 +16,16 @@ describe('Settings', () => {
     it('renders settings modal when open', () => {
         render(<Settings isOpen={true} />);
         expect(screen.getByText('Configurações')).toBeInTheDocument();
-        expect(screen.getByLabelText('Token da API Gemini')).toBeInTheDocument();
+        expect(screen.getByLabelText('AI SDK API Key')).toBeInTheDocument();
     });
 
-    it('loads api key from local storage', () => {
-        localStorage.setItem('gemini_api_key', 'stored-key');
+    it('loads ai sdk api key from local storage', () => {
+        localStorage.setItem('ai_sdk_api_key', 'stored-sdk-key');
         render(<Settings isOpen={true} />);
-        expect(screen.getByLabelText('Token da API Gemini')).toHaveValue('stored-key');
+        expect(screen.getByLabelText('AI SDK API Key')).toHaveValue('stored-sdk-key');
     });
 
     it('loads ai config from local storage', () => {
-        localStorage.setItem('ai_provider', 'ai-sdk');
         localStorage.setItem('ai_sdk_provider', 'openai');
         localStorage.setItem('ai_sdk_api_key', 'sdk-key');
         localStorage.setItem('ai_sdk_model', 'gpt-4');
@@ -34,7 +33,6 @@ describe('Settings', () => {
 
         render(<Settings isOpen={true} />);
 
-        expect(screen.getByLabelText('Provedor de IA')).toHaveValue('ai-sdk');
         expect(screen.getByLabelText('AI SDK Provider')).toHaveValue('openai');
         expect(screen.getByLabelText('AI SDK API Key')).toHaveValue('sdk-key');
         expect(screen.getByLabelText('Model (Opcional)')).toHaveValue('gpt-4');
@@ -43,10 +41,6 @@ describe('Settings', () => {
 
     it('updates ai config state on input change', () => {
         render(<Settings isOpen={true} />);
-
-        const providerSelect = screen.getByLabelText('Provedor de IA');
-        fireEvent.change(providerSelect, { target: { value: 'ai-sdk' } });
-        expect(providerSelect).toHaveValue('ai-sdk');
 
         const sdkProviderSelect = screen.getByLabelText('AI SDK Provider');
         fireEvent.change(sdkProviderSelect, { target: { value: 'anthropic' } });
@@ -67,20 +61,15 @@ describe('Settings', () => {
 
         render(<Settings isOpen={true} onSave={onSaveMock} onClose={onCloseMock} />);
 
-        const providerSelect = screen.getByLabelText('Provedor de IA');
-        fireEvent.change(providerSelect, { target: { value: 'ai-sdk' } });
-
         const sdkKeyInput = screen.getByLabelText('AI SDK API Key');
         fireEvent.change(sdkKeyInput, { target: { value: 'saved-sdk-key' } });
 
         const saveButton = screen.getByRole('button', { name: 'Salvar' });
         fireEvent.click(saveButton);
 
-        expect(localStorage.getItem('ai_provider')).toBe('ai-sdk');
         expect(localStorage.getItem('ai_sdk_api_key')).toBe('saved-sdk-key');
 
         expect(onSaveMock).toHaveBeenCalledWith(expect.objectContaining({
-            aiProvider: 'ai-sdk',
             aiSdkApiKey: 'saved-sdk-key'
         }));
         expect(onCloseMock).toHaveBeenCalled();
