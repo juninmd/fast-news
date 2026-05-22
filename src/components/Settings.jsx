@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
 const Settings = ({ isOpen, onClose, onSave }) => {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'gemini');
-  const [aiSdkProvider, setAiSdkProvider] = useState(() => localStorage.getItem('ai_sdk_provider') || 'openai');
+      const [aiSdkProvider, setAiSdkProvider] = useState(() => localStorage.getItem('ai_sdk_provider') || 'openai');
   const [aiSdkApiKey, setAiSdkApiKey] = useState(() => localStorage.getItem('ai_sdk_api_key') || '');
   const [aiSdkModel, setAiSdkModel] = useState(() => localStorage.getItem('ai_sdk_model') || '');
   const [autoSummarize, setAutoSummarize] = useState(() => {
@@ -13,17 +11,13 @@ const Settings = ({ isOpen, onClose, onSave }) => {
   });
 
   const handleSave = () => {
-    localStorage.setItem('gemini_api_key', apiKey);
-    localStorage.setItem('ai_provider', aiProvider);
-    localStorage.setItem('ai_sdk_provider', aiSdkProvider);
+            localStorage.setItem('ai_sdk_provider', aiSdkProvider);
     localStorage.setItem('ai_sdk_api_key', aiSdkApiKey);
     localStorage.setItem('ai_sdk_model', aiSdkModel);
     localStorage.setItem('auto_summarize', autoSummarize.toString());
 
     onSave({
-      geminiApiKey: apiKey,
-      aiProvider,
-      aiSdkProvider,
+                  aiSdkProvider,
       aiSdkApiKey,
       aiSdkModel,
       autoSummarize
@@ -58,39 +52,10 @@ const Settings = ({ isOpen, onClose, onSave }) => {
             </label>
           </div>
 
-          <div>
-            <label htmlFor="ai-provider-select" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Provedor de IA
-            </label>
-            <select
-              id="ai-provider-select"
-              value={aiProvider}
-              onChange={(e) => setAiProvider(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="gemini">Gemini (Direct)</option>
-              <option value="ai-sdk">AI SDK</option>
-            </select>
-          </div>
 
-          {aiProvider === 'gemini' && (
-            <div>
-              <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Token da API Gemini
-              </label>
-              <input
-                id="api-key-input"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
-                placeholder="Cole sua chave de API aqui"
-              />
-            </div>
-          )}
 
-          {aiProvider === 'ai-sdk' && (
-            <div className="space-y-4">
+
+                <div className="space-y-4">
               <div>
                 <label htmlFor="ai-sdk-provider-select" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   AI SDK Provider
@@ -137,7 +102,6 @@ const Settings = ({ isOpen, onClose, onSave }) => {
                 />
               </div>
             </div>
-          )}
 
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             Sua chave é armazenada localmente no seu navegador.

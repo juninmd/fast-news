@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import NewsCard from './NewsCard';
-import * as geminiService from '../services/geminiService';
-import * as aiSdkService from '../services/aiSdkService';
+import * as aiSdkService from "../services/aiSdkService";
 
-vi.mock('../services/geminiService', () => ({
-    summarizeText: vi.fn(),
+vi.mock("../services/aiSdkService", () => ({
+  summarizeTextAiSdk: vi.fn(),
 }));
 
 vi.mock('../services/aiSdkService', () => ({
@@ -48,7 +47,7 @@ describe('NewsCard', () => {
     });
 
     it('renders news card with details', () => {
-        render(<NewsCard item={mockItem} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
         expect(screen.getByText('Test News')).toBeInTheDocument();
         expect(screen.getByText('Test Source')).toBeInTheDocument();
         // Date formatting might depend on locale, check basic presence
@@ -59,8 +58,8 @@ describe('NewsCard', () => {
     });
 
     it('handles summarize action with Gemini', async () => {
-        geminiService.summarizeText.mockResolvedValue('Summary result gemini');
-        render(<NewsCard item={mockItem} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        aiSdkService.summarizeTextAiSdk.mockResolvedValue('Summary result');
+        render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
 
         const summarizeButton = screen.getByRole('button', { name: /Resumir/i });
         fireEvent.click(summarizeButton);
@@ -68,10 +67,10 @@ describe('NewsCard', () => {
         expect(screen.getByText('Resumindo...')).toBeInTheDocument();
 
         await waitFor(() => {
-            expect(screen.getByText('Summary result gemini')).toBeInTheDocument();
+            expect(screen.getByText('Summary result')).toBeInTheDocument();
         });
 
-        expect(geminiService.summarizeText).toHaveBeenCalledWith('Test content', 'test-key');
+        expect(aiSdkService.summarizeTextAiSdk).toHaveBeenCalledWith("Test content", { provider: "openai", apiKey: "test-key", modelName: undefined });
         expect(screen.getByText('Resumido')).toBeInTheDocument();
     });
 
@@ -101,14 +100,14 @@ describe('NewsCard', () => {
          expect(screen.getByText('Configurações de IA não encontradas.')).toBeInTheDocument();
     });
 
-    it('shows error if gemini api key is missing', () => {
-         render(<NewsCard item={mockItem} aiConfig={{ aiProvider: 'gemini', autoSummarize: false }} />);
+    it('shows error if ai sdk api key is missing', () => {
+         render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: "openai", autoSummarize: false }} />);
 
          const summarizeButton = screen.getByRole('button', { name: /Resumir/i });
          fireEvent.click(summarizeButton);
 
-         expect(screen.getByText('Por favor adicione sua chave de API Gemini nas configurações.')).toBeInTheDocument();
-         expect(geminiService.summarizeText).not.toHaveBeenCalled();
+         expect(screen.getByText("Por favor adicione sua chave de API AI SDK nas configurações.")).toBeInTheDocument();
+         expect(aiSdkService.summarizeTextAiSdk).not.toHaveBeenCalled();
     });
 
     it('shows error if ai sdk api key is missing', () => {
@@ -122,10 +121,10 @@ describe('NewsCard', () => {
     });
 
     it('shows error if summarization fails', async () => {
-        geminiService.summarizeText.mockRejectedValue(new Error('API Error'));
+        aiSdkService.summarizeTextAiSdk.mockRejectedValue(new Error('API Error'));
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        render(<NewsCard item={mockItem} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
 
         const summarizeButton = screen.getByRole('button', { name: /Resumir/i });
         fireEvent.click(summarizeButton);
@@ -138,8 +137,8 @@ describe('NewsCard', () => {
     });
 
     it('auto summarizes via IntersectionObserver when autoSummarize is true', async () => {
-        geminiService.summarizeText.mockResolvedValue('Auto summary gemini');
-        render(<NewsCard item={mockItem} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: true }} />);
+        aiSdkService.summarizeTextAiSdk.mockResolvedValue('Auto summary');
+        render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: true }} />);
 
         act(() => {
             if (window.triggerIntersectNewsCard) {
@@ -148,10 +147,10 @@ describe('NewsCard', () => {
         });
 
         await waitFor(() => {
-            expect(screen.getByText('Auto summary gemini')).toBeInTheDocument();
+            expect(screen.getByText('Auto summary')).toBeInTheDocument();
         });
 
-        expect(geminiService.summarizeText).toHaveBeenCalledWith('Test content', 'test-key');
+        expect(aiSdkService.summarizeTextAiSdk).toHaveBeenCalledWith("Test content", { provider: "openai", apiKey: "test-key", modelName: undefined });
     });
 
     it('extracts image from enclosure', () => {
@@ -160,7 +159,7 @@ describe('NewsCard', () => {
             thumbnail: null,
             enclosure: { link: 'http://test.com/enclosure.jpg' }
         };
-        render(<NewsCard item={itemWithEnclosure} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemWithEnclosure} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
         expect(screen.getByRole('img')).toHaveAttribute('src', 'http://test.com/enclosure.jpg');
     });
 
@@ -170,7 +169,7 @@ describe('NewsCard', () => {
             thumbnail: null,
             description: 'Some text <img src="http://test.com/desc.jpg" /> more text'
         };
-        render(<NewsCard item={itemWithImgInDesc} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemWithImgInDesc} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
         expect(screen.getByRole('img')).toHaveAttribute('src', 'http://test.com/desc.jpg');
     });
 
@@ -180,7 +179,7 @@ describe('NewsCard', () => {
             thumbnail: null,
             description: 'No image here'
         };
-        render(<NewsCard item={itemNoImg} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemNoImg} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
         expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
 
@@ -189,7 +188,7 @@ describe('NewsCard', () => {
             ...mockItem,
             pubDate: 'invalid-date'
         };
-        render(<NewsCard item={itemInvalidDate} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemInvalidDate} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
         // Should not crash, date text will be empty string
         // We can check if Calendar icon is present but no date text
         expect(screen.getAllByText((content, element) => {
@@ -203,13 +202,13 @@ describe('NewsCard', () => {
              content: null,
              description: 'Description text',
         };
-        geminiService.summarizeText.mockResolvedValue('Summary');
-        render(<NewsCard item={itemNoContent} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        aiSdkService.summarizeTextAiSdk.mockResolvedValue('Summary');
+        render(<NewsCard item={itemNoContent} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
 
         fireEvent.click(screen.getByRole('button', { name: /Resumir/i }));
 
         await waitFor(() => {
-             expect(geminiService.summarizeText).toHaveBeenCalledWith('Description text', 'test-key');
+             expect(aiSdkService.summarizeTextAiSdk).toHaveBeenCalledWith("Description text", { provider: "openai", apiKey: "test-key", modelName: undefined });
         });
     });
 
@@ -220,13 +219,13 @@ describe('NewsCard', () => {
              description: null,
              title: 'Title text'
         };
-        geminiService.summarizeText.mockResolvedValue('Summary');
-        render(<NewsCard item={itemNoContentDesc} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+        aiSdkService.summarizeTextAiSdk.mockResolvedValue('Summary');
+        render(<NewsCard item={itemNoContentDesc} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
 
         fireEvent.click(screen.getByRole('button', { name: /Resumir/i }));
 
         await waitFor(() => {
-             expect(geminiService.summarizeText).toHaveBeenCalledWith('Title text', 'test-key');
+             expect(aiSdkService.summarizeTextAiSdk).toHaveBeenCalledWith("Title text", { provider: "openai", apiKey: "test-key", modelName: undefined });
         });
     });
 
@@ -253,7 +252,7 @@ describe('NewsCard', () => {
                 ...mockItem,
                 pubDate: '2023-01-01'
             };
-            render(<NewsCard item={itemValidDate} aiConfig={{ aiProvider: 'gemini', geminiApiKey: 'test-key', autoSummarize: false }} />);
+            render(<NewsCard item={itemValidDate} aiConfig={{ aiSdkProvider: "openai", aiSdkApiKey: "test-key", autoSummarize: false }} />);
             // Should catch and return empty string, so no date displayed.
             // We check for absence of date text (or presence of empty date div)
         } finally {
