@@ -27,19 +27,37 @@ describe('NewsCard', () => {
                 this.callback = callback;
             }
             observe(target) {
-                // Attach the callback to a global so we can trigger it in tests
-                window.triggerIntersectNewsCard = () => {
-                    this.callback([{ isIntersecting: true, target }]);
-                };
+                this.target = target;
             }
-            unobserve() {}
-            disconnect() {}
+            unobserve() {
+                // Intentionally empty mock for unobserve
+            }
+            disconnect() {
+                // Intentionally empty mock for disconnect
+            }
+            triggerIntersect() {
+                if (this.target && this.callback) {
+                    this.callback([{ isIntersecting: true, target: this.target }]);
+                }
+            }
         }
         window.IntersectionObserver = SpecificMockIntersectionObserver;
+
+        // Store instances globally without mocking the constructor with vi.fn()
+        const OriginalObserver = window.IntersectionObserver;
+        window.IntersectionObserver = class extends OriginalObserver {
+            constructor(callback) {
+                super(callback);
+                if (!window.mockObserverInstances) {
+                    window.mockObserverInstances = [];
+                }
+                window.mockObserverInstances.push(this);
+            }
+        };
     });
 
     afterEach(() => {
-        delete window.triggerIntersectNewsCard;
+        delete window.mockObserverInstances;
     });
 
     it('renders news card with details', () => {
@@ -110,8 +128,8 @@ describe('NewsCard', () => {
         render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: true }} />);
 
         act(() => {
-            if (window.triggerIntersectNewsCard) {
-                window.triggerIntersectNewsCard();
+            if (window.mockObserverInstances && window.mockObserverInstances.length > 0) {
+                window.mockObserverInstances[0].triggerIntersect();
             }
         });
 
