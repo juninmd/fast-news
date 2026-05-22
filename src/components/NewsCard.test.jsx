@@ -18,6 +18,12 @@ const mockItem = {
     thumbnail: 'http://test.com/image.jpg'
 };
 
+const DEFAULT_AI_CONFIG = {
+    aiSdkProvider: 'openai',
+    aiSdkApiKey: 'test-key',
+    autoSummarize: false
+};
+
 describe('NewsCard', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -61,7 +67,7 @@ describe('NewsCard', () => {
     });
 
     it('renders news card with details', () => {
-        render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={mockItem} aiConfig={DEFAULT_AI_CONFIG} />);
         expect(screen.getByText('Test News')).toBeInTheDocument();
         expect(screen.getByText('Test Source')).toBeInTheDocument();
         // Date formatting might depend on locale, check basic presence
@@ -111,7 +117,7 @@ describe('NewsCard', () => {
         aiSdkService.summarizeTextAiSdk.mockRejectedValue(new Error('API Error'));
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={mockItem} aiConfig={DEFAULT_AI_CONFIG} />);
 
         const summarizeButton = screen.getByRole('button', { name: /Resumir/i });
         fireEvent.click(summarizeButton);
@@ -125,7 +131,7 @@ describe('NewsCard', () => {
 
     it('auto summarizes via IntersectionObserver when autoSummarize is true', async () => {
         aiSdkService.summarizeTextAiSdk.mockResolvedValue('Auto summary ai sdk');
-        render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: true }} />);
+        render(<NewsCard item={mockItem} aiConfig={{ ...DEFAULT_AI_CONFIG, autoSummarize: true }} />);
 
         act(() => {
             if (window.mockObserverInstances && window.mockObserverInstances.length > 0) {
@@ -146,7 +152,7 @@ describe('NewsCard', () => {
             thumbnail: null,
             enclosure: { link: 'http://test.com/enclosure.jpg' }
         };
-        render(<NewsCard item={itemWithEnclosure} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemWithEnclosure} aiConfig={DEFAULT_AI_CONFIG} />);
         expect(screen.getByRole('img')).toHaveAttribute('src', 'http://test.com/enclosure.jpg');
     });
 
@@ -156,7 +162,7 @@ describe('NewsCard', () => {
             thumbnail: null,
             description: 'Some text <img src="http://test.com/desc.jpg" /> more text'
         };
-        render(<NewsCard item={itemWithImgInDesc} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemWithImgInDesc} aiConfig={DEFAULT_AI_CONFIG} />);
         expect(screen.getByRole('img')).toHaveAttribute('src', 'http://test.com/desc.jpg');
     });
 
@@ -166,7 +172,7 @@ describe('NewsCard', () => {
             thumbnail: null,
             description: 'No image here'
         };
-        render(<NewsCard item={itemNoImg} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemNoImg} aiConfig={DEFAULT_AI_CONFIG} />);
         expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
 
@@ -175,7 +181,7 @@ describe('NewsCard', () => {
             ...mockItem,
             pubDate: 'invalid-date'
         };
-        render(<NewsCard item={itemInvalidDate} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemInvalidDate} aiConfig={DEFAULT_AI_CONFIG} />);
         // Should not crash, date text will be empty string
         // We can check if Calendar icon is present but no date text
         expect(screen.getAllByText((content, element) => {
@@ -190,7 +196,7 @@ describe('NewsCard', () => {
              description: 'Description text',
         };
         aiSdkService.summarizeTextAiSdk.mockResolvedValue('Summary');
-        render(<NewsCard item={itemNoContent} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemNoContent} aiConfig={DEFAULT_AI_CONFIG} />);
 
         fireEvent.click(screen.getByRole('button', { name: /Resumir/i }));
 
@@ -207,7 +213,7 @@ describe('NewsCard', () => {
              title: 'Title text'
         };
         aiSdkService.summarizeTextAiSdk.mockResolvedValue('Summary');
-        render(<NewsCard item={itemNoContentDesc} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+        render(<NewsCard item={itemNoContentDesc} aiConfig={DEFAULT_AI_CONFIG} />);
 
         fireEvent.click(screen.getByRole('button', { name: /Resumir/i }));
 
@@ -239,7 +245,7 @@ describe('NewsCard', () => {
                 ...mockItem,
                 pubDate: '2023-01-01'
             };
-            render(<NewsCard item={itemValidDate} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key', autoSummarize: false }} />);
+            render(<NewsCard item={itemValidDate} aiConfig={DEFAULT_AI_CONFIG} />);
             // Should catch and return empty string, so no date displayed.
             // We check for absence of date text (or presence of empty date div)
         } finally {
