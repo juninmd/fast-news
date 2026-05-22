@@ -76,7 +76,7 @@ describe('NewsCard', () => {
 
     it('handles summarize action with AI SDK', async () => {
         aiSdkService.summarizeTextAiSdk.mockResolvedValue('Summary result ai sdk');
-        render(<NewsCard item={mockItem} aiConfig={{ aiProvider: 'ai-sdk', aiSdkProvider: 'openai', aiSdkApiKey: 'test-key-sdk', aiSdkModel: 'gpt-4o', autoSummarize: false }} />);
+        render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key-sdk', aiSdkModel: 'gpt-4o', autoSummarize: false }} />);
 
         const summarizeButton = screen.getByRole('button', { name: /Resumir/i });
         fireEvent.click(summarizeButton);
