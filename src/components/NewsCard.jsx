@@ -77,7 +77,8 @@ const NewsCard = memo(({ item, aiConfig }) => {
 
   // Remove HTML tags for clean description preview
   const cleanDescription = useMemo(() => {
-    return item.description?.replace(/<\/?[^>]+(>|$)/g, '').substring(0, 150) + '...';
+    if (!item.description) return '...';
+    return item.description.replace(/<\/?[^>]+(>|$)/g, '').substring(0, 150) + '...';
   }, [item.description]);
 
   const formattedDate = useMemo(() => {

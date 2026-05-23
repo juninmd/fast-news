@@ -16,7 +16,10 @@ vi.mock('./components/Settings', () => ({
         isOpen ? (
             <div data-testid="settings-modal">
                 Settings Modal
-                <button type="button" onClick={() => { onSave({ aiSdkApiKey: 'new-api-key' }); onClose(); }}>Save</button>
+                <button type="button" onClick={() => {
+                    onSave({ aiSdkApiKey: 'new-api-key' });
+                    onClose();
+                }}>Save</button>
                 <button type="button" onClick={onClose}>Close</button>
             </div>
         ) : null

@@ -19,6 +19,8 @@ const mockItem = {
 };
 
 describe('NewsCard', () => {
+    let triggerIntersectNewsCard;
+
     beforeEach(() => {
         vi.clearAllMocks();
         // Setup specific IntersectionObserver Mock for this test block
@@ -27,19 +29,23 @@ describe('NewsCard', () => {
                 this.callback = callback;
             }
             observe(target) {
-                // Attach the callback to a global so we can trigger it in tests
-                window.triggerIntersectNewsCard = () => {
+                // Attach the callback to a variable so we can trigger it in tests
+                triggerIntersectNewsCard = () => {
                     this.callback([{ isIntersecting: true, target }]);
                 };
             }
-            unobserve() {}
-            disconnect() {}
+            unobserve() {
+                // Intentionally empty mock
+            }
+            disconnect() {
+                // Intentionally empty mock
+            }
         }
         window.IntersectionObserver = SpecificMockIntersectionObserver;
     });
 
     afterEach(() => {
-        delete window.triggerIntersectNewsCard;
+        triggerIntersectNewsCard = undefined;
     });
 
     it('renders news card with details', () => {
@@ -110,8 +116,8 @@ describe('NewsCard', () => {
         render(<NewsCard item={mockItem} aiConfig={{ aiSdkProvider: 'openai', aiSdkApiKey: 'test-key-sdk', autoSummarize: true }} />);
 
         act(() => {
-            if (window.triggerIntersectNewsCard) {
-                window.triggerIntersectNewsCard();
+            if (triggerIntersectNewsCard) {
+                triggerIntersectNewsCard();
             }
         });
 

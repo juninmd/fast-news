@@ -7,10 +7,7 @@ const Settings = lazy(() => import('./components/Settings'));
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return true;
-    }
-    return false;
+    return Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -65,7 +62,7 @@ function App() {
               </button>
               <button
                 type="button"
-                onClick={() => setIsSettingsOpen(true)}
+                onClick={() => { setIsSettingsOpen(true); }}
                 className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
                 title="Configurações"
               >
@@ -93,7 +90,7 @@ function App() {
                   Por favor configure seu Provedor de IA e Chave de API nas configurações para habilitar os resumos inteligentes.
                   <button
                     type="button"
-                    onClick={() => setIsSettingsOpen(true)}
+                    onClick={() => { setIsSettingsOpen(true); }}
                     className="font-medium underline hover:text-yellow-600 dark:hover:text-yellow-100 ml-2"
                   >
                     Configurações
@@ -113,7 +110,7 @@ function App() {
         <Suspense fallback={null}>
           <Settings
             isOpen={isSettingsOpen}
-            onClose={() => setIsSettingsOpen(false)}
+            onClose={() => { setIsSettingsOpen(false); }}
             onSave={handleSaveSettings}
           />
         </Suspense>
