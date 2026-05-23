@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { X } from 'lucide-react';
 
 const Settings = ({ isOpen, onClose, onSave }) => {
@@ -124,6 +125,12 @@ const Settings = ({ isOpen, onClose, onSave }) => {
       </div>
     </div>
   );
+};
+
+Settings.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
 };
 
 export default Settings;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import { summarizeTextAiSdk } from '../services/aiSdkService';
 import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
 
@@ -174,6 +175,28 @@ const NewsCard = memo(({ item, aiConfig }) => {
     </div>
   );
 });
+
+NewsCard.propTypes = {
+  item: PropTypes.shape({
+    title: PropTypes.string,
+    link: PropTypes.string,
+    description: PropTypes.string,
+    content: PropTypes.string,
+    source: PropTypes.string,
+    pubDate: PropTypes.string,
+    category: PropTypes.string,
+    thumbnail: PropTypes.string,
+    enclosure: PropTypes.shape({
+      link: PropTypes.string,
+    }),
+  }).isRequired,
+  aiConfig: PropTypes.shape({
+    aiSdkProvider: PropTypes.string,
+    aiSdkApiKey: PropTypes.string,
+    aiSdkModel: PropTypes.string,
+    autoSummarize: PropTypes.bool,
+  }),
+};
 
 NewsCard.displayName = 'NewsCard';
 
