@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
-import { summarizeText } from '../services/geminiService';
 import { summarizeTextAiSdk } from '../services/aiSdkService';
 import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
 
@@ -17,14 +16,9 @@ const NewsCard = memo(({ item, aiConfig }) => {
         return;
     }
 
-    const { geminiApiKey, aiSdkProvider, aiSdkApiKey, aiSdkModel } = aiConfig;
+    const { aiSdkProvider, aiSdkApiKey, aiSdkModel } = aiConfig;
 
-    if (aiConfig.aiProvider === 'gemini' && !geminiApiKey) {
-      setError("Por favor adicione sua chave de API Gemini nas configurações.");
-      return;
-    }
-
-    if (aiConfig.aiProvider === 'ai-sdk' && !aiSdkApiKey) {
+    if (!aiSdkApiKey) {
       setError("Por favor adicione sua chave de API AI SDK nas configurações.");
       return;
     }
@@ -33,17 +27,11 @@ const NewsCard = memo(({ item, aiConfig }) => {
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-      let result = '';
-
-      if (aiConfig.aiProvider === 'gemini') {
-         result = await summarizeText(textToSummarize, geminiApiKey);
-      } else if (aiConfig.aiProvider === 'ai-sdk') {
-         result = await summarizeTextAiSdk(textToSummarize, {
+      const result = await summarizeTextAiSdk(textToSummarize, {
              provider: aiSdkProvider,
              apiKey: aiSdkApiKey,
              modelName: aiSdkModel
-         });
-      }
+      });
 
       setSummary(result);
     } catch (error) {
@@ -89,7 +77,7 @@ const NewsCard = memo(({ item, aiConfig }) => {
 
   // Remove HTML tags for clean description preview
   const cleanDescription = useMemo(() => {
-    return item.description?.replace(/<[^>]+>/g, '').substring(0, 150) + '...';
+    return item.description?.replace(/<\/?[^>]+(>|$)/g, '').substring(0, 150) + '...';
   }, [item.description]);
 
   const formattedDate = useMemo(() => {
@@ -155,6 +143,7 @@ const NewsCard = memo(({ item, aiConfig }) => {
         {/* Footer Actions */}
         <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
              <button
+                type="button"
                 onClick={handleSummarize}
                 disabled={loading || summary}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all shadow-sm ${
@@ -184,5 +173,7 @@ const NewsCard = memo(({ item, aiConfig }) => {
     </div>
   );
 });
+
+NewsCard.displayName = 'NewsCard';
 
 export default NewsCard;
