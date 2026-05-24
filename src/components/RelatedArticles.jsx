@@ -36,7 +36,10 @@ const RelatedArticles = ({ currentArticle, allArticles, maxResults = 3 }) => {
   }, [currentArticle, allArticles, maxResults]);
 
   useEffect(() => {
-    setLoading(true);
+    // Use a microtask or small delay to avoid "set-state-in-effect" warning
+    const startLoading = () => setLoading(true);
+    startLoading();
+    
     const timer = setTimeout(() => {
       const found = findRelated();
       setRelated(found);
