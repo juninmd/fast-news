@@ -1,59 +1,58 @@
 {
-  "name": "fast-news",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "workspaces": [
-    "packages/*"
-  ],
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "news-agent": "node scripts/news-agent.js",
-    "start-agent": "node scripts/news-agent.js --loop",
-    "lint": "biome check --write .",
-    "format": "biome format --write .",
-    "preview": "vite preview",
-    "test": "vitest",
-    "coverage": "vitest run --coverage",
-    "dev:api": "pnpm --filter @fast-news/api dev",
-    "dev:mcp": "pnpm --filter @fast-news/mcp dev"
-  },
-  "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "@vitejs/plugin-react": "^5.1.4",
-    "autoprefixer": "^10.4.23",
-    "dotenv": "^17.3.1",
-    "lucide-react": "^0.562.0",
-    "postcss": "^8.5.14",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-markdown": "^10.1.0",
-    "rss-parser": "^3.13.0",
-    "tailwindcss": "^3.4.17",
-    "vite": "^8.0.13"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.4.15",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
-    "@vitest/coverage-v8": "^4.1.6",
-    "globals": "^16.5.0",
-    "jsdom": "^27.4.0",
-    "msw": "^2.12.7",
-    "vitest": "^4.0.17"
-  },
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "msw"
-    ]
-  }
+	"name": "fast-news",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"workspaces": [
+		"packages/*"
+	],
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"news-agent": "node scripts/news-agent.js",
+		"start-agent": "node scripts/news-agent.js --loop",
+		"lint": "biome check --write .",
+		"format": "biome format --write .",
+		"preview": "vite preview",
+		"test": "vitest",
+		"coverage": "vitest run --coverage",
+		"dev:api": "pnpm --filter @fast-news/api dev",
+		"dev:mcp": "pnpm --filter @fast-news/mcp dev"
+	},
+	"dependencies": {
+		"@google/generative-ai": "^0.24.1",
+		"@vitejs/plugin-react": "^5.1.4",
+		"autoprefixer": "^10.4.23",
+		"dotenv": "^17.3.1",
+		"lucide-react": "^0.562.0",
+		"postcss": "^8.5.14",
+		"react": "^19.2.0",
+		"react-dom": "^19.2.0",
+		"react-markdown": "^10.1.0",
+		"rss-parser": "^3.13.0",
+		"tailwindcss": "^3.4.17",
+		"vite": "^8.0.13"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.15",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.2",
+		"@testing-library/user-event": "^14.6.1",
+		"@types/react": "^19.2.5",
+		"@types/react-dom": "^19.2.3",
+		"@vitest/coverage-v8": "^4.1.6",
+		"globals": "^16.5.0",
+		"jsdom": "^27.4.0",
+		"msw": "^2.12.7",
+		"vitest": "^4.0.17"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild",
+			"msw"
+		]
+	}
 }

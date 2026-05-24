@@ -1,30 +1,34 @@
-import { generateText } from 'ai';
-import { getLanguageModel } from './aiProvider.js';
-import { listActiveStories } from './correlation.js';
-import { searchSimilarArticles } from './rag.js';
+import { generateText } from "ai";
+import { getLanguageModel } from "./aiProvider.js";
+import { listActiveStories } from "./correlation.js";
+import { searchSimilarArticles } from "./rag.js";
 
 export interface GlobalPulse {
-  summary: string;
-  sentiment: string;
-  topStories: string[];
-  marketMood: string;
-  criticalRisks: string[];
-  opportunities: string[];
+	summary: string;
+	sentiment: string;
+	topStories: string[];
+	marketMood: string;
+	criticalRisks: string[];
+	opportunities: string[];
 }
 
 export async function generateGlobalPulse(): Promise<string> {
-  const stories = await listActiveStories(15);
-  const recentNews = await searchSimilarArticles('principais notícias do dia', 1, 10);
-  
-  const context = `
+	const stories = await listActiveStories(15);
+	const recentNews = await searchSimilarArticles(
+		"principais notícias do dia",
+		1,
+		10,
+	);
+
+	const context = `
 STORIES EM ANDAMENTO:
-${stories.map(s => `- ${s.title} (${s.impactLevel}): ${s.summary}`).join('\n')}
+${stories.map((s) => `- ${s.title} (${s.impactLevel}): ${s.summary}`).join("\n")}
 
 NOTÍCIAS RECENTES:
-${recentNews.map(n => `- ${n.title} (${n.source})`).join('\n')}
+${recentNews.map((n) => `- ${n.title} (${n.source})`).join("\n")}
 `;
 
-  const prompt = `
+	const prompt = `
 Você é o Chief Intelligence Officer do Fast-News AI. 
 Analise o contexto acima e gere um "Intelligence Pulse" estratégico para investidores e tomadores de decisão.
 
@@ -54,12 +58,12 @@ Use o seguinte formato Markdown do Telegram:
 _Gerado por Fast-News Intelligence v2_
 `;
 
-  const model = await getLanguageModel();
-  const { text } = await generateText({
-    model,
-    prompt,
-    maxTokens: 1500,
-  });
+	const model = await getLanguageModel();
+	const { text } = await generateText({
+		model,
+		prompt,
+		maxTokens: 1500,
+	});
 
-  return text;
+	return text;
 }
