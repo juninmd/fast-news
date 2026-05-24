@@ -14,7 +14,8 @@
     "build": "vite build",
     "news-agent": "node scripts/news-agent.js",
     "start-agent": "node scripts/news-agent.js --loop",
-    "lint": "eslint . --no-warn-ignored",
+    "lint": "biome check --write .",
+    "format": "biome format --write .",
     "preview": "vite preview",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -36,23 +37,23 @@
     "vite": "^8.0.13"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@biomejs/biome": "2.4.15",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/parser": "^8.59.3",
     "@vitest/coverage-v8": "^4.1.6",
-    "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^16.5.0",
     "jsdom": "^27.4.0",
     "msw": "^2.12.7",
     "vitest": "^4.0.17"
   },
+  },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "msw"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msw"
+    ]
   }
 }
