@@ -292,7 +292,7 @@ async function processFeed(source, historySet) {
 			newItems.push({ ...item, sourceCategory: source.category });
 		}
 		return newItems;
-	} catch (error) {
+	} catch (_error) {
 		// console.error(`Error processing ${source.url}: ${error.message}`);
 		return [];
 	}
