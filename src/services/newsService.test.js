@@ -68,7 +68,9 @@ describe("newsService", () => {
 		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
 
 		fetch.mockRejectedValueOnce(new Error("Network Error"));
-		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {
+			/* Suppress log during test */
+		});
 
 		const news = await fetchNews(mockSources);
 
