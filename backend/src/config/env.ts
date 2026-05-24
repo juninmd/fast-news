@@ -1,81 +1,92 @@
-import 'dotenv/config';
+import "dotenv/config";
 
 function required(key: string): string {
-  const value = process.env[key];
-  if (!value) throw new Error(`Missing required env var: ${key}`);
-  return value;
+	const value = process.env[key];
+	if (!value) throw new Error(`Missing required env var: ${key}`);
+	return value;
 }
 
 function optional(key: string, fallback: string): string {
-  return process.env[key] ?? fallback;
+	return process.env[key] ?? fallback;
 }
 
 export const config = {
-  port: parseInt(optional('PORT', '3001'), 10),
-  nodeEnv: optional('NODE_ENV', 'development'),
+	port: parseInt(optional("PORT", "3001"), 10),
+	nodeEnv: optional("NODE_ENV", "development"),
 
-  databaseUrl: required('DATABASE_URL'),
-  redisUrl: optional('REDIS_URL', 'redis://localhost:6379'),
+	databaseUrl: required("DATABASE_URL"),
+	redisUrl: optional("REDIS_URL", "redis://localhost:6379"),
 
-  // AI provider: 'ollama' | 'google' | 'openai' | 'anthropic'
-  aiProvider: optional('AI_PROVIDER', 'ollama'),
+	// AI provider: 'ollama' | 'google' | 'openai' | 'anthropic'
+	aiProvider: optional("AI_PROVIDER", "ollama"),
 
-  ollama: {
-    baseUrl: optional('OLLAMA_BASE_URL', 'http://localhost:11434/v1'),
-    model: optional('OLLAMA_MODEL', 'gemma4'),
-    embeddingModel: optional('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text'),
-  },
+	ollama: {
+		baseUrl: optional("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+		model: optional("OLLAMA_MODEL", "gemma4"),
+		embeddingModel: optional("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text"),
+	},
 
-  geminiApiKey: optional('GEMINI_API_KEY', ''),
-  openaiApiKey: optional('OPENAI_API_KEY', ''),
-  anthropicApiKey: optional('ANTHROPIC_API_KEY', ''),
-  openrouterApiKey: optional('OPENROUTER_API_KEY', ''),
-  openrouterModel: optional('OPENROUTER_MODEL', 'anthropic/claude-3-haiku'),
+	geminiApiKey: optional("GEMINI_API_KEY", ""),
+	openaiApiKey: optional("OPENAI_API_KEY", ""),
+	anthropicApiKey: optional("ANTHROPIC_API_KEY", ""),
+	openrouterApiKey: optional("OPENROUTER_API_KEY", ""),
+	openrouterModel: optional("OPENROUTER_MODEL", "anthropic/claude-3-haiku"),
 
-  telegramBotToken: optional('TELEGRAM_BOT_TOKEN', ''),
-  telegramEnabled: optional('TELEGRAM_ENABLED', 'false') === 'true',
-  telegramChatIds: optional('TELEGRAM_CHAT_IDS', '').split(',').filter(Boolean),
-  telegramQueue: {
-    name: optional('TELEGRAM_QUEUE_NAME', 'telegram:posts'),
-    attempts: parseInt(optional('TELEGRAM_QUEUE_ATTEMPTS', '5'), 10),
-    backoffMs: parseInt(optional('TELEGRAM_QUEUE_BACKOFF_MS', '15000'), 10),
-    // 1 message every ~2.5s to avoid Telegram throttle and reduce Ollama load.
-    rateLimitMax: parseInt(optional('TELEGRAM_QUEUE_RATE_LIMIT_MAX', '1'), 10),
-    rateLimitDurationMs: parseInt(optional('TELEGRAM_QUEUE_RATE_LIMIT_DURATION_MS', '2500'), 10),
-  },
+	telegramBotToken: optional("TELEGRAM_BOT_TOKEN", ""),
+	telegramEnabled: optional("TELEGRAM_ENABLED", "false") === "true",
+	telegramChatIds: optional("TELEGRAM_CHAT_IDS", "").split(",").filter(Boolean),
+	telegramQueue: {
+		name: optional("TELEGRAM_QUEUE_NAME", "telegram:posts"),
+		attempts: parseInt(optional("TELEGRAM_QUEUE_ATTEMPTS", "5"), 10),
+		backoffMs: parseInt(optional("TELEGRAM_QUEUE_BACKOFF_MS", "15000"), 10),
+		// 1 message every ~2.5s to avoid Telegram throttle and reduce Ollama load.
+		rateLimitMax: parseInt(optional("TELEGRAM_QUEUE_RATE_LIMIT_MAX", "1"), 10),
+		rateLimitDurationMs: parseInt(
+			optional("TELEGRAM_QUEUE_RATE_LIMIT_DURATION_MS", "2500"),
+			10,
+		),
+	},
 
-  cron: {
-    ingestion: optional('CRON_INGESTION', '*/30 * * * *'),
-    learning: optional('CRON_LEARNING', '0 0 * * *'),
-    digest: optional('CRON_DIGEST', '0 11 * * *'),
-  },
+	cron: {
+		ingestion: optional("CRON_INGESTION", "*/30 * * * *"),
+		learning: optional("CRON_LEARNING", "0 0 * * *"),
+		digest: optional("CRON_DIGEST", "0 11 * * *"),
+	},
 
-  ingestion: {
-    batchSize: parseInt(optional('INGESTION_BATCH_SIZE', '10'), 10),
-    maxArticlesPerFeed: parseInt(optional('MAX_ARTICLES_PER_FEED', '20'), 10),
-  },
+	ingestion: {
+		batchSize: parseInt(optional("INGESTION_BATCH_SIZE", "10"), 10),
+		maxArticlesPerFeed: parseInt(optional("MAX_ARTICLES_PER_FEED", "20"), 10),
+	},
 
-  rag: {
-    topK: parseInt(optional('RAG_TOP_K', '10'), 10),
-    embeddingDimensions: parseInt(optional('EMBEDDING_DIMENSIONS', '768'), 10),
-  },
+	rag: {
+		topK: parseInt(optional("RAG_TOP_K", "10"), 10),
+		embeddingDimensions: parseInt(optional("EMBEDDING_DIMENSIONS", "768"), 10),
+	},
 
-  ai: {
-    analysisModel: optional('ANALYSIS_MODEL', ''),
-    fastModel: optional('FAST_MODEL', ''),
-    embeddingModel: optional('EMBEDDING_MODEL', ''),
-    embeddingTimeoutMs: parseInt(optional('EMBEDDING_TIMEOUT_MS', '45000'), 10),
-    backgroundTaskTimeoutMs: parseInt(optional('AI_BACKGROUND_TASK_TIMEOUT_MS', '90000'), 10),
-  },
+	ai: {
+		analysisModel: optional("ANALYSIS_MODEL", ""),
+		fastModel: optional("FAST_MODEL", ""),
+		embeddingModel: optional("EMBEDDING_MODEL", ""),
+		embeddingTimeoutMs: parseInt(optional("EMBEDDING_TIMEOUT_MS", "45000"), 10),
+		backgroundTaskTimeoutMs: parseInt(
+			optional("AI_BACKGROUND_TASK_TIMEOUT_MS", "90000"),
+			10,
+		),
+	},
 } as const;
 
 export function validateConfig(): void {
-  // DATABASE_URL is required — required() already throws if missing, this makes it explicit at startup
-  if (!process.env['DATABASE_URL']) throw new Error('Missing required env var: DATABASE_URL');
-  if (config.telegramEnabled && !config.telegramBotToken) {
-    console.warn('[config] TELEGRAM_ENABLED=true but TELEGRAM_BOT_TOKEN is not set — Telegram will be disabled');
-  }
-  if (config.telegramEnabled && !config.telegramChatIds.length) {
-    console.warn('[config] TELEGRAM_ENABLED=true but TELEGRAM_CHAT_IDS is empty — no messages will be sent');
-  }
+	// DATABASE_URL is required — required() already throws if missing, this makes it explicit at startup
+	if (!process.env["DATABASE_URL"])
+		throw new Error("Missing required env var: DATABASE_URL");
+	if (config.telegramEnabled && !config.telegramBotToken) {
+		console.warn(
+			"[config] TELEGRAM_ENABLED=true but TELEGRAM_BOT_TOKEN is not set — Telegram will be disabled",
+		);
+	}
+	if (config.telegramEnabled && !config.telegramChatIds.length) {
+		console.warn(
+			"[config] TELEGRAM_ENABLED=true but TELEGRAM_CHAT_IDS is empty — no messages will be sent",
+		);
+	}
 }
