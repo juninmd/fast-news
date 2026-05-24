@@ -1,165 +1,195 @@
-import { Router, Request, Response } from 'express';
-import { query } from '../../database/client.js';
-import { searchSimilarArticles } from '../../services/rag.js';
-import { cacheGet, cacheSet } from '../../services/cache.js';
+import { Request, Response, Router } from "express";
+import { query } from "../../database/client.js";
+import { cacheGet, cacheSet } from "../../services/cache.js";
+import { searchSimilarArticles } from "../../services/rag.js";
 
 export const newsRouter: Router = Router();
 
-newsRouter.get('/', async (req: Request, res: Response) => {
-  const page = parseInt(req.query['page'] as string ?? '1', 10);
-  const limit = Math.min(parseInt(req.query['limit'] as string ?? '20', 10), 50);
-  const category = req.query['category'] as string | undefined;
-  const offset = (page - 1) * limit;
+newsRouter.get("/", async (req: Request, res: Response) => {
+	const page = parseInt((req.query["page"] as string) ?? "1", 10);
+	const limit = Math.min(
+		parseInt((req.query["limit"] as string) ?? "20", 10),
+		50,
+	);
+	const category = req.query["category"] as string | undefined;
+	const offset = (page - 1) * limit;
 
-  const cacheKey = `news:list:${page}:${limit}:${category ?? 'all'}`;
-  const cached = await cacheGet(cacheKey);
-  if (cached) return res.json(cached);
+	const cacheKey = `news:list:${page}:${limit}:${category ?? "all"}`;
+	const cached = await cacheGet(cacheKey);
+	if (cached) return res.json(cached);
 
-  const whereClauses: string[] = [];
-  const params: unknown[] = [limit, offset];
+	const whereClauses: string[] = [];
+	const params: unknown[] = [limit, offset];
 
-  if (category) {
-    whereClauses.push(`category = $${params.length + 1}`);
-    params.push(category);
-  }
+	if (category) {
+		whereClauses.push(`category = $${params.length + 1}`);
+		params.push(category);
+	}
 
-  const where = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
-  const result = await query<{
-    id: string;
-    title: string;
-    summary: string;
-    url: string;
-    source: string;
-    category: string;
-    published_at: string;
-    sentiment: string;
-    importance_score: number;
-    fake_news_score: number | null;
-    political_bias: string | null;
-    is_militant: boolean;
-    has_incoherence: boolean;
-    credibility_flags: string[];
-    total_count: string;
-  }>(
-    `SELECT id, title, summary, url, source, category, published_at, sentiment, importance_score,
+	const where = whereClauses.length
+		? `WHERE ${whereClauses.join(" AND ")}`
+		: "";
+	const result = await query<{
+		id: string;
+		title: string;
+		summary: string;
+		url: string;
+		source: string;
+		category: string;
+		published_at: string;
+		sentiment: string;
+		importance_score: number;
+		fake_news_score: number | null;
+		political_bias: string | null;
+		is_militant: boolean;
+		has_incoherence: boolean;
+		credibility_flags: string[];
+		total_count: string;
+	}>(
+		`SELECT id, title, summary, url, source, category, published_at, sentiment, importance_score,
             fake_news_score, political_bias, is_militant, has_incoherence, credibility_flags,
             COUNT(*) OVER() AS total_count
      FROM news_articles ${where}
      ORDER BY published_at DESC NULLS LAST
      LIMIT $1 OFFSET $2`,
-    params
-  );
+		params,
+	);
 
-  const total = result.rows[0]?.total_count ? parseInt(result.rows[0].total_count, 10) : 0;
-  const hasMore = offset + limit < total;
+	const total = result.rows[0]?.total_count
+		? parseInt(result.rows[0].total_count, 10)
+		: 0;
+	const hasMore = offset + limit < total;
 
-  const response = {
-    data: result.rows,
-    articles: result.rows,
-    page,
-    limit,
-    total,
-    hasMore,
-  };
+	const response = {
+		data: result.rows,
+		articles: result.rows,
+		page,
+		limit,
+		total,
+		hasMore,
+	};
 
-  await cacheSet(cacheKey, response, 300);
-  return res.json(response);
+	await cacheSet(cacheKey, response, 300);
+	return res.json(response);
 });
 
-newsRouter.get('/search', async (req: Request, res: Response) => {
-  const q = req.query['q'] as string;
-  if (!q || q.trim().length < 3) return res.status(400).json({ error: 'Query too short' });
+newsRouter.get("/search", async (req: Request, res: Response) => {
+	const q = req.query["q"] as string;
+	if (!q || q.trim().length < 3)
+		return res.status(400).json({ error: "Query too short" });
 
-  const cacheKey = `news:search:${q.toLowerCase().trim()}`;
-  const cached = await cacheGet(cacheKey);
-  if (cached) return res.json(cached);
+	const cacheKey = `news:search:${q.toLowerCase().trim()}`;
+	const cached = await cacheGet(cacheKey);
+	if (cached) return res.json(cached);
 
-  const results = await searchSimilarArticles(q, 30, 10);
-  const response = { data: results, query: q };
-  await cacheSet(cacheKey, response, 300);
-  return res.json(response);
+	const results = await searchSimilarArticles(q, 30, 10);
+	const response = { data: results, query: q };
+	await cacheSet(cacheKey, response, 300);
+	return res.json(response);
 });
 
-newsRouter.get('/top', async (_req: Request, res: Response) => {
-  const cached = await cacheGet('news:top');
-  if (cached) return res.json(cached);
+newsRouter.get("/top", async (_req: Request, res: Response) => {
+	const cached = await cacheGet("news:top");
+	if (cached) return res.json(cached);
 
-  const result = await query<{
-    id: string; title: string; summary: string; url: string; source: string;
-    category: string; company: string | null; published_at: string;
-    image_url: string | null; importance_score: number;
-    fake_news_score: number | null; political_bias: string | null; is_militant: boolean;
-  }>(
-    `SELECT id, title, summary, url, source, category, company,
+	const result = await query<{
+		id: string;
+		title: string;
+		summary: string;
+		url: string;
+		source: string;
+		category: string;
+		company: string | null;
+		published_at: string;
+		image_url: string | null;
+		importance_score: number;
+		fake_news_score: number | null;
+		political_bias: string | null;
+		is_militant: boolean;
+	}>(
+		`SELECT id, title, summary, url, source, category, company,
             published_at, image_url, importance_score,
             fake_news_score, political_bias, is_militant
      FROM news_articles
      WHERE published_at > NOW() - INTERVAL '48 hours'
        AND importance_score IS NOT NULL
      ORDER BY importance_score DESC NULLS LAST, published_at DESC
-     LIMIT 10`
-  );
+     LIMIT 10`,
+	);
 
-  const response = { data: result.rows };
-  await cacheSet('news:top', response, 300);
-  return res.json(response);
+	const response = { data: result.rows };
+	await cacheSet("news:top", response, 300);
+	return res.json(response);
 });
 
-newsRouter.get('/categories', async (_req: Request, res: Response) => {
-  const cached = await cacheGet('news:categories');
-  if (cached) return res.json(cached);
+newsRouter.get("/categories", async (_req: Request, res: Response) => {
+	const cached = await cacheGet("news:categories");
+	if (cached) return res.json(cached);
 
-  const result = await query<{ category: string; count: string }>(
-    'SELECT category, COUNT(*) as count FROM news_articles GROUP BY category ORDER BY count DESC'
-  );
-  await cacheSet('news:categories', result.rows, 3600);
-  return res.json(result.rows);
+	const result = await query<{ category: string; count: string }>(
+		"SELECT category, COUNT(*) as count FROM news_articles GROUP BY category ORDER BY count DESC",
+	);
+	await cacheSet("news:categories", result.rows, 3600);
+	return res.json(result.rows);
 });
 
-newsRouter.get('/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+newsRouter.get("/:id", async (req: Request, res: Response) => {
+	const { id } = req.params;
 
-  const cacheKey = `news:article:${id}`;
-  const cached = await cacheGet(cacheKey);
-  if (cached) return res.json(cached);
+	const cacheKey = `news:article:${id}`;
+	const cached = await cacheGet(cacheKey);
+	if (cached) return res.json(cached);
 
-  const result = await query<{
-    id: string; title: string; summary: string; content: string;
-    url: string; source: string; category: string; company: string | null;
-    published_at: string; image_url: string | null; sentiment: string;
-    importance_score: number; fake_news_score: number | null;
-    political_bias: string | null; is_militant: boolean;
-    has_incoherence: boolean; credibility_flags: string[];
-  }>(
-    `SELECT id, title, summary, content, url, source, category, company, published_at,
+	const result = await query<{
+		id: string;
+		title: string;
+		summary: string;
+		content: string;
+		url: string;
+		source: string;
+		category: string;
+		company: string | null;
+		published_at: string;
+		image_url: string | null;
+		sentiment: string;
+		importance_score: number;
+		fake_news_score: number | null;
+		political_bias: string | null;
+		is_militant: boolean;
+		has_incoherence: boolean;
+		credibility_flags: string[];
+	}>(
+		`SELECT id, title, summary, content, url, source, category, company, published_at,
             image_url, sentiment, importance_score, fake_news_score, political_bias,
             is_militant, has_incoherence, credibility_flags
      FROM news_articles WHERE id = $1`,
-    [id]
-  );
+		[id],
+	);
 
-  if (!result.rows[0]) return res.status(404).json({ error: 'Article not found' });
+	if (!result.rows[0])
+		return res.status(404).json({ error: "Article not found" });
 
-  await cacheSet(cacheKey, result.rows[0], 600);
-  return res.json(result.rows[0]);
+	await cacheSet(cacheKey, result.rows[0], 600);
+	return res.json(result.rows[0]);
 });
 
-newsRouter.get('/:id/related', async (req: Request, res: Response) => {
-  const { id } = req.params;
+newsRouter.get("/:id/related", async (req: Request, res: Response) => {
+	const { id } = req.params;
 
-  const cacheKey = `news:related:${id}`;
-  const cached = await cacheGet(cacheKey);
-  if (cached) return res.json(cached);
+	const cacheKey = `news:related:${id}`;
+	const cached = await cacheGet(cacheKey);
+	if (cached) return res.json(cached);
 
-  const article = await query<{ title: string; content: string }>(
-    'SELECT title, content FROM news_articles WHERE id = $1',
-    [id]
-  );
-  if (!article.rows[0]) return res.status(404).json({ error: 'Article not found' });
+	const article = await query<{ title: string; content: string }>(
+		"SELECT title, content FROM news_articles WHERE id = $1",
+		[id],
+	);
+	if (!article.rows[0])
+		return res.status(404).json({ error: "Article not found" });
 
-  const { title, content } = article.rows[0];
-  const related = await searchSimilarArticles(`${title} ${content}`, 30, 8);
-  const response = { data: related.filter((a) => a.id !== id) };
-  await cacheSet(cacheKey, response, 900);
-  return res.json(response);
+	const { title, content } = article.rows[0];
+	const related = await searchSimilarArticles(`${title} ${content}`, 30, 8);
+	const response = { data: related.filter((a) => a.id !== id) };
+	await cacheSet(cacheKey, response, 900);
+	return res.json(response);
 });

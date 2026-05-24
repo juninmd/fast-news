@@ -1,42 +1,54 @@
-import { generateObject } from 'ai';
-import { z } from 'zod';
-import { query } from '../database/client.js';
-import { getFastModel, getCloudFallbackModel } from './aiProvider.js';
-import { embedQuery, vectorToSQL } from './embeddings.js';
+import { generateObject } from "ai";
+import { z } from "zod";
+import { query } from "../database/client.js";
+import { getCloudFallbackModel, getFastModel } from "./aiProvider.js";
+import { embedQuery, vectorToSQL } from "./embeddings.js";
 
 const CredibilitySchema = z.object({
-  fakeNewsScore: z
-    .number()
-    .min(1)
-    .max(10)
-    .describe('1 = totalmente confiável, 10 = altamente suspeito/desinformação'),
-  politicalBias: z
-    .enum(['neutral', 'left', 'far_left', 'right', 'far_right'])
-    .describe('Viés político do conteúdo'),
-  isMilitant: z
-    .boolean()
-    .describe('É um post de cunho panfletário/militante, com intenção clara de mobilizar ou atacar'),
-  hasIncoherence: z
-    .boolean()
-    .describe('Contém afirmações incoerentes, contraditórias ou inverificáveis'),
-  credibilityFlags: z
-    .array(z.enum([
-      'misleading_headline',
-      'missing_sources',
-      'emotional_language',
-      'unverified_claims',
-      'conspiracy_theory',
-      'satire',
-      'opinion_as_fact',
-      'selective_data',
-      'out_of_context',
-      'fake_news',
-      'lie',
-      'hypocrisy',
-      'incoherence',
-    ]))
-    .describe('Problemas detectados: incoerência, fake news, hipocrisia, mentira ou sinais editoriais'),
-  reasoning: z.string().describe('Justificativa breve (1 frase) da pontuação atribuída'),
+	fakeNewsScore: z
+		.number()
+		.min(1)
+		.max(10)
+		.describe(
+			"1 = totalmente confiável, 10 = altamente suspeito/desinformação",
+		),
+	politicalBias: z
+		.enum(["neutral", "left", "far_left", "right", "far_right"])
+		.describe("Viés político do conteúdo"),
+	isMilitant: z
+		.boolean()
+		.describe(
+			"É um post de cunho panfletário/militante, com intenção clara de mobilizar ou atacar",
+		),
+	hasIncoherence: z
+		.boolean()
+		.describe(
+			"Contém afirmações incoerentes, contraditórias ou inverificáveis",
+		),
+	credibilityFlags: z
+		.array(
+			z.enum([
+				"misleading_headline",
+				"missing_sources",
+				"emotional_language",
+				"unverified_claims",
+				"conspiracy_theory",
+				"satire",
+				"opinion_as_fact",
+				"selective_data",
+				"out_of_context",
+				"fake_news",
+				"lie",
+				"hypocrisy",
+				"incoherence",
+			]),
+		)
+		.describe(
+			"Problemas detectados: incoerência, fake news, hipocrisia, mentira ou sinais editoriais",
+		),
+	reasoning: z
+		.string()
+		.describe("Justificativa breve (1 frase) da pontuação atribuída"),
 });
 
 const CREDIBILITY_PROMPT = `Você é um fact-checker especialista. Analise a credibilidade desta notícia de forma objetiva e imparcial.
@@ -56,104 +68,119 @@ Avalie:
 Atenção especial às fontes: verifique se o texto cita fontes institucionais, relatórios oficiais, especialistas nominados ou links diretos. Falta completa de fontes ou dados inventados aumentam o score de fake news. Seja rigoroso mas justo. Notícias factuais de grandes veículos com boa apuração jornalística devem receber score 1 a 3.`;
 
 async function findRelatedFactChecks(title: string): Promise<string> {
-  try {
-    const embedding = await embedQuery(title);
-    const res = await query<{ title: string; source: string; content: string }>(
-      `SELECT title, source, content FROM news_articles
+	try {
+		const embedding = await embedQuery(title);
+		const res = await query<{ title: string; source: string; content: string }>(
+			`SELECT title, source, content FROM news_articles
        WHERE category = 'fact_check'
          AND embedding IS NOT NULL
          AND 1 - (embedding <=> $1::vector) >= 0.60
        ORDER BY embedding <=> $1::vector
        LIMIT 3`,
-      [vectorToSQL(embedding)]
-    );
-    if (!res.rows.length) return '';
-    const snippets = res.rows.map((r) =>
-      `• [${r.source}] ${r.title}: ${(r.content ?? '').slice(0, 200)}`
-    ).join('\n');
-    return `\nVERIFICAÇÕES DE FACT-CHECKERS BRASILEIROS RELACIONADAS:\n${snippets}\n`;
-  } catch {
-    return '';
-  }
+			[vectorToSQL(embedding)],
+		);
+		if (!res.rows.length) return "";
+		const snippets = res.rows
+			.map(
+				(r) => `• [${r.source}] ${r.title}: ${(r.content ?? "").slice(0, 200)}`,
+			)
+			.join("\n");
+		return `\nVERIFICAÇÕES DE FACT-CHECKERS BRASILEIROS RELACIONADAS:\n${snippets}\n`;
+	} catch {
+		return "";
+	}
 }
 
 export interface CredibilityResult {
-  fakeNewsScore: number;
-  politicalBias: string;
-  isMilitant: boolean;
-  hasIncoherence: boolean;
-  credibilityFlags: string[];
-  reasoning: string;
+	fakeNewsScore: number;
+	politicalBias: string;
+	isMilitant: boolean;
+	hasIncoherence: boolean;
+	credibilityFlags: string[];
+	reasoning: string;
 }
 
 export async function analyzeCredibility(
-  articleId: string,
-  title: string,
-  content: string,
-  source: string,
-  category: string,
-  abortSignal?: AbortSignal,
+	articleId: string,
+	title: string,
+	content: string,
+	source: string,
+	category: string,
+	abortSignal?: AbortSignal,
 ): Promise<CredibilityResult | null> {
-  const model = await getFastModel();
-  const factCheckContext = await findRelatedFactChecks(title);
+	const model = await getFastModel();
+	const factCheckContext = await findRelatedFactChecks(title);
 
-  let object;
-  try {
-    const res = await generateObject({
-      model,
-      schema: CredibilitySchema,
-      prompt: CREDIBILITY_PROMPT
-        .replace('{title}', title)
-        .replace('{source}', source)
-        .replace('{category}', category)
-        .replace('{content}', (content ?? '').slice(0, 5000))
-        .replace('{factCheckContext}', factCheckContext),
-      abortSignal,
-    });
-    object = res.object;
-  } catch (err) {
-    console.warn(`[credibility] Primary model failed: ${(err as Error).message}. Attempting cloud fallback...`);
-    const fallbackModel = await getCloudFallbackModel();
-    if (fallbackModel) {
-      try {
-        const res = await generateObject({
-          model: fallbackModel,
-          schema: CredibilitySchema,
-          prompt: CREDIBILITY_PROMPT
-            .replace('{title}', title)
-            .replace('{source}', source)
-            .replace('{category}', category)
-            .replace('{content}', (content ?? '').slice(0, 5000))
-            .replace('{factCheckContext}', factCheckContext),
-          abortSignal,
-        });
-        object = res.object;
-        console.log('[credibility] Analysis succeeded using cloud fallback model');
-      } catch (fallbackErr) {
-        console.error('[credibility] Cloud fallback model also failed:', (fallbackErr as Error).message);
-        return null;
-      }
-    } else {
-      console.error('[credibility] No cloud fallback model available');
-      return null;
-    }
-  }
+	let object;
+	try {
+		const res = await generateObject({
+			model,
+			schema: CredibilitySchema,
+			prompt: CREDIBILITY_PROMPT.replace("{title}", title)
+				.replace("{source}", source)
+				.replace("{category}", category)
+				.replace("{content}", (content ?? "").slice(0, 5000))
+				.replace("{factCheckContext}", factCheckContext),
+			abortSignal,
+		});
+		object = res.object;
+	} catch (err) {
+		console.warn(
+			`[credibility] Primary model failed: ${(err as Error).message}. Attempting cloud fallback...`,
+		);
+		const fallbackModel = await getCloudFallbackModel();
+		if (fallbackModel) {
+			try {
+				const res = await generateObject({
+					model: fallbackModel,
+					schema: CredibilitySchema,
+					prompt: CREDIBILITY_PROMPT.replace("{title}", title)
+						.replace("{source}", source)
+						.replace("{category}", category)
+						.replace("{content}", (content ?? "").slice(0, 5000))
+						.replace("{factCheckContext}", factCheckContext),
+					abortSignal,
+				});
+				object = res.object;
+				console.log(
+					"[credibility] Analysis succeeded using cloud fallback model",
+				);
+			} catch (fallbackErr) {
+				console.error(
+					"[credibility] Cloud fallback model also failed:",
+					(fallbackErr as Error).message,
+				);
+				return null;
+			}
+		} else {
+			console.error("[credibility] No cloud fallback model available");
+			return null;
+		}
+	}
 
-  try {
-    await query(
-      `UPDATE news_articles SET
+	try {
+		await query(
+			`UPDATE news_articles SET
          fake_news_score = $1, political_bias = $2, is_militant = $3,
          has_incoherence = $4, credibility_flags = $5, credibility_reasoning = $6
        WHERE id = $7`,
-      [
-        object.fakeNewsScore, object.politicalBias, object.isMilitant,
-        object.hasIncoherence, object.credibilityFlags, object.reasoning, articleId,
-      ],
-    );
+			[
+				object.fakeNewsScore,
+				object.politicalBias,
+				object.isMilitant,
+				object.hasIncoherence,
+				object.credibilityFlags,
+				object.reasoning,
+				articleId,
+			],
+		);
 
-    return object;
-  } catch (err) {
-    console.error('[credibility] database save failed:', (err as Error).message);
-    return null;
-  }
+		return object;
+	} catch (err) {
+		console.error(
+			"[credibility] database save failed:",
+			(err as Error).message,
+		);
+		return null;
+	}
 }
