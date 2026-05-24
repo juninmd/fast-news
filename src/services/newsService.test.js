@@ -1,227 +1,241 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchNews, FEED_SOURCES } from './newsService';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { FEED_SOURCES, fetchNews } from "./newsService";
 
 // Mocking the global fetch
 // eslint-disable-next-line no-undef
 global.fetch = vi.fn();
 
-describe('newsService', () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-        vi.useRealTimers();
-    });
+describe("newsService", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.useRealTimers();
+	});
 
-    it('should fetch news from multiple sources and aggregate them', async () => {
-        const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
-            { url: 'http://source2.com/rss', category: 'World' },
-        ];
+	it("should fetch news from multiple sources and aggregate them", async () => {
+		const mockSources = [
+			{ url: "http://source1.com/rss", category: "Tech" },
+			{ url: "http://source2.com/rss", category: "World" },
+		];
 
-        const mockResponse1 = {
-            status: 'ok',
-            feed: { title: 'Source 1' },
-            items: [
-                { title: 'News 1', pubDate: '2023-10-27 10:00:00', guid: '1', link: 'l1' },
-            ],
-        };
+		const mockResponse1 = {
+			status: "ok",
+			feed: { title: "Source 1" },
+			items: [
+				{
+					title: "News 1",
+					pubDate: "2023-10-27 10:00:00",
+					guid: "1",
+					link: "l1",
+				},
+			],
+		};
 
-        const mockResponse2 = {
-            status: 'ok',
-            feed: { title: 'Source 2' },
-            items: [
-                { title: 'News 2', pubDate: '2023-10-27 11:00:00', guid: '2', link: 'l2' },
-            ],
-        };
+		const mockResponse2 = {
+			status: "ok",
+			feed: { title: "Source 2" },
+			items: [
+				{
+					title: "News 2",
+					pubDate: "2023-10-27 11:00:00",
+					guid: "2",
+					link: "l2",
+				},
+			],
+		};
 
-        fetch
-            .mockResolvedValueOnce({
-                json: () => Promise.resolve(mockResponse1),
-            })
-            .mockResolvedValueOnce({
-                json: () => Promise.resolve(mockResponse2),
-            });
+		fetch
+			.mockResolvedValueOnce({
+				json: () => Promise.resolve(mockResponse1),
+			})
+			.mockResolvedValueOnce({
+				json: () => Promise.resolve(mockResponse2),
+			});
 
-        const news = await fetchNews(mockSources);
+		const news = await fetchNews(mockSources);
 
-        expect(fetch).toHaveBeenCalledTimes(2);
-        expect(news).toHaveLength(2);
+		expect(fetch).toHaveBeenCalledTimes(2);
+		expect(news).toHaveLength(2);
 
-        // Should be sorted by date (newest first)
-        expect(news[0].title).toBe('News 2');
-        expect(news[1].title).toBe('News 1');
+		// Should be sorted by date (newest first)
+		expect(news[0].title).toBe("News 2");
+		expect(news[1].title).toBe("News 1");
 
-        expect(news[0].source).toBe('Source 2');
-        expect(news[0].category).toBe('World');
-    });
+		expect(news[0].source).toBe("Source 2");
+		expect(news[0].category).toBe("World");
+	});
 
-    it('should handle fetch errors gracefully', async () => {
-         const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
-        ];
+	it("should handle fetch errors gracefully", async () => {
+		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
 
-        fetch.mockRejectedValueOnce(new Error('Network Error'));
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		fetch.mockRejectedValueOnce(new Error("Network Error"));
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-        const news = await fetchNews(mockSources);
+		const news = await fetchNews(mockSources);
 
-        expect(news).toHaveLength(0);
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Error fetching'), expect.any(Error));
+		expect(news).toHaveLength(0);
+		expect(consoleSpy).toHaveBeenCalledWith(
+			expect.stringContaining("Error fetching"),
+			expect.any(Error),
+		);
 
-        consoleSpy.mockRestore();
-    });
+		consoleSpy.mockRestore();
+	});
 
-    it('should ignore failed api responses (status != ok)', async () => {
-        const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
-        ];
+	it("should ignore failed api responses (status != ok)", async () => {
+		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
 
-        fetch.mockResolvedValueOnce({
-            json: () => Promise.resolve({ status: 'error' }),
-        });
+		fetch.mockResolvedValueOnce({
+			json: () => Promise.resolve({ status: "error" }),
+		});
 
-        const news = await fetchNews(mockSources);
+		const news = await fetchNews(mockSources);
 
-        expect(news).toHaveLength(0);
-    });
+		expect(news).toHaveLength(0);
+	});
 
-    it('should handle invalid dates in sorting', async () => {
-         const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
-        ];
+	it("should handle invalid dates in sorting", async () => {
+		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
 
-        const mockResponse = {
-            status: 'ok',
-            feed: { title: 'Source 1' },
-            items: [
-                { title: 'News 1', pubDate: 'invalid-date', guid: '1', link: 'l1' },
-                 { title: 'News 2', pubDate: '2023-10-27 10:00:00', guid: '2', link: 'l2' },
-            ],
-        };
+		const mockResponse = {
+			status: "ok",
+			feed: { title: "Source 1" },
+			items: [
+				{ title: "News 1", pubDate: "invalid-date", guid: "1", link: "l1" },
+				{
+					title: "News 2",
+					pubDate: "2023-10-27 10:00:00",
+					guid: "2",
+					link: "l2",
+				},
+			],
+		};
 
-        fetch.mockResolvedValueOnce({
-             json: () => Promise.resolve(mockResponse),
-        });
+		fetch.mockResolvedValueOnce({
+			json: () => Promise.resolve(mockResponse),
+		});
 
-        const news = await fetchNews(mockSources);
+		const news = await fetchNews(mockSources);
 
-        // Invalid date should be pushed to the end or treated as older
-        // Logic: if (isNaN(dateA)) return 1; (A is greater/later in index)
-        // if (isNaN(dateB)) return -1;
-        // So News 1 (invalid) should be after News 2
+		// Invalid date should be pushed to the end or treated as older
+		// Logic: if (isNaN(dateA)) return 1; (A is greater/later in index)
+		// if (isNaN(dateB)) return -1;
+		// So News 1 (invalid) should be after News 2
 
-        expect(news[0].title).toBe('News 2');
-        expect(news[1].title).toBe('News 1');
-    });
+		expect(news[0].title).toBe("News 2");
+		expect(news[1].title).toBe("News 1");
+	});
 
-    it('should use item link as id if guid is missing', async () => {
-        const mockSources = [
-             { url: 'http://source1.com/rss', category: 'Tech' },
-        ];
+	it("should use item link as id if guid is missing", async () => {
+		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
 
-        const mockResponse = {
-            status: 'ok',
-            feed: { title: 'Source 1' },
-            items: [
-                { title: 'News 1', pubDate: '2023-10-27 10:00:00', link: 'http://link.com/1' },
-            ],
-        };
+		const mockResponse = {
+			status: "ok",
+			feed: { title: "Source 1" },
+			items: [
+				{
+					title: "News 1",
+					pubDate: "2023-10-27 10:00:00",
+					link: "http://link.com/1",
+				},
+			],
+		};
 
-        fetch.mockResolvedValueOnce({
-            json: () => Promise.resolve(mockResponse),
-        });
+		fetch.mockResolvedValueOnce({
+			json: () => Promise.resolve(mockResponse),
+		});
 
-        const news = await fetchNews(mockSources);
-        expect(news[0].id).toBe('http://link.com/1');
-    });
+		const news = await fetchNews(mockSources);
+		expect(news[0].id).toBe("http://link.com/1");
+	});
 
-     it('should use invalid date if both are invalid', async () => {
-        const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
-        ];
+	it("should use invalid date if both are invalid", async () => {
+		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
 
-        const mockResponse = {
-            status: 'ok',
-            feed: { title: 'Source 1' },
-            items: [
-                { title: 'News 1', pubDate: 'invalid-date-1', guid: '1', link: 'l1' },
-                 { title: 'News 2', pubDate: 'invalid-date-2', guid: '2', link: 'l2' },
-            ],
-        };
+		const mockResponse = {
+			status: "ok",
+			feed: { title: "Source 1" },
+			items: [
+				{ title: "News 1", pubDate: "invalid-date-1", guid: "1", link: "l1" },
+				{ title: "News 2", pubDate: "invalid-date-2", guid: "2", link: "l2" },
+			],
+		};
 
-        fetch.mockResolvedValueOnce({
-             json: () => Promise.resolve(mockResponse),
-        });
+		fetch.mockResolvedValueOnce({
+			json: () => Promise.resolve(mockResponse),
+		});
 
-        const news = await fetchNews(mockSources);
-        // The sorting stability might depend on browser implementation if both return 1
-        // But checking coverage is main goal.
-        expect(news).toHaveLength(2);
-    });
+		const news = await fetchNews(mockSources);
+		// The sorting stability might depend on browser implementation if both return 1
+		// But checking coverage is main goal.
+		expect(news).toHaveLength(2);
+	});
 
-    it('should use default FEED_SOURCES if no sources provided', async () => {
-        vi.useFakeTimers();
-        // We will mock fetch to return empty json to avoid real network calls
-        fetch.mockResolvedValue({
-             json: () => Promise.resolve({ status: 'ok', feed: {}, items: [] }),
-        });
+	it("should use default FEED_SOURCES if no sources provided", async () => {
+		vi.useFakeTimers();
+		// We will mock fetch to return empty json to avoid real network calls
+		fetch.mockResolvedValue({
+			json: () => Promise.resolve({ status: "ok", feed: {}, items: [] }),
+		});
 
-        const promise = fetchNews();
+		const promise = fetchNews();
 
-        // Fast-forward time to complete all delayed batches
-        await vi.runAllTimersAsync();
+		// Fast-forward time to complete all delayed batches
+		await vi.runAllTimersAsync();
 
-        await promise;
-        expect(fetch).toHaveBeenCalledTimes(FEED_SOURCES.length);
-        vi.useRealTimers();
-    });
+		await promise;
+		expect(fetch).toHaveBeenCalledTimes(FEED_SOURCES.length);
+		vi.useRealTimers();
+	});
 
-    it('should append rss2jsonApiKey to fetch URL if provided', async () => {
-        const mockSources = [
-            { url: 'http://source1.com/rss', category: 'Tech' },
-        ];
-        const apiKey = 'test-api-key';
+	it("should append rss2jsonApiKey to fetch URL if provided", async () => {
+		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
+		const apiKey = "test-api-key";
 
-        fetch.mockResolvedValue({
-            json: () => Promise.resolve({ status: 'ok', feed: { title: 'S1' }, items: [] }),
-        });
+		fetch.mockResolvedValue({
+			json: () =>
+				Promise.resolve({ status: "ok", feed: { title: "S1" }, items: [] }),
+		});
 
-        await fetchNews(mockSources, apiKey);
+		await fetchNews(mockSources, apiKey);
 
-        const expectedUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(mockSources[0].url)}&api_key=${apiKey}`;
-        expect(fetch).toHaveBeenCalledWith(expectedUrl);
-    });
+		const expectedUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(mockSources[0].url)}&api_key=${apiKey}`;
+		expect(fetch).toHaveBeenCalledWith(expectedUrl);
+	});
 
-    it('should handle sorting when dateB is invalid', async () => {
-        const mockSources = [
-             { url: 'http://source1.com/rss', category: 'Tech' },
-        ];
+	it("should handle sorting when dateB is invalid", async () => {
+		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
 
-         const mockResponse2 = {
-            status: 'ok',
-            feed: { title: 'Source 1' },
-            items: [
-                { title: 'News 2', pubDate: '2023-10-27 10:00:00', guid: '2', link: 'l2' },
-                { title: 'News 1', pubDate: 'invalid-date', guid: '1', link: 'l1' },
-            ],
-        };
+		const mockResponse2 = {
+			status: "ok",
+			feed: { title: "Source 1" },
+			items: [
+				{
+					title: "News 2",
+					pubDate: "2023-10-27 10:00:00",
+					guid: "2",
+					link: "l2",
+				},
+				{ title: "News 1", pubDate: "invalid-date", guid: "1", link: "l1" },
+			],
+		};
 
-        fetch.mockResolvedValueOnce({
-             json: () => Promise.resolve(mockResponse2),
-        });
+		fetch.mockResolvedValueOnce({
+			json: () => Promise.resolve(mockResponse2),
+		});
 
-        const news = await fetchNews(mockSources);
-        expect(news[0].title).toBe('News 2');
-        expect(news[1].title).toBe('News 1');
-    });
+		const news = await fetchNews(mockSources);
+		expect(news[0].title).toBe("News 2");
+		expect(news[1].title).toBe("News 1");
+	});
 
-    it('should have a valid list of FEED_SOURCES', () => {
-        expect(FEED_SOURCES.length).toBeGreaterThan(50);
-        FEED_SOURCES.forEach(source => {
-            expect(source).toHaveProperty('url');
-            expect(source).toHaveProperty('category');
-            expect(typeof source.url).toBe('string');
-            expect(typeof source.category).toBe('string');
-            expect(source.url.startsWith('http')).toBe(true);
-        });
-    });
+	it("should have a valid list of FEED_SOURCES", () => {
+		expect(FEED_SOURCES.length).toBeGreaterThan(50);
+		FEED_SOURCES.forEach((source) => {
+			expect(source).toHaveProperty("url");
+			expect(source).toHaveProperty("category");
+			expect(typeof source.url).toBe("string");
+			expect(typeof source.category).toBe("string");
+			expect(source.url.startsWith("http")).toBe(true);
+		});
+	});
 });
