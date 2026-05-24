@@ -1,7 +1,7 @@
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import { query } from '../database/client.js';
-import { getFastModel } from './aiProvider.js';
+import { getFastModel, getCloudFallbackModel } from './aiProvider.js';
 import { embedQuery, vectorToSQL } from './embeddings.js';
 
 const CredibilitySchema = z.object({
@@ -47,13 +47,13 @@ CATEGORIA: {category}
 CONTEÚDO: {content}
 {factCheckContext}
 Avalie:
-1. Score de fake news (1=confiável, 10=desinformação)
+1. Score de fake news (1=totalmente confiável e factual de grande veículo, 10=desinformação deliberada/boato)
 2. Viés político do conteúdo (não da fonte, mas do texto em si)
-3. Se é panfletário/militante
-4. Se há incoerências internas, hipocrisia, mentiras ou alegações não sustentadas
-5. Flags de problemas, usando fake_news, lie, hypocrisy ou incoherence quando houver evidência
+3. Se é panfletário/militante (linguagem muito emotiva, incitação, ataques pessoais ou ativismo explícito)
+4. Se há incoerências internas, contradições, mentiras ou alegações sérias sem qualquer menção a fontes/evidências
+5. Flags de problemas, usando fake_news, lie, hypocrisy ou incoherence quando houver evidência clara no texto
 
-Seja rigoroso mas justo. Notícias factuais de grandes veículos tendem a score 1-3.`;
+Atenção especial às fontes: verifique se o texto cita fontes institucionais, relatórios oficiais, especialistas nominados ou links diretos. Falta completa de fontes ou dados inventados aumentam o score de fake news. Seja rigoroso mas justo. Notícias factuais de grandes veículos com boa apuração jornalística devem receber score 1 a 3.`;
 
 async function findRelatedFactChecks(title: string): Promise<string> {
   try {
@@ -94,23 +94,52 @@ export async function analyzeCredibility(
   category: string,
   abortSignal?: AbortSignal,
 ): Promise<CredibilityResult | null> {
+  const model = await getFastModel();
+  const factCheckContext = await findRelatedFactChecks(title);
+
+  let object;
   try {
-    const [model, factCheckContext] = await Promise.all([
-      getFastModel(),
-      findRelatedFactChecks(title),
-    ]);
-    const { object } = await generateObject({
+    const res = await generateObject({
       model,
       schema: CredibilitySchema,
       prompt: CREDIBILITY_PROMPT
         .replace('{title}', title)
         .replace('{source}', source)
         .replace('{category}', category)
-        .replace('{content}', (content ?? '').slice(0, 1200))
+        .replace('{content}', (content ?? '').slice(0, 5000))
         .replace('{factCheckContext}', factCheckContext),
       abortSignal,
     });
+    object = res.object;
+  } catch (err) {
+    console.warn(`[credibility] Primary model failed: ${(err as Error).message}. Attempting cloud fallback...`);
+    const fallbackModel = await getCloudFallbackModel();
+    if (fallbackModel) {
+      try {
+        const res = await generateObject({
+          model: fallbackModel,
+          schema: CredibilitySchema,
+          prompt: CREDIBILITY_PROMPT
+            .replace('{title}', title)
+            .replace('{source}', source)
+            .replace('{category}', category)
+            .replace('{content}', (content ?? '').slice(0, 5000))
+            .replace('{factCheckContext}', factCheckContext),
+          abortSignal,
+        });
+        object = res.object;
+        console.log('[credibility] Analysis succeeded using cloud fallback model');
+      } catch (fallbackErr) {
+        console.error('[credibility] Cloud fallback model also failed:', (fallbackErr as Error).message);
+        return null;
+      }
+    } else {
+      console.error('[credibility] No cloud fallback model available');
+      return null;
+    }
+  }
 
+  try {
     await query(
       `UPDATE news_articles SET
          fake_news_score = $1, political_bias = $2, is_militant = $3,
@@ -124,7 +153,7 @@ export async function analyzeCredibility(
 
     return object;
   } catch (err) {
-    console.error('[credibility] analysis failed:', (err as Error).message);
+    console.error('[credibility] database save failed:', (err as Error).message);
     return null;
   }
 }
