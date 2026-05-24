@@ -13,10 +13,11 @@ import React, { useState } from "react";
 const Settings = ({
 	isOpen,
 	onClose,
-	onSave = () => {},
+	onSave = () => {
+		/* No-op */
+	},
 	initialCustomFeeds = [],
-}) => {
-	const [rss2jsonApiKey, setRss2jsonApiKey] = useState(
+	}) => {	const [rss2jsonApiKey, setRss2jsonApiKey] = useState(
 		() => localStorage.getItem("rss2json_api_key") || "",
 	);
 	const [autoSummarize, setAutoSummarize] = useState(

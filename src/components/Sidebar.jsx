@@ -12,7 +12,7 @@ import {
 	Headphones,
 	Heart,
 	LayoutGrid,
-	Map,
+	Map as MapIcon,
 	Microscope,
 	Newspaper,
 	Plane,
@@ -26,7 +26,7 @@ import React from "react";
 const CATEGORY_ICONS = {
 	Todas: LayoutGrid,
 	Tecnologia: Cpu,
-	Brasil: Map,
+	Brasil: MapIcon,
 	Mundo: Globe,
 	Negócios: Briefcase,
 	Ciência: Microscope,
