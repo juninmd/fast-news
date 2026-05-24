@@ -21,8 +21,25 @@
 			"!**/Thumbs.db"
 		]
 	},
+	"css": {
+		"parser": {
+			"cssModules": true,
+			"allowWrongLinewards": true
+		},
+		"linter": {
+			"enabled": true
+		}
+	},
 	"javascript": { "formatter": { "quoteStyle": "double" } },
 	"overrides": [
+		{
+			"includes": ["**/*.css"],
+			"css": {
+				"parser": {
+					"tailwindDirectives": true
+				}
+			}
+		},
 		{
 			"includes": ["**/*.{js,jsx}"],
 			"linter": {
