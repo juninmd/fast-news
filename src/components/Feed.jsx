@@ -54,11 +54,13 @@ const Feed = ({
 
   useEffect(() => {
     sourcesRef.current = shuffledSources;
-    setNews([]);
-    setNextBatchIndex(0);
-    setHasMore(shuffledSources.length > 0);
-    setError(null);
-    setInit(true);
+    queueMicrotask(() => {
+      setNews([]);
+      setNextBatchIndex(0);
+      setHasMore(shuffledSources.length > 0);
+      setError(null);
+      setInit(true);
+    });
   }, [shuffledSources]);
 
   const loadMoreNews = useCallback(async (isRetry = false) => {
@@ -163,9 +165,9 @@ const Feed = ({
 
   useEffect(() => {
     if (init && shuffledSources.length > 0 && news.length === 0 && !loading) {
-        loadMoreNews();
+        queueMicrotask(() => loadMoreNews());
     }
-  }, [init, shuffledSources.length, news.length, loading]);
+  }, [init, shuffledSources.length, news.length, loading, loadMoreNews]);
 
   const filteredNews = useMemo(() => {
       let filtered = news;
