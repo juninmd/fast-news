@@ -3,7 +3,7 @@ import { X, BookmarkCheck, Trash2, ExternalLink, Clock, Calendar } from 'lucide-
 import { getBookmarks } from '../utils/bookmarks';
 
 const BookmarkPanel = ({ isOpen, onClose }) => {
-  const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarks, setBookmarks] = useState(() => getBookmarks());
 
   const refreshBookmarks = useCallback(() => {
     setBookmarks(getBookmarks());
@@ -11,7 +11,7 @@ const BookmarkPanel = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      refreshBookmarks();
+      queueMicrotask(() => refreshBookmarks());
     }
   }, [isOpen, refreshBookmarks]);
 
