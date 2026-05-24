@@ -23,8 +23,7 @@
 	},
 	"css": {
 		"parser": {
-			"cssModules": true,
-			"allowWrongLinewards": true
+			"cssModules": true
 		},
 		"linter": {
 			"enabled": true
