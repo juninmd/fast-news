@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { streamText } from 'ai';
+import { generateText } from 'ai';
 import { getAllTrackedTopics, getTopicLatestAnalysis } from '../services/analysis.js';
 import { listActiveStories } from '../services/correlation.js';
 import { getActiveOpportunities } from '../services/financial.js';
@@ -126,14 +126,12 @@ export async function buildAndSendDigest(): Promise<void> {
     .replace('{financial}', financialSection || 'Sem oportunidades.')
     .replace('{date}', new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }));
 
-  const { textStream } = streamText({
+  const { text } = await generateText({
     model,
     prompt: fullPrompt,
     maxTokens: 1000,
     abortSignal: AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
   });
-  let text = '';
-  for await (const chunk of textStream) { text += chunk; }
 
   const topUrl = topArticles[0]?.url;
   await sendDigest(text, topUrl);

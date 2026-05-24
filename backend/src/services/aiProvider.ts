@@ -1,95 +1,82 @@
-/**
- * AI Provider factory using Vercel AI SDK.
- * Troque de provider com a env AI_PROVIDER: ollama | google | openai | anthropic
- */
 import { config } from '../config/env.js';
+import { createProviderRegistry } from 'ai';
+import { google } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { createOllama } from 'ollama-ai-provider';
 import type { LanguageModel, EmbeddingModel } from 'ai';
 
 type Provider = 'ollama' | 'google' | 'openai' | 'anthropic' | 'openrouter';
 
 const provider = (): Provider => config.aiProvider as Provider;
 
-// ── Ollama (local, nativo) ────────────────────────────────────────────────────
-async function ollamaLanguageModel(modelId?: string): Promise<LanguageModel> {
-  const { createOllama } = await import('ollama-ai-provider');
-  const ollama = createOllama({ baseURL: config.ollama.baseUrl.replace(/\/v1$/, '/api') });
-  return ollama(modelId ?? config.ollama.model);
-}
+// OpenRouter uses OpenAI client setup with custom endpoint/key
+const openrouterProvider = createOpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: config.openrouterApiKey,
+});
 
-async function ollamaEmbeddingModel(): Promise<EmbeddingModel<string>> {
-  const { createOllama } = await import('ollama-ai-provider');
-  const ollama = createOllama({ baseURL: config.ollama.baseUrl.replace(/\/v1$/, '/api') });
-  return ollama.embedding(config.ollama.embeddingModel);
-}
+const ollamaProvider = createOllama({
+  baseURL: config.ollama.baseUrl.replace(/\/v1$/, '/api'),
+});
 
-// ── Google Gemini ─────────────────────────────────────────────────────────────
-async function googleLanguageModel(modelId?: string): Promise<LanguageModel> {
-  process.env['GOOGLE_GENERATIVE_AI_API_KEY'] = config.geminiApiKey;
-  const { google } = await import('@ai-sdk/google');
-  return google(modelId ?? (config.ai.analysisModel || 'gemini-1.5-pro'));
-}
+const googleProvider = google;
+const openaiProvider = createOpenAI({ apiKey: config.openaiApiKey });
+const anthropicProvider = anthropic;
 
-async function googleEmbeddingModel(): Promise<EmbeddingModel<string>> {
-  process.env['GOOGLE_GENERATIVE_AI_API_KEY'] = config.geminiApiKey;
-  const { google } = await import('@ai-sdk/google');
-  return google.textEmbeddingModel(config.ai.embeddingModel || 'text-embedding-004');
-}
+// Unified AI SDK Provider Registry
+const registry = createProviderRegistry({
+  google: googleProvider,
+  openai: openaiProvider,
+  anthropic: anthropicProvider,
+  openrouter: openrouterProvider,
+  ollama: ollamaProvider,
+});
 
-// ── OpenAI ────────────────────────────────────────────────────────────────────
-async function openaiLanguageModel(modelId?: string): Promise<LanguageModel> {
-  process.env['OPENAI_API_KEY'] = config.openaiApiKey;
-  const { openai } = await import('@ai-sdk/openai');
-  return openai(modelId ?? (config.ai.analysisModel || 'gpt-4o-mini'));
-}
-
-async function openaiEmbeddingModel(): Promise<EmbeddingModel<string>> {
-  process.env['OPENAI_API_KEY'] = config.openaiApiKey;
-  const { openai } = await import('@ai-sdk/openai');
-  return openai.embedding(config.ai.embeddingModel || 'text-embedding-3-small');
-}
-
-// ── Anthropic ─────────────────────────────────────────────────────────────────
-async function anthropicLanguageModel(modelId?: string): Promise<LanguageModel> {
-  process.env['ANTHROPIC_API_KEY'] = config.anthropicApiKey;
-  const { anthropic } = await import('@ai-sdk/anthropic');
-  return anthropic(modelId ?? (config.ai.analysisModel || 'claude-3-5-haiku-20241022'));
-}
-
-// ── OpenRouter (OpenAI-compat) ────────────────────────────────────────────────
-async function openrouterLanguageModel(modelId?: string): Promise<LanguageModel> {
-  const { createOpenAI } = await import('@ai-sdk/openai');
-  const openrouter = createOpenAI({
-    baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: config.openrouterApiKey,
-  });
-  return openrouter(modelId ?? config.openrouterModel);
-}
-
-// ── Public API ────────────────────────────────────────────────────────────────
 export async function getLanguageModel(modelId?: string): Promise<LanguageModel> {
-  switch (provider()) {
-    case 'google':      return googleLanguageModel(modelId);
-    case 'openai':      return openaiLanguageModel(modelId);
-    case 'anthropic':   return anthropicLanguageModel(modelId);
-    case 'openrouter':  return openrouterLanguageModel(modelId);
-    default:            return ollamaLanguageModel(modelId);
+  const p = provider();
+  let id = modelId;
+  if (!id) {
+    if (p === 'google') id = config.ai.analysisModel || 'gemini-1.5-pro';
+    else if (p === 'openai') id = config.ai.analysisModel || 'gpt-4o-mini';
+    else if (p === 'anthropic') id = config.ai.analysisModel || 'claude-3-5-haiku-20241022';
+    else if (p === 'openrouter') id = config.openrouterModel;
+    else id = config.ollama.model;
   }
+  return registry.languageModel(`${p}:${id}`);
 }
 
 export async function getFastModel(): Promise<LanguageModel> {
-  switch (provider()) {
-    case 'google':      return googleLanguageModel(config.ai.fastModel || 'gemini-1.5-flash');
-    case 'openai':      return openaiLanguageModel(config.ai.fastModel || 'gpt-4o-mini');
-    case 'anthropic':   return anthropicLanguageModel(config.ai.fastModel);
-    case 'openrouter':  return openrouterLanguageModel(config.ai.fastModel);
-    default:            return ollamaLanguageModel(config.ollama.model);
-  }
+  const p = provider();
+  let id;
+  if (p === 'google') id = config.ai.fastModel || 'gemini-1.5-flash';
+  else if (p === 'openai') id = config.ai.fastModel || 'gpt-4o-mini';
+  else if (p === 'anthropic') id = config.ai.fastModel || 'claude-3-5-haiku-20241022';
+  else if (p === 'openrouter') id = config.ai.fastModel || 'anthropic/claude-3-haiku';
+  else id = config.ollama.model;
+  return registry.languageModel(`${p}:${id}`);
 }
 
 export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
-  switch (provider()) {
-    case 'google':  return googleEmbeddingModel();
-    case 'openai':  return openaiEmbeddingModel();
-    default:        return ollamaEmbeddingModel();  // ollama / anthropic / openrouter fallback
+  const p = provider();
+  if (p === 'google') {
+    return google.textEmbeddingModel(config.ai.embeddingModel || 'text-embedding-004');
   }
+  if (p === 'openai') {
+    return openaiProvider.embedding(config.ai.embeddingModel || 'text-embedding-3-small');
+  }
+  return ollamaProvider.embedding(config.ollama.embeddingModel);
+}
+
+export async function getCloudFallbackModel(): Promise<LanguageModel | null> {
+  if (config.geminiApiKey) {
+    return registry.languageModel(`google:${config.ai.fastModel || 'gemini-1.5-flash'}`);
+  }
+  if (config.openaiApiKey) {
+    return registry.languageModel(`openai:${config.ai.fastModel || 'gpt-4o-mini'}`);
+  }
+  if (config.anthropicApiKey) {
+    return registry.languageModel(`anthropic:${config.ai.fastModel || 'claude-3-5-haiku-20241022'}`);
+  }
+  return null;
 }
