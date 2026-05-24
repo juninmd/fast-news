@@ -1,8 +1,8 @@
-export { NewsCard } from './NewsCard';
-export { CategoryTabs } from './CategoryTabs';
-export { SearchModal } from './SearchModal';
-export { Sidebar } from './Sidebar';
-export { Header } from './Header';
-export { SkeletonCard } from './SkeletonCard';
-export { TopNewsSection } from './TopNewsSection';
-export { ArticleModal } from './ArticleModal';
+export { ArticleModal } from "./ArticleModal";
+export { CategoryTabs } from "./CategoryTabs";
+export { Header } from "./Header";
+export { NewsCard } from "./NewsCard";
+export { SearchModal } from "./SearchModal";
+export { Sidebar } from "./Sidebar";
+export { SkeletonCard } from "./SkeletonCard";
+export { TopNewsSection } from "./TopNewsSection";
