@@ -381,10 +381,38 @@ async function sendLongMessage(ctx: Context, text: string): Promise<void> {
 			.catch(() => ctx.reply(chunk));
 }
 export async function startBot(): Promise<void> {
-	if (config.telegramEnabled && config.telegramBotToken) {
-		getBot().launch().catch(console.error);
-		console.log("[Telegram] Bot started.");
+	if (!config.telegramEnabled || !config.telegramBotToken) return;
+
+	const b = getBot();
+
+	// Clear any stale webhook that may block polling
+	await b.telegram
+		.deleteWebhook({ drop_pending_updates: true })
+		.catch(() => {});
+
+	async function launchWithRetry(attempt = 1): Promise<void> {
+		try {
+			await b.launch();
+			console.log("[Telegram] Bot started successfully.");
+		} catch (err) {
+			const msg = (err as Error).message;
+			console.error(`[Telegram] Bot launch attempt ${attempt} failed: ${msg}`);
+			if (attempt < 5 && /409|Conflict/.test(msg)) {
+				const delay = Math.min(1_000 * 2 ** (attempt - 1), 30_000);
+				console.log(`[Telegram] Retrying in ${delay / 1000}s...`);
+				await new Promise((r) => setTimeout(r, delay));
+				return launchWithRetry(attempt + 1);
+			}
+			if (/401|Unauthorized/.test(msg)) {
+				console.error("[Telegram] Invalid bot token — aborting.");
+				return;
+			}
+		}
 	}
+
+	launchWithRetry().catch((e) =>
+		console.error("[Telegram] Bot failed to start:", (e as Error).message),
+	);
 }
 export async function stopBot(): Promise<void> {
 	bot?.stop("SIGTERM");
