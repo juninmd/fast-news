@@ -7,18 +7,13 @@ const Settings = lazy(() => import('./components/Settings'));
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return true;
-    }
-    return false;
+    return Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [aiConfig, setAiConfig] = useState(() => {
     const autoSummarizeVal = localStorage.getItem('auto_summarize');
     return {
-      geminiApiKey: localStorage.getItem('gemini_api_key') || '',
-      aiProvider: localStorage.getItem('ai_provider') || 'gemini',
       aiSdkProvider: localStorage.getItem('ai_sdk_provider') || 'openai',
       aiSdkApiKey: localStorage.getItem('ai_sdk_api_key') || '',
       aiSdkModel: localStorage.getItem('ai_sdk_model') || '',
@@ -43,9 +38,7 @@ function App() {
   };
 
   const isAiConfigured = () => {
-    if (aiConfig.aiProvider === 'gemini') return !!aiConfig.geminiApiKey;
-    if (aiConfig.aiProvider === 'ai-sdk') return !!aiConfig.aiSdkApiKey;
-    return false;
+    return !!aiConfig.aiSdkApiKey;
   };
 
   return (
@@ -60,6 +53,7 @@ function App() {
 
             <div className="flex items-center space-x-4">
               <button
+                type="button"
                 onClick={toggleTheme}
                 className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
                 title={darkMode ? "Modo claro" : "Modo escuro"}
@@ -67,7 +61,8 @@ function App() {
                 {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
               <button
-                onClick={() => setIsSettingsOpen(true)}
+                type="button"
+                onClick={() => { setIsSettingsOpen(true); }}
                 className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
                 title="Configurações"
               >
@@ -94,7 +89,8 @@ function App() {
                 <p className="text-sm text-yellow-700 dark:text-yellow-200">
                   Por favor configure seu Provedor de IA e Chave de API nas configurações para habilitar os resumos inteligentes.
                   <button
-                    onClick={() => setIsSettingsOpen(true)}
+                    type="button"
+                    onClick={() => { setIsSettingsOpen(true); }}
                     className="font-medium underline hover:text-yellow-600 dark:hover:text-yellow-100 ml-2"
                   >
                     Configurações
@@ -114,7 +110,7 @@ function App() {
         <Suspense fallback={null}>
           <Settings
             isOpen={isSettingsOpen}
-            onClose={() => setIsSettingsOpen(false)}
+            onClose={() => { setIsSettingsOpen(false); }}
             onSave={handleSaveSettings}
           />
         </Suspense>
