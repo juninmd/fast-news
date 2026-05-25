@@ -5,6 +5,7 @@ import { getFastModel } from "./aiProvider.js";
 import { analyzeTopicWithRAG, getAllTrackedTopics } from "./analysis.js";
 import { getStoryGraph, listActiveStories } from "./correlation.js";
 import { getActiveOpportunities } from "./financial.js";
+import { fetchFullArticle } from "./fullArticle.js";
 import { generateGlobalPulse } from "./intelligence.js";
 import { searchSimilarArticles } from "./rag.js";
 import {
@@ -20,6 +21,7 @@ import {
 	fetchRelatedArticles,
 	generateContext,
 	generateSummary,
+	rewriteMisleadingTitle,
 } from "./telegram_logic.js";
 
 const FAST_NEWS_URL = "https://fast-news.antonio-code.duckdns.org";
@@ -180,6 +182,7 @@ export interface TelegramArticle {
 	source: string;
 	category: string;
 	content: string;
+	fullContent?: string;
 	company?: string;
 	publishedAt?: Date | null;
 	imageUrl?: string;
@@ -254,15 +257,24 @@ export async function postArticleToTelegram(
 	const activeStories = await listActiveStories(50).catch(() => []);
 	const storyMap = new Map(activeStories.map((s) => [s.id, s]));
 	const fastModel = await getFastModel();
-	const [summary, context] = await Promise.all([
-		generateSummary(article.title, article.content, fastModel),
-		generateContext(
-			article.title,
-			article.content,
-			article.category,
-			fastModel,
-		),
+	const fullContent =
+		article.fullContent ||
+		(await fetchFullArticle(article.url).catch(() => null)) ||
+		article.content;
+
+	const isMisleading = (article.credibilityFlags ?? []).some((f) =>
+		["misleading_headline", "out_of_context", "fake_news"].includes(f),
+	);
+
+	const [summary, context, rewrittenTitle] = await Promise.all([
+		generateSummary(article.title, fullContent, fastModel),
+		generateContext(article.title, fullContent, article.category, fastModel),
+		isMisleading
+			? rewriteMisleadingTitle(article.title, fullContent, fastModel)
+			: null,
 	]);
+
+	const displayTitle = rewrittenTitle || article.title;
 	const displaySummary =
 		summary ||
 		article.content
@@ -290,8 +302,8 @@ export async function postArticleToTelegram(
 		? `\n\n${SEPARATOR}\n🔗 <b>Veja também</b>\n${related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 72))}</a>`).join("\n")}`
 		: "";
 	const breakingLabel = isBreaking ? `🔴 <b>URGENTE</b>  ·  ` : "";
-	const sourceHeader = `${breakingLabel}${CATEGORY_EMOJI[article.category] ?? "📰"} <b>${article.category.toUpperCase()}</b>  ·  ${article.company ? `${article.company} · ` : ""}${article.source}${ago ? `  ·  <i>${ago}</i>` : ""}`;
-	const message = `${sourceHeader}\n${SEPARATOR}\n<b>${escapeHtml(article.title)}</b>\n\n<i>${escapeHtml(displaySummary)}</i>${context ? `\n\n💡 <i>${escapeHtml(context)}</i>` : ""}${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n#${article.category.replace(/\W/g, "_")}`;
+	const sourceHeader = `${breakingLabel}${CATEGORY_EMOJI[article.category] ?? "📰"} <b>${article.category.toUpperCase()}</b>  ·  ${article.company && article.company !== article.source ? `${article.company} · ` : ""}${article.source}${ago ? `  ·  <i>${ago}</i>` : ""}`;
+	const message = `${sourceHeader}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>\n\n<i>${escapeHtml(displaySummary)}</i>${context ? `\n\n💡 <i>${escapeHtml(context)}</i>` : ""}${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n#${article.category.replace(/\W/g, "_")}`;
 	const inlineButtons = [
 		[
 			{ text: "👍 Curtir", callback_data: `fb:like:${article.id}` },

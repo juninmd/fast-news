@@ -1,6 +1,7 @@
 import Bull from "bull";
 import { config } from "../config/env.js";
 import { analyzeCredibility } from "./credibility.js";
+import { fetchFullArticle } from "./fullArticle.js";
 import type { TelegramArticle } from "./telegram.js";
 import { enqueueTelegramPosts } from "./telegramQueue.js";
 
@@ -27,10 +28,14 @@ function getQueue(): Bull.Queue<CredibilityJob> {
 
 			if (article.category === "fact_check") return;
 
+			const fullContent =
+				(await fetchFullArticle(article.url).catch(() => null)) ||
+				article.content;
+
 			const result = await analyzeCredibility(
 				article.id,
 				article.title,
-				article.content,
+				fullContent,
 				article.source,
 				article.category,
 				AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
@@ -39,9 +44,9 @@ function getQueue(): Bull.Queue<CredibilityJob> {
 			let enriched: TelegramArticle = article;
 
 			if (result) {
-				// Credibility succeeded — use fresh scores from result
 				enriched = {
 					...article,
+					fullContent,
 					fakeNewsScore: result.fakeNewsScore,
 					politicalBias: result.politicalBias,
 					isMilitant: result.isMilitant,
