@@ -65,7 +65,7 @@ Avalie:
 4. Se há incoerências internas, contradições, mentiras ou alegações sérias sem qualquer menção a fontes/evidências
 5. Flags de problemas, usando fake_news, lie, hypocrisy ou incoherence quando houver evidência clara no texto
 
-Atenção especial às fontes: verifique se o texto cita fontes institucionais, relatórios oficiais, especialistas nominados ou links diretos. Falta completa de fontes ou dados inventados aumentam o score de fake news. Seja rigoroso mas justo. Notícias factuais de grandes veículos com boa apuração jornalística devem receber score 1 a 3.`;
+ATENÇÃO: O conteúdo pode ser um excerto/resumo truncado de uma notícia maior. Se o texto for curto (1-2 parágrafos), NÃO marque missing_sources como flag — fontes podem estar no artigo completo. Marque missing_sources apenas quando o texto fizer alegações factuais sérias sem qualquer menção a fontes. Para grandes veículos jornalísticos (CNN, BBC, Folha, etc.), privilegie scores 1-4, pois o conteúdo tende a ser factual. Seja rigoroso mas justo.`;
 
 async function findRelatedFactChecks(title: string): Promise<string> {
 	try {
