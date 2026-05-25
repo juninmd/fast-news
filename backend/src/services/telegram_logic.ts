@@ -18,9 +18,24 @@ export async function generateSummary(
 		const m = model ?? (await getFastModel());
 		const { text } = await generateText({
 			model: m,
-			prompt: `Você é um editor sênior. Resuma esta notícia em 2-3 frases impactantes e profissionais em português (PT-BR).
-Foque nos fatos e no impacto. Se o conteúdo original estiver em inglês ou outro idioma, traduza e resuma diretamente em português (PT-BR) fluente. Não use "Esta notícia fala sobre...". Vá direto ao ponto.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 5000)}`,
-			maxTokens: 180,
+			prompt: `Você é um editor-chefe de um canal de notícias premium. Escreva um resumo em português (PT-BR) seguindo ESTRITAMENTE este formato:
+
+**Frase de impacto com o fato principal**
+
+🔸 Dado ou contexto importante 1
+🔸 Dado ou contexto importante 2
+
+Regras:
+- Máximo 340 caracteres no total
+- Sem introduções ("Esta notícia...", "O artigo...")
+- Se o original estiver em outro idioma, traduza direto para PT-BR
+- Foco em fatos, números e impacto real
+- NUNCA invente dados — use apenas o que está no conteúdo
+
+Título: ${title}
+
+Conteúdo: ${content.slice(0, 8000)}`,
+			maxTokens: 250,
 		});
 		return text.trim();
 	} catch {
@@ -35,22 +50,14 @@ export async function generateContext(
 	model?: Awaited<ReturnType<typeof getFastModel>>,
 ): Promise<string> {
 	try {
-		const m = model ?? (await getFastModel());
 		const seriousCategories = ["segurança", "mundo", "brasil", "negócios"];
-		const isSerious = category
-			? seriousCategories.includes(category.toLowerCase())
-			: false;
+		if (!category || !seriousCategories.includes(category.toLowerCase()))
+			return "";
 
-		const prompt = isSerious
-			? `Você é um analista geopolítico e de mercados sério e bem-informado. Com base na notícia abaixo, escreva UMA ou DUAS frases curtas em português (PT-BR) fornecendo um insight estratégico ou contexto factual importante sobre os desdobramentos, pessoas públicas ou corporações mencionadas. Vá direto ao ponto.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 4000)}`
-			: `Você é um colunista brasileiro irônico e bem-informado. Com base na notícia abaixo, escreva UMA ou DUAS frases curtas em português (PT-BR) seguindo esta prioridade:
-1. Se houver uma pessoa pública: mencione o fato ou período mais marcante da carreira dela que seja RELEVANTE para esta notícia.
-2. Depois, se couber, adicione uma observação sarcástica, irônica ou curiosa.
-Título: ${title}\nConteúdo: ${content.slice(0, 4000)}`;
-
+		const m = model ?? (await getFastModel());
 		const { text } = await generateText({
 			model: m,
-			prompt,
+			prompt: `Você é um analista geopolítico e de mercados sério e bem-informado. Com base na notícia abaixo, escreva UMA ou DUAS frases curtas em português (PT-BR) fornecendo um insight estratégico ou contexto factual importante sobre os desdobramentos, pessoas públicas ou corporações mencionadas. Vá direto ao ponto.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 8000)}`,
 			maxTokens: 120,
 		});
 		const result = text.trim();
@@ -84,6 +91,24 @@ export function buildCredibilityBlock(article: {
 	if (article.credibilityReasoning)
 		lines.push(`<i>${escapeHtml(article.credibilityReasoning)}</i>`);
 	return `\n\n${SEPARATOR}\n${lines.join("\n")}`;
+}
+
+export async function rewriteMisleadingTitle(
+	title: string,
+	content: string,
+	model?: Awaited<ReturnType<typeof getFastModel>>,
+): Promise<string> {
+	try {
+		const m = model ?? (await getFastModel());
+		const { text } = await generateText({
+			model: m,
+			prompt: `Reescreva este título sensacionalista para uma versão factual e direta em português (PT-BR). Máximo 100 caracteres. NUNCA invente fatos — baseie-se apenas no conteúdo.\n\nTítulo original: ${title}\n\nConteúdo: ${content.slice(0, 6000)}`,
+			maxTokens: 80,
+		});
+		return text.trim() || title;
+	} catch {
+		return title;
+	}
 }
 
 export async function fetchRelatedArticles(
