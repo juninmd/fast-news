@@ -4,7 +4,7 @@ import App from './App';
 
 // Mock child components
 vi.mock('./components/Feed', () => ({
-    default: ({ aiConfig }) => <div data-testid="feed">Feed Component (Provider: {aiConfig?.aiProvider}, Key: {aiConfig?.geminiApiKey || aiConfig?.aiSdkApiKey})</div>
+    default: ({ aiConfig }) => <div data-testid="feed">Feed Component (Key: {aiConfig?.aiSdkApiKey})</div>
 }));
 
 vi.mock('./components/TrendingTopics', () => ({
@@ -16,8 +16,11 @@ vi.mock('./components/Settings', () => ({
         isOpen ? (
             <div data-testid="settings-modal">
                 Settings Modal
-                <button onClick={() => { onSave({ geminiApiKey: 'new-api-key', aiProvider: 'gemini' }); onClose(); }}>Save</button>
-                <button onClick={onClose}>Close</button>
+                <button type="button" onClick={() => {
+                    onSave({ aiSdkApiKey: 'new-api-key' });
+                    onClose();
+                }}>Save</button>
+                <button type="button" onClick={onClose}>Close</button>
             </div>
         ) : null
     )
@@ -44,8 +47,7 @@ describe('App', () => {
     });
 
     it('does not show notification if api key is present', () => {
-        localStorage.setItem('gemini_api_key', 'test-key');
-        localStorage.setItem('ai_provider', 'gemini');
+        localStorage.setItem('ai_sdk_api_key', 'test-key');
         render(<App />);
         expect(screen.queryByText(/Por favor configure seu Provedor de IA e Chave de API/)).not.toBeInTheDocument();
     });
@@ -79,7 +81,7 @@ describe('App', () => {
         expect(screen.queryByTestId('settings-modal')).not.toBeInTheDocument();
 
         // Check if api key was updated in Feed
-        expect(screen.getByTestId('feed')).toHaveTextContent('Feed Component (Provider: gemini, Key: new-api-key)');
+        expect(screen.getByTestId('feed')).toHaveTextContent('Feed Component (Key: new-api-key)');
 
         // Notification should disappear
         expect(screen.queryByText(/Por favor configure seu Provedor de IA e Chave de API/)).not.toBeInTheDocument();
