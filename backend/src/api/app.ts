@@ -9,6 +9,7 @@ import { financialRouter } from "./routes/financial.js";
 import { newsRouter } from "./routes/news.js";
 import { ragRouter } from "./routes/rag.js";
 import { storiesRouter } from "./routes/stories.js";
+import { telegramRouter } from "./routes/telegram.js";
 import { topicsRouter } from "./routes/topics.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,6 +29,7 @@ export function createApp(): express.Application {
 	app.use("/api/financial", financialRouter);
 	app.use("/api/rag", ragRouter);
 	app.use("/api/stories", storiesRouter);
+	app.use("/api/telegram", telegramRouter);
 	app.use("/api/ai", aiRouter);
 
 	// Serve static files from frontend build (optional — only when built)

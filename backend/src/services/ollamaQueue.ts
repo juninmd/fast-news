@@ -93,6 +93,23 @@ export async function enqueueCredibilityAnalysis(
 	}
 }
 
+export async function waitForOllamaQueueIdle(
+	timeoutMs = 180_000,
+): Promise<void> {
+	if (!queue) return;
+	const startedAt = Date.now();
+	while (Date.now() - startedAt < timeoutMs) {
+		const [waiting, active, delayed] = await Promise.all([
+			queue.getWaitingCount(),
+			queue.getActiveCount(),
+			queue.getDelayedCount(),
+		]);
+		if (waiting === 0 && active === 0 && delayed === 0) return;
+		await new Promise((resolve) => setTimeout(resolve, 1_000));
+	}
+	throw new Error("[OllamaQueue] Timed out waiting for queue to go idle.");
+}
+
 export async function stopOllamaQueueWorker(): Promise<void> {
 	if (!queue) return;
 	await queue.close();

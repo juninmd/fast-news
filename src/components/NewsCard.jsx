@@ -16,10 +16,7 @@ import {
 	summarizeWithBackendAI,
 } from "../services/aiService";
 import { summarizeWithGemini } from "../services/geminiService";
-import {
-	sendPhotoToTelegram,
-	sendToTelegram,
-} from "../services/telegramService";
+import { sendArticleToTelegram } from "../services/telegramService";
 import BookmarkButton from "./BookmarkButton";
 
 const STORAGE_KEY = "newsai_reactions";
@@ -66,8 +63,6 @@ const NewsCard = ({
 	aiProvider,
 	apiKey,
 	aiModel,
-	telegramBotToken,
-	telegramChatId,
 	autoSummarize,
 }) => {
 	const [summary, setSummary] = useState(null);
@@ -136,110 +131,9 @@ const NewsCard = ({
 	}, [autoSummarize, summary, loading, error, handleSummarize]);
 
 	const handleSendToTelegram = useCallback(async () => {
-		if (!telegramBotToken || !telegramChatId) {
-			setTelegramStatus("error");
-			setTimeout(() => setTelegramStatus(null), 3000);
-			return;
-		}
-
 		setSendingTelegram(true);
 		try {
-			const dateStr = (() => {
-				try {
-					const d = new Date(item.pubDate);
-					if (isNaN(d)) return "";
-					return d.toLocaleDateString("pt-BR", {
-						day: "2-digit",
-						month: "2-digit",
-						hour: "2-digit",
-						minute: "2-digit",
-					});
-				} catch {
-					return "";
-				}
-			})();
-
-			const keywords = (item.title || "")
-				.toLowerCase()
-				.split(/\s+/)
-				.filter((w) => w.length > 4)
-				.slice(0, 3);
-			const related = keywords.map((kw) => `#${kw}`).join(" ");
-			const desc = summary || item.description?.replace(/<[^>]+>/g, "") || "";
-			const cleanDesc = desc.substring(0, 500);
-
-			const videoUrl = extractVideoUrl(item.content || item.description || "");
-			const mediaHtml = videoUrl
-				? `\n🎬 <a href="${videoUrl.embedUrl.replace("/embed/", "/watch?v=")}">Assistir vídeo</a>\n`
-				: "";
-
-			const textToSend = [
-				`📰 <b>${item.source}</b> — ${dateStr}`,
-				"",
-				`<b>${item.title}</b>`,
-				"",
-				mediaHtml,
-				`🤖 <b>Análise com IA:</b>`,
-				cleanDesc,
-				"",
-				related ? `🔗 ${related}` : "",
-			]
-				.filter(Boolean)
-				.join("\n");
-
-			const fastNewsUrl = `${window.location.origin}/?id=${encodeURIComponent(item.id)}`;
-			const inlineKeyboard = {
-				inline_keyboard: [
-					[
-						{
-							text: "👍 Curtir",
-							callback_data: `fb:like:${item.id}`,
-						},
-						{
-							text: "👎 Descurtir",
-							callback_data: `fb:dislike:${item.id}`,
-						},
-					],
-					[
-						{
-							text: "📖 Ler reportagem",
-							url: item.link,
-						},
-						{
-							text: "📱 Fast News",
-							url: fastNewsUrl,
-						},
-					],
-					[
-						{
-							text: "❌ Remover fonte",
-							callback_data: `remove_source:${item.id}`,
-						},
-					],
-				],
-			};
-
-			const imgUrl =
-				item.enclosure?.link ||
-				item.thumbnail ||
-				item.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] ||
-				null;
-			if (imgUrl && !imageError) {
-				await sendPhotoToTelegram(
-					textToSend,
-					imgUrl,
-					telegramBotToken,
-					telegramChatId,
-					inlineKeyboard,
-				);
-			} else {
-				await sendToTelegram(
-					textToSend,
-					telegramBotToken,
-					telegramChatId,
-					inlineKeyboard,
-				);
-			}
+			await sendArticleToTelegram(item.id);
 			setTelegramStatus("success");
 		} catch (e) {
 			console.error(e);
@@ -248,7 +142,7 @@ const NewsCard = ({
 			setSendingTelegram(false);
 			setTimeout(() => setTelegramStatus(null), 3000);
 		}
-	}, [telegramBotToken, telegramChatId, item, summary, imageError]);
+	}, [item]);
 
 	const copyToClipboard = () => {
 		navigator.clipboard.writeText(item.link);
@@ -337,7 +231,7 @@ const NewsCard = ({
 						<div className="aspect-[16/10] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
 							<Newspaper className="text-indigo-400 dark:text-indigo-500 w-16 h-16 opacity-50" />
 						</div>
-					)}
+					}
 
 					{item.category && (
 						<div className="absolute top-3 left-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider z-10">
@@ -421,7 +315,6 @@ const NewsCard = ({
 					</div>
 
 					<div className="flex items-center gap-1">
-						{telegramBotToken && (
 							<button
 								onClick={handleSendToTelegram}
 								disabled={sendingTelegram}
@@ -436,7 +329,6 @@ const NewsCard = ({
 									<Send size={16} />
 								)}
 							</button>
-						)}
 						<button
 							onClick={handleSummarize}
 							disabled={loading || summary}
