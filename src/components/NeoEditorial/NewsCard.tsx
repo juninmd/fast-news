@@ -137,6 +137,7 @@ export function NewsCard({
 	id,
 	title,
 	excerpt,
+	url,
 	source,
 	category,
 	company,
