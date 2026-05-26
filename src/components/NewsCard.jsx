@@ -1,12 +1,13 @@
 import {
 	Check,
-	Clock,
 	Copy,
 	ExternalLink,
 	Loader,
 	Newspaper,
 	Send,
 	Sparkles,
+	ThumbsDown,
+	ThumbsUp,
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -15,8 +16,50 @@ import {
 	summarizeWithBackendAI,
 } from "../services/aiService";
 import { summarizeWithGemini } from "../services/geminiService";
-import { sendToTelegram } from "../services/telegramService";
+import {
+	sendPhotoToTelegram,
+	sendToTelegram,
+} from "../services/telegramService";
 import BookmarkButton from "./BookmarkButton";
+
+const STORAGE_KEY = "newsai_reactions";
+
+function getReactions() {
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		return stored ? JSON.parse(stored) : {};
+	} catch {
+		return {};
+	}
+}
+
+function saveReactions(reactions) {
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(reactions));
+}
+
+function extractVideoUrl(text) {
+	if (!text) return null;
+	const youtubeRegex =
+		/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+	const match = text.match(youtubeRegex);
+	if (match) {
+		return {
+			type: "youtube",
+			id: match[1],
+			embedUrl: `https://www.youtube.com/embed/${match[1]}`,
+		};
+	}
+	const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/;
+	const vimeoMatch = text.match(vimeoRegex);
+	if (vimeoMatch) {
+		return {
+			type: "vimeo",
+			id: vimeoMatch[1],
+			embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`,
+		};
+	}
+	return null;
+}
 
 const NewsCard = ({
 	item,
@@ -33,7 +76,25 @@ const NewsCard = ({
 	const [telegramStatus, setTelegramStatus] = useState(null);
 	const [error, setError] = useState(null);
 	const [imageError, setImageError] = useState(false);
+	const [copied, setCopied] = useState(false);
 	const autoSummarizeAttempted = useRef(false);
+
+	const [reaction, setReaction] = useState(() => {
+		const reactions = getReactions();
+		return reactions[item.id] || null;
+	});
+
+	const handleReaction = (type) => {
+		const reactions = getReactions();
+		if (reactions[item.id] === type) {
+			delete reactions[item.id];
+			setReaction(null);
+		} else {
+			reactions[item.id] = type;
+			setReaction(type);
+		}
+		saveReactions(reactions);
+	};
 
 	const handleSummarize = useCallback(async () => {
 		if (aiProvider === "gemini" && !apiKey) {
@@ -83,18 +144,102 @@ const NewsCard = ({
 
 		setSendingTelegram(true);
 		try {
-			let finalCategory = item.category || "Geral";
+			const dateStr = (() => {
+				try {
+					const d = new Date(item.pubDate);
+					if (isNaN(d)) return "";
+					return d.toLocaleDateString("pt-BR", {
+						day: "2-digit",
+						month: "2-digit",
+						hour: "2-digit",
+						minute: "2-digit",
+					});
+				} catch {
+					return "";
+				}
+			})();
 
-			if (!aiProvider || aiProvider === "backend") {
-				const textToClassify = item.content || item.description || item.title;
-				finalCategory = await classifyWithBackendAI(textToClassify, aiModel);
+			const keywords = (item.title || "")
+				.toLowerCase()
+				.split(/\s+/)
+				.filter((w) => w.length > 4)
+				.slice(0, 3);
+			const related = keywords.map((kw) => `#${kw}`).join(" ");
+			const desc = summary || item.description?.replace(/<[^>]+>/g, "") || "";
+			const cleanDesc = desc.substring(0, 500);
+
+			const videoUrl = extractVideoUrl(item.content || item.description || "");
+			const mediaHtml = videoUrl
+				? `\n🎬 <a href="${videoUrl.embedUrl.replace("/embed/", "/watch?v=")}">Assistir vídeo</a>\n`
+				: "";
+
+			const textToSend = [
+				`📰 <b>${item.source}</b> — ${dateStr}`,
+				"",
+				`<b>${item.title}</b>`,
+				"",
+				mediaHtml,
+				`🤖 <b>Análise com IA:</b>`,
+				cleanDesc,
+				"",
+				related ? `🔗 ${related}` : "",
+			]
+				.filter(Boolean)
+				.join("\n");
+
+			const fastNewsUrl = `${window.location.origin}/?id=${encodeURIComponent(item.id)}`;
+			const inlineKeyboard = {
+				inline_keyboard: [
+					[
+						{
+							text: "👍 Curtir",
+							callback_data: `fb:like:${item.id}`,
+						},
+						{
+							text: "👎 Descurtir",
+							callback_data: `fb:dislike:${item.id}`,
+						},
+					],
+					[
+						{
+							text: "📖 Ler reportagem",
+							url: item.link,
+						},
+						{
+							text: "📱 Fast News",
+							url: fastNewsUrl,
+						},
+					],
+					[
+						{
+							text: "❌ Remover fonte",
+							callback_data: `remove_source:${item.id}`,
+						},
+					],
+				],
+			};
+
+			const imgUrl =
+				item.enclosure?.link ||
+				item.thumbnail ||
+				item.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] ||
+				null;
+			if (imgUrl && !imageError) {
+				await sendPhotoToTelegram(
+					textToSend,
+					imgUrl,
+					telegramBotToken,
+					telegramChatId,
+					inlineKeyboard,
+				);
+			} else {
+				await sendToTelegram(
+					textToSend,
+					telegramBotToken,
+					telegramChatId,
+					inlineKeyboard,
+				);
 			}
-
-			const categoryHashtag = finalCategory.replace(/\s+/g, "");
-			const hashtags = `#${categoryHashtag} #Notícias`;
-
-			const textToSend = `*${finalCategory.toUpperCase()}*\n───────────────\n*${item.title}*\n\n${summary || item.description || ""}\n\n_${hashtags}_\n\n[Ler matéria completa](${item.link})`;
-			await sendToTelegram(textToSend, telegramBotToken, telegramChatId);
 			setTelegramStatus("success");
 		} catch (e) {
 			console.error(e);
@@ -103,10 +248,12 @@ const NewsCard = ({
 			setSendingTelegram(false);
 			setTimeout(() => setTelegramStatus(null), 3000);
 		}
-	}, [aiProvider, aiModel, telegramBotToken, telegramChatId, item, summary]);
+	}, [telegramBotToken, telegramChatId, item, summary, imageError]);
 
 	const copyToClipboard = () => {
 		navigator.clipboard.writeText(item.link);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 2000);
 	};
 
 	const getImage = () => {
@@ -117,7 +264,8 @@ const NewsCard = ({
 		return null;
 	};
 
-	const imageUrl = getImage();
+	const video = extractVideoUrl(item.content || item.description || "");
+	const imageUrl = !video ? getImage() : null;
 	const cleanDescription =
 		item.description?.replace(/<[^>]+>/g, "").substring(0, 150) + "...";
 
@@ -136,25 +284,45 @@ const NewsCard = ({
 		}
 	};
 
-	const estimateReadTime = (text) => {
-		const words = text?.split(/\s+/).length || 0;
-		return Math.max(1, Math.ceil(words / 200));
-	};
-
-	const getRelatedArticles = () => {
+	const relatedArticles = (() => {
 		if (!item.title) return [];
-		const keywords = item.title
+		const words = item.title
 			.toLowerCase()
 			.split(/\s+/)
 			.filter((w) => w.length > 4);
-		return keywords.slice(0, 3);
-	};
+		return words.slice(0, 3);
+	})();
 
 	return (
 		<div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:-translate-y-2 transition-all duration-500 h-full flex flex-col overflow-hidden group border border-slate-200/50 dark:border-slate-800/80">
-			<div className="relative p-3">
+			<div className="p-3">
+				<div className="flex items-center justify-between mb-3 px-2 pt-1">
+					<div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+						<span className="text-blue-600 dark:text-blue-400 font-bold">
+							{item.source}
+						</span>
+						<span className="text-slate-300 dark:text-slate-600">—</span>
+						<span>{formatDate(item.pubDate)}</span>
+					</div>
+					<BookmarkButton
+						item={item}
+						className="!p-1 !bg-transparent !text-slate-400 hover:!text-blue-500"
+					/>
+				</div>
+
 				<div className="relative overflow-hidden rounded-[1.5rem]">
-					{imageUrl && !imageError ? (
+					{video ? (
+						<div className="aspect-video w-full overflow-hidden relative bg-black">
+							<iframe
+								src={video.embedUrl}
+								title={item.title}
+								className="w-full h-full"
+								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+								allowFullScreen
+								loading="lazy"
+							/>
+						</div>
+					) : imageUrl && !imageError ? (
 						<div className="aspect-[16/10] w-full overflow-hidden relative">
 							<img
 								src={imageUrl}
@@ -176,26 +344,11 @@ const NewsCard = ({
 							{item.category}
 						</div>
 					)}
-
-					<div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
-						<div className="flex items-center gap-2 text-[11px] font-medium text-white/90 drop-shadow-md">
-							<span className="bg-blue-600/80 backdrop-blur-sm px-2.5 py-1 rounded-md">
-								{item.source}
-							</span>
-							<span className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">
-								{formatDate(item.pubDate)}
-							</span>
-						</div>
-						<BookmarkButton
-							item={item}
-							className="!bg-black/40 backdrop-blur-sm !rounded-md p-1.5"
-						/>
-					</div>
 				</div>
 			</div>
 
-			<div className="px-6 py-5 flex flex-col flex-grow relative">
-				<h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-3 leading-[1.3] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-3">
+			<div className="px-6 py-4 flex flex-col flex-grow relative">
+				<h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-4 leading-[1.3] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
 					<a
 						href={item.link}
 						target="_blank"
@@ -206,28 +359,11 @@ const NewsCard = ({
 					</a>
 				</h3>
 
-				<div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mb-3">
-					<span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-						<Clock size={12} />
-						{estimateReadTime(item.title)} min
-					</span>
-					<span className="flex items-center gap-1">
-						{getRelatedArticles().map((kw, i) => (
-							<span
-								key={i}
-								className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full text-[10px]"
-							>
-								#{kw}
-							</span>
-						))}
-					</span>
-				</div>
-
 				<div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4 flex-grow">
 					{summary ? (
 						<div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-900/20 dark:to-blue-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-2">
 							<div className="flex items-center gap-1.5 mb-3 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
-								<Sparkles size={14} className="fill-current" /> Resumo IA
+								<Sparkles size={14} className="fill-current" /> Análise com IA
 							</div>
 							<div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
 								<ReactMarkdown>{summary}</ReactMarkdown>
@@ -242,64 +378,98 @@ const NewsCard = ({
 						</p>
 					)}
 				</div>
+
+				{relatedArticles.length > 0 && (
+					<div className="mb-4 flex flex-wrap gap-1.5">
+						{relatedArticles.map((kw, i) => (
+							<span
+								key={i}
+								className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-full font-medium"
+							>
+								#{kw}
+							</span>
+						))}
+					</div>
+				)}
 			</div>
 
-			<div className="px-5 pb-5 mt-auto bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-3">
-				<div className="flex gap-2 w-full justify-between items-center mb-2">
-					<div className="flex gap-2">
+			<div className="px-5 pb-5 mt-auto bg-slate-50/50 dark:bg-slate-900/50">
+				<div className="flex items-center justify-between py-2.5 border-b border-slate-200/50 dark:border-slate-700/50">
+					<div className="flex items-center gap-1">
 						<button
-							onClick={handleSummarize}
-							disabled={loading || summary}
-							className="bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
-							title="Resumir com IA"
+							onClick={() => handleReaction("like")}
+							className={`p-2 rounded-lg transition-all hover:scale-110 active:scale-90 ${
+								reaction === "like"
+									? "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30"
+									: "text-slate-400 dark:text-slate-500 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
+							}`}
+							title="Curtir"
 						>
-							{loading ? (
-								<Loader size={14} className="animate-spin" />
-							) : (
-								<Sparkles size={14} />
-							)}
-							<span className="hidden sm:inline">Resumir</span>
+							<ThumbsUp size={16} />
 						</button>
+						<button
+							onClick={() => handleReaction("dislike")}
+							className={`p-2 rounded-lg transition-all hover:scale-110 active:scale-90 ${
+								reaction === "dislike"
+									? "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30"
+									: "text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+							}`}
+							title="Não curtir"
+						>
+							<ThumbsDown size={16} />
+						</button>
+					</div>
+
+					<div className="flex items-center gap-1">
 						{telegramBotToken && (
 							<button
 								onClick={handleSendToTelegram}
 								disabled={sendingTelegram}
-								className="bg-white dark:bg-slate-800 text-blue-500 dark:text-blue-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
+								className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all disabled:opacity-50"
 								title="Enviar para Telegram"
 							>
 								{sendingTelegram ? (
-									<Loader size={14} className="animate-spin" />
+									<Loader size={16} className="animate-spin" />
 								) : telegramStatus === "success" ? (
-									<Check size={14} />
+									<Check size={16} />
 								) : (
-									<Send size={14} />
+									<Send size={16} />
 								)}
-								<span className="hidden sm:inline">Telegram</span>
 							</button>
 						)}
+						<button
+							onClick={handleSummarize}
+							disabled={loading || summary}
+							className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all disabled:opacity-50"
+							title="Resumir com IA"
+						>
+							{loading ? (
+								<Loader size={16} className="animate-spin" />
+							) : (
+								<Sparkles size={16} />
+							)}
+						</button>
 					</div>
-					<button
-						onClick={copyToClipboard}
-						className="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-700 transition-colors text-xs font-bold flex items-center gap-1.5"
-						title="Copiar Link"
-					>
-						<Copy size={14} />
-						<span className="hidden sm:inline">Copiar</span>
-					</button>
 				</div>
 
-				<a
-					href={item.link}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="relative z-20 flex items-center justify-center w-full gap-2 bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group/link"
-				>
-					Ler notícia completa
-					<ExternalLink
-						size={16}
-						className="opacity-70 group-hover/link:opacity-100 transition-opacity"
-					/>
-				</a>
+				<div className="flex gap-2 mt-3">
+					<a
+						href={item.link}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="flex items-center justify-center gap-2 flex-1 bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white py-3 rounded-2xl text-sm font-bold transition-all duration-300"
+					>
+						Ler reportagem
+						<ExternalLink size={16} />
+					</a>
+					<button
+						onClick={copyToClipboard}
+						className="flex items-center justify-center gap-2 px-5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 py-3 rounded-2xl text-sm font-bold transition-all duration-300"
+					>
+						{copied ? <Check size={16} /> : <Copy size={16} />}
+						Fast News
+					</button>
+				</div>
 			</div>
 		</div>
 	);

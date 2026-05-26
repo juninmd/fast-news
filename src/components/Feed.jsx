@@ -15,7 +15,6 @@ import { FEED_SOURCES, fetchNews } from "../services/newsService";
 import { withRetry } from "../utils/retry";
 import HeroSection from "./HeroSection";
 import NewsCard from "./NewsCard";
-import RelatedArticles from "./RelatedArticles";
 import SkeletonCard from "./SkeletonCard";
 
 const DEFAULT_FEEDS = [];
@@ -273,13 +272,6 @@ const Feed = ({
 								telegramBotToken={telegramBotToken}
 								telegramChatId={telegramChatId}
 							/>
-							{item === gridItems[gridItems.length - 1] &&
-								filteredNews.length > 3 && (
-									<RelatedArticles
-										currentArticle={item}
-										allArticles={filteredNews}
-									/>
-								)}
 						</div>
 					))}
 				</div>
