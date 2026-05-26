@@ -24,12 +24,6 @@ const Settings = ({
 	const [autoSummarize, setAutoSummarize] = useState(
 		() => localStorage.getItem("auto_summarize") === "true",
 	);
-	const [telegramBotToken, setTelegramBotToken] = useState(
-		() => localStorage.getItem("telegram_bot_token") || "",
-	);
-	const [telegramChatId, setTelegramChatId] = useState(
-		() => localStorage.getItem("telegram_chat_id") || "",
-	);
 	const [customFeeds, setCustomFeeds] = useState(initialCustomFeeds);
 	const [newFeedUrl, setNewFeedUrl] = useState("");
 	const [newFeedCategory, setNewFeedCategory] = useState("Geral");
@@ -41,14 +35,10 @@ const Settings = ({
 		localStorage.setItem("custom_feeds", JSON.stringify(customFeeds));
 		localStorage.setItem("rss2json_api_key", rss2jsonApiKey);
 		localStorage.setItem("auto_summarize", String(autoSummarize));
-		localStorage.setItem("telegram_bot_token", telegramBotToken);
-		localStorage.setItem("telegram_chat_id", telegramChatId);
 		onSave({
 			customFeeds,
 			rss2jsonApiKey,
 			autoSummarize,
-			telegramBotToken,
-			telegramChatId,
 		});
 		onClose?.();
 	};
@@ -136,21 +126,10 @@ const Settings = ({
 					)}
 
 					{activeTab === "telegram" && (
-						<>
-							<Field
-								label="Telegram Bot Token"
-								type="password"
-								value={telegramBotToken}
-								onChange={setTelegramBotToken}
-								placeholder="Configurado localmente"
-							/>
-							<Field
-								label="Chat ID"
-								value={telegramChatId}
-								onChange={setTelegramChatId}
-								placeholder="123456789"
-							/>
-						</>
+						<div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-700/30 dark:text-gray-300">
+							O envio para Telegram agora usa apenas a configuracao do backend.
+							Isso evita layouts duplicados e tokens locais fora do servidor.
+						</div>
 					)}
 
 					{activeTab === "feeds" && (
