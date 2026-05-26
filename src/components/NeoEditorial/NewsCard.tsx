@@ -11,10 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import { useBookmarks } from "../../hooks/useBookmarks";
 import { useReadingHistory } from "../../hooks/useReadingHistory";
-import {
-	sendPhotoToTelegram,
-	sendToTelegram,
-} from "../../services/telegramService";
+import { sendArticleToTelegram } from "../../services/telegramService";
 
 const categoryColors: Record<string, string> = {
 	"AI Frontier": "bg-violet-500/20 text-violet-400 border-violet-500/30",
@@ -189,15 +186,7 @@ export function NewsCard({
 		localStorage.setItem(REACTIONS_KEY, JSON.stringify(reactions));
 	}
 
-	function getTelegramConfig() {
-		return {
-			botToken: localStorage.getItem("telegram_bot_token") || "",
-			chatId: localStorage.getItem("telegram_chat_id") || "",
-		};
-	}
-
 	const videoEmbedUrl = extractVideoUrl(excerpt);
-
 	const relatedKeywords = title
 		.toLowerCase()
 		.split(/\s+/)
@@ -205,56 +194,9 @@ export function NewsCard({
 		.slice(0, 3);
 
 	async function handleSendToTelegram() {
-		const { botToken, chatId } = getTelegramConfig();
-		if (!botToken || !chatId) return;
-
 		setSendingTelegram(true);
 		try {
-			const dateStr = formatFullDate(publishedAt);
-			const cleanDesc = (excerpt || "")
-				.replace(/<[^>]+>/g, "")
-				.substring(0, 500);
-			const related = relatedKeywords.map((kw) => `#${kw}`).join(" ");
-
-			const textToSend = [
-				`📰 <b>${source}</b> — ${dateStr}`,
-				"",
-				`<b>${title}</b>`,
-				"",
-				`🤖 <b>Análise com IA:</b>`,
-				cleanDesc,
-				"",
-				related ? `🔗 ${related}` : "",
-			]
-				.filter(Boolean)
-				.join("\n");
-
-			const fastNewsUrl = `${window.location.origin}/?id=${encodeURIComponent(id)}`;
-			const inlineKeyboard = {
-				inline_keyboard: [
-					[
-						{ text: "👍 Curtir", callback_data: `fb:like:${id}` },
-						{ text: "👎 Descurtir", callback_data: `fb:dislike:${id}` },
-					],
-					[
-						{ text: "📖 Ler reportagem", url },
-						{ text: "📱 Fast News", url: fastNewsUrl },
-					],
-					[{ text: "❌ Remover fonte", callback_data: `remove_source:${id}` }],
-				],
-			};
-
-			if (imageUrl && !imageError) {
-				await sendPhotoToTelegram(
-					textToSend,
-					imageUrl,
-					botToken,
-					chatId,
-					inlineKeyboard,
-				);
-			} else {
-				await sendToTelegram(textToSend, botToken, chatId, inlineKeyboard);
-			}
+			await sendArticleToTelegram(id);
 			setTelegramStatus("success");
 		} catch {
 			setTelegramStatus("error");
@@ -270,7 +212,6 @@ export function NewsCard({
 	}
 
 	const showImage = imageUrl && !imageError && !videoEmbedUrl;
-	const { botToken } = getTelegramConfig();
 
 	return (
 		<article
@@ -454,18 +395,16 @@ export function NewsCard({
 						<ThumbsDown className="w-3.5 h-3.5" />
 					</button>
 					<div className="flex-1" />
-					{botToken && (
-						<button
-							onClick={handleSendToTelegram}
-							disabled={sendingTelegram}
-							className="p-1.5 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50"
-							title="Enviar para Telegram"
-						>
-							<Send
-								className={`w-3.5 h-3.5 ${sendingTelegram ? "animate-pulse" : ""}`}
-							/>
-						</button>
-					)}
+					<button
+						onClick={handleSendToTelegram}
+						disabled={sendingTelegram}
+						className="p-1.5 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50"
+						title="Enviar para Telegram"
+					>
+						<Send
+							className={`w-3.5 h-3.5 ${sendingTelegram ? "animate-pulse" : ""}`}
+						/>
+					</button>
 					{telegramStatus === "success" && (
 						<span className="text-[10px] text-green-400 font-medium animate-fade-in">
 							Enviado!

@@ -114,6 +114,23 @@ export async function retryFailedTelegramPosts(limit = 100): Promise<number> {
 	return failed.length;
 }
 
+export async function waitForTelegramQueueIdle(
+	timeoutMs = 120_000,
+): Promise<void> {
+	const q = getQueue();
+	const startedAt = Date.now();
+	while (Date.now() - startedAt < timeoutMs) {
+		const [waiting, active, delayed] = await Promise.all([
+			q.getWaitingCount(),
+			q.getActiveCount(),
+			q.getDelayedCount(),
+		]);
+		if (waiting === 0 && active === 0 && delayed === 0) return;
+		await new Promise((resolve) => setTimeout(resolve, 1_000));
+	}
+	throw new Error("[TelegramQueue] Timed out waiting for queue to go idle.");
+}
+
 export async function stopTelegramQueueWorker(): Promise<void> {
 	if (!queue) return;
 	await queue.close();
