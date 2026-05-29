@@ -28,6 +28,19 @@ const ollamaProvider = config.ollama.baseUrl.includes("/v1")
 			baseURL: config.ollama.baseUrl.replace(/\/v1$/, "/api"),
 		});
 
+// Dedicated native Ollama provider for embeddings.
+// Always uses createOllama (not OpenAI-compat) to avoid the
+// encoding_format:float rejection from LiteLLM / other proxies.
+const _embeddingNativeBase = (() => {
+	const explicit = config.ollama.embeddingBaseUrl;
+	if (explicit) return explicit.replace(/\/$/, "");
+	// Derive from main baseUrl: strip /v1 suffix → bare Ollama host
+	return config.ollama.baseUrl.replace(/\/v1\/?$/, "");
+})();
+const ollamaEmbeddingProvider = createOllama({
+	baseURL: `${_embeddingNativeBase}/api`,
+});
+
 const googleProvider = google;
 const openaiProvider = createOpenAI({ apiKey: config.openaiApiKey });
 const anthropicProvider = anthropic;
@@ -82,7 +95,10 @@ export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
 			config.ai.embeddingModel || "text-embedding-3-small",
 		);
 	}
-	return ollamaProvider.embedding(config.ollama.embeddingModel);
+	// Always use native Ollama (createOllama) for embeddings, even when the
+	// main inference provider points to LiteLLM/OpenAI-compat endpoint.
+	// This avoids the encoding_format:float UnsupportedParamsError from proxies.
+	return ollamaEmbeddingProvider.embedding(config.ollama.embeddingModel);
 }
 
 export async function getCloudFallbackModel(): Promise<LanguageModel | null> {
