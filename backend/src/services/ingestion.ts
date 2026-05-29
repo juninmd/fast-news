@@ -225,11 +225,22 @@ export interface IngestionResult {
 }
 
 async function isOllamaAvailable(): Promise<boolean> {
-	const base = config.ollama.baseUrl.replace(/\/v1\/?$/, "");
+	const base = config.ollama.baseUrl;
+	// LiteLLM / OpenAI-compatible proxy exposes /v1/models; native Ollama exposes /api/tags
+	const probeUrl = base.includes("/v1")
+		? `${base.replace(/\/v1\/?$/, "")}/v1/models`
+		: `${base.replace(/\/v1\/?$/, "")}/api/tags`;
 	try {
 		const ac = new AbortController();
-		const t = setTimeout(() => ac.abort(), 3_000);
-		const res = await fetch(`${base}/api/tags`, { signal: ac.signal });
+		const t = setTimeout(() => ac.abort(), 5_000);
+		const apiKey =
+			process.env["OLLAMA_API_KEY"] ||
+			process.env["OPENAI_API_KEY"] ||
+			"";
+		const res = await fetch(probeUrl, {
+			signal: ac.signal,
+			headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+		});
 		clearTimeout(t);
 		return res.ok;
 	} catch {
