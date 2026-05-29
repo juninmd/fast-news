@@ -16,9 +16,17 @@ const openrouterProvider = createOpenAI({
 	apiKey: config.openrouterApiKey,
 });
 
-const ollamaProvider = createOllama({
-	baseURL: config.ollama.baseUrl.replace(/\/v1$/, "/api"),
-});
+const ollamaProvider = config.ollama.baseUrl.includes("/v1")
+	? createOpenAI({
+			baseURL: config.ollama.baseUrl,
+			apiKey:
+				process.env["OLLAMA_API_KEY"] ||
+				process.env["OPENAI_API_KEY"] ||
+				"placeholder",
+		})
+	: createOllama({
+			baseURL: config.ollama.baseUrl.replace(/\/v1$/, "/api"),
+		});
 
 const googleProvider = google;
 const openaiProvider = createOpenAI({ apiKey: config.openaiApiKey });
