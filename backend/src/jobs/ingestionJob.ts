@@ -25,6 +25,7 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
 			company?: string;
 			content: string;
 			publishedAt?: Date | null;
+			imageUrl: string | null;
 			fakeNewsScore: number | null;
 			politicalBias: string | null;
 			isMilitant: boolean;
@@ -34,7 +35,7 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
 			storyId: string | null;
 		}>(
 			`SELECT na.id, na.title, na.url, na.source, na.category, na.company,
-              na.content, na.published_at AS "publishedAt",
+              na.content, na.published_at AS "publishedAt", na.image_url AS "imageUrl",
               na.fake_news_score AS "fakeNewsScore", na.political_bias AS "politicalBias",
               na.is_militant AS "isMilitant", na.has_incoherence AS "hasIncoherence",
               na.credibility_flags AS "credibilityFlags",
@@ -65,7 +66,7 @@ async function fetchUnsentUnevaluatedArticles(): Promise<TelegramArticle[]> {
 	try {
 		const res = await query<TelegramArticle>(
 			`SELECT na.id, na.title, na.url, na.source, na.category, na.company,
-              na.content, na.published_at AS "publishedAt", sa.story_id AS "storyId"
+              na.content, na.published_at AS "publishedAt", na.image_url AS "imageUrl", sa.story_id AS "storyId"
        FROM news_articles na
        LEFT JOIN LATERAL (
          SELECT story_id FROM story_articles WHERE article_id = na.id LIMIT 1

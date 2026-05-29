@@ -12,6 +12,7 @@ export interface ArticleResult {
 	source: string;
 	category: string;
 	published_at: string;
+	image_url: string | null;
 	similarity: number;
 }
 
@@ -35,7 +36,7 @@ export async function searchSimilarArticles(
 
 	const embedding = await embedQuery(queryText);
 	const result = await query<ArticleResult>(
-		`SELECT id, title, content, url, source, category, published_at,
+		`SELECT id, title, content, url, source, category, published_at, image_url,
        1 - (embedding <=> $1::vector) AS similarity
      FROM news_articles
      WHERE published_at > NOW() - INTERVAL '${daysBack} days'
