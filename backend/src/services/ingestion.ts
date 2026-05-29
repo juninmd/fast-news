@@ -164,8 +164,8 @@ async function upsertArticle(
 	}
 
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -178,6 +178,7 @@ async function upsertArticle(
 			article.company ?? null,
 			article.publishedAt,
 			embedding ? vectorToSQL(embedding) : null,
+			article.imageUrl ?? null,
 		],
 	);
 
