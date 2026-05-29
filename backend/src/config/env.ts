@@ -35,6 +35,14 @@ export const config = {
 	telegramBotToken: optional("TELEGRAM_BOT_TOKEN", ""),
 	telegramEnabled: optional("TELEGRAM_ENABLED", "false") === "true",
 	telegramChatIds: optional("TELEGRAM_CHAT_IDS", "").split(",").filter(Boolean),
+	telegramNewsCategories: optional("TELEGRAM_NEWS_CATEGORIES", "")
+		.split(",")
+		.map((c) => c.trim())
+		.filter(Boolean),
+	telegramMaxNewsPerRun: parseInt(
+		optional("TELEGRAM_MAX_NEWS_PER_RUN", "0"),
+		10,
+	),
 	telegramQueue: {
 		name: optional("TELEGRAM_QUEUE_NAME", "telegram:posts"),
 		attempts: parseInt(optional("TELEGRAM_QUEUE_ATTEMPTS", "5"), 10),
