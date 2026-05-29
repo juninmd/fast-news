@@ -103,20 +103,33 @@ export async function runIngestionAndPost(): Promise<void> {
 		`[IngestionJob] Stored ${result.stored} new articles — queued for credibility evaluation.`,
 	);
 
+	const allowedCategories = config.telegramNewsCategories;
+	const maxPerRun = config.telegramMaxNewsPerRun > 0 ? config.telegramMaxNewsPerRun : Infinity;
+
+	function filterAndCap<T extends { category: string }>(items: T[]): T[] {
+		const filtered =
+			allowedCategories.length > 0
+				? items.filter((a) => allowedCategories.includes(a.category))
+				: items;
+		return filtered.slice(0, maxPerRun as number);
+	}
+
 	// New articles: credibility first → Telegram (handled by ollamaQueue worker)
 	// Already logged inside runIngestion via enqueueCredibilityAnalysis
 	const unevaluated = await fetchUnsentUnevaluatedArticles();
-	if (unevaluated.length > 0) {
-		await Promise.all(unevaluated.map(enqueueCredibilityAnalysis));
+	const filteredUnevaluated = filterAndCap(unevaluated);
+	if (filteredUnevaluated.length > 0) {
+		await Promise.all(filteredUnevaluated.map(enqueueCredibilityAnalysis));
 		console.log(
-			`[IngestionJob] Requeued ${unevaluated.length} unevaluated articles for Ollama.`,
+			`[IngestionJob] Requeued ${filteredUnevaluated.length} unevaluated articles for Ollama.`,
 		);
 	}
 
 	// Articles from previous runs already evaluated: send directly to Telegram
 	const evaluated = await fetchUnsentEvaluatedArticles();
-	if (evaluated.length > 0) {
-		const queued = await enqueueTelegramPosts(evaluated);
+	const filteredEvaluated = filterAndCap(evaluated);
+	if (filteredEvaluated.length > 0) {
+		const queued = await enqueueTelegramPosts(filteredEvaluated);
 		console.log(
 			`[IngestionJob] Queued ${queued} previously-evaluated articles for Telegram.`,
 		);
