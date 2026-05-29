@@ -185,7 +185,7 @@ export interface TelegramArticle {
 	fullContent?: string;
 	company?: string;
 	publishedAt?: Date | null;
-	imageUrl?: string;
+	imageUrl?: string | null;
 	storyId?: string | null;
 	fakeNewsScore?: number | null;
 	politicalBias?: string | null;

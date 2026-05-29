@@ -1,4 +1,3 @@
-import { generateText } from "ai";
 import cron from "node-cron";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
@@ -11,61 +10,20 @@ import { listActiveStories } from "../services/correlation.js";
 import { getActiveOpportunities } from "../services/financial.js";
 import { searchSimilarArticles } from "../services/rag.js";
 import { sendDigest } from "../services/telegram.js";
-
-const DIGEST_PROMPT = `Você é um jornalista irônico e bem-humorado escrevendo um resumo diário para Telegram.
-Use Markdown do Telegram: *negrito*, _itálico_, \`código\`. Máximo 3500 caracteres.
-Tom: sarcástico e inteligente, como quem assistiu ao mundo se contradizer mais uma vez.
-Use humor ácido, analogias absurdas. Português brasileiro.
-
-REGRAS IMPORTANTES:
-- Cada seção tem conteúdo ÚNICO — nunca repita informação entre seções
-- AS TRAPALHADAS: comente cada notícia com ironia (1 linha por notícia)
-- ANÁLISE: foque em tendências macro e contexto, NÃO nos ativos financeiros
-- CASSINO FINANCEIRO: foque APENAS nos ativos/oportunidades — preços, movimentos, risco
-- FIQUE DE OLHO: 2-3 alertas específicos e acionáveis (datas, eventos, gatilhos)
-
-TOP NOTÍCIAS:
-{news}
-
-HISTÓRIAS EM DESTAQUE (correlações entre notícias):
-{stories}
-
-ANÁLISES DE TÓPICOS:
-{analyses}
-
-OPORTUNIDADES FINANCEIRAS:
-{financial}
-
-Formato EXATO (use esses emojis e títulos):
-🎭 *O CIRCO DIÁRIO — {date}*
-_"Mais um dia, mais uma oportunidade do mundo decepcionar"_
-
-━━━━━━━━━━━━━━━━━━━━
-🔥 *AS TRAPALHADAS DO DIA*
-
-1. [emoji] [notícia 1 com comentário irônico]
-2. [emoji] [notícia 2 com comentário irônico]
-...
-
-━━━━━━━━━━━━━━━━━━━━
-📊 *ANÁLISE — TENDÊNCIAS*
-
-[análise macro dos tópicos, sem falar de ativos financeiros específicos]
-
-━━━━━━━━━━━━━━━━━━━━
-💰 *CASSINO FINANCEIRO*
-
-[lista de ativos com sinal e raciocínio curto, ex: 📈 *BRL/USD*: ...]
-
-━━━━━━━━━━━━━━━━━━━━
-🎪 *FIQUE DE OLHO*
-
-• [alerta 1]
-• [alerta 2]`;
+import { DIGEST_PROMPT, normalizeDigest } from "./digestFormat.js";
+import { generateDigestText } from "./digestGeneration.js";
 
 export async function buildAndSendDigest(): Promise<void> {
 	console.log("[DigestJob] Building daily digest...");
+	const { content, topUrl } = await buildDigestContent();
+	await sendDigest(content, topUrl);
+	console.log("[DigestJob] Digest sent.");
+}
 
+export async function buildDigestContent(): Promise<{
+	content: string;
+	topUrl?: string;
+}> {
 	const [topics, opportunities, ragArticles, activeStories] = await Promise.all(
 		[
 			getAllTrackedTopics().catch(() => []),
@@ -171,16 +129,9 @@ export async function buildAndSendDigest(): Promise<void> {
 			}),
 		);
 
-	const { text } = await generateText({
-		model,
-		prompt: fullPrompt,
-		maxTokens: 1000,
-		abortSignal: AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
-	});
+	const text = await generateDigestText(model, fullPrompt);
 
-	const topUrl = topArticles[0]?.url;
-	await sendDigest(text, topUrl);
-	console.log("[DigestJob] Digest sent.");
+	return { content: normalizeDigest(text), topUrl: topArticles[0]?.url };
 }
 
 let task: cron.ScheduledTask | null = null;

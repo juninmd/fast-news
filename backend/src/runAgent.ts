@@ -88,7 +88,7 @@ async function main(): Promise<void> {
 }
 
 main().catch(async (err) => {
-	console.error("[Agent] Fatal error:", (err as Error).message);
+	console.error("[Agent] Fatal error:", err);
 	await shutdown().catch(() => {});
 	process.exit(1);
 });
