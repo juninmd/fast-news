@@ -52,6 +52,9 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
        ORDER BY na.published_at DESC NULLS LAST
        LIMIT 50`,
 		);
+		console.log(
+			`[IngestionJob] Found ${res.rows.length} unsent evaluated articles`,
+		);
 		return res.rows;
 	} catch (err) {
 		console.error(
@@ -104,7 +107,8 @@ export async function runIngestionAndPost(): Promise<void> {
 	);
 
 	const allowedCategories = config.telegramNewsCategories;
-	const maxPerRun = config.telegramMaxNewsPerRun > 0 ? config.telegramMaxNewsPerRun : Infinity;
+	const maxPerRun =
+		config.telegramMaxNewsPerRun > 0 ? config.telegramMaxNewsPerRun : Infinity;
 
 	function filterAndCap<T extends { category: string }>(items: T[]): T[] {
 		const filtered =
