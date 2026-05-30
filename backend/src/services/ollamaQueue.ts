@@ -10,6 +10,7 @@ interface CredibilityJob {
 }
 
 let queue: Bull.Queue<CredibilityJob> | null = null;
+let processorReady = false;
 
 function getQueue(): Bull.Queue<CredibilityJob> {
 	if (!queue) {
@@ -21,64 +22,68 @@ function getQueue(): Bull.Queue<CredibilityJob> {
 				removeOnFail: 100,
 			},
 		});
-
-		// Max 2 concurrent Ollama calls to avoid hammering the model server
-		queue.process(2, async (job) => {
-			const { article } = job.data;
-
-			if (article.category === "fact_check") return;
-
-			const fullContent =
-				(await fetchFullArticle(article.url).catch(() => null)) ||
-				article.content;
-
-			const result = await analyzeCredibility(
-				article.id,
-				article.title,
-				fullContent,
-				article.source,
-				article.category,
-				AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
-			);
-
-			let enriched: TelegramArticle = article;
-
-			if (result) {
-				enriched = {
-					...article,
-					fullContent,
-					fakeNewsScore: result.fakeNewsScore,
-					politicalBias: result.politicalBias,
-					isMilitant: result.isMilitant,
-					hasIncoherence: result.hasIncoherence,
-					credibilityFlags: result.credibilityFlags,
-					credibilityReasoning: result.reasoning,
-				};
-				console.log(
-					`[OllamaQueue] Credibility done for ${article.id} (score: ${result.fakeNewsScore})`,
-				);
-			} else {
-				throw new Error(
-					`Credibility analysis did not complete for ${article.id}`,
-				);
-			}
-
-			await enqueueTelegramPosts([enriched]);
-		});
-
-		queue.on("failed", (job, err) => {
-			console.error(
-				`[OllamaQueue] Job ${job?.id ?? "unknown"} failed after all retries: ${err.message}`,
-			);
-		});
-
-		console.log("[OllamaQueue] Credibility worker started (concurrency: 2).");
 	}
 	return queue;
 }
 
 export async function startOllamaQueueWorker(): Promise<void> {
-	getQueue();
+	if (processorReady) return;
+	const q = getQueue();
+	await q.isReady();
+
+	// Max 2 concurrent Ollama calls to avoid hammering the model server
+	q.process(2, async (job) => {
+		const { article } = job.data;
+
+		if (article.category === "fact_check") return;
+
+		const fullContent =
+			(await fetchFullArticle(article.url).catch(() => null)) ||
+			article.content;
+
+		const result = await analyzeCredibility(
+			article.id,
+			article.title,
+			fullContent,
+			article.source,
+			article.category,
+			AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
+		);
+
+		let enriched: TelegramArticle = article;
+
+		if (result) {
+			enriched = {
+				...article,
+				fullContent,
+				fakeNewsScore: result.fakeNewsScore,
+				politicalBias: result.politicalBias,
+				isMilitant: result.isMilitant,
+				hasIncoherence: result.hasIncoherence,
+				credibilityFlags: result.credibilityFlags,
+				credibilityReasoning: result.reasoning,
+			};
+			console.log(
+				`[OllamaQueue] Credibility done for ${article.id} (score: ${result.fakeNewsScore})`,
+			);
+		} else {
+			throw new Error(
+				`Credibility analysis did not complete for ${article.id}`,
+			);
+		}
+
+		await enqueueTelegramPosts([enriched]);
+	});
+
+	q.on("failed", (job, err) => {
+		console.error(
+			`[OllamaQueue] Job ${job?.id ?? "unknown"} failed after all retries: ${err.message}`,
+		);
+	});
+
+	processorReady = true;
+	await new Promise((r) => setTimeout(r, 100));
+	console.log("[OllamaQueue] Credibility worker started and ready (concurrency: 2).");
 }
 
 export async function enqueueCredibilityAnalysis(
