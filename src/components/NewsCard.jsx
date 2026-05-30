@@ -58,13 +58,7 @@ function extractVideoUrl(text) {
 	return null;
 }
 
-const NewsCard = ({
-	item,
-	aiProvider,
-	apiKey,
-	aiModel,
-	autoSummarize,
-}) => {
+const NewsCard = ({ item, aiProvider, apiKey, aiModel, autoSummarize }) => {
 	const [summary, setSummary] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [sendingTelegram, setSendingTelegram] = useState(false);
@@ -231,7 +225,7 @@ const NewsCard = ({
 						<div className="aspect-[16/10] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 flex items-center justify-center relative">
 							<Newspaper className="text-indigo-400 dark:text-indigo-500 w-16 h-16 opacity-50" />
 						</div>
-					}
+					)}
 
 					{item.category && (
 						<div className="absolute top-3 left-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider z-10">
@@ -315,20 +309,20 @@ const NewsCard = ({
 					</div>
 
 					<div className="flex items-center gap-1">
-							<button
-								onClick={handleSendToTelegram}
-								disabled={sendingTelegram}
-								className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all disabled:opacity-50"
-								title="Enviar para Telegram"
-							>
-								{sendingTelegram ? (
-									<Loader size={16} className="animate-spin" />
-								) : telegramStatus === "success" ? (
-									<Check size={16} />
-								) : (
-									<Send size={16} />
-								)}
-							</button>
+						<button
+							onClick={handleSendToTelegram}
+							disabled={sendingTelegram}
+							className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all disabled:opacity-50"
+							title="Enviar para Telegram"
+						>
+							{sendingTelegram ? (
+								<Loader size={16} className="animate-spin" />
+							) : telegramStatus === "success" ? (
+								<Check size={16} />
+							) : (
+								<Send size={16} />
+							)}
+						</button>
 						<button
 							onClick={handleSummarize}
 							disabled={loading || summary}

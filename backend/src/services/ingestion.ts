@@ -234,9 +234,7 @@ async function isOllamaAvailable(): Promise<boolean> {
 		const ac = new AbortController();
 		const t = setTimeout(() => ac.abort(), 5_000);
 		const apiKey =
-			process.env["OLLAMA_API_KEY"] ||
-			process.env["OPENAI_API_KEY"] ||
-			"";
+			process.env["OLLAMA_API_KEY"] || process.env["OPENAI_API_KEY"] || "";
 		const res = await fetch(probeUrl, {
 			signal: ac.signal,
 			headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
