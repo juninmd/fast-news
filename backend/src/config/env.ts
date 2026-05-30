@@ -38,6 +38,11 @@ export const config = {
 
 	telegramBotToken: optional("TELEGRAM_BOT_TOKEN", ""),
 	telegramEnabled: optional("TELEGRAM_ENABLED", "false") === "true",
+	telegramBotMode: optional("TELEGRAM_BOT_MODE", "polling") as
+		| "polling"
+		| "webhook"
+		| "none",
+	telegramWebhookUrl: optional("TELEGRAM_WEBHOOK_URL", ""),
 	telegramChatIds: optional("TELEGRAM_CHAT_IDS", "").split(",").filter(Boolean),
 	telegramNewsCategories: optional("TELEGRAM_NEWS_CATEGORIES", "")
 		.split(",")
@@ -99,6 +104,15 @@ export function validateConfig(): void {
 	if (config.telegramEnabled && !config.telegramChatIds.length) {
 		console.warn(
 			"[config] TELEGRAM_ENABLED=true but TELEGRAM_CHAT_IDS is empty — no messages will be sent",
+		);
+	}
+	if (
+		config.telegramEnabled &&
+		config.telegramBotMode === "webhook" &&
+		!config.telegramWebhookUrl
+	) {
+		console.warn(
+			"[config] TELEGRAM_BOT_MODE=webhook but TELEGRAM_WEBHOOK_URL is not set — webhook cannot be registered",
 		);
 	}
 }

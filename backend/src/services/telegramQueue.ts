@@ -7,8 +7,7 @@ interface TelegramQueueJob {
 }
 
 let queue: Bull.Queue<TelegramQueueJob> | null = null;
-let workerStarted = false;
-let workerStartPromise: Promise<void> | null = null;
+let processorReady = false;
 
 function getQueue(): Bull.Queue<TelegramQueueJob> {
 	if (!queue) {
@@ -42,31 +41,27 @@ function getQueue(): Bull.Queue<TelegramQueueJob> {
 }
 
 export async function startTelegramQueueWorker(): Promise<void> {
-	if (workerStarted) return;
-	if (workerStartPromise) return workerStartPromise;
-	workerStartPromise = (async () => {
-		const q = getQueue();
-		await q.isReady();
-		q.process(1, async (job) => {
-			await postArticleToTelegram(job.data.article);
-		});
-		q.on("failed", (job, err) => {
-			console.error(
-				`[TelegramQueue] Job ${job?.id ?? "unknown"} failed:`,
-				err.message,
-			);
-		});
-		q.on("completed", (job) => {
-			console.log(`[TelegramQueue] Job ${job.id} completed.`);
-		});
-		workerStarted = true;
-		console.log("[TelegramQueue] Worker started.");
-	})();
-	try {
-		await workerStartPromise;
-	} finally {
-		workerStartPromise = null;
-	}
+	if (processorReady) return;
+	const q = getQueue();
+	await q.isReady();
+
+	q.process(1, async (job) => {
+		await postArticleToTelegram(job.data.article);
+	});
+
+	q.on("failed", (job, err) => {
+		console.error(
+			`[TelegramQueue] Job ${job?.id ?? "unknown"} failed:`,
+			err.message,
+		);
+	});
+	q.on("completed", (job) => {
+		console.log(`[TelegramQueue] Job ${job.id} completed.`);
+	});
+
+	processorReady = true;
+	await new Promise((r) => setTimeout(r, 100));
+	console.log("[TelegramQueue] Worker started and ready.");
 }
 
 export async function enqueueTelegramPosts(
@@ -92,12 +87,19 @@ export async function enqueueTelegramPosts(
 		articles.map((article) => q.add({ article }, { jobId: article.id })),
 	);
 	const failed = queued.filter((result) => result.status === "rejected");
+	const succeeded = queued.length - failed.length;
 	if (failed.length > 0) {
 		console.error(
 			`[TelegramQueue] Failed to enqueue ${failed.length}/${articles.length} article(s).`,
 		);
+		failed.forEach((result) => {
+			if (result.status === "rejected") {
+				console.error(`[TelegramQueue] Enqueue error:`, result.reason.message);
+			}
+		});
 	}
-	return queued.length - failed.length;
+	console.log(`[TelegramQueue] Enqueued ${succeeded} articles for Telegram posting.`);
+	return succeeded;
 }
 
 export async function retryFailedTelegramPosts(limit = 100): Promise<number> {
@@ -135,6 +137,6 @@ export async function stopTelegramQueueWorker(): Promise<void> {
 	if (!queue) return;
 	await queue.close();
 	queue = null;
-	workerStarted = false;
+	processorReady = false;
 	console.log("[TelegramQueue] Worker stopped.");
 }
