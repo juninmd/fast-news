@@ -1,6 +1,8 @@
 import { Request, Response, Router } from "express";
+import { config } from "../../config/env.js";
 import { query } from "../../database/client.js";
 import {
+	getBot,
 	postArticleToTelegram,
 	type TelegramArticle,
 } from "../../services/telegram.js";
@@ -55,3 +57,17 @@ telegramRouter.post(
 		return res.status(202).json({ ok: true, articleId: id });
 	},
 );
+
+telegramRouter.post("/webhook", async (req: Request, res: Response) => {
+	if (!config.telegramEnabled || config.telegramBotMode !== "webhook") {
+		return res
+			.status(404)
+			.json({ error: "Webhook not enabled or Telegram is disabled" });
+	}
+	try {
+		await getBot().handleUpdate(req.body, res);
+	} catch (err: any) {
+		console.error("[Telegram] Webhook error:", err.message);
+		res.sendStatus(500);
+	}
+});

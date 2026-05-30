@@ -385,6 +385,32 @@ export async function startBot(): Promise<void> {
 
 	const b = getBot();
 
+	if (config.telegramBotMode === "webhook") {
+		if (!config.telegramWebhookUrl) {
+			console.warn(
+				"[Telegram] TELEGRAM_BOT_MODE is webhook but TELEGRAM_WEBHOOK_URL is empty. Skipping webhook registration.",
+			);
+			return;
+		}
+		try {
+			await b.telegram.setWebhook(config.telegramWebhookUrl);
+			console.log(
+				`[Telegram] Webhook registered successfully: ${config.telegramWebhookUrl}`,
+			);
+		} catch (err) {
+			console.error(
+				"[Telegram] Webhook registration failed:",
+				(err as Error).message,
+			);
+		}
+		return;
+	}
+
+	if (config.telegramBotMode === "none") {
+		console.log("[Telegram] Bot update updates loop disabled (none mode).");
+		return;
+	}
+
 	// Clear any stale webhook that may block polling
 	await b.telegram
 		.deleteWebhook({ drop_pending_updates: true })
