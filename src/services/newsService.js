@@ -4,7 +4,6 @@ export const FEED_SOURCES = [
 	// --- TECNOLOGIA (MUNDO) ---
 	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
 
-
 	{ url: "https://arstechnica.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.engadget.com/rss.xml", category: "Tecnologia" },
 	{ url: "https://www.cnet.com/rss/news/", category: "Tecnologia" },
@@ -199,6 +198,7 @@ export const FEED_SOURCES = [
 	},
 	{ url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: "Mundo" },
 	{ url: "https://feeds.bbci.co.uk/news/rss.xml", category: "Mundo" },
+	{ url: "http://feeds.foxnews.com/foxnews/world", category: "Mundo" },
 	{ url: "https://www.aljazeera.com/xml/rss/all.xml", category: "Mundo" },
 	{ url: "https://feeds.reuters.com/reuters/worldNews", category: "Mundo" },
 	{ url: "https://www.theguardian.com/world/rss", category: "Mundo" },

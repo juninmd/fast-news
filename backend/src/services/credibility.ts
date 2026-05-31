@@ -51,21 +51,26 @@ const CredibilitySchema = z.object({
 		.describe("Justificativa breve (1 frase) da pontuação atribuída"),
 });
 
-const CREDIBILITY_PROMPT = `Você é um fact-checker especialista. Analise a credibilidade desta notícia de forma objetiva e imparcial.
+const CREDIBILITY_PROMPT = `Você é um avaliador de credibilidade e fact-checking especialista. Analise a credibilidade desta notícia de forma objetiva, realista e imparcial, evitando o excesso de rigor acadêmico ou paranoia.
 
 TÍTULO: {title}
 FONTE: {source}
 CATEGORIA: {category}
 CONTEÚDO: {content}
 {factCheckContext}
+
+Instruções Cruciais para evitar Falsos Positivos:
+1. Notícias de Esportes, Entretenimento, Cultura, Tecnologia Prática e Finanças: Não precisam citar fontes acadêmicas. Se forem de portais jornalísticos comuns, atribua scores baixos de fake news (1 a 3) e NÃO marque "unverified_claims" ou "missing_sources" sem necessidade.
+2. Notícias Factuais Recentes (Tempo Real): É perfeitamente normal que reportagens publicadas no mesmo dia do evento apenas tragam resultados rápidos (como o placar de um jogo de tênis/futebol ocorrendo hoje). Não marque como "unverified_claims" só porque o evento é de hoje.
+3. Teoria da Conspiração e Fake News (flags "conspiracy_theory", "fake_news"): Use APENAS para boatos evidentes, desinformação deliberada ou teorias bizarras não comprovadas. NUNCA use para análises financeiras corporativas legítimas ou colunas de opinião técnica.
+4. Tamanho do texto: O texto pode ser curto por ser apenas um resumo. Seja justo. Atribua scores de 1 a 4 para portais de notícias jornalísticas reconhecidas nacional ou internacionalmente (ex: Folha, CNN, Metrópoles, Exame, BBC, InfoMoney).
+
 Avalie:
-1. Score de fake news (1=totalmente confiável e factual de grande veículo, 10=desinformação deliberada/boato)
+1. Score de fake news (1=totalmente confiável/factual/fonte legítima, 10=desinformação deliberada/boato completo)
 2. Viés político do conteúdo (não da fonte, mas do texto em si)
 3. Se é panfletário/militante (linguagem muito emotiva, incitação, ataques pessoais ou ativismo explícito)
 4. Se há incoerências internas, contradições, mentiras ou alegações sérias sem qualquer menção a fontes/evidências
-5. Flags de problemas, usando fake_news, lie, hypocrisy ou incoherence quando houver evidência clara no texto
-
-ATENÇÃO: O conteúdo pode ser um excerto/resumo truncado de uma notícia maior. Se o texto for curto (1-2 parágrafos), NÃO marque missing_sources como flag — fontes podem estar no artigo completo. Marque missing_sources apenas quando o texto fizer alegações factuais sérias sem qualquer menção a fontes. Para grandes veículos jornalísticos (CNN, BBC, Folha, etc.), privilegie scores 1-4, pois o conteúdo tende a ser factual. Seja rigoroso mas justo.`;
+5. Flags de problemas, usando fake_news, lie, hypocrisy ou incoherence quando houver evidência clara no texto`;
 
 async function findRelatedFactChecks(title: string): Promise<string> {
 	try {

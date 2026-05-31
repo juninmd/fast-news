@@ -419,6 +419,11 @@ export const FEED_SOURCES = [
 		company: "BBC",
 	},
 	{
+		url: "http://feeds.foxnews.com/foxnews/world",
+		category: "Mundo",
+		company: "Fox News",
+	},
+	{
 		url: "https://feeds.bbci.co.uk/portuguese/rss.xml",
 		category: "Mundo",
 		company: "BBC Brasil",
