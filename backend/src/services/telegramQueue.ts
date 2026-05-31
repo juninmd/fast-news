@@ -98,7 +98,9 @@ export async function enqueueTelegramPosts(
 			}
 		});
 	}
-	console.log(`[TelegramQueue] Enqueued ${succeeded} articles for Telegram posting.`);
+	console.log(
+		`[TelegramQueue] Enqueued ${succeeded} articles for Telegram posting.`,
+	);
 	return succeeded;
 }
 
