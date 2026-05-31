@@ -33,6 +33,7 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
 			credibilityFlags: string[];
 			credibilityReasoning: string | null;
 			storyId: string | null;
+			sentiment: string | null;
 		}>(
 			`SELECT na.id, na.title, na.url, na.source, na.category, na.company,
               na.content, na.published_at AS "publishedAt", na.image_url AS "imageUrl",
@@ -40,7 +41,8 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
               na.is_militant AS "isMilitant", na.has_incoherence AS "hasIncoherence",
               na.credibility_flags AS "credibilityFlags",
               na.credibility_reasoning AS "credibilityReasoning",
-              sa.story_id AS "storyId"
+              sa.story_id AS "storyId",
+              na.sentiment AS "sentiment"
        FROM news_articles na
        LEFT JOIN LATERAL (
          SELECT story_id FROM story_articles WHERE article_id = na.id LIMIT 1
