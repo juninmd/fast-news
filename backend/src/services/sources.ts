@@ -617,11 +617,7 @@ export const FEED_SOURCES = [
 		category: "Tecnologia",
 		company: "Vox",
 	},
-	{
-		url: "https://www.wired.com/feed/rss",
-		category: "Tecnologia",
-		company: "Wired",
-	},
+
 	{
 		url: "https://www.zdnet.com/news/rss.xml",
 		category: "Tecnologia",

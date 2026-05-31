@@ -190,12 +190,7 @@ export const FEED_SOURCES: FeedSource[] = [
 		category: "Tecnologia",
 		company: "Ars Technica",
 	},
-	{
-		name: "Wired",
-		url: "https://www.wired.com/feed/rss",
-		category: "Tecnologia",
-		company: "Wired",
-	},
+
 	{
 		name: "Engadget",
 		url: "https://www.engadget.com/rss.xml",
