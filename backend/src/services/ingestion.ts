@@ -5,7 +5,7 @@ import { upsertArticleToSqlite } from "../database/sqliteStore.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
 import { enqueueCredibilityAnalysis } from "./ollamaQueue.js";
-import { FEED_SOURCES } from "./sources.js";
+import { getActiveFeeds } from "./sources.js";
 
 const parser = new Parser({
 	customFields: { item: [["media:content", "mediaContent"], "enclosure"] },
@@ -248,14 +248,15 @@ async function isOllamaAvailable(): Promise<boolean> {
 
 export async function runIngestion(): Promise<IngestionResult> {
 	console.log("[ingestion] Starting news ingestion...");
+	const feeds = await getActiveFeeds();
 	const ollamaUp = await isOllamaAvailable();
 	if (!ollamaUp)
 		console.warn("[ingestion] Ollama unavailable — embeddings will be skipped");
 	let fetched = 0;
 	const newArticles: IngestionResult["newArticles"] = [];
 
-	for (let i = 0; i < FEED_SOURCES.length; i += config.ingestion.batchSize) {
-		const batch = FEED_SOURCES.slice(i, i + config.ingestion.batchSize);
+	for (let i = 0; i < feeds.length; i += config.ingestion.batchSize) {
+		const batch = feeds.slice(i, i + config.ingestion.batchSize);
 		const results = await Promise.allSettled(batch.map(fetchFeed));
 
 		for (const result of results) {
