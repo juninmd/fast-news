@@ -66,10 +66,42 @@ function setupCommands(bot: Telegraf): void {
 			/^fb:(like|dislike):(.+)$/i,
 		);
 		if (!match) return;
-		await saveFeedback(ctx, match[2], match[1] as "like" | "dislike");
+		const action = match[1];
+		const articleId = match[2];
+		await saveFeedback(ctx, articleId, action as "like" | "dislike");
 		await ctx.answerCbQuery(
-			match[1] === "like" ? "Preferência registrada." : "Dislike registrado.",
+			action === "like" ? "Preferência registrada." : "Dislike registrado.",
 		);
+
+		// Fetch updated counts for the keyboard
+		const countRes = await query<{ likes: string; dislikes: string }>(
+			`SELECT 
+				COUNT(*) FILTER (WHERE reaction = 'like') AS likes, 
+				COUNT(*) FILTER (WHERE reaction = 'dislike') AS dislikes 
+			 FROM telegram_article_feedback 
+			 WHERE article_id = $1`,
+			[articleId],
+		);
+		const likes = countRes.rows[0]?.likes || "0";
+		const dislikes = countRes.rows[0]?.dislikes || "0";
+
+		// Update reply markup dynamically
+		const oldKeyboard =
+			(ctx.callbackQuery as any).message?.reply_markup?.inline_keyboard || [];
+		const newKeyboard = [
+			[
+				{ text: `👍 Curtir (${likes})`, callback_data: `fb:like:${articleId}` },
+				{
+					text: `👎 Não curti (${dislikes})`,
+					callback_data: `fb:dislike:${articleId}`,
+				},
+			],
+			...oldKeyboard.slice(1),
+		];
+
+		await ctx
+			.editMessageReplyMarkup({ inline_keyboard: newKeyboard })
+			.catch(console.error);
 	});
 	bot.command("pulse", async (ctx: Context) => {
 		await ctx.reply("🌌 Gerando Neo-Pulse Global...");
@@ -163,15 +195,15 @@ async function saveFeedback(
 	articleId: string,
 	reaction: "like" | "dislike",
 ): Promise<void> {
+	const chatId = ctx.chat?.id ? String(ctx.chat.id) : null;
+	const userId = ctx.from?.id ? String(ctx.from.id) : null;
+	if (!chatId) {
+		console.error("No chat_id found for telegram feedback");
+		return;
+	}
 	await query(
 		`INSERT INTO telegram_article_feedback (article_id, chat_id, user_id, username, reaction) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (article_id, chat_id, user_id) DO UPDATE SET reaction = EXCLUDED.reaction, updated_at = NOW()`,
-		[
-			articleId,
-			String(ctx.chat?.id ?? ""),
-			String(ctx.from?.id ?? ""),
-			ctx.from?.username ?? null,
-			reaction,
-		],
+		[articleId, chatId, userId, ctx.from?.username ?? null, reaction],
 	).catch(console.error);
 }
 
@@ -193,6 +225,7 @@ export interface TelegramArticle {
 	hasIncoherence?: boolean;
 	credibilityFlags?: string[];
 	credibilityReasoning?: string | null;
+	sentiment?: string | null;
 }
 
 export function safeTruncateHtml(html: string, limit: number): string {
@@ -310,13 +343,33 @@ export async function postArticleToTelegram(
 	const relatedBlock = related.length
 		? `\n\n${SEPARATOR}\n🔗 <b>Veja também</b>\n${related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 72))}</a>`).join("\n")}`
 		: "";
+	const wordCount = (article.fullContent || article.content || "").split(
+		/\s+/,
+	).length;
+	const readTimeMin = Math.max(1, Math.ceil(wordCount / 200));
+	const readTimeLabel = `  ·  ⏱️ <i>${readTimeMin} min de leitura</i>`;
+
 	const breakingLabel = isBreaking ? `🔴 <b>URGENTE</b>  ·  ` : "";
-	const sourceHeader = `${breakingLabel}${CATEGORY_EMOJI[article.category] ?? "📰"} <b>${article.category.toUpperCase()}</b>  ·  ${article.company && article.company !== article.source ? `${article.company} · ` : ""}${article.source}${ago ? `  ·  <i>${ago}</i>` : ""}`;
-	const message = `${sourceHeader}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>\n\n<i>${escapeHtml(displaySummary)}</i>${context ? `\n\n💡 <i>${escapeHtml(context)}</i>` : ""}${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n#${article.category.replace(/\W/g, "_")}`;
+	const sourceHeader = `${breakingLabel}${CATEGORY_EMOJI[article.category] ?? "📰"} <b>${article.category.toUpperCase()}</b>  ·  ${article.company && article.company !== article.source ? `${article.company} · ` : ""}${article.source}${ago ? `  ·  <i>${ago}</i>` : ""}${readTimeLabel}`;
+
+	let sentimentLabel = "";
+	if (article.sentiment) {
+		const s = article.sentiment.toLowerCase();
+		if (s === "positive" || s === "bullish")
+			sentimentLabel = "\n🎭 <b>Sentimento:</b> Otimista 🟢";
+		else if (s === "negative" || s === "bearish")
+			sentimentLabel = "\n🎭 <b>Sentimento:</b> Pessimista 🔴";
+		else if (s === "neutral")
+			sentimentLabel = "\n🎭 <b>Sentimento:</b> Neutro ⚪";
+	}
+
+	const sourceHashtag = `#${(article.company || article.source).replace(/\W+/g, "_")}`;
+	const message = `${sourceHeader}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>${sentimentLabel}\n\n<i>${escapeHtml(displaySummary)}</i>${context ? `\n\n💡 <i>${escapeHtml(context)}</i>` : ""}${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n#${article.category.replace(/\W/g, "_")} ${sourceHashtag}`;
+
 	const inlineButtons = [
 		[
-			{ text: "👍 Curtir", callback_data: `fb:like:${article.id}` },
-			{ text: "👎 Não curti", callback_data: `fb:dislike:${article.id}` },
+			{ text: "👍 Curtir (0)", callback_data: `fb:like:${article.id}` },
+			{ text: "👎 Não curti (0)", callback_data: `fb:dislike:${article.id}` },
 		],
 		[
 			{ text: "📖 Ler reportagem", url: article.url },
