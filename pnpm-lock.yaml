@@ -21,8 +21,8 @@ importers:
         specifier: ^17.4.2
         version: 17.4.2
       lucide-react:
-        specifier: ^0.562.0
-        version: 0.562.0(react@19.2.5)
+        specifier: ^1.17.0
+        version: 1.17.0(react@19.2.5)
       postcss:
         specifier: ^8.5.15
         version: 8.5.15
@@ -1444,8 +1444,8 @@ packages:
     resolution: {integrity: sha512-5YgH9UJd7wVb9hIouI2adWpgqrrICkt070Dnj8EUY1+B4B2P9eRLPAkAAo6NICA7CEhOIeBHl46u9zSNpNu7zA==}
     engines: {node: 20 || >=22}
 
-  lucide-react@0.562.0:
-    resolution: {integrity: sha512-82hOAu7y0dbVuFfmO4bYF1XEwYk/mEbM5E+b1jgci/udUBEE/R7LF5Ip0CCEmXe8AybRM8L+04eP+LGZeDvkiw==}
+  lucide-react@1.17.0:
+    resolution: {integrity: sha512-9FA9evdox/JQL5PT57fdA1x/yg8T7knJ98+zjTL3UfKza6pflQUUh3XtaQIHKvnsJw1lmsEyHVlt5jchYxOQ5w==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -3449,7 +3449,7 @@ snapshots:
 
   lru-cache@11.5.0: {}
 
-  lucide-react@0.562.0(react@19.2.5):
+  lucide-react@1.17.0(react@19.2.5):
     dependencies:
       react: 19.2.5
 
