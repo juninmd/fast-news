@@ -31,6 +31,9 @@ interface UseNewsOptions {
 	category?: string;
 	company?: string;
 	limit?: number;
+	minCredibility?: number;
+	politicalBias?: string;
+	excludeMilitant?: boolean;
 }
 
 interface UseNewsReturn {
@@ -65,6 +68,15 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 				if (options.company && options.company !== "Todas") {
 					params.set("company", options.company);
 				}
+				if (options.minCredibility) {
+					params.set("minCredibility", options.minCredibility.toString());
+				}
+				if (options.politicalBias && options.politicalBias !== "all") {
+					params.set("politicalBias", options.politicalBias);
+				}
+				if (options.excludeMilitant) {
+					params.set("excludeMilitant", "true");
+				}
 
 				const response = await fetch(`/api/news?${params}`);
 				if (!response.ok) throw new Error("Failed to fetch articles");
@@ -84,7 +96,14 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 				setLoading(false);
 			}
 		},
-		[options.category, options.company, options.limit],
+		[
+			options.category,
+			options.company,
+			options.limit,
+			options.minCredibility,
+			options.politicalBias,
+			options.excludeMilitant,
+		],
 	);
 
 	useEffect(() => {

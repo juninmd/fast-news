@@ -1,3 +1,5 @@
+import { query } from "../database/client.js";
+
 export const FEED_SOURCES = [
 	// ── AI Frontier ─────────────────────────────────────────────────────────────
 	{
@@ -643,3 +645,54 @@ export const FEED_SOURCES = [
 		company: "Boatos.org",
 	},
 ];
+
+export async function syncDefaultFeeds(): Promise<void> {
+	try {
+		const countRes = await query<{ count: string }>(
+			"SELECT COUNT(*) FROM source_feeds",
+		);
+		if (parseInt(countRes.rows[0].count, 10) === 0) {
+			console.log(
+				"[sources] Database source_feeds is empty. Seeding with default sources...",
+			);
+			for (const source of FEED_SOURCES) {
+				await query(
+					"INSERT INTO source_feeds (name, url, category, company, is_active) VALUES ($1, $2, $3, $4, true) ON CONFLICT (url) DO NOTHING",
+					[
+						source.company || "Fonte",
+						source.url,
+						source.category,
+						source.company,
+					],
+				);
+			}
+			console.log("[sources] Finished seeding default sources.");
+		}
+	} catch (err) {
+		console.error("[sources] Failed to sync default feeds:", err);
+	}
+}
+
+export async function getActiveFeeds(): Promise<
+	Array<{ url: string; category: string; company?: string }>
+> {
+	try {
+		await syncDefaultFeeds();
+		const res = await query<{ url: string; category: string; company: string }>(
+			"SELECT url, category, company FROM source_feeds WHERE is_active = true",
+		);
+		if (res.rows.length > 0) {
+			return res.rows.map((r) => ({
+				url: r.url,
+				category: r.category,
+				company: r.company || undefined,
+			}));
+		}
+	} catch (err) {
+		console.error(
+			"[sources] Error loading feeds from database, falling back to static list:",
+			err,
+		);
+	}
+	return FEED_SOURCES;
+}
