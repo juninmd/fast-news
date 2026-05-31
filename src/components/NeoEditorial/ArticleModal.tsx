@@ -257,7 +257,7 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 											>
 												<ShieldAlert className="w-3 h-3" />
 												{fakeNewsLabel(article.fake_news_score).label} (
-												{article.fake_news_score}/10)
+												{11 - article.fake_news_score}/10)
 											</span>
 										)}
 										{article.political_bias &&
