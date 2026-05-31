@@ -7,6 +7,7 @@ import {
 	SearchModal,
 	Sidebar,
 	SkeletonCard,
+	StatusPanel,
 	TopNewsSection,
 } from "./components/NeoEditorial";
 import {
@@ -25,7 +26,13 @@ import "./styles/animations.css";
 function App() {
 	const [activeCategory, setActiveCategory] = useState("Todas");
 	const [activeView, setActiveView] = useState<
-		"feed" | "stories" | "graph" | "intelligence" | "bookmarks" | "history"
+		| "feed"
+		| "stories"
+		| "graph"
+		| "intelligence"
+		| "bookmarks"
+		| "history"
+		| "status"
 	>("feed");
 	const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
 	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
@@ -37,6 +44,9 @@ function App() {
 		edges: GraphEdge[];
 	} | null>(null);
 	const [filters, setFilters] = useState({});
+	const [minCredibility, setMinCredibility] = useState<number>(0);
+	const [politicalBias, setPoliticalBias] = useState<string>("all");
+	const [excludeMilitant, setExcludeMilitant] = useState<boolean>(false);
 
 	const { stories, loading: storiesLoading } = useStories(activeCategory);
 	const { detail: storyDetail, loading: detailLoading } =
@@ -53,6 +63,9 @@ function App() {
 
 	const { articles, loading, error, refetch, loadMore, hasMore } = useNews({
 		category: activeCategory,
+		minCredibility: minCredibility > 0 ? minCredibility : undefined,
+		politicalBias: politicalBias !== "all" ? politicalBias : undefined,
+		excludeMilitant: excludeMilitant ? true : undefined,
 		...filters,
 	});
 
@@ -168,6 +181,7 @@ function App() {
 								"intelligence",
 								"bookmarks",
 								"history",
+								"status",
 							] as const
 						).map((v) => {
 							const labels: Record<string, string> = {
@@ -177,6 +191,7 @@ function App() {
 								intelligence: "💡 Inteligência",
 								bookmarks: `🔖 Salvos${bookmarks.length > 0 ? ` (${bookmarks.length})` : ""}`,
 								history: `📖 Lidos${readHistory.length > 0 ? ` (${readHistory.length})` : ""}`,
+								status: "⚡ Status",
 							};
 							return (
 								<button
@@ -334,9 +349,65 @@ function App() {
 							/>
 						)}
 
+						{/* Status view */}
+						{activeView === "status" && <StatusPanel />}
+
 						{/* Feed view */}
 						{activeView === "feed" && (
 							<>
+								{/* Advanced Filters */}
+								<div className="mb-6 p-4 rounded-xl bg-bg-secondary border border-border-subtle flex flex-wrap gap-4 items-center animate-fade-in">
+									<div className="flex flex-col gap-1">
+										<label className="text-xs text-text-secondary font-medium">
+											Credibilidade Mínima
+										</label>
+										<select
+											value={minCredibility}
+											onChange={(e) =>
+												setMinCredibility(Number(e.target.value))
+											}
+											className="bg-bg-tertiary border border-border-subtle rounded-lg px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-primary"
+										>
+											<option value={0}>Todas</option>
+											<option value={7}>{"Confiável (>= 7/10)"}</option>
+											<option value={9}>
+												{"Alta Confiabilidade (>= 9/10)"}
+											</option>
+										</select>
+									</div>
+
+									<div className="flex flex-col gap-1">
+										<label className="text-xs text-text-secondary font-medium">
+											Viés Político
+										</label>
+										<select
+											value={politicalBias}
+											onChange={(e) => setPoliticalBias(e.target.value)}
+											className="bg-bg-tertiary border border-border-subtle rounded-lg px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-primary"
+										>
+											<option value="all">Todos</option>
+											<option value="neutral">⚖️ Neutro</option>
+											<option value="left">🔵 Esquerda</option>
+											<option value="right">🔴 Direita</option>
+										</select>
+									</div>
+
+									<div className="flex items-center gap-2 mt-4 sm:mt-0">
+										<input
+											type="checkbox"
+											id="exclude-militant"
+											checked={excludeMilitant}
+											onChange={(e) => setExcludeMilitant(e.target.checked)}
+											className="rounded border-border-subtle bg-bg-tertiary text-accent-primary focus:ring-accent-primary w-4 h-4 cursor-pointer"
+										/>
+										<label
+											htmlFor="exclude-militant"
+											className="text-sm font-medium text-text-primary cursor-pointer select-none"
+										>
+											Ocultar Panfletário/Militante
+										</label>
+									</div>
+								</div>
 								{error && (
 									<div className="text-center py-12">
 										<p className="text-red-400 mb-4">{error.message}</p>

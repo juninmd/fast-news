@@ -5,4 +5,5 @@ export { NewsCard } from "./NewsCard";
 export { SearchModal } from "./SearchModal";
 export { Sidebar } from "./Sidebar";
 export { SkeletonCard } from "./SkeletonCard";
+export { StatusPanel } from "./StatusPanel";
 export { TopNewsSection } from "./TopNewsSection";
