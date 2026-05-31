@@ -609,11 +609,7 @@ export const FEED_SOURCES = [
 		category: "Tecnologia",
 		company: "The Atlantic",
 	},
-	{
-		url: "https://www.theverge.com/rss/index.xml",
-		category: "Tecnologia",
-		company: "The Verge",
-	},
+
 	{
 		url: "https://www.vox.com/rss/technology/index.xml",
 		category: "Tecnologia",

@@ -183,12 +183,7 @@ export const FEED_SOURCES: FeedSource[] = [
 		category: "Tecnologia",
 		company: "TechCrunch",
 	},
-	{
-		name: "The Verge",
-		url: "https://www.theverge.com/rss/index.xml",
-		category: "Tecnologia",
-		company: "The Verge",
-	},
+
 	{
 		name: "Ars Technica",
 		url: "https://feeds.arstechnica.com/arstechnica/index",
