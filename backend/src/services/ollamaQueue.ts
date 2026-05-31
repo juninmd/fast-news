@@ -83,7 +83,9 @@ export async function startOllamaQueueWorker(): Promise<void> {
 
 	processorReady = true;
 	await new Promise((r) => setTimeout(r, 100));
-	console.log("[OllamaQueue] Credibility worker started and ready (concurrency: 2).");
+	console.log(
+		"[OllamaQueue] Credibility worker started and ready (concurrency: 2).",
+	);
 }
 
 export async function enqueueCredibilityAnalysis(
