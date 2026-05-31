@@ -79,12 +79,13 @@ export function buildCredibilityBlock(article: {
 	if (article.fakeNewsScore == null) return "";
 	const score = article.fakeNewsScore;
 	const emoji = SCORE_EMOJI(score);
+	const displayCredibility = 11 - score;
 	const bias = article.politicalBias
 		? (BIAS_LABEL[article.politicalBias] ?? article.politicalBias)
 		: null;
 	const flags = (article.credibilityFlags ?? []).map((f) => FLAG_LABEL[f] ?? f);
 	const lines: string[] = [
-		`${emoji} <b>Credibilidade: ${score}/10</b>${article.isMilitant ? "  ·  📢 Panfletário" : ""}`,
+		`${emoji} <b>Credibilidade: ${displayCredibility}/10</b>${article.isMilitant ? "  ·  📢 Panfletário" : ""}`,
 	];
 	if (bias && article.politicalBias !== "neutral") lines.push(`${bias}`);
 	if (flags.length) lines.push(flags.join("  ·  "));
