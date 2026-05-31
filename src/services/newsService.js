@@ -4,7 +4,7 @@ export const FEED_SOURCES = [
 	// --- TECNOLOGIA (MUNDO) ---
 	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
 
-	{ url: "https://www.wired.com/feed/rss", category: "Tecnologia" },
+
 	{ url: "https://arstechnica.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.engadget.com/rss.xml", category: "Tecnologia" },
 	{ url: "https://www.cnet.com/rss/news/", category: "Tecnologia" },
