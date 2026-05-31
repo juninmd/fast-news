@@ -102,6 +102,10 @@ export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
 }
 
 export async function getCloudFallbackModel(): Promise<LanguageModel | null> {
+	if (config.aiProvider === "ollama") {
+		const fallbackModel = config.ai.fastModel || "z-ai/glm-4-32b";
+		return registry.languageModel(`ollama:${fallbackModel}`);
+	}
 	if (config.geminiApiKey) {
 		return registry.languageModel(
 			`google:${config.ai.fastModel || "gemini-1.5-flash"}`,
@@ -119,3 +123,4 @@ export async function getCloudFallbackModel(): Promise<LanguageModel | null> {
 	}
 	return null;
 }
+
