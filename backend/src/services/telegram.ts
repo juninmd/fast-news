@@ -281,8 +281,17 @@ export async function postArticleToTelegram(
 			.replace(/\s+/g, " ")
 			.trim()
 			.slice(0, FALLBACK_SUMMARY_MAX_LEN);
-	const { label: ago, isBreaking } = formatPublishedAt(article.publishedAt);
+	const { label: ago, isBreaking: isTimeRecent } = formatPublishedAt(
+		article.publishedAt,
+	);
 	const matchedStory = article.storyId ? storyMap.get(article.storyId) : null;
+	const isBreaking =
+		isTimeRecent &&
+		!!(
+			matchedStory &&
+			(matchedStory.impactLevel === "critical" ||
+				matchedStory.impactLevel === "high")
+		);
 	const storyGraph = matchedStory
 		? await getStoryGraph(matchedStory.id).catch(() => null)
 		: null;

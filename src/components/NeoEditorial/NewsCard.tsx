@@ -311,7 +311,7 @@ export function NewsCard({
 						{fake_news_score != null && (
 							<span
 								className={`px-1.5 py-0.5 rounded-md text-xs font-semibold border ${fakeNewsColor(fake_news_score)}`}
-								title={`Score: ${fake_news_score}/10`}
+								title={`Credibilidade: ${11 - fake_news_score}/10`}
 							>
 								{fakeNewsLabel(fake_news_score)}
 							</span>
