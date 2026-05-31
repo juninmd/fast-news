@@ -73,7 +73,7 @@ export async function getLanguageModel(
 export async function getFastModel(): Promise<LanguageModel> {
 	const p = provider();
 	let id;
-	if (p === "google") id = config.ai.fastModel || "gemini-1.5-flash";
+	if (p === "google") id = config.ai.fastModel || "gemini-2.5-flash-lite";
 	else if (p === "openai") id = config.ai.fastModel || "gpt-4o-mini";
 	else if (p === "anthropic")
 		id = config.ai.fastModel || "claude-3-5-haiku-20241022";
@@ -108,7 +108,7 @@ export async function getCloudFallbackModel(): Promise<LanguageModel | null> {
 	}
 	if (config.geminiApiKey) {
 		return registry.languageModel(
-			`google:${config.ai.fastModel || "gemini-1.5-flash"}`,
+			`google:${config.ai.fastModel || "gemini-2.5-flash-lite"}`,
 		);
 	}
 	if (config.openaiApiKey) {
@@ -123,4 +123,3 @@ export async function getCloudFallbackModel(): Promise<LanguageModel | null> {
 	}
 	return null;
 }
-
