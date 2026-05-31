@@ -12,9 +12,12 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 		50,
 	);
 	const category = req.query["category"] as string | undefined;
+	const minCredibility = req.query["minCredibility"] as string | undefined;
+	const politicalBias = req.query["politicalBias"] as string | undefined;
+	const excludeMilitant = req.query["excludeMilitant"] === "true";
 	const offset = (page - 1) * limit;
 
-	const cacheKey = `news:list:${page}:${limit}:${category ?? "all"}`;
+	const cacheKey = `news:list:${page}:${limit}:${category ?? "all"}:${minCredibility ?? "all"}:${politicalBias ?? "all"}:${excludeMilitant}`;
 	const cached = await cacheGet(cacheKey);
 	if (cached) return res.json(cached);
 
@@ -24,6 +27,22 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 	if (category) {
 		whereClauses.push(`category = $${params.length + 1}`);
 		params.push(category);
+	}
+	if (minCredibility) {
+		const val = parseInt(minCredibility, 10);
+		if (!isNaN(val)) {
+			whereClauses.push(
+				`(fake_news_score IS NULL OR fake_news_score <= $${params.length + 1})`,
+			);
+			params.push(11 - val);
+		}
+	}
+	if (politicalBias && politicalBias !== "all") {
+		whereClauses.push(`political_bias = $${params.length + 1}`);
+		params.push(politicalBias);
+	}
+	if (excludeMilitant) {
+		whereClauses.push(`is_militant = false`);
 	}
 
 	const where = whereClauses.length
@@ -193,4 +212,63 @@ newsRouter.get("/:id/related", async (req: Request, res: Response) => {
 	const response = { data: related.filter((a) => a.id !== id) };
 	await cacheSet(cacheKey, response, 900);
 	return res.json(response);
+});
+
+// --- Feed Management Endpoints ---
+
+newsRouter.get("/feeds/list", async (req: Request, res: Response) => {
+	try {
+		const { syncDefaultFeeds } = await import("../../services/sources.js");
+		await syncDefaultFeeds();
+
+		const result = await query(
+			'SELECT id, name, url, category, company, is_active AS "isActive", last_fetched AS "lastFetched" FROM source_feeds ORDER BY name ASC',
+		);
+		return res.json({ data: result.rows });
+	} catch (error) {
+		console.error("[API] Failed to fetch feeds list:", error);
+		return res.status(500).json({ error: "Failed to fetch feeds list" });
+	}
+});
+
+newsRouter.post("/feeds/toggle", async (req: Request, res: Response) => {
+	const { id, isActive } = req.body;
+	if (!id) return res.status(400).json({ error: "Missing feed ID" });
+	try {
+		await query("UPDATE source_feeds SET is_active = $1 WHERE id = $2", [
+			isActive,
+			id,
+		]);
+		return res.json({ success: true });
+	} catch (error) {
+		console.error("[API] Failed to toggle feed:", error);
+		return res.status(500).json({ error: "Failed to toggle feed" });
+	}
+});
+
+newsRouter.post("/feeds/add", async (req: Request, res: Response) => {
+	const { name, url, category, company } = req.body;
+	if (!name || !url)
+		return res.status(400).json({ error: "Missing feed name or URL" });
+	try {
+		await query(
+			"INSERT INTO source_feeds (name, url, category, company, is_active) VALUES ($1, $2, $3, $4, true) ON CONFLICT (url) DO NOTHING",
+			[name, url, category || "Tecnologia", company || name],
+		);
+		return res.json({ success: true });
+	} catch (error) {
+		console.error("[API] Failed to add feed:", error);
+		return res.status(500).json({ error: "Failed to add feed" });
+	}
+});
+
+newsRouter.delete("/feeds/:id", async (req: Request, res: Response) => {
+	const { id } = req.params;
+	try {
+		await query("DELETE FROM source_feeds WHERE id = $1", [id]);
+		return res.json({ success: true });
+	} catch (error) {
+		console.error("[API] Failed to delete feed:", error);
+		return res.status(500).json({ error: "Failed to delete feed" });
+	}
 });

@@ -45,11 +45,19 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
        LEFT JOIN LATERAL (
          SELECT story_id FROM story_articles WHERE article_id = na.id LIMIT 1
        ) sa ON true
+       LEFT JOIN (
+         SELECT COALESCE(a.company, a.source) as src_name,
+                SUM(CASE WHEN f.reaction = 'like' THEN 1 WHEN f.reaction = 'dislike' THEN -2 ELSE 0 END) as score
+         FROM telegram_article_feedback f
+         JOIN news_articles a ON f.article_id = a.id
+         GROUP BY COALESCE(a.company, a.source)
+       ) feedback ON feedback.src_name = COALESCE(na.company, na.source)
        WHERE na.telegram_sent_at IS NULL
          AND na.fake_news_score IS NOT NULL
          AND na.fake_news_score <= 6
          AND na.category != 'fact_check'
-       ORDER BY na.published_at DESC NULLS LAST
+         AND COALESCE(feedback.score, 0) >= -5
+       ORDER BY COALESCE(feedback.score, 0) DESC, na.published_at DESC NULLS LAST
        LIMIT 50`,
 		);
 		console.log(
