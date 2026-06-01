@@ -48,5 +48,5 @@ jobs:
       - name: Validate backend types
         working-directory: backend
         run: |
-          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm install --frozen-lockfile --ignore-workspace --ignore-scripts
           pnpm exec tsc --noEmit
