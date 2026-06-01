@@ -1,4 +1,4 @@
-﻿name: Validate
+name: Validate
 
 on:
   pull_request:
@@ -11,6 +11,42 @@ concurrency:
 
 jobs:
   check:
-    uses: juninmd/base-actions/.github/workflows/reusable-validate.yml@main
-    with:
-      pnpm-version: 10.33.2
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check tracked secret files
+        run: |
+          forbidden=$(git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.(local|production|prod|staging|dev)$|(^|/)id_rsa$|(^|/).+\.pem$|(^|/).+\.key$' || true)
+          if [ -n "$forbidden" ]; then
+            echo "::error::Secret files tracked: $forbidden"
+            exit 1
+          fi
+          echo "No committed secret files found."
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.33.2 --activate
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint frontend workspace
+        run: pnpm exec biome check .
+
+      - name: Test frontend workspace
+        run: pnpm exec vitest run
+
+      - name: Validate backend types
+        working-directory: backend
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm exec tsc --noEmit
