@@ -349,8 +349,9 @@ export async function postArticleToTelegram(
 	const readTimeMin = Math.max(1, Math.ceil(wordCount / 200));
 	const readTimeLabel = `  ·  ⏱️ <i>${readTimeMin} min de leitura</i>`;
 
-	const breakingLabel = isBreaking ? `🔴 <b>URGENTE</b>  ·  ` : "";
-	const sourceHeader = `${breakingLabel}${CATEGORY_EMOJI[article.category] ?? "📰"} <b>${article.category.toUpperCase()}</b>  ·  ${article.company && article.company !== article.source ? `${article.company} · ` : ""}${article.source}${ago ? `  ·  <i>${ago}</i>` : ""}${readTimeLabel}`;
+	const breakingLabel = isBreaking ? `🔴 <b>URGENTE</b>\n` : "";
+	const sourceHeader = `${CATEGORY_EMOJI[article.category] ?? "📰"} <b>${article.category.toUpperCase()}</b>  ·  ${article.company && article.company !== article.source ? `${article.company} · ` : ""}${article.source}`;
+	const metaLine = `${ago ? `🕒 <i>${ago}</i>` : ""}${readTimeLabel}`.trim();
 
 	let sentimentLabel = "";
 	if (article.sentiment) {
@@ -364,7 +365,8 @@ export async function postArticleToTelegram(
 	}
 
 	const sourceHashtag = `#${(article.company || article.source).replace(/\W+/g, "_")}`;
-	const message = `${sourceHeader}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>${sentimentLabel}\n\n<i>${escapeHtml(displaySummary)}</i>${context ? `\n\n💡 <i>${escapeHtml(context)}</i>` : ""}${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n#${article.category.replace(/\W/g, "_")} ${sourceHashtag}`;
+	const layoutFooterTags = `#${article.category.replace(/\W/g, "_")} ${sourceHashtag}`;
+	const message = `${breakingLabel}${sourceHeader}${metaLine ? `\n${metaLine}` : ""}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>${sentimentLabel}\n\n<b>Essencial</b>\n<i>${escapeHtml(displaySummary)}</i>${context ? `\n\n<b>Por que importa</b>\n💡 <i>${escapeHtml(context)}</i>` : ""}${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n${SEPARATOR}\n${layoutFooterTags}`;
 
 	const inlineButtons = [
 		[
