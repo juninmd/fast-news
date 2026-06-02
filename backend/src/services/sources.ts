@@ -58,16 +58,6 @@ export const FEED_SOURCES = [
 		company: "SemiAnalysis",
 	},
 	{
-		url: "https://www.together.ai/blog/rss.xml",
-		category: "AI Frontier",
-		company: "Together AI",
-	},
-	{
-		url: "https://arxiv.org/rss/cs.AI",
-		category: "AI Frontier",
-		company: "arXiv",
-	},
-	{
 		url: "https://www.fast.ai/index.xml",
 		category: "AI Frontier",
 		company: "fast.ai",
@@ -558,80 +548,18 @@ export const FEED_SOURCES = [
 		category: "Startups",
 		company: "Point Nine",
 	},
-	{
-		url: "https://www.sequoiacap.com/feed/",
-		category: "Startups",
-		company: "Sequoia",
-	},
 	{ url: "https://sifted.eu/feed/", category: "Startups", company: "Sifted" },
-	{
-		url: "https://techcrunch.com/category/startups/feed/",
-		category: "Startups",
-		company: "TechCrunch",
-	},
-	{
-		url: "https://www.ycombinator.com/blog/rss.xml",
-		category: "Startups",
-		company: "Y Combinator",
-	},
 
 	// ── Tecnologia ─────────────────────────────────────────────────────────────
-	{
-		url: "https://feeds.arstechnica.com/arstechnica/index",
-		category: "Tecnologia",
-		company: "Ars Technica",
-	},
 	{
 		url: "https://css-tricks.com/feed/",
 		category: "Tecnologia",
 		company: "CSS-Tricks",
 	},
 	{
-		url: "https://spectrum.ieee.org/rss/fulltext",
-		category: "Tecnologia",
-		company: "IEEE Spectrum",
-	},
-	{
 		url: "https://www.infoworld.com/feed/",
 		category: "Tecnologia",
 		company: "InfoWorld",
-	},
-	{
-		url: "https://www.technologyreview.com/feed/",
-		category: "Tecnologia",
-		company: "MIT Tech Review",
-	},
-	{
-		url: "https://simonwillison.net/atom/everything/",
-		category: "Tecnologia",
-		company: "Simon Willison",
-	},
-	{
-		url: "https://techcrunch.com/feed/",
-		category: "Tecnologia",
-		company: "TechCrunch",
-	},
-	{
-		url: "https://www.theatlantic.com/feed/all/",
-		category: "Tecnologia",
-		company: "The Atlantic",
-	},
-
-	{
-		url: "https://www.vox.com/rss/technology/index.xml",
-		category: "Tecnologia",
-		company: "Vox",
-	},
-
-	{
-		url: "https://www.zdnet.com/news/rss.xml",
-		category: "Tecnologia",
-		company: "ZDNet",
-	},
-	{
-		url: "https://web.dev/feed.xml",
-		category: "Tecnologia",
-		company: "web.dev",
 	},
 
 	// ── fact_check ─────────────────────────────────────────────────────────────
