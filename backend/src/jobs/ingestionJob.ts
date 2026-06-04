@@ -130,13 +130,15 @@ export async function runIngestionAndPost(): Promise<void> {
 
 	// New articles: credibility first → Telegram (handled by ollamaQueue worker)
 	// Already logged inside runIngestion via enqueueCredibilityAnalysis
-	const unevaluated = await fetchUnsentUnevaluatedArticles();
-	const filteredUnevaluated = filterAndCap(unevaluated);
-	if (filteredUnevaluated.length > 0) {
-		await Promise.all(filteredUnevaluated.map(enqueueCredibilityAnalysis));
-		console.log(
-			`[IngestionJob] Requeued ${filteredUnevaluated.length} unevaluated articles for Ollama.`,
-		);
+	if (config.ingestion.credibilityEnabled) {
+		const unevaluated = await fetchUnsentUnevaluatedArticles();
+		const filteredUnevaluated = filterAndCap(unevaluated);
+		if (filteredUnevaluated.length > 0) {
+			await Promise.all(filteredUnevaluated.map(enqueueCredibilityAnalysis));
+			console.log(
+				`[IngestionJob] Requeued ${filteredUnevaluated.length} unevaluated articles for Ollama.`,
+			);
+		}
 	}
 
 	// Articles from previous runs already evaluated: send directly to Telegram
