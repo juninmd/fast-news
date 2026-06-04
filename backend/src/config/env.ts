@@ -73,6 +73,10 @@ export const config = {
 	ingestion: {
 		batchSize: parseInt(optional("INGESTION_BATCH_SIZE", "10"), 10),
 		maxArticlesPerFeed: parseInt(optional("MAX_ARTICLES_PER_FEED", "20"), 10),
+		// When false, ingestion stores + embeds articles but skips per-article
+		// credibility AI analysis (digest still works via embeddings/RAG).
+		credibilityEnabled:
+			optional("INGESTION_CREDIBILITY_ENABLED", "true") === "true",
 	},
 
 	rag: {
