@@ -294,11 +294,14 @@ export async function runIngestion(): Promise<IngestionResult> {
 		}
 	}
 
-	const orderedArticles = [...newArticles].sort(
-		(a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
-	);
-	for (const article of orderedArticles) {
-		await enqueueCredibilityAnalysis(article);
+	if (config.ingestion.credibilityEnabled) {
+		const orderedArticles = [...newArticles].sort(
+			(a, b) =>
+				(b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
+		);
+		for (const article of orderedArticles) {
+			await enqueueCredibilityAnalysis(article);
+		}
 	}
 
 	console.log(
