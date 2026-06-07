@@ -30,10 +30,12 @@ export async function buildDigestContent(): Promise<{
 			getActiveOpportunities().catch(() => []) as Promise<
 				Record<string, unknown>[]
 			>,
-			searchSimilarArticles("principais notícias do dia", 1, 10).catch(
-				() => [],
-			),
-			listActiveStories(5).catch(() => []),
+			searchSimilarArticles(
+				"principais notícias do dia",
+				1,
+				config.digest.ragLimit,
+			).catch(() => []),
+			listActiveStories(config.digest.storiesLimit).catch(() => []),
 		],
 	);
 
@@ -53,7 +55,8 @@ export async function buildDigestContent(): Promise<{
        FROM news_articles
        WHERE created_at > NOW() - INTERVAL '8 hours'
        ORDER BY published_at DESC NULLS LAST
-       LIMIT 10`,
+       LIMIT $1`,
+			[config.digest.ragLimit],
 		).catch(() => ({ rows: [] }));
 		topArticles = res.rows.map((r) => ({
 			...r,
@@ -61,13 +64,29 @@ export async function buildDigestContent(): Promise<{
 		})) as typeof ragArticles;
 	}
 
-	const newsSection = topArticles
-		.slice(0, 5)
-		.map((a, i) => `${i + 1}. ${a.title} — _${a.source}_`)
+	const JUNK_PATTERNS =
+		/horóscopo|horoscopo|frase do dia|previsão para os \d+ signos|signo|tarot/i;
+
+	const seenTitles = new Set<string>();
+	const deduped = topArticles.filter((a) => {
+		const key = a.title.toLowerCase().trim();
+		if (seenTitles.has(key) || JUNK_PATTERNS.test(a.title)) return false;
+		seenTitles.add(key);
+		return true;
+	});
+
+	const newsSection = deduped
+		.slice(0, config.digest.newsLimit)
+		.map((a, i) => {
+			const snippet = typeof a.content === "string" && a.content.length > 0
+				? ` | Contexto: ${a.content.replace(/\s+/g, " ").slice(0, 200)}`
+				: "";
+			return `${i + 1}. ${a.title} — _${a.source}_${snippet}`;
+		})
 		.join("\n");
 
 	const analysisSection: string[] = [];
-	for (const topic of topics.slice(0, 3)) {
+	for (const topic of topics.slice(0, config.digest.analysisTopicsLimit)) {
 		const analysis = await getTopicLatestAnalysis(topic.id);
 		if (analysis) {
 			const first = analysis.split("\n\n")[0] ?? "";
@@ -85,7 +104,7 @@ export async function buildDigestContent(): Promise<{
 			usedAssets.add(key);
 			return true;
 		})
-		.slice(0, 5)
+		.slice(0, config.digest.financialLimit)
 		.map(
 			(o) =>
 				`${o["direction"] === "buy" ? "📈" : o["direction"] === "sell" ? "📉" : "👀"} *${o["asset"]}*: ${String(o["reasoning"]).slice(0, 100)}`,
@@ -95,7 +114,7 @@ export async function buildDigestContent(): Promise<{
 	const storiesSection =
 		activeStories
 			.filter((s) => s.articleCount > 1)
-			.slice(0, 4)
+			.slice(0, config.digest.storiesLimit)
 			.map((s) => {
 				const impact =
 					s.impactLevel === "critical"

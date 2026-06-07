@@ -2,8 +2,6 @@ import { generateText, type LanguageModel } from "ai";
 import { config } from "../config/env.js";
 import { hasTemplateMarkers } from "./digestFormat.js";
 
-const DIGEST_MAX_TOKENS = 1000;
-
 export async function generateDigestText(
 	model: LanguageModel,
 	prompt: string,
@@ -29,7 +27,7 @@ async function runDigestGeneration(
 	const { text } = await generateText({
 		model,
 		prompt,
-		maxTokens: DIGEST_MAX_TOKENS,
+		maxTokens: config.digest.maxTokens,
 		abortSignal: AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
 	});
 	return text;
