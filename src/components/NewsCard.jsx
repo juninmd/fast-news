@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import { summarizeTextAiSdk } from '../services/aiSdkService';
 import { ExternalLink, Sparkles, Loader, Calendar } from 'lucide-react';
 
@@ -19,7 +20,7 @@ const NewsCard = memo(({ item, aiConfig }) => {
     const { aiSdkProvider, aiSdkApiKey, aiSdkModel } = aiConfig;
 
     if (!aiSdkApiKey) {
-      setError("Por favor adicione sua chave de API nas configurações.");
+      setError("Por favor adicione sua chave de API AI SDK nas configurações.");
       return;
     }
 
@@ -27,7 +28,6 @@ const NewsCard = memo(({ item, aiConfig }) => {
     setError(null);
     try {
       const textToSummarize = item.content || item.description || item.title;
-
       const result = await summarizeTextAiSdk(textToSummarize, {
           provider: aiSdkProvider,
           apiKey: aiSdkApiKey,
@@ -78,7 +78,8 @@ const NewsCard = memo(({ item, aiConfig }) => {
 
   // Remove HTML tags for clean description preview
   const cleanDescription = useMemo(() => {
-    return item.description?.replace(/<\/?[^>]+(>|$)/g, '').substring(0, 150) + '...';
+    if (!item.description) return '...';
+    return item.description.replace(/<\/?[^>]+(>|$)/g, '').substring(0, 150) + '...';
   }, [item.description]);
 
   const formattedDate = useMemo(() => {
@@ -178,6 +179,28 @@ const NewsCard = memo(({ item, aiConfig }) => {
     </div>
   );
 });
+
+NewsCard.propTypes = {
+  item: PropTypes.shape({
+    title: PropTypes.string,
+    link: PropTypes.string,
+    description: PropTypes.string,
+    content: PropTypes.string,
+    source: PropTypes.string,
+    pubDate: PropTypes.string,
+    category: PropTypes.string,
+    thumbnail: PropTypes.string,
+    enclosure: PropTypes.shape({
+      link: PropTypes.string,
+    }),
+  }).isRequired,
+  aiConfig: PropTypes.shape({
+    aiSdkProvider: PropTypes.string,
+    aiSdkApiKey: PropTypes.string,
+    aiSdkModel: PropTypes.string,
+    autoSummarize: PropTypes.bool,
+  }),
+};
 
 NewsCard.displayName = 'NewsCard';
 

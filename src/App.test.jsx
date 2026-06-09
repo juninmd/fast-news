@@ -4,11 +4,11 @@ import App from './App';
 
 // Mock child components
 vi.mock('./components/Feed', () => ({
-    default: ({ aiConfig }) => <div data-testid="feed">Feed Component (Provider: {aiConfig?.aiSdkProvider}, Key: {aiConfig?.aiSdkApiKey})</div>
+    default: ({ aiConfig }) => <div data-testid=\"feed\">Feed Component (Provider: {aiConfig?.aiSdkProvider}, Key: {aiConfig?.aiSdkApiKey})</div>
 }));
 
 vi.mock('./components/TrendingTopics', () => ({
-    default: () => <div data-testid="trending-topics">Trending Topics Mock</div>
+    default: () => <div data-testid=\"trending-topics\">Trending Topics Mock</div>
 }));
 
 vi.mock('./components/Settings', () => ({
@@ -21,10 +21,10 @@ vi.mock('./components/Settings', () => ({
         };
 
         return (
-            <div data-testid="settings-modal">
+            <div data-testid=\"settings-modal\">
                 Settings Modal
-                <button type="button" onClick={handleSave}>Save</button>
-                <button type="button" onClick={onClose}>Close</button>
+                <button type=\"button\" onClick={handleSave}>Save</button>
+                <button type=\"button\" onClick={onClose}>Close</button>
             </div>
         );
     }
