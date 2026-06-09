@@ -117,6 +117,7 @@ export const FEED_SOURCES = [
 
     // Automóveis
     { url: 'https://g1.globo.com/rss/g1/carros/', category: 'Automóveis' },
+    { url: 'https://www.autossegredos.com.br/feed/', category: 'Automóveis' },
     { url: 'https://quatrorodas.abril.com.br/feed/', category: 'Automóveis' },
     { url: 'https://autoesporte.globo.com/rss/autoesporte/', category: 'Automóveis' },
 

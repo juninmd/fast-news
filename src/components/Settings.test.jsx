@@ -61,15 +61,20 @@ describe('Settings', () => {
 
         render(<Settings isOpen={true} onSave={onSaveMock} onClose={onCloseMock} />);
 
+        const sdkProviderSelect = screen.getByLabelText('Provedor de IA (AI SDK)');
+        fireEvent.change(sdkProviderSelect, { target: { value: 'anthropic' } });
+
         const sdkKeyInput = screen.getByLabelText('Chave de API');
         fireEvent.change(sdkKeyInput, { target: { value: 'saved-sdk-key' } });
 
         const saveButton = screen.getByRole('button', { name: 'Salvar' });
         fireEvent.click(saveButton);
 
+        expect(localStorage.getItem('ai_sdk_provider')).toBe('anthropic');
         expect(localStorage.getItem('ai_sdk_api_key')).toBe('saved-sdk-key');
 
         expect(onSaveMock).toHaveBeenCalledWith(expect.objectContaining({
+            aiSdkProvider: 'anthropic',
             aiSdkApiKey: 'saved-sdk-key'
         }));
         expect(onCloseMock).toHaveBeenCalled();

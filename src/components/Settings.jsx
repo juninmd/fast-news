@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { X } from 'lucide-react';
 
 const Settings = ({ isOpen, onClose, onSave }) => {
@@ -32,7 +33,7 @@ const Settings = ({ isOpen, onClose, onSave }) => {
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl shadow-black/20 transform transition-all animate-in zoom-in-95 duration-200 border border-gray-100 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Configurações</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-700 p-2 rounded-full transition-all">
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-700 p-2 rounded-full transition-all">
             <X size={20} />
           </button>
         </div>
@@ -81,7 +82,7 @@ const Settings = ({ isOpen, onClose, onSave }) => {
                 value={aiSdkApiKey}
                 onChange={(e) => setAiSdkApiKey(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 dark:bg-gray-700 dark:text-white"
-                placeholder="Cole sua chave de API aqui"
+                placeholder="Insira sua Chave de API"
               />
             </div>
 
@@ -107,12 +108,14 @@ const Settings = ({ isOpen, onClose, onSave }) => {
 
         <div className="flex justify-end space-x-3 pt-2">
           <button
+            type="button"
             onClick={onClose}
             className="px-5 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 rounded-xl font-medium transition-all"
           >
             Cancelar
           </button>
           <button
+            type="button"
             onClick={handleSave}
             className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all"
           >
@@ -122,6 +125,12 @@ const Settings = ({ isOpen, onClose, onSave }) => {
       </div>
     </div>
   );
+};
+
+Settings.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
 };
 
 export default Settings;
