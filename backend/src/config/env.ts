@@ -77,11 +77,25 @@ export const config = {
 		// credibility AI analysis (digest still works via embeddings/RAG).
 		credibilityEnabled:
 			optional("INGESTION_CREDIBILITY_ENABLED", "true") === "true",
+		// Minimum relevance score (1-10) required to post an article to Telegram.
+		relevanceThreshold: parseInt(optional("RELEVANCE_THRESHOLD", "6"), 10),
 	},
 
 	rag: {
 		topK: parseInt(optional("RAG_TOP_K", "10"), 10),
 		embeddingDimensions: parseInt(optional("EMBEDDING_DIMENSIONS", "768"), 10),
+	},
+
+	digest: {
+		ragLimit: parseInt(optional("DIGEST_RAG_LIMIT", "20"), 10),
+		newsLimit: parseInt(optional("DIGEST_NEWS_LIMIT", "10"), 10),
+		storiesLimit: parseInt(optional("DIGEST_STORIES_LIMIT", "8"), 10),
+		analysisTopicsLimit: parseInt(
+			optional("DIGEST_ANALYSIS_TOPICS_LIMIT", "4"),
+			10,
+		),
+		financialLimit: parseInt(optional("DIGEST_FINANCIAL_LIMIT", "5"), 10),
+		maxTokens: parseInt(optional("DIGEST_MAX_TOKENS", "1800"), 10),
 	},
 
 	ai: {
