@@ -4,7 +4,6 @@ import { query } from "../database/client.js";
 import { runIngestion } from "../services/ingestion.js";
 import { enqueueCredibilityAnalysis } from "../services/ollamaQueue.js";
 import type { TelegramArticle } from "../services/telegram.js";
-import { enqueueTelegramPosts } from "../services/telegramQueue.js";
 
 let task: cron.ScheduledTask | null = null;
 
@@ -128,30 +127,28 @@ export async function runIngestionAndPost(): Promise<void> {
 		return filtered.slice(0, maxPerRun as number);
 	}
 
-	// New articles: credibility first → Telegram (handled by ollamaQueue worker)
+	// New articles (unevaluated): credibility+relevance or relevance-only → Telegram
 	const unevaluated = await fetchUnsentUnevaluatedArticles();
 	const filteredUnevaluated = filterAndCap(unevaluated);
 	if (filteredUnevaluated.length > 0) {
-		if (config.ingestion.credibilityEnabled) {
-			await Promise.all(filteredUnevaluated.map(enqueueCredibilityAnalysis));
-			console.log(
-				`[IngestionJob] Requeued ${filteredUnevaluated.length} unevaluated articles for Ollama.`,
-			);
-		} else {
-			const queued = await enqueueTelegramPosts(filteredUnevaluated);
-			console.log(
-				`[IngestionJob] Queued ${queued} unevaluated articles directly for Telegram (credibility disabled).`,
-			);
-		}
+		const relevanceOnly = !config.ingestion.credibilityEnabled;
+		await Promise.all(
+			filteredUnevaluated.map((a) => enqueueCredibilityAnalysis(a, { relevanceOnly })),
+		);
+		console.log(
+			`[IngestionJob] Requeued ${filteredUnevaluated.length} unevaluated articles (relevanceOnly=${relevanceOnly}).`,
+		);
 	}
 
-	// Articles from previous runs already evaluated: send directly to Telegram
+	// Previously evaluated articles: relevance check before Telegram
 	const evaluated = await fetchUnsentEvaluatedArticles();
 	const filteredEvaluated = filterAndCap(evaluated);
 	if (filteredEvaluated.length > 0) {
-		const queued = await enqueueTelegramPosts(filteredEvaluated);
+		await Promise.all(
+			filteredEvaluated.map((a) => enqueueCredibilityAnalysis(a, { relevanceOnly: true })),
+		);
 		console.log(
-			`[IngestionJob] Queued ${queued} previously-evaluated articles for Telegram.`,
+			`[IngestionJob] Queued ${filteredEvaluated.length} previously-evaluated articles for relevance check.`,
 		);
 	}
 }
