@@ -2,11 +2,13 @@ import Bull from "bull";
 import { config } from "../config/env.js";
 import { analyzeCredibility } from "./credibility.js";
 import { fetchFullArticle } from "./fullArticle.js";
+import { scoreRelevance } from "./relevance.js";
 import type { TelegramArticle } from "./telegram.js";
 import { enqueueTelegramPosts } from "./telegramQueue.js";
 
 interface CredibilityJob {
 	article: TelegramArticle;
+	relevanceOnly?: boolean;
 }
 
 let queue: Bull.Queue<CredibilityJob> | null = null;
@@ -33,7 +35,7 @@ export async function startOllamaQueueWorker(): Promise<void> {
 
 	// Max 2 concurrent Ollama calls to avoid hammering the model server
 	q.process(2, async (job) => {
-		const { article } = job.data;
+		const { article, relevanceOnly } = job.data;
 
 		if (article.category === "fact_check") return;
 
@@ -41,21 +43,35 @@ export async function startOllamaQueueWorker(): Promise<void> {
 			(await fetchFullArticle(article.url).catch(() => null)) ||
 			article.content;
 
-		const result = await analyzeCredibility(
-			article.id,
-			article.title,
-			fullContent,
-			article.source,
-			article.category,
-			AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
-		);
+		let enriched: TelegramArticle = { ...article, fullContent };
 
-		let enriched: TelegramArticle = article;
-
-		if (result) {
-			enriched = {
-				...article,
+		if (!relevanceOnly) {
+			const result = await analyzeCredibility(
+				article.id,
+				article.title,
 				fullContent,
+				article.source,
+				article.category,
+				AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
+			);
+
+			if (!result) {
+				throw new Error(`Credibility analysis did not complete for ${article.id}`);
+			}
+
+			console.log(
+				`[OllamaQueue] Credibility done for ${article.id} (score: ${result.fakeNewsScore})`,
+			);
+
+			if (result.fakeNewsScore > 6) {
+				console.log(
+					`[OllamaQueue] Dropping ${article.id} — fake news score ${result.fakeNewsScore} > 6`,
+				);
+				return;
+			}
+
+			enriched = {
+				...enriched,
 				fakeNewsScore: result.fakeNewsScore,
 				politicalBias: result.politicalBias,
 				isMilitant: result.isMilitant,
@@ -63,13 +79,20 @@ export async function startOllamaQueueWorker(): Promise<void> {
 				credibilityFlags: result.credibilityFlags,
 				credibilityReasoning: result.reasoning,
 			};
+		}
+
+		const relevanceScore = await scoreRelevance(
+			article.id,
+			article.title,
+			fullContent,
+			article.category,
+		);
+
+		if (relevanceScore < config.ingestion.relevanceThreshold) {
 			console.log(
-				`[OllamaQueue] Credibility done for ${article.id} (score: ${result.fakeNewsScore})`,
+				`[OllamaQueue] Dropping ${article.id} — relevance score ${relevanceScore} < ${config.ingestion.relevanceThreshold}`,
 			);
-		} else {
-			throw new Error(
-				`Credibility analysis did not complete for ${article.id}`,
-			);
+			return;
 		}
 
 		await enqueueTelegramPosts([enriched]);
@@ -90,11 +113,13 @@ export async function startOllamaQueueWorker(): Promise<void> {
 
 export async function enqueueCredibilityAnalysis(
 	article: TelegramArticle,
+	opts: { relevanceOnly?: boolean } = {},
 ): Promise<void> {
 	try {
 		const q = getQueue();
 		await q.isReady();
-		await q.add({ article }, { jobId: `cred:${article.id}` });
+		const jobId = opts.relevanceOnly ? `rel:${article.id}` : `cred:${article.id}`;
+		await q.add({ article, relevanceOnly: opts.relevanceOnly ?? false }, { jobId });
 	} catch (err) {
 		console.warn("[OllamaQueue] Failed to enqueue:", (err as Error).message);
 	}
