@@ -133,7 +133,9 @@ export async function runIngestionAndPost(): Promise<void> {
 	if (filteredUnevaluated.length > 0) {
 		const relevanceOnly = !config.ingestion.credibilityEnabled;
 		await Promise.all(
-			filteredUnevaluated.map((a) => enqueueCredibilityAnalysis(a, { relevanceOnly })),
+			filteredUnevaluated.map((a) =>
+				enqueueCredibilityAnalysis(a, { relevanceOnly }),
+			),
 		);
 		console.log(
 			`[IngestionJob] Requeued ${filteredUnevaluated.length} unevaluated articles (relevanceOnly=${relevanceOnly}).`,
@@ -145,7 +147,9 @@ export async function runIngestionAndPost(): Promise<void> {
 	const filteredEvaluated = filterAndCap(evaluated);
 	if (filteredEvaluated.length > 0) {
 		await Promise.all(
-			filteredEvaluated.map((a) => enqueueCredibilityAnalysis(a, { relevanceOnly: true })),
+			filteredEvaluated.map((a) =>
+				enqueueCredibilityAnalysis(a, { relevanceOnly: true }),
+			),
 		);
 		console.log(
 			`[IngestionJob] Queued ${filteredEvaluated.length} previously-evaluated articles for relevance check.`,
