@@ -23,9 +23,10 @@ import {
 	generateSummary,
 	rewriteMisleadingTitle,
 } from "./telegram_logic.js";
+import type { TrendingVideo } from "./youtubeTrending.js";
 
 const FAST_NEWS_URL = "https://fast-news.antonio-code.duckdns.org";
-const FALLBACK_SUMMARY_MAX_LEN = 280;
+const FALLBACK_SUMMARY_MAX_LEN = 200;
 let bot: Telegraf | null = null;
 
 export function getBot(): Telegraf {
@@ -417,6 +418,44 @@ export async function postNewArticles(
 		await new Promise((r) => setTimeout(r, 1500));
 	}
 }
+const VIEWS_FORMAT = new Intl.NumberFormat("pt-BR", {
+	notation: "compact",
+	maximumFractionDigits: 1,
+});
+
+export async function sendTrendingVideoCards(
+	videos: TrendingVideo[],
+): Promise<void> {
+	if (
+		!config.telegramEnabled ||
+		!config.telegramBotToken ||
+		!config.telegramChatIds.length
+	)
+		return;
+	for (const video of videos) {
+		const regionLabel = video.region === "BR" ? "🇧🇷 Brasil" : "🌍 Mundo";
+		const desc = video.description.replace(/\s+/g, " ").slice(0, 250);
+		const message = `🎬 <b>EM ALTA NO YOUTUBE</b>  ·  ${regionLabel} #${video.rank}\n${SEPARATOR}\n<b>${escapeHtml(video.title)}</b>\n📺 ${escapeHtml(video.channel)}  ·  👁 ${VIEWS_FORMAT.format(video.views)} views${desc ? `\n\n<i>${escapeHtml(desc)}</i>` : ""}`;
+		const sendOpts = {
+			parse_mode: "HTML" as const,
+			link_preview_options: {
+				url: video.url,
+				prefer_large_media: true,
+				show_above_text: true,
+			},
+			reply_markup: {
+				inline_keyboard: [[{ text: "▶️ Assistir no YouTube", url: video.url }]],
+			},
+		};
+		await Promise.allSettled(
+			config.telegramChatIds.map((chatId) =>
+				getBot().telegram.sendMessage(chatId, message, sendOpts),
+			),
+		);
+		await new Promise((r) => setTimeout(r, 1500));
+	}
+}
+
 export async function sendDigest(
 	content: string,
 	_topArticleUrl?: string,
