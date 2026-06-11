@@ -9,7 +9,8 @@ import {
 import { listActiveStories } from "../services/correlation.js";
 import { getActiveOpportunities } from "../services/financial.js";
 import { searchSimilarArticles } from "../services/rag.js";
-import { sendDigest } from "../services/telegram.js";
+import { sendDigest, sendTrendingVideoCards } from "../services/telegram.js";
+import { getTrendingVideos } from "../services/youtubeTrending.js";
 import { DIGEST_PROMPT, normalizeDigest } from "./digestFormat.js";
 import { generateDigestText } from "./digestGeneration.js";
 
@@ -18,6 +19,12 @@ export async function buildAndSendDigest(): Promise<void> {
 	const { content, topUrl } = await buildDigestContent();
 	await sendDigest(content, topUrl);
 	console.log("[DigestJob] Digest sent.");
+
+	const videos = await getTrendingVideos().catch(() => []);
+	if (videos.length) {
+		await sendTrendingVideoCards(videos);
+		console.log(`[DigestJob] Sent ${videos.length} trending video cards.`);
+	}
 }
 
 export async function buildDigestContent(): Promise<{
@@ -78,9 +85,10 @@ export async function buildDigestContent(): Promise<{
 	const newsSection = deduped
 		.slice(0, config.digest.newsLimit)
 		.map((a, i) => {
-			const snippet = typeof a.content === "string" && a.content.length > 0
-				? ` | Contexto: ${a.content.replace(/\s+/g, " ").slice(0, 200)}`
-				: "";
+			const snippet =
+				typeof a.content === "string" && a.content.length > 0
+					? ` | Contexto: ${a.content.replace(/\s+/g, " ").slice(0, 200)}`
+					: "";
 			return `${i + 1}. ${a.title} — _${a.source}_${snippet}`;
 		})
 		.join("\n");

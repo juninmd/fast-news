@@ -9,6 +9,19 @@ import {
 	SEPARATOR,
 } from "./telegram_format.js";
 
+function looksPortuguese(text: string): boolean {
+	return /\b(do|da|de|em|com|que|foi|para|uma|um|no|na)\b/i.test(text);
+}
+
+const SUMMARY_PROMPT = `Você é um editor de notícias. Escreva UMA ÚNICA frase em português do Brasil (PT-BR) resumindo o fato principal da notícia.
+
+Regras:
+- Apenas 1 frase, máximo 200 caracteres
+- SEMPRE em PT-BR — se o original estiver em outro idioma, traduza
+- Sem introduções ("Esta notícia...", "O artigo...")
+- Foco em fatos, números e impacto real
+- NUNCA invente dados — use apenas o que está no conteúdo`;
+
 export async function generateSummary(
 	title: string,
 	content: string,
@@ -16,28 +29,22 @@ export async function generateSummary(
 ): Promise<string> {
 	try {
 		const m = model ?? (await getFastModel());
+		const input = `Título: ${title}\n\nConteúdo: ${content.slice(0, 8000)}`;
 		const { text } = await generateText({
 			model: m,
-			prompt: `Você é um editor-chefe de um canal de notícias premium. Escreva um resumo em português (PT-BR) seguindo ESTRITAMENTE este formato:
-
-**Frase de impacto com o fato principal**
-
-🔸 Dado ou contexto importante 1
-🔸 Dado ou contexto importante 2
-
-Regras:
-- Máximo 340 caracteres no total
-- Sem introduções ("Esta notícia...", "O artigo...")
-- Se o original estiver em outro idioma, traduza direto para PT-BR
-- Foco em fatos, números e impacto real
-- NUNCA invente dados — use apenas o que está no conteúdo
-
-Título: ${title}
-
-Conteúdo: ${content.slice(0, 8000)}`,
-			maxTokens: 250,
+			prompt: `${SUMMARY_PROMPT}\n\n${input}`,
+			maxTokens: 100,
 		});
-		return text.trim();
+		const summary = text.trim();
+		if (looksPortuguese(summary)) return summary;
+		// Saiu em outro idioma — uma nova tentativa forçando tradução
+		const retry = await generateText({
+			model: m,
+			prompt: `${SUMMARY_PROMPT}\n\nATENÇÃO: responda OBRIGATORIAMENTE em português do Brasil. Traduza tudo.\n\n${input}`,
+			maxTokens: 100,
+		});
+		const retried = retry.text.trim();
+		return looksPortuguese(retried) ? retried : summary;
 	} catch {
 		return "";
 	}
@@ -61,9 +68,7 @@ export async function generateContext(
 			maxTokens: 120,
 		});
 		const result = text.trim();
-		const looksPortuguese =
-			/\b(do|da|de|em|com|que|foi|para|uma|um|no|na)\b/i.test(result);
-		return looksPortuguese ? result : "";
+		return looksPortuguese(result) ? result : "";
 	} catch {
 		return "";
 	}
