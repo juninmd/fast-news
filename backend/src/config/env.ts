@@ -86,6 +86,11 @@ export const config = {
 		embeddingDimensions: parseInt(optional("EMBEDDING_DIMENSIONS", "768"), 10),
 	},
 
+	youtube: {
+		apiKey: optional("YOUTUBE_API_KEY", ""),
+		trendingLimit: parseInt(optional("YOUTUBE_TRENDING_LIMIT", "5"), 10),
+	},
+
 	digest: {
 		ragLimit: parseInt(optional("DIGEST_RAG_LIMIT", "20"), 10),
 		newsLimit: parseInt(optional("DIGEST_NEWS_LIMIT", "10"), 10),

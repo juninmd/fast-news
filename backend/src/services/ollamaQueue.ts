@@ -56,7 +56,9 @@ export async function startOllamaQueueWorker(): Promise<void> {
 			);
 
 			if (!result) {
-				throw new Error(`Credibility analysis did not complete for ${article.id}`);
+				throw new Error(
+					`Credibility analysis did not complete for ${article.id}`,
+				);
 			}
 
 			console.log(
@@ -118,8 +120,13 @@ export async function enqueueCredibilityAnalysis(
 	try {
 		const q = getQueue();
 		await q.isReady();
-		const jobId = opts.relevanceOnly ? `rel:${article.id}` : `cred:${article.id}`;
-		await q.add({ article, relevanceOnly: opts.relevanceOnly ?? false }, { jobId });
+		const jobId = opts.relevanceOnly
+			? `rel:${article.id}`
+			: `cred:${article.id}`;
+		await q.add(
+			{ article, relevanceOnly: opts.relevanceOnly ?? false },
+			{ jobId },
+		);
 	} catch (err) {
 		console.warn("[OllamaQueue] Failed to enqueue:", (err as Error).message);
 	}

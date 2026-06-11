@@ -3,6 +3,17 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── AI Frontier ─────────────────────────────────────────────────────────────
 	{
+		// Mirror comunitário — anthropic.com não publica RSS oficial
+		url: "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml",
+		category: "AI Frontier",
+		company: "Anthropic",
+	},
+	{
+		url: "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_engineering.xml",
+		category: "AI Frontier",
+		company: "Anthropic",
+	},
+	{
 		url: "https://bair.berkeley.edu/blog/feed.xml",
 		category: "AI Frontier",
 		company: "BAIR",
@@ -194,8 +205,13 @@ export const FEED_SOURCES = [
 		company: "Folha de S.Paulo",
 	},
 	{
-		url: "https://www.metropoles.com/feed/",
+		url: "https://www.metropoles.com/brasil/feed",
 		category: "Brasil",
+		company: "Metrópoles",
+	},
+	{
+		url: "https://www.metropoles.com/negocios/feed",
+		category: "Negócios",
 		company: "Metrópoles",
 	},
 	{
@@ -209,8 +225,13 @@ export const FEED_SOURCES = [
 		company: "Tecnoblog",
 	},
 	{
-		url: "https://veja.abril.com.br/feed/",
+		url: "https://veja.abril.com.br/politica/feed/",
 		category: "Brasil",
+		company: "Veja",
+	},
+	{
+		url: "https://veja.abril.com.br/economia/feed/",
+		category: "Negócios",
 		company: "Veja",
 	},
 
@@ -341,11 +362,6 @@ export const FEED_SOURCES = [
 		company: "Adrenaline",
 	},
 	{
-		url: "https://www.destructoid.com/feed",
-		category: "Gaming",
-		company: "Destructoid",
-	},
-	{
 		url: "https://www.eurogamer.net/feed",
 		category: "Gaming",
 		company: "Eurogamer",
@@ -359,6 +375,21 @@ export const FEED_SOURCES = [
 		url: "https://www.gameblast.com.br/feeds/posts/default",
 		category: "Gaming",
 		company: "GameBlast",
+	},
+	{
+		url: "https://www.gamespot.com/feeds/news/",
+		category: "Gaming",
+		company: "GameSpot",
+	},
+	{
+		url: "https://www.gamesradar.com/rss/",
+		category: "Gaming",
+		company: "GamesRadar",
+	},
+	{
+		url: "https://flowgames.gg/feed/",
+		category: "Gaming",
+		company: "Flow Games",
 	},
 	{
 		url: "https://pt.ign.com/feed.xml",
@@ -382,6 +413,11 @@ export const FEED_SOURCES = [
 		company: "PC Gamer",
 	},
 	{
+		url: "https://www.polygon.com/rss/index.xml",
+		category: "Gaming",
+		company: "Polygon",
+	},
+	{
 		url: "https://blog.playstation.com/feed/",
 		category: "Gaming",
 		company: "PlayStation",
@@ -395,6 +431,11 @@ export const FEED_SOURCES = [
 		url: "https://store.steampowered.com/feeds/news/",
 		category: "Gaming",
 		company: "Steam",
+	},
+	{
+		url: "https://www.videogameschronicle.com/feed/",
+		category: "Gaming",
+		company: "VGC",
 	},
 
 	// ── Mundo ─────────────────────────────────────────────────────────────
@@ -491,11 +532,6 @@ export const FEED_SOURCES = [
 
 	// ── Segurança ─────────────────────────────────────────────────────────────
 	{
-		url: "https://www.bleepingcomputer.com/feed/",
-		category: "Segurança",
-		company: "BleepingComputer",
-	},
-	{
 		url: "https://www.crowdstrike.com/blog/feed/",
 		category: "Segurança",
 		company: "CrowdStrike",
@@ -521,16 +557,26 @@ export const FEED_SOURCES = [
 		company: "Project Zero",
 	},
 	{
-		url: "https://www.rapid7.com/blog/rss/",
-		category: "Segurança",
-		company: "Rapid7",
-	},
-	{
 		url: "https://isc.sans.edu/rssfeed.xml",
 		category: "Segurança",
 		company: "SANS ISC",
 	},
 	{ url: "https://snyk.io/blog/feed/", category: "Segurança", company: "Snyk" },
+	{
+		url: "https://openssf.org/feed/",
+		category: "Segurança",
+		company: "OpenSSF",
+	},
+	{
+		url: "https://socket.dev/blog/rss.xml",
+		category: "Segurança",
+		company: "Socket.dev",
+	},
+	{
+		url: "https://www.reddit.com/r/netsec/.rss",
+		category: "Segurança",
+		company: "Reddit r/netsec",
+	},
 	{
 		url: "https://feeds.feedburner.com/TheHackersNews",
 		category: "Segurança",
@@ -575,28 +621,39 @@ export const FEED_SOURCES = [
 	},
 ];
 
+// Feeds removidos da lista padrão — desativados no banco em cada sync
+const RETIRED_FEED_URLS = [
+	// Gerais substituídos por feeds de seção (corta fofoca/entretenimento na fonte)
+	"https://veja.abril.com.br/feed/",
+	"https://www.metropoles.com/feed/",
+	"https://www.bleepingcomputer.com/feed/",
+];
+
 export async function syncDefaultFeeds(): Promise<void> {
 	try {
-		const countRes = await query<{ count: string }>(
-			"SELECT COUNT(*) FROM source_feeds",
-		);
-		if (parseInt(countRes.rows[0].count, 10) === 0) {
-			console.log(
-				"[sources] Database source_feeds is empty. Seeding with default sources...",
+		// Upsert idempotente: insere apenas fontes novas, preserva is_active de existentes
+		let inserted = 0;
+		for (const source of FEED_SOURCES) {
+			const res = await query(
+				"INSERT INTO source_feeds (name, url, category, company, is_active) VALUES ($1, $2, $3, $4, true) ON CONFLICT (url) DO NOTHING",
+				[
+					source.company || "Fonte",
+					source.url,
+					source.category,
+					source.company,
+				],
 			);
-			for (const source of FEED_SOURCES) {
-				await query(
-					"INSERT INTO source_feeds (name, url, category, company, is_active) VALUES ($1, $2, $3, $4, true) ON CONFLICT (url) DO NOTHING",
-					[
-						source.company || "Fonte",
-						source.url,
-						source.category,
-						source.company,
-					],
-				);
-			}
-			console.log("[sources] Finished seeding default sources.");
+			inserted += res.rowCount ?? 0;
 		}
+		if (inserted > 0)
+			console.log(`[sources] Seeded ${inserted} new default sources.`);
+
+		const retired = await query(
+			"UPDATE source_feeds SET is_active = false WHERE url = ANY($1) AND is_active = true",
+			[RETIRED_FEED_URLS],
+		);
+		if (retired.rowCount)
+			console.log(`[sources] Deactivated ${retired.rowCount} retired feeds.`);
 	} catch (err) {
 		console.error("[sources] Failed to sync default feeds:", err);
 	}
