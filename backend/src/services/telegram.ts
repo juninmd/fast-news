@@ -447,11 +447,18 @@ export async function sendTrendingVideoCards(
 				inline_keyboard: [[{ text: "▶️ Assistir no YouTube", url: video.url }]],
 			},
 		};
-		await Promise.allSettled(
+		const results = await Promise.allSettled(
 			config.telegramChatIds.map((chatId) =>
 				getBot().telegram.sendMessage(chatId, message, sendOpts),
 			),
 		);
+		results.forEach((r, i) => {
+			if (r.status === "rejected")
+				console.error(
+					`[Telegram] Video card failed (chat ${config.telegramChatIds[i]}, ${video.region} #${video.rank}):`,
+					(r.reason as Error).message,
+				);
+		});
 		await new Promise((r) => setTimeout(r, 1500));
 	}
 }
