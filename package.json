@@ -27,7 +27,7 @@
 		"lucide-react": "^1.17.0",
 		"postcss": "^8.5.15",
 		"react": "^19.2.7",
-		"react-dom": "^19.2.0",
+		"react-dom": "^19.2.7",
 		"react-markdown": "^10.1.0",
 		"rss-parser": "^3.13.0",
 		"tailwindcss": "^4.3.1",
