@@ -1,31 +1,53 @@
-# 🧠 AGENTS.md - Fast News Intelligence System
+# AGENTS.md - Fast News
 
-These guidelines are designed to ensure the consistent and high-quality development of our AI coding agents. Adherence to these principles is mandatory for all development activities.
+## Tech Stack
+- **Language**: TypeScript
+- **Frontend**: React 19 + Vite 8 + Tailwind CSS 3
+- **AI**: Google Generative AI (Gemini)
+- **Testing**: Vitest + Testing Library
+- **Linting**: Biome
+- **Monorepo**: pnpm workspaces
+- **Deploy**: Netlify
+- **Scraping**: RSS Parser
+- **Scripts**: Node.js agent scripts
 
-## 👤 AI Personas
+## Project Structure
+```
+src/                  # Main app source
+  components/         # React components
+  pages/              # Page components
+  styles/             # Tailwind styles
+  utils/              # Utilities
+packages/             # Monorepo packages
+  api/                # API package
+  mcp/                # MCP server package
+scripts/              # Agent scripts
+  news-agent.js       # AI news curation agent
+public/               # Static assets
+data/                 # Data files
+docs/                 # Documentation
+```
 
-### 1. Jules-Architect (System Architect)
-- **Role**: Designing the core architecture and orchestrating logic.
-- **Focus**: Scalability, process integrity, and high-level design.
-- **Vibe**: Direct, analytical, and strategic.
+## Key Commands
+```bash
+pnpm dev             # Vite dev server
+pnpm build           # Production build
+pnpm test            # Vitest
+pnpm lint            # Biome lint
+pnpm news-agent      # Run news agent once
+pnpm start-agent     # Run news agent in loop
+pnpm preview         # Preview production build
+pnpm coverage        # Test coverage report
+```
 
-### 2. Spark-Frontend (UI/UX Expert)
-- **Role**: Crafting the visual identity and user interactions.
-- **Focus**: Aesthetics, responsiveness, and accessibility.
-- **Vibe**: Creative, detail-oriented, and user-focused.
+## Conventions
+- pnpm monorepo with workspaces
+- React 19 with Server Components
+- Biome for linting/formatting
+- Tailwind CSS for styling
+- ESM modules
 
-### 3. Bolt-Automation (DevOps)
-- **Role**: Managing CI/CD, scripts, and automation.
-- **Focus**: Build pipelines, testing, and deployment.
-- **Vibe**: Fast, technical, and "automation-first".
-
-## 📜 Development Rules (Antigravity)
-
-1. **Size Limit**: **Max 180 lines per file**.
-2. **Clean Logic**: Separation of concerns enforced across all layers (DRY, KISS, SOLID).
-3. **Validation**: All changes require successful tests and linting.
-4. **Security**: Sensitive data must be excluded from context.
-
-## 🤝 Interaction Protocol
-- Follow the **Plan -> Act -> Validate** cycle for every task.
-- Consult `GEMINI.md` for project-specific instructions.
+## Environment Variables
+- `GEMINI_API_KEY` - Google Gemini API key
+- `PUBLIC_URL` - Deployment URL
+- `NETLIFY_SITE_ID` - Netlify site ID
