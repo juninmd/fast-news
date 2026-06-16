@@ -1,53 +1,66 @@
-# 🚀 Fast News (NewsAI) - Agregador de Notícias Inteligente
+# Fast News
 
-O **Fast News** é um agregador de notícias moderno que utiliza Inteligência Artificial para resumir, classificar e enviar conteúdos relevantes diretamente para você. O projeto combina uma interface web elegante com um agente de automação poderoso. Construído com **Node.js / TypeScript** e orquestrado sob o protocolo Antigravity.
+![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwind-css&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
-## ✨ Funcionalidades / Features
+> Plataforma de curadoria de notícias com inteligência artificial.
 
-*   **Interface Web Moderna:** Layout responsivo com Sidebar, Dark Mode, Grid Masonry e transições suaves.
-*   **IA Local (Ollama):** Resumos privados e classificados automaticamente (Tecnologia, Política, Esportes, etc.) rodando diretamente na sua máquina.
-*   **Integração com Telegram:** Envie notícias resumidas e categorizadas (com emojis) diretamente para seu canal ou grupo.
-*   **Agente Autônomo:** Backend Node.js que monitora feeds RSS, resume com IA e envia para o Telegram automaticamente.
-*   **High Performance**: Otimizado para velocidade e baixo uso de recursos.
+## 📝 Descrição
 
-## 🛠️ Pré-requisitos & Tecnologias
+**Fast News** é uma plataforma moderna que agrega e resume notícias utilizando IA. Com agentes autônomos de curadoria, o sistema coleta conteúdo de diversas fontes RSS, processa com modelos de linguagem (Gemini) e publica resumos inteligentes em uma interface web elegante.
 
-1.  **Node.js** (v18 ou superior).
-2.  **Ollama** instalado e rodando com o modelo gemma4:e2b (ou configurado para outro provedor).
-3.  **PostgreSQL** e **Redis** para armazenamento de embeddings, RAG e cache.
-4.  **React + Vite + Tailwind** no Frontend.
+## ✨ Funcionalidades
 
-## ⚙️ Configuração
+- Curadoria automatizada de notícias via agentes de IA
+- Agregação de múltiplas fontes RSS
+- Resumo inteligente com Google Gemini
+- Interface web responsiva com React + Tailwind
+- Publicação automática em Netlify
+- Suporte a monorepo com workspaces
 
-### 1. Variáveis de Ambiente (.env)
+## 🛠️ Tech Stack
 
-Crie um arquivo `.env` no backend (ou copie de `.env.example`):
+- **Frontend:** React 19 + Vite + Tailwind CSS
+- **Linguagem:** TypeScript
+- **IA:** Google Generative AI (Gemini)
+- **Testes:** Vitest + Testing Library
+- **Linting:** Biome
+- **Deploy:** Netlify
+- **Package Manager:** pnpm (monorepo)
+
+## 🚀 Instalação
 
 ```bash
-cd backend
-cp .env.example .env
-```
+# Clonar
+git clone https://github.com/juninmd/fast-news.git
+cd fast-news
 
-Edite o arquivo `.env` com suas configurações (Telegram, DB, Ollama, etc).
-
-### 2. Instalação
-
-```bash
-# Na raiz para o frontend (se aplicável)
-npm install
-
-# No diretório backend
-cd backend
+# Instalar dependências
 pnpm install
+
+# Desenvolvimento
+pnpm dev
+
+# Build
+pnpm build
+
+# Testes
+pnpm test
 ```
 
-## 🛡️ Antigravity Protocol
+## 🤖 Agente de Notícias
 
-Este projeto segue os padrões de código **Antigravity**:
-- **Limite de 180 Linhas**: Aplicado a todos os módulos lógicos.
-- **Strict Typing**: Evitando tipos dinâmicos/any sempre que possível (TypeScript).
-- **Clean Code**: DRY, KISS e SOLID aplicados rigorosamente.
+```bash
+# Executar agente uma vez
+pnpm news-agent
 
-## Licença
+# Executar agente em loop
+pnpm start-agent
+```
+
+## 📜 Licença
 
 MIT
