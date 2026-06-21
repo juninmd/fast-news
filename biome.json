@@ -5,7 +5,7 @@
 	"formatter": { "enabled": true, "indentStyle": "tab" },
 	"linter": {
 		"enabled": true,
-		"rules": { "recommended": false },
+		"rules": { "preset": "none" },
 		"includes": [
 			"**",
 			"!dist",
