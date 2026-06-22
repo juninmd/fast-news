@@ -63,6 +63,12 @@ export const config = {
 			10,
 		),
 	},
+	telegram: {
+		similarThreshold: parseFloat(
+			optional("TELEGRAM_SIMILAR_THRESHOLD", "0.82"),
+		),
+		similarInterval: optional("TELEGRAM_SIMILAR_INTERVAL", "24 hours"),
+	},
 
 	cron: {
 		ingestion: optional("CRON_INGESTION", "*/30 * * * *"),
