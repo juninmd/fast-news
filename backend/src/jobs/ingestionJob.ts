@@ -54,6 +54,7 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
          GROUP BY COALESCE(a.company, a.source)
        ) feedback ON feedback.src_name = COALESCE(na.company, na.source)
        WHERE na.telegram_sent_at IS NULL
+         AND na.telegram_skipped_at IS NULL
          AND na.fake_news_score IS NOT NULL
          AND na.fake_news_score <= 6
          AND na.category != 'fact_check'
@@ -84,6 +85,7 @@ async function fetchUnsentUnevaluatedArticles(): Promise<TelegramArticle[]> {
          SELECT story_id FROM story_articles WHERE article_id = na.id LIMIT 1
        ) sa ON true
        WHERE na.telegram_sent_at IS NULL
+         AND na.telegram_skipped_at IS NULL
          AND na.fake_news_score IS NULL
          AND na.category != 'fact_check'
          AND na.created_at < NOW() - INTERVAL '5 minutes'

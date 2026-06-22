@@ -154,8 +154,16 @@ ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS telegram_sent_at TIMESTAMPTZ 
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS credibility_reasoning TEXT DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS relevance_score SMALLINT DEFAULT NULL;
-CREATE INDEX IF NOT EXISTS idx_articles_telegram_unsent ON news_articles(created_at DESC) WHERE telegram_sent_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_articles_unsent_credible ON news_articles(published_at DESC) WHERE telegram_sent_at IS NULL AND fake_news_score IS NOT NULL AND fake_news_score <= 6;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS telegram_skipped_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS relevance_reasoning TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS is_spam_or_promo BOOLEAN DEFAULT FALSE;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS should_post_telegram BOOLEAN DEFAULT TRUE;
+
+DROP INDEX IF EXISTS idx_articles_telegram_unsent;
+CREATE INDEX IF NOT EXISTS idx_articles_telegram_unsent ON news_articles(created_at DESC) WHERE telegram_sent_at IS NULL AND telegram_skipped_at IS NULL;
+
+DROP INDEX IF EXISTS idx_articles_unsent_credible;
+CREATE INDEX IF NOT EXISTS idx_articles_unsent_credible ON news_articles(published_at DESC) WHERE telegram_sent_at IS NULL AND telegram_skipped_at IS NULL AND fake_news_score IS NOT NULL AND fake_news_score <= 6;
 CREATE INDEX IF NOT EXISTS idx_articles_url ON news_articles(url);
 CREATE INDEX IF NOT EXISTS idx_articles_fake_news ON news_articles(fake_news_score) WHERE fake_news_score IS NOT NULL;
 
