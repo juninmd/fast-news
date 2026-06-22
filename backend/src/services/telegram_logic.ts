@@ -13,18 +13,12 @@ function looksPortuguese(text: string): boolean {
 	return /\b(do|da|de|em|com|que|foi|para|uma|um|no|na)\b/i.test(text);
 }
 
-const SUMMARY_PROMPT = `Você é um editor de notícias. Escreva UMA ÚNICA frase em português do Brasil (PT-BR) resumindo o fato principal da notícia.
+const BLURB_PROMPT = `Você é um editor-chefe de notícias. Com base na notícia abaixo, escreva de 1 a 2 frases em português do Brasil (PT-BR) que cubram: (1) o fato principal com números e impacto real, e (2) por que isso importa ou qual é o desdobramento estratégico — tudo em uma narrativa corrida, sem subtítulos, sem introduções ("Esta notícia...", "O artigo..."). SEMPRE em PT-BR. NUNCA invente dados.`;
 
-Regras:
-- Apenas 1 frase, máximo 200 caracteres
-- SEMPRE em PT-BR — se o original estiver em outro idioma, traduza
-- Sem introduções ("Esta notícia...", "O artigo...")
-- Foco em fatos, números e impacto real
-- NUNCA invente dados — use apenas o que está no conteúdo`;
-
-export async function generateSummary(
+export async function generateArticleBlurb(
 	title: string,
 	content: string,
+	_category?: string,
 	model?: Awaited<ReturnType<typeof getFastModel>>,
 ): Promise<string> {
 	try {
@@ -32,46 +26,40 @@ export async function generateSummary(
 		const input = `Título: ${title}\n\nConteúdo: ${content.slice(0, 8000)}`;
 		const { text } = await generateText({
 			model: m,
-			prompt: `${SUMMARY_PROMPT}\n\n${input}`,
-			maxTokens: 100,
+			prompt: `${BLURB_PROMPT}\n\n${input}`,
+			maxTokens: 160,
 		});
-		const summary = text.trim();
-		if (looksPortuguese(summary)) return summary;
-		// Saiu em outro idioma — uma nova tentativa forçando tradução
+		const blurb = text.trim();
+		if (looksPortuguese(blurb)) return blurb;
 		const retry = await generateText({
 			model: m,
-			prompt: `${SUMMARY_PROMPT}\n\nATENÇÃO: responda OBRIGATORIAMENTE em português do Brasil. Traduza tudo.\n\n${input}`,
-			maxTokens: 100,
+			prompt: `${BLURB_PROMPT}\n\nATENÇÃO: responda OBRIGATORIAMENTE em português do Brasil. Traduza tudo.\n\n${input}`,
+			maxTokens: 160,
 		});
 		const retried = retry.text.trim();
-		return looksPortuguese(retried) ? retried : summary;
+		return looksPortuguese(retried) ? retried : blurb;
 	} catch {
 		return "";
 	}
 }
 
-export async function generateContext(
+/** @deprecated use generateArticleBlurb */
+export async function generateSummary(
 	title: string,
 	content: string,
-	category: string,
 	model?: Awaited<ReturnType<typeof getFastModel>>,
 ): Promise<string> {
-	try {
-		const seriousCategories = ["segurança", "mundo", "brasil", "negócios"];
-		if (!category || !seriousCategories.includes(category.toLowerCase()))
-			return "";
+	return generateArticleBlurb(title, content, undefined, model);
+}
 
-		const m = model ?? (await getFastModel());
-		const { text } = await generateText({
-			model: m,
-			prompt: `Você é um analista geopolítico e de mercados sério e bem-informado. Com base na notícia abaixo, escreva UMA ou DUAS frases curtas em português (PT-BR) fornecendo um insight estratégico ou contexto factual importante sobre os desdobramentos, pessoas públicas ou corporações mencionadas. Vá direto ao ponto.\n\nTítulo: ${title}\n\nConteúdo: ${content.slice(0, 8000)}`,
-			maxTokens: 120,
-		});
-		const result = text.trim();
-		return looksPortuguese(result) ? result : "";
-	} catch {
-		return "";
-	}
+/** @deprecated use generateArticleBlurb */
+export async function generateContext(
+	_title: string,
+	_content: string,
+	_category: string,
+	_model?: Awaited<ReturnType<typeof getFastModel>>,
+): Promise<string> {
+	return "";
 }
 
 export function buildCredibilityBlock(article: {

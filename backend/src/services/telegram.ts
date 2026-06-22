@@ -19,8 +19,7 @@ import {
 import {
 	buildCredibilityBlock,
 	fetchRelatedArticles,
-	generateContext,
-	generateSummary,
+	generateArticleBlurb,
 	rewriteMisleadingTitle,
 } from "./telegram_logic.js";
 import type { TrendingVideo } from "./youtubeTrending.js";
@@ -302,17 +301,21 @@ export async function postArticleToTelegram(
 		["misleading_headline", "out_of_context", "fake_news"].includes(f),
 	);
 
-	const [summary, context, rewrittenTitle] = await Promise.all([
-		generateSummary(article.title, fullContent, fastModel),
-		generateContext(article.title, fullContent, article.category, fastModel),
+	const [blurb, rewrittenTitle] = await Promise.all([
+		generateArticleBlurb(
+			article.title,
+			fullContent,
+			article.category,
+			fastModel,
+		),
 		isMisleading
 			? rewriteMisleadingTitle(article.title, fullContent, fastModel)
 			: null,
 	]);
 
 	const displayTitle = rewrittenTitle || article.title;
-	const displaySummary =
-		summary ||
+	const displayBlurb =
+		blurb ||
 		article.content
 			.replace(/\s+/g, " ")
 			.trim()
@@ -369,7 +372,7 @@ export async function postArticleToTelegram(
 
 	const sourceHashtag = `#${(article.company || article.source).replace(/\W+/g, "_")}`;
 	const layoutFooterTags = `#${article.category.replace(/\W/g, "_")} ${sourceHashtag}`;
-	const message = `${breakingLabel}${sourceHeader}${metaLine ? `\n${metaLine}` : ""}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>${sentimentLabel}\n\n<b>Essencial</b>\n<i>${escapeHtml(displaySummary)}</i>${context ? `\n\n<b>Por que importa</b>\n💡 <i>${escapeHtml(context)}</i>` : ""}${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n${SEPARATOR}\n${layoutFooterTags}`;
+	const message = `${breakingLabel}${sourceHeader}${metaLine ? `\n${metaLine}` : ""}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>${sentimentLabel}\n\n<i>${escapeHtml(displayBlurb)}</i>${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n${SEPARATOR}\n${layoutFooterTags}`;
 
 	const inlineButtons = [
 		[
