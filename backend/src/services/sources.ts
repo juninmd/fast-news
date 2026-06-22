@@ -598,11 +598,6 @@ export const FEED_SOURCES = [
 
 	// ── Tecnologia ─────────────────────────────────────────────────────────────
 	{
-		url: "https://css-tricks.com/feed/",
-		category: "Tecnologia",
-		company: "CSS-Tricks",
-	},
-	{
 		url: "https://www.infoworld.com/feed/",
 		category: "Tecnologia",
 		company: "InfoWorld",
@@ -627,6 +622,7 @@ const RETIRED_FEED_URLS = [
 	"https://veja.abril.com.br/feed/",
 	"https://www.metropoles.com/feed/",
 	"https://www.bleepingcomputer.com/feed/",
+	"https://css-tricks.com/feed/",
 ];
 
 export async function syncDefaultFeeds(): Promise<void> {
