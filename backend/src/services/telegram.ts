@@ -227,6 +227,8 @@ export interface TelegramArticle {
 	credibilityFlags?: string[];
 	credibilityReasoning?: string | null;
 	sentiment?: string | null;
+	relevanceScore?: number | null;
+	relevanceReasoning?: string | null;
 }
 
 export function safeTruncateHtml(html: string, limit: number): string {
@@ -408,6 +410,49 @@ export async function postArticleToTelegram(
 		`UPDATE news_articles SET telegram_sent_at = NOW() WHERE id = $1`,
 		[article.id],
 	).catch(console.error);
+}
+
+export async function skipArticleFromTelegram(
+	articleId: string,
+): Promise<void> {
+	await query(
+		`UPDATE news_articles SET telegram_skipped_at = NOW() WHERE id = $1`,
+		[articleId],
+	).catch(console.error);
+}
+
+export async function isSimilarArticleAlreadySent(
+	articleId: string,
+): Promise<boolean> {
+	try {
+		const threshold = config.telegram.similarThreshold;
+		const interval = config.telegram.similarInterval;
+		const res = await query<{ title: string; similarity: number }>(
+			`SELECT na.title, 1 - (na.embedding <=> curr.embedding) AS similarity
+			 FROM news_articles na
+			 JOIN news_articles curr ON curr.id = $1
+			 WHERE na.telegram_sent_at > NOW() - CAST($2 AS INTERVAL)
+			   AND na.id != $1
+			   AND na.embedding IS NOT NULL
+			   AND curr.embedding IS NOT NULL
+			   AND 1 - (na.embedding <=> curr.embedding) >= $3
+			 ORDER BY na.embedding <=> curr.embedding
+			 LIMIT 1`,
+			[articleId, interval, threshold],
+		);
+		if (res.rows.length > 0) {
+			console.log(
+				`[Telegram] Article ${articleId} skipped. Similar article already sent: "${res.rows[0].title}" (similarity: ${res.rows[0].similarity.toFixed(3)})`,
+			);
+			return true;
+		}
+	} catch (err) {
+		console.warn(
+			"[Telegram] Error checking similar articles sent:",
+			(err as Error).message,
+		);
+	}
+	return false;
 }
 
 export async function postNewArticles(

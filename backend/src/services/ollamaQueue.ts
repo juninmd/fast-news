@@ -3,7 +3,11 @@ import { config } from "../config/env.js";
 import { analyzeCredibility } from "./credibility.js";
 import { fetchFullArticle } from "./fullArticle.js";
 import { scoreRelevance } from "./relevance.js";
-import type { TelegramArticle } from "./telegram.js";
+import {
+	isSimilarArticleAlreadySent,
+	skipArticleFromTelegram,
+	type TelegramArticle,
+} from "./telegram.js";
 import { enqueueTelegramPosts } from "./telegramQueue.js";
 
 interface CredibilityJob {
@@ -37,7 +41,10 @@ export async function startOllamaQueueWorker(): Promise<void> {
 	q.process(2, async (job) => {
 		const { article, relevanceOnly } = job.data;
 
-		if (article.category === "fact_check") return;
+		if (article.category === "fact_check") {
+			await skipArticleFromTelegram(article.id);
+			return;
+		}
 
 		const fullContent =
 			(await fetchFullArticle(article.url).catch(() => null)) ||
@@ -69,6 +76,7 @@ export async function startOllamaQueueWorker(): Promise<void> {
 				console.log(
 					`[OllamaQueue] Dropping ${article.id} — fake news score ${result.fakeNewsScore} > 6`,
 				);
+				await skipArticleFromTelegram(article.id);
 				return;
 			}
 
@@ -83,19 +91,42 @@ export async function startOllamaQueueWorker(): Promise<void> {
 			};
 		}
 
-		const relevanceScore = await scoreRelevance(
+		// First check vector similarity to prevent posting similar news within the lookback window
+		const isDuplicate = await isSimilarArticleAlreadySent(article.id);
+		if (isDuplicate) {
+			console.log(
+				`[OllamaQueue] Dropping ${article.id} — similar article already posted recently.`,
+			);
+			await skipArticleFromTelegram(article.id);
+			return;
+		}
+
+		const relevance = await scoreRelevance(
 			article.id,
 			article.title,
 			fullContent,
 			article.category,
 		);
 
-		if (relevanceScore < config.ingestion.relevanceThreshold) {
+		if (
+			relevance.relevanceScore < config.ingestion.relevanceThreshold ||
+			relevance.isSpamOrPromo ||
+			relevance.isDuplicateOrRehash ||
+			!relevance.shouldPostTelegram
+		) {
 			console.log(
-				`[OllamaQueue] Dropping ${article.id} — relevance score ${relevanceScore} < ${config.ingestion.relevanceThreshold}`,
+				`[OllamaQueue] Dropping ${article.id} — relevanceScore=${relevance.relevanceScore} (threshold=${config.ingestion.relevanceThreshold}), isSpamOrPromo=${relevance.isSpamOrPromo}, isDuplicateOrRehash=${relevance.isDuplicateOrRehash}, shouldPostTelegram=${relevance.shouldPostTelegram}`,
 			);
+			await skipArticleFromTelegram(article.id);
 			return;
 		}
+
+		// Save the relevance details into the enriched object as well
+		enriched = {
+			...enriched,
+			relevanceScore: relevance.relevanceScore,
+			relevanceReasoning: relevance.reason,
+		};
 
 		await enqueueTelegramPosts([enriched]);
 	});
