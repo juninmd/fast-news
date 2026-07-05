@@ -1,6 +1,10 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 import { query } from "../database/client.js";
+import {
+	getStorySimilarities,
+	searchVectors,
+} from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
 
 export const SIMILARITY_THRESHOLD = 0.75;
@@ -32,22 +36,27 @@ export async function buildArticleRelations(articleId: string): Promise<void> {
 		`SELECT id, embedding FROM news_articles WHERE id = $1 AND embedding IS NOT NULL`,
 		[articleId],
 	);
-	if (!res.rows[0]) return;
+	if (!res.rows[0] || !res.rows[0].embedding) return;
 
-	const candidates = await query<{ id: string; similarity: string }>(
-		`SELECT id, 1 - (embedding <=> $1::vector) AS similarity
-     FROM news_articles
-     WHERE id != $2
-       AND embedding IS NOT NULL
-       AND published_at > NOW() - INTERVAL '7 days'
-     ORDER BY embedding <=> $1::vector
-     LIMIT 20`,
-		[res.rows[0].embedding, articleId],
-	);
+	let embedding: number[];
+	try {
+		embedding = JSON.parse(res.rows[0].embedding);
+	} catch (err) {
+		console.error(
+			`[correlation] Malformed embedding for article ${articleId}, skipping relation build:`,
+			(err as Error).message,
+		);
+		return;
+	}
+	const candidates = await searchVectors(embedding, 20, {
+		daysBack: 7,
+		minSimilarity: SIMILARITY_THRESHOLD,
+	});
 
-	for (const c of candidates.rows) {
-		const sim = parseFloat(c.similarity);
+	for (const c of candidates) {
+		const sim = c.similarity;
 		if (sim < SIMILARITY_THRESHOLD) continue;
+		if (c.id === articleId) continue;
 		const [a, b] = articleId < c.id ? [articleId, c.id] : [c.id, articleId];
 		await query(
 			`INSERT INTO article_relations (article_a, article_b, similarity)
@@ -73,24 +82,21 @@ export async function assignArticleToStory(
 	const article = artRes.rows[0];
 	if (!article || !article.embedding) return null;
 
-	const storyRes = await query<{ story_id: string; avg_sim: string }>(
-		`SELECT sa.story_id, AVG(1 - (na.embedding <=> $1::vector)) AS avg_sim
-     FROM story_articles sa
-     JOIN news_articles na ON na.id = sa.article_id
-     JOIN news_stories ns ON ns.id = sa.story_id
-     WHERE na.embedding IS NOT NULL
-       AND ns.last_updated_at > NOW() - INTERVAL '72 hours'
-       AND ns.status = 'active'
-     GROUP BY sa.story_id
-     HAVING AVG(1 - (na.embedding <=> $1::vector)) >= $2
-     ORDER BY avg_sim DESC
-     LIMIT 5`,
-		[article.embedding, STORY_MERGE_THRESHOLD],
-	);
+	let embedding: number[];
+	try {
+		embedding = JSON.parse(article.embedding);
+	} catch (err) {
+		console.error(
+			`[correlation] Malformed embedding for article ${articleId}, skipping story assignment:`,
+			(err as Error).message,
+		);
+		return null;
+	}
+	const storyRes = await getStorySimilarities(embedding, STORY_MERGE_THRESHOLD);
 
 	let targetStoryId: string | null = null;
-	if (storyRes.rows.length > 0) {
-		targetStoryId = storyRes.rows[0].story_id;
+	if (storyRes.length > 0) {
+		targetStoryId = storyRes[0].story_id;
 	} else {
 		const newStory = await query<{ id: string }>(
 			`INSERT INTO news_stories (title, category, article_count)
@@ -103,7 +109,7 @@ export async function assignArticleToStory(
 	await query(
 		`INSERT INTO story_articles (story_id, article_id, role)
      VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-		[targetStoryId, articleId, storyRes.rows.length > 0 ? "update" : "origin"],
+		[targetStoryId, articleId, storyRes.length > 0 ? "update" : "origin"],
 	);
 
 	await enrichStory(targetStoryId, articleId, article);
