@@ -1,11 +1,7 @@
 import "dotenv/config";
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import { config, validateConfig } from "./config/env.js";
-import { closePool, getPool } from "./database/client.js";
+import { initInfra, shutdownInfra } from "./bootstrap.js";
+import { validateConfig } from "./config/env.js";
 import { runIngestionAndPost } from "./jobs/ingestionJob.js";
-import { closeRedis, getRedis } from "./services/cache.js";
 import {
 	startOllamaQueueWorker,
 	stopOllamaQueueWorker,
@@ -18,7 +14,6 @@ import {
 	waitForTelegramQueueIdle,
 } from "./services/telegramQueue.js";
 
-const __dir = dirname(fileURLToPath(import.meta.url));
 const LOOP_INTERVAL_MS = parseInt(
 	process.env["NEWS_AGENT_LOOP_INTERVAL_MS"] ?? "900000",
 	10,
@@ -26,18 +21,8 @@ const LOOP_INTERVAL_MS = parseInt(
 
 validateConfig();
 
-async function runMigrations(): Promise<void> {
-	const files = ["schema.sql", "telegram-feedback.sql"];
-	const sql = files
-		.map((file) => readFileSync(join(__dir, "database", file), "utf-8"))
-		.join("\n");
-	await getPool().query(sql);
-}
-
 async function bootstrap(): Promise<void> {
-	await getPool().query("SELECT 1");
-	await runMigrations();
-	await getRedis();
+	await initInfra();
 	await startBot();
 	await startTelegramQueueWorker();
 	await startOllamaQueueWorker();
@@ -52,8 +37,7 @@ async function shutdown(): Promise<void> {
 	stopBot();
 	await stopTelegramQueueWorker();
 	await stopOllamaQueueWorker();
-	await closeRedis();
-	await closePool();
+	await shutdownInfra();
 }
 
 async function runOnce(): Promise<void> {

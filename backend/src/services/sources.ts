@@ -362,11 +362,6 @@ export const FEED_SOURCES = [
 		company: "Adrenaline",
 	},
 	{
-		url: "https://www.eurogamer.net/feed",
-		category: "Gaming",
-		company: "Eurogamer",
-	},
-	{
 		url: "https://www.gameinformer.com/rss.xml",
 		category: "Gaming",
 		company: "Game Informer",
@@ -445,19 +440,9 @@ export const FEED_SOURCES = [
 		company: "Al Jazeera",
 	},
 	{
-		url: "https://feeds.bbci.co.uk/news/world/rss.xml",
-		category: "Mundo",
-		company: "BBC",
-	},
-	{
 		url: "http://feeds.foxnews.com/foxnews/world",
 		category: "Mundo",
 		company: "Fox News",
-	},
-	{
-		url: "https://feeds.bbci.co.uk/portuguese/rss.xml",
-		category: "Mundo",
-		company: "BBC Brasil",
 	},
 	{
 		url: "https://feeds.folha.uol.com.br/mundo/rss091.xml",
@@ -623,13 +608,30 @@ const RETIRED_FEED_URLS = [
 	"https://www.metropoles.com/feed/",
 	"https://www.bleepingcomputer.com/feed/",
 	"https://css-tricks.com/feed/",
+	// BBC e Eurogamer removidos da lista padrão a pedido do usuário
+	"https://feeds.bbci.co.uk/news/world/rss.xml",
+	"https://feeds.bbci.co.uk/portuguese/rss.xml",
+	"https://www.eurogamer.net/feed",
 ];
+
+function isValidFeedUrl(url: string): boolean {
+	try {
+		const parsed = new URL(url);
+		return parsed.protocol === "http:" || parsed.protocol === "https:";
+	} catch {
+		return false;
+	}
+}
 
 export async function syncDefaultFeeds(): Promise<void> {
 	try {
 		// Upsert idempotente: insere apenas fontes novas, preserva is_active de existentes
 		let inserted = 0;
 		for (const source of FEED_SOURCES) {
+			if (!isValidFeedUrl(source.url)) {
+				console.warn(`[sources] Skipping malformed feed URL: ${source.url}`);
+				continue;
+			}
 			const res = await query(
 				"INSERT INTO source_feeds (name, url, category, company, is_active) VALUES ($1, $2, $3, $4, true) ON CONFLICT (url) DO NOTHING",
 				[
@@ -659,7 +661,6 @@ export async function getActiveFeeds(): Promise<
 	Array<{ url: string; category: string; company?: string }>
 > {
 	try {
-		await syncDefaultFeeds();
 		const res = await query<{ url: string; category: string; company: string }>(
 			"SELECT url, category, company FROM source_feeds WHERE is_active = true",
 		);

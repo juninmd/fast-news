@@ -50,6 +50,17 @@ export async function startOllamaQueueWorker(): Promise<void> {
 			(await fetchFullArticle(article.url).catch(() => null)) ||
 			article.content;
 
+		// Check vector similarity first to avoid wasting credibility/relevance LLM calls on
+		// near-duplicate articles (same story from multiple feeds, rehashes, etc).
+		const isDuplicate = await isSimilarArticleAlreadySent(article.id);
+		if (isDuplicate) {
+			console.log(
+				`[OllamaQueue] Dropping ${article.id} — similar article already posted recently.`,
+			);
+			await skipArticleFromTelegram(article.id);
+			return;
+		}
+
 		let enriched: TelegramArticle = { ...article, fullContent };
 
 		if (!relevanceOnly) {
@@ -63,9 +74,14 @@ export async function startOllamaQueueWorker(): Promise<void> {
 			);
 
 			if (!result) {
-				throw new Error(
-					`Credibility analysis did not complete for ${article.id}`,
+				// analyzeCredibility already tried both the primary and cloud-fallback
+				// models before returning null, so this is a deterministic failure —
+				// retrying the same job at the Bull level would just repeat it.
+				console.error(
+					`[OllamaQueue] Credibility analysis failed for ${article.id} on all providers, skipping without retry.`,
 				);
+				await skipArticleFromTelegram(article.id);
+				return;
 			}
 
 			console.log(
@@ -89,16 +105,6 @@ export async function startOllamaQueueWorker(): Promise<void> {
 				credibilityFlags: result.credibilityFlags,
 				credibilityReasoning: result.reasoning,
 			};
-		}
-
-		// First check vector similarity to prevent posting similar news within the lookback window
-		const isDuplicate = await isSimilarArticleAlreadySent(article.id);
-		if (isDuplicate) {
-			console.log(
-				`[OllamaQueue] Dropping ${article.id} — similar article already posted recently.`,
-			);
-			await skipArticleFromTelegram(article.id);
-			return;
 		}
 
 		const relevance = await scoreRelevance(
@@ -161,6 +167,24 @@ export async function enqueueCredibilityAnalysis(
 	} catch (err) {
 		console.warn("[OllamaQueue] Failed to enqueue:", (err as Error).message);
 	}
+}
+
+export interface QueueCounts {
+	waiting: number;
+	active: number;
+	delayed: number;
+	failed: number;
+}
+
+export async function getOllamaQueueCounts(): Promise<QueueCounts> {
+	if (!queue) return { waiting: 0, active: 0, delayed: 0, failed: 0 };
+	const [waiting, active, delayed, failed] = await Promise.all([
+		queue.getWaitingCount(),
+		queue.getActiveCount(),
+		queue.getDelayedCount(),
+		queue.getFailedCount(),
+	]);
+	return { waiting, active, delayed, failed };
 }
 
 export async function waitForOllamaQueueIdle(

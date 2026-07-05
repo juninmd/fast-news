@@ -3,6 +3,7 @@ import cron from "node-cron";
 import { z } from "zod";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
+import { upsertInsight } from "../database/vectorStore.js";
 import { getFastModel } from "../services/aiProvider.js";
 import {
 	getAllTrackedTopics,
@@ -32,11 +33,19 @@ async function buildKnowledgeInsights(): Promise<void> {
 
 			for (const insight of object.insights) {
 				const embedding = await embedDocument(insight);
-				await query(
+				const insertRes = await query<{ id: string }>(
 					`INSERT INTO knowledge_insights (topic, insight, confidence, embedding)
-           VALUES ($1, $2, $3, $4)`,
+           VALUES ($1, $2, $3, $4) RETURNING id`,
 					[topic.name, insight, 0.7, vectorToSQL(embedding)],
 				);
+				const newInsightId = insertRes.rows[0]?.id;
+				if (newInsightId) {
+					await upsertInsight(newInsightId, embedding, {
+						topic: topic.name,
+						insight: insight,
+						confidence: 0.7,
+					});
+				}
 			}
 		} catch (err) {
 			console.error(
