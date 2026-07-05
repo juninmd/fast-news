@@ -1,7 +1,8 @@
+import { createHash } from "node:crypto";
 import Parser from "rss-parser";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
-import { upsertArticleToSqlite } from "../database/sqliteStore.js";
+import { upsertVector } from "../database/vectorStore.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
 import { enqueueCredibilityAnalysis } from "./ollamaQueue.js";
@@ -11,10 +12,54 @@ const parser = new Parser({
 	customFields: { item: [["media:content", "mediaContent"], "enclosure"] },
 });
 
+/** Bounds concurrent work per key (host, or a fixed budget for LLM calls) to avoid rate limits. */
+class KeyedSemaphore {
+	private active = new Map<string, number>();
+	private queues = new Map<string, Array<() => void>>();
+	constructor(private limit: number) {}
+
+	async run<T>(key: string, fn: () => Promise<T>): Promise<T> {
+		await this.acquire(key);
+		try {
+			return await fn();
+		} finally {
+			this.release(key);
+		}
+	}
+
+	private acquire(key: string): Promise<void> {
+		const active = this.active.get(key) ?? 0;
+		if (active < this.limit) {
+			this.active.set(key, active + 1);
+			return Promise.resolve();
+		}
+		return new Promise((resolve) => {
+			const q = this.queues.get(key) ?? [];
+			q.push(resolve);
+			this.queues.set(key, q);
+		});
+	}
+
+	private release(key: string): void {
+		const q = this.queues.get(key);
+		if (q && q.length > 0) {
+			q.shift()?.();
+			return;
+		}
+		this.active.set(key, Math.max(0, (this.active.get(key) ?? 1) - 1));
+	}
+}
+
+// Max 1 concurrent request per news portal host — avoids hammering a single portal's rate limit.
+const hostGate = new KeyedSemaphore(1);
+// Max 2 concurrent story-assignment LLM calls (fired in the background per article) — avoids
+// stacking unbounded LiteLLM requests on top of the credibility/relevance queue's own concurrency.
+const storyAssignmentGate = new KeyedSemaphore(2);
+
 /** Fetch feed XML with proper charset decoding (handles ISO-8859-1 / Windows-1252 Brazilian feeds) */
 async function fetchXml(url: string): Promise<string> {
 	const ac = new AbortController();
-	const t = setTimeout(() => ac.abort(), 12_000);
+	const t = setTimeout(() => ac.abort(), config.ingestion.feedFetchTimeoutMs);
 	try {
 		const resp = await fetch(url, {
 			signal: ac.signal,
@@ -113,7 +158,10 @@ async function fetchFeed(source: {
 	company?: string;
 }): Promise<RawArticle[]> {
 	try {
-		const xml = await withRetry(() => fetchXml(source.url));
+		const host = new URL(source.url).hostname;
+		const xml = await hostGate.run(host, () =>
+			withRetry(() => fetchXml(source.url)),
+		);
 		const feed = await parser.parseString(xml);
 		return (feed.items ?? [])
 			.slice(0, config.ingestion.maxArticlesPerFeed)
@@ -122,9 +170,18 @@ async function fetchFeed(source: {
 				const dateStr = item.isoDate ?? item.pubDate;
 				const publishedAt = dateStr ? new Date(dateStr) : null;
 
+				const stableGuid =
+					item.guid ??
+					item.link ??
+					(item.title
+						? createHash("sha1")
+								.update(`${item.title}|${source.url}|${dateStr ?? ""}`)
+								.digest("hex")
+						: undefined);
+
 				return {
 					guid:
-						item.guid ?? item.link ?? item.title ?? Math.random().toString(36),
+						stableGuid ?? createHash("sha1").update(source.url).digest("hex"),
 					title: item.title ?? "Sem título",
 					content: item.contentSnippet ?? item.summary ?? item.content ?? "",
 					url: item.link ?? "",
@@ -158,7 +215,10 @@ async function upsertArticle(
 	);
 	if (existing.rowCount && existing.rowCount > 0) return null;
 
-	const textToEmbed = `${article.title}. ${article.content}`.slice(0, 2000);
+	const textToEmbed = `${article.title}. ${article.content}`.slice(
+		0,
+		config.ingestion.embedTruncateChars,
+	);
 	// Embedding is best-effort — if Ollama is unavailable, store without vector
 	let embedding: number[] | null = null;
 	if (ollamaUp) {
@@ -197,23 +257,18 @@ async function upsertArticle(
 	const newId = result.rows[0]?.id ?? null;
 	if (newId && embedding) {
 		try {
-			upsertArticleToSqlite(
-				{
-					id: newId,
-					guid: article.guid,
-					title: article.title,
-					content: article.content,
-					url: article.url,
-					source: article.source,
-					category: article.category,
-					company: article.company,
-					publishedAt: article.publishedAt?.toISOString() ?? undefined,
-					imageUrl: article.imageUrl,
-				},
-				embedding,
-			);
+			await upsertVector(newId, embedding, {
+				id: newId,
+				title: article.title,
+				content: article.content,
+				url: article.url,
+				source: article.source,
+				category: article.category,
+				publishedAt: article.publishedAt,
+				imageUrl: article.imageUrl,
+			});
 		} catch (e) {
-			console.warn("[sqlite] upsert failed:", (e as Error).message);
+			console.warn("[vectorStore] upsert failed:", (e as Error).message);
 		}
 	}
 
@@ -244,7 +299,10 @@ async function isOllamaAvailable(): Promise<boolean> {
 		: `${base.replace(/\/v1\/?$/, "")}/api/tags`;
 	try {
 		const ac = new AbortController();
-		const t = setTimeout(() => ac.abort(), 5_000);
+		const t = setTimeout(
+			() => ac.abort(),
+			config.ingestion.ollamaProbeTimeoutMs,
+		);
 		const apiKey =
 			process.env["OLLAMA_API_KEY"] || process.env["OPENAI_API_KEY"] || "";
 		const res = await fetch(probeUrl, {
@@ -294,7 +352,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 							buildArticleRelations(id),
 						);
 						runBackground("assignArticleToStory", () =>
-							assignArticleToStory(id),
+							storyAssignmentGate.run("global", () => assignArticleToStory(id)),
 						);
 					}
 				} catch (err) {

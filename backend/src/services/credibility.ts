@@ -1,8 +1,8 @@
-import { generateObject } from "ai";
 import { z } from "zod";
 import { query } from "../database/client.js";
-import { getCloudFallbackModel, getFastModel } from "./aiProvider.js";
-import { embedQuery, vectorToSQL } from "./embeddings.js";
+import { searchVectors } from "../database/vectorStore.js";
+import { embedQuery } from "./embeddings.js";
+import { generateWithFallback } from "./llmWithFallback.js";
 
 const CredibilitySchema = z.object({
 	fakeNewsScore: z
@@ -75,19 +75,15 @@ Avalie:
 async function findRelatedFactChecks(title: string): Promise<string> {
 	try {
 		const embedding = await embedQuery(title);
-		const res = await query<{ title: string; source: string; content: string }>(
-			`SELECT title, source, content FROM news_articles
-       WHERE category = 'fact_check'
-         AND embedding IS NOT NULL
-         AND 1 - (embedding <=> $1::vector) >= 0.60
-       ORDER BY embedding <=> $1::vector
-       LIMIT 3`,
-			[vectorToSQL(embedding)],
-		);
-		if (!res.rows.length) return "";
-		const snippets = res.rows
+		const results = await searchVectors(embedding, 3, {
+			category: "fact_check",
+			minSimilarity: 0.6,
+		});
+		if (!results.length) return "";
+		const snippets = results
 			.map(
-				(r) => `• [${r.source}] ${r.title}: ${(r.content ?? "").slice(0, 200)}`,
+				(r) =>
+					`• [${r.metadata?.source ?? ""}] ${r.metadata?.title ?? ""}: ${(r.metadata?.content ?? "").slice(0, 200)}`,
 			)
 			.join("\n");
 		return `\nVERIFICAÇÕES DE FACT-CHECKERS BRASILEIROS RELACIONADAS:\n${snippets}\n`;
@@ -113,55 +109,20 @@ export async function analyzeCredibility(
 	category: string,
 	abortSignal?: AbortSignal,
 ): Promise<CredibilityResult | null> {
-	const model = await getFastModel();
 	const factCheckContext = await findRelatedFactChecks(title);
+	const prompt = CREDIBILITY_PROMPT.replace("{title}", title)
+		.replace("{source}", source)
+		.replace("{category}", category)
+		.replace("{content}", (content ?? "").slice(0, 5000))
+		.replace("{factCheckContext}", factCheckContext);
 
-	let object;
-	try {
-		const res = await generateObject({
-			model,
-			schema: CredibilitySchema,
-			prompt: CREDIBILITY_PROMPT.replace("{title}", title)
-				.replace("{source}", source)
-				.replace("{category}", category)
-				.replace("{content}", (content ?? "").slice(0, 5000))
-				.replace("{factCheckContext}", factCheckContext),
-			abortSignal,
-		});
-		object = res.object;
-	} catch (err) {
-		console.warn(
-			`[credibility] Primary model failed: ${(err as Error).message}. Attempting cloud fallback...`,
-		);
-		const fallbackModel = await getCloudFallbackModel();
-		if (fallbackModel) {
-			try {
-				const res = await generateObject({
-					model: fallbackModel,
-					schema: CredibilitySchema,
-					prompt: CREDIBILITY_PROMPT.replace("{title}", title)
-						.replace("{source}", source)
-						.replace("{category}", category)
-						.replace("{content}", (content ?? "").slice(0, 5000))
-						.replace("{factCheckContext}", factCheckContext),
-					abortSignal,
-				});
-				object = res.object;
-				console.log(
-					"[credibility] Analysis succeeded using cloud fallback model",
-				);
-			} catch (fallbackErr) {
-				console.error(
-					"[credibility] Cloud fallback model also failed:",
-					(fallbackErr as Error).message,
-				);
-				return null;
-			}
-		} else {
-			console.error("[credibility] No cloud fallback model available");
-			return null;
-		}
-	}
+	const object = await generateWithFallback({
+		schema: CredibilitySchema,
+		prompt,
+		abortSignal,
+		logTag: "credibility",
+	});
+	if (!object) return null;
 
 	try {
 		await query(

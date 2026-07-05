@@ -7,8 +7,6 @@ import type { TelegramArticle } from "../services/telegram.js";
 
 let task: cron.ScheduledTask | null = null;
 
-const JOB_TIMEOUT_MS = 25 * 60 * 1_000;
-
 /**
  * Articles from previous ingestion runs that already have credibility scores
  * and were never sent to Telegram. Safe to send directly without re-evaluation.
@@ -109,7 +107,7 @@ export async function runIngestionAndPost(): Promise<void> {
 		new Promise<never>((_, reject) =>
 			setTimeout(
 				() => reject(new Error("ingestion job timeout after 25min")),
-				JOB_TIMEOUT_MS,
+				config.ingestion.jobTimeoutMs,
 			),
 		),
 	]);

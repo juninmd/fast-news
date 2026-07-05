@@ -1,10 +1,14 @@
 import { Context, Telegraf } from "telegraf";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
+import { searchVectors } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
 import { analyzeTopicWithRAG, getAllTrackedTopics } from "./analysis.js";
 import { getStoryGraph, listActiveStories } from "./correlation.js";
-import { getActiveOpportunities } from "./financial.js";
+import {
+	type FinancialOpportunity,
+	getActiveOpportunities,
+} from "./financial.js";
 import { fetchFullArticle } from "./fullArticle.js";
 import { generateGlobalPulse } from "./intelligence.js";
 import { searchSimilarArticles } from "./rag.js";
@@ -24,7 +28,6 @@ import {
 } from "./telegram_logic.js";
 import type { TrendingVideo } from "./youtubeTrending.js";
 
-const FAST_NEWS_URL = "https://fast-news.antonio-code.duckdns.org";
 const FALLBACK_SUMMARY_MAX_LEN = 200;
 let bot: Telegraf | null = null;
 
@@ -38,7 +41,16 @@ export function getBot(): Telegraf {
 	return bot;
 }
 
-function setupCommands(bot: Telegraf): void {
+/** Extracts the argument text after a /command, without assuming ctx.message has `text`. */
+function commandArgs(ctx: Context): string {
+	const message = ctx.message;
+	if (message && "text" in message) {
+		return message.text.split(" ").slice(1).join(" ").trim();
+	}
+	return "";
+}
+
+async function handleStart(ctx: Context): Promise<void> {
 	const mainKeyboard = {
 		keyboard: [
 			[{ text: "🌌 Neo-Pulse" }, { text: "📰 Top Notícias" }],
@@ -47,20 +59,88 @@ function setupCommands(bot: Telegraf): void {
 		],
 		resize_keyboard: true,
 	};
-	bot.start((ctx: Context) =>
-		ctx.replyWithHTML(
-			`🌌 <b>NEO-EDITORIAL INTEL</b>\n${SEPARATOR}\nO futuro do jornalismo financeiro está aqui.\n\nExplore o pulso do mercado através dos botões abaixo.\n\n<i>Sempre à frente do mercado.</i>`,
-			{ reply_markup: mainKeyboard },
-		),
+	await ctx.replyWithHTML(
+		`🌌 <b>NEO-EDITORIAL INTEL</b>\n${SEPARATOR}\nO futuro do jornalismo financeiro está aqui.\n\nExplore o pulso do mercado através dos botões abaixo.\n\n<i>Sempre à frente do mercado.</i>`,
+		{ reply_markup: mainKeyboard },
 	);
-	bot.hears("🌌 Neo-Pulse", (ctx) => (ctx as any).replyWithCommand("/pulse"));
-	bot.hears("📰 Top Notícias", (ctx) => (ctx as any).replyWithCommand("/news"));
-	bot.hears("🔗 Histórias", (ctx) => (ctx as any).replyWithCommand("/stories"));
-	bot.hears("📊 Tópicos", (ctx) => (ctx as any).replyWithCommand("/topics"));
-	bot.hears("💰 Financeiro", (ctx) =>
-		(ctx as any).replyWithCommand("/financial"),
+}
+
+async function handlePulse(ctx: Context): Promise<void> {
+	await ctx.reply("🌌 Gerando Neo-Pulse Global...");
+	try {
+		const pulse = await generateGlobalPulse();
+		await ctx.reply(pulse, { parse_mode: "Markdown" });
+	} catch (err) {
+		await ctx.reply(`❌ Falha ao gerar Pulse: ${(err as Error).message}`);
+	}
+}
+
+async function handleTopics(ctx: Context): Promise<void> {
+	const topics = await getAllTrackedTopics();
+	const list = topics.map((t) => `• <b>${t.name}</b>`).join("\n");
+	await ctx.replyWithHTML(
+		`📊 <b>TÓPICOS MONITORADOS</b>\n${SEPARATOR}\n${list}\n${SEPARATOR}`,
 	);
-	bot.hears("❓ Ajuda", (ctx) => (ctx as any).replyWithCommand("/start"));
+}
+
+async function handleFinancial(ctx: Context): Promise<void> {
+	const opps = (await getActiveOpportunities()) as FinancialOpportunity[];
+	if (!opps.length) {
+		await ctx.reply("📉 Nenhuma oportunidade ativa no momento.");
+		return;
+	}
+	const text = opps
+		.slice(0, 6)
+		.map(
+			(o) =>
+				`${o.direction === "buy" ? "📈" : "📉"} <b>${o.asset}</b>\n${o.reasoning.slice(0, 120)}...`,
+		)
+		.join("\n\n");
+	await ctx.replyWithHTML(
+		`💰 <b>OPORTUNIDADES FINANCEIRAS</b>\n${SEPARATOR}\n${text}\n${SEPARATOR}`,
+	);
+}
+
+async function handleNews(ctx: Context): Promise<void> {
+	const articles = await searchSimilarArticles("principais notícias", 1, 8);
+	const text = articles
+		.map(
+			(a, i) =>
+				`${i + 1}. <b>${a.title.slice(0, 80)}</b>\n   📰 ${a.source} — <a href="${a.url}">ler</a>`,
+		)
+		.join("\n\n");
+	await ctx.replyWithHTML(
+		`📰 <b>TOP NOTÍCIAS</b>\n${SEPARATOR}\n${text || "Sem notícias recentes."}\n${SEPARATOR}`,
+		{ link_preview_options: { is_disabled: true } },
+	);
+}
+
+async function handleStories(ctx: Context): Promise<void> {
+	const stories = await listActiveStories(8);
+	if (!stories.length) {
+		await ctx.reply("📭 Nenhuma história ativa.");
+		return;
+	}
+	const text = stories
+		.map(
+			(s) =>
+				`${IMPACT_EMOJI[s.impactLevel] ?? "📊"}${s.financialSignal ? ` ${SIGNAL_EMOJI[s.financialSignal]}` : ""} <b>${escapeHtml(s.title)}</b>\n   ${s.articleCount} artigos · ${escapeHtml(s.category)}`,
+		)
+		.join("\n\n");
+	await ctx.replyWithHTML(
+		`🔗 <b>HISTÓRIAS EM ANDAMENTO</b>\n${SEPARATOR}\n${text}\n${SEPARATOR}\n<a href="${config.publicUrl}/?view=stories">Ver grafo completo</a>`,
+		{ link_preview_options: { is_disabled: true } },
+	);
+}
+
+function setupCommands(bot: Telegraf): void {
+	bot.start(handleStart);
+	bot.hears("🌌 Neo-Pulse", handlePulse);
+	bot.hears("📰 Top Notícias", handleNews);
+	bot.hears("🔗 Histórias", handleStories);
+	bot.hears("📊 Tópicos", handleTopics);
+	bot.hears("💰 Financeiro", handleFinancial);
+	bot.hears("❓ Ajuda", handleStart);
 	bot.action(/^fb:(like|dislike):([0-9a-f-]{36})$/i, async (ctx) => {
 		const match = (ctx.callbackQuery as { data?: string }).data?.match(
 			/^fb:(like|dislike):(.+)$/i,
@@ -86,8 +166,15 @@ function setupCommands(bot: Telegraf): void {
 		const dislikes = countRes.rows[0]?.dislikes || "0";
 
 		// Update reply markup dynamically
+		const cbMessage =
+			ctx.callbackQuery && "message" in ctx.callbackQuery
+				? ctx.callbackQuery.message
+				: undefined;
 		const oldKeyboard =
-			(ctx.callbackQuery as any).message?.reply_markup?.inline_keyboard || [];
+			(cbMessage &&
+				"reply_markup" in cbMessage &&
+				cbMessage.reply_markup?.inline_keyboard) ||
+			[];
 		const newKeyboard = [
 			[
 				{ text: `👍 Curtir (${likes})`, callback_data: `fb:like:${articleId}` },
@@ -103,52 +190,13 @@ function setupCommands(bot: Telegraf): void {
 			.editMessageReplyMarkup({ inline_keyboard: newKeyboard })
 			.catch(console.error);
 	});
-	bot.command("pulse", async (ctx: Context) => {
-		await ctx.reply("🌌 Gerando Neo-Pulse Global...");
-		try {
-			const pulse = await generateGlobalPulse();
-			await ctx.reply(pulse, { parse_mode: "Markdown" });
-		} catch (err: any) {
-			await ctx.reply(`❌ Falha ao gerar Pulse: ${err.message}`);
-		}
-	});
-	bot.command("topics", async (ctx: Context) => {
-		const topics = await getAllTrackedTopics();
-		const list = topics.map((t) => `• <b>${t.name}</b>`).join("\n");
-		await ctx.replyWithHTML(
-			`📊 <b>TÓPICOS MONITORADOS</b>\n${SEPARATOR}\n${list}\n${SEPARATOR}`,
-		);
-	});
-	bot.command("financial", async (ctx: Context) => {
-		const opps = (await getActiveOpportunities()) as any[];
-		if (!opps.length)
-			return ctx.reply("📉 Nenhuma oportunidade ativa no momento.");
-		const text = opps
-			.slice(0, 6)
-			.map(
-				(o) =>
-					`${o.direction === "buy" ? "📈" : "📉"} <b>${o.asset}</b>\n${o.reasoning.slice(0, 120)}...`,
-			)
-			.join("\n\n");
-		await ctx.replyWithHTML(
-			`💰 <b>OPORTUNIDADES FINANCEIRAS</b>\n${SEPARATOR}\n${text}\n${SEPARATOR}`,
-		);
-	});
-	bot.command("news", async (ctx: Context) => {
-		const articles = await searchSimilarArticles("principais notícias", 1, 8);
-		const text = articles
-			.map(
-				(a, i) =>
-					`${i + 1}. <b>${a.title.slice(0, 80)}</b>\n   📰 ${a.source} — <a href="${a.url}">ler</a>`,
-			)
-			.join("\n\n");
-		await ctx.replyWithHTML(
-			`📰 <b>TOP NOTÍCIAS</b>\n${SEPARATOR}\n${text || "Sem notícias recentes."}\n${SEPARATOR}`,
-			{ link_preview_options: { is_disabled: true } },
-		);
-	});
+	bot.command("pulse", handlePulse);
+	bot.command("topics", handleTopics);
+	bot.command("financial", handleFinancial);
+	bot.command("news", handleNews);
+	bot.command("stories", handleStories);
 	bot.command("analysis", async (ctx: Context) => {
-		const args = (ctx.message as any).text.split(" ").slice(1).join(" ").trim();
+		const args = commandArgs(ctx);
 		const topics = await getAllTrackedTopics();
 		const topic = args
 			? topics.find((t) => t.name.toLowerCase().includes(args.toLowerCase()))
@@ -158,26 +206,8 @@ function setupCommands(bot: Telegraf): void {
 		const analysis = await analyzeTopicWithRAG(topic);
 		await sendLongMessage(ctx, analysis);
 	});
-	bot.command("stories", async (ctx: Context) => {
-		const stories = await listActiveStories(8);
-		if (!stories.length) return ctx.reply("📭 Nenhuma história ativa.");
-		const text = stories
-			.map(
-				(s) =>
-					`${IMPACT_EMOJI[s.impactLevel] ?? "📊"}${s.financialSignal ? ` ${SIGNAL_EMOJI[s.financialSignal]}` : ""} <b>${escapeHtml(s.title)}</b>\n   ${s.articleCount} artigos · ${escapeHtml(s.category)}`,
-			)
-			.join("\n\n");
-		await ctx.replyWithHTML(
-			`🔗 <b>HISTÓRIAS EM ANDAMENTO</b>\n${SEPARATOR}\n${text}\n${SEPARATOR}\n<a href="${FAST_NEWS_URL}/?view=stories">Ver grafo completo</a>`,
-			{ link_preview_options: { is_disabled: true } },
-		);
-	});
 	bot.command("ask", async (ctx: Context) => {
-		const question = (ctx.message as any).text
-			.split(" ")
-			.slice(1)
-			.join(" ")
-			.trim();
+		const question = commandArgs(ctx);
 		if (!question) return ctx.reply("❓ Use: /ask [pergunta]");
 		const articles = await searchSimilarArticles(question, 7, 5);
 		const text = articles
@@ -381,14 +411,14 @@ export async function postArticleToTelegram(
 		],
 		[
 			{ text: "📖 Ler reportagem", url: article.url },
-			{ text: "📱 Fast News", url: `${FAST_NEWS_URL}/?id=${article.id}` },
+			{ text: "📱 Fast News", url: `${config.publicUrl}/?id=${article.id}` },
 		],
 	];
 	if (matchedStory)
 		inlineButtons.push([
 			{
 				text: "🕸 Ver grafo",
-				url: `${FAST_NEWS_URL}/?view=stories&story=${matchedStory.id}`,
+				url: `${config.publicUrl}/?view=stories&story=${matchedStory.id}`,
 			},
 		]);
 	const sendOpts = {
@@ -412,7 +442,12 @@ export async function postArticleToTelegram(
 	await query(
 		`UPDATE news_articles SET telegram_sent_at = NOW() WHERE id = $1`,
 		[article.id],
-	).catch(console.error);
+	).catch((err) => {
+		console.error(
+			`[telegram] Failed to mark article ${article.id} as sent — it may be re-posted on the next cycle:`,
+			(err as Error).message,
+		);
+	});
 }
 
 export async function skipArticleFromTelegram(
@@ -429,25 +464,41 @@ export async function isSimilarArticleAlreadySent(
 ): Promise<boolean> {
 	try {
 		const threshold = config.telegram.similarThreshold;
-		const interval = config.telegram.similarInterval;
-		const res = await query<{ title: string; similarity: number }>(
-			`SELECT na.title, 1 - (na.embedding <=> curr.embedding) AS similarity
-			 FROM news_articles na
-			 JOIN news_articles curr ON curr.id = $1
-			 WHERE na.telegram_sent_at > NOW() - CAST($2 AS INTERVAL)
-			   AND na.id != $1
-			   AND na.embedding IS NOT NULL
-			   AND curr.embedding IS NOT NULL
-			   AND 1 - (na.embedding <=> curr.embedding) >= $3
-			 ORDER BY na.embedding <=> curr.embedding
-			 LIMIT 1`,
-			[articleId, interval, threshold],
+		// 1. Get current article embedding
+		const artRes = await query<{ embedding: string }>(
+			`SELECT embedding FROM news_articles WHERE id = $1`,
+			[articleId],
 		);
-		if (res.rows.length > 0) {
-			console.log(
-				`[Telegram] Article ${articleId} skipped. Similar article already sent: "${res.rows[0].title}" (similarity: ${res.rows[0].similarity.toFixed(3)})`,
+		if (!artRes.rows[0] || !artRes.rows[0].embedding) return false;
+		const embedding = JSON.parse(artRes.rows[0].embedding);
+
+		// 2. Query similar articles using searchVectors in the last 24h (1 day)
+		const candidates = await searchVectors(embedding, 5, {
+			daysBack: 1,
+			minSimilarity: threshold,
+		});
+
+		// 3. Check if any of those similar articles were already sent
+		if (candidates.length > 0) {
+			const candidateIds = candidates
+				.map((c) => c.id)
+				.filter((id) => id !== articleId);
+			if (candidateIds.length === 0) return false;
+
+			const sentRes = await query<{ id: string; title: string }>(
+				`SELECT id, title FROM news_articles 
+				 WHERE id = ANY($1::uuid[]) AND telegram_sent_at IS NOT NULL`,
+				[candidateIds],
 			);
-			return true;
+			if (sentRes.rows.length > 0) {
+				const matchingCandidate = candidates.find(
+					(c) => c.id === sentRes.rows[0].id,
+				);
+				console.log(
+					`[Telegram] Article ${articleId} skipped. Similar article already sent: "${sentRes.rows[0].title}" (similarity: ${matchingCandidate?.similarity.toFixed(3)})`,
+				);
+				return true;
+			}
 		}
 	} catch (err) {
 		console.warn(

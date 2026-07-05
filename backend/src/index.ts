@@ -1,25 +1,10 @@
 import "dotenv/config";
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
 import { config, validateConfig } from "./config/env.js";
 
 validateConfig();
 
 import { createApp } from "./api/app.js";
-import { closePool, getPool } from "./database/client.js";
-import { closeRedis, getRedis } from "./services/cache.js";
-
-const __dir = dirname(fileURLToPath(import.meta.url));
-
-async function runMigrations(): Promise<void> {
-	const files = ["schema.sql", "telegram-feedback.sql"];
-	const sql = files
-		.map((file) => readFileSync(join(__dir, "database", file), "utf-8"))
-		.join("\n");
-	await getPool().query(sql);
-	console.log("✅ Migrations applied");
-}
+import { initInfra, shutdownInfra } from "./bootstrap.js";
 
 import { startDigestJob, stopDigestJob } from "./jobs/digestJob.js";
 import {
@@ -50,15 +35,9 @@ async function bootstrap(): Promise<void> {
 	console.log("🚀 Fast News Backend starting...");
 
 	try {
-		// Verify DB + Redis connections
-		await getPool().query("SELECT 1");
-		console.log("✅ PostgreSQL connected");
-
-		// Apply schema migrations on every startup (idempotent — all IF NOT EXISTS)
-		await runMigrations();
-
-		await getRedis();
-		console.log("✅ Redis connected");
+		// DB/Redis connect, migrations, vector store init, feed sync — shared with other entry points
+		await initInfra();
+		console.log("✅ PostgreSQL + Redis connected, migrations applied");
 
 		// Start HTTP server
 		const app = createApp();
@@ -98,8 +77,12 @@ async function bootstrap(): Promise<void> {
 			process.env["ENABLE_INTERNAL_CRONS"] === "true"
 		) {
 			console.log("🔄 Running initial ingestion...");
-			await runIngestionAndPost().catch(console.error);
-			await runLearningCycle().catch(console.error);
+			await runIngestionAndPost().catch((err) => {
+				console.error("❌ Initial ingestion run failed:", err);
+			});
+			await runLearningCycle().catch((err) => {
+				console.error("❌ Initial learning cycle failed:", err);
+			});
 		}
 
 		console.log("✅ Fast News Backend ready!");
@@ -151,16 +134,10 @@ async function shutdown(signal?: string): Promise<void> {
 		await stopOllamaQueueWorker();
 	});
 
-	// Close Redis
+	// Close Redis + PostgreSQL
 	cleanup.push(async () => {
-		console.log("💾 Closing Redis connection...");
-		await closeRedis();
-	});
-
-	// Close PostgreSQL
-	cleanup.push(async () => {
-		console.log("🗄️  Closing PostgreSQL connection...");
-		await closePool();
+		console.log("💾 Closing Redis and PostgreSQL connections...");
+		await shutdownInfra();
 	});
 
 	for (const fn of cleanup) {
