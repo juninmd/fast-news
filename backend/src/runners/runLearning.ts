@@ -1,13 +1,11 @@
 import "dotenv/config";
-import { getPool } from "../database/client.js";
+import { initInfra } from "../bootstrap.js";
 import { runLearningCycle } from "../jobs/learningJob.js";
-import { getRedis } from "../services/cache.js";
 
 async function main(): Promise<void> {
 	const start = Date.now();
 	console.log(`[Runner] Starting learning at ${new Date().toISOString()}`);
-	await getPool().query("SELECT 1");
-	await getRedis();
+	await initInfra();
 	await runLearningCycle();
 	console.log(`[Runner] Completed learning in ${Date.now() - start}ms`);
 	process.exit(0);

@@ -1,4 +1,5 @@
 import "dotenv/config";
+import cron from "node-cron";
 
 function required(key: string): string {
 	const value = process.env[key];
@@ -13,6 +14,10 @@ function optional(key: string, fallback: string): string {
 export const config = {
 	port: parseInt(optional("PORT", "3001"), 10),
 	nodeEnv: optional("NODE_ENV", "development"),
+	publicUrl: optional(
+		"PUBLIC_URL",
+		"https://fast-news.antonio-code.duckdns.org",
+	),
 
 	databaseUrl: required("DATABASE_URL"),
 	redisUrl: optional("REDIS_URL", "redis://localhost:6379"),
@@ -85,11 +90,37 @@ export const config = {
 			optional("INGESTION_CREDIBILITY_ENABLED", "true") === "true",
 		// Minimum relevance score (1-10) required to post an article to Telegram.
 		relevanceThreshold: parseInt(optional("RELEVANCE_THRESHOLD", "6"), 10),
+		feedFetchTimeoutMs: parseInt(
+			optional("INGESTION_FEED_FETCH_TIMEOUT_MS", "12000"),
+			10,
+		),
+		embedTruncateChars: parseInt(
+			optional("INGESTION_EMBED_TRUNCATE_CHARS", "2000"),
+			10,
+		),
+		ollamaProbeTimeoutMs: parseInt(
+			optional("INGESTION_OLLAMA_PROBE_TIMEOUT_MS", "5000"),
+			10,
+		),
+		jobTimeoutMs: parseInt(
+			optional("INGESTION_JOB_TIMEOUT_MS", String(25 * 60 * 1_000)),
+			10,
+		),
 	},
 
 	rag: {
 		topK: parseInt(optional("RAG_TOP_K", "10"), 10),
 		embeddingDimensions: parseInt(optional("EMBEDDING_DIMENSIONS", "768"), 10),
+	},
+
+	vectorStore: optional("VECTOR_STORE", "postgres") as
+		| "qdrant"
+		| "postgres"
+		| "sqlite",
+
+	qdrant: {
+		url: optional("QDRANT_URL", "http://localhost:6333"),
+		apiKey: optional("QDRANT_API_KEY", ""),
 	},
 
 	youtube: {
@@ -143,5 +174,22 @@ export function validateConfig(): void {
 		console.warn(
 			"[config] TELEGRAM_BOT_MODE=webhook but TELEGRAM_WEBHOOK_URL is not set — webhook cannot be registered",
 		);
+	}
+
+	const nonNumericChatIds = config.telegramChatIds.filter(
+		(id) => !/^-?\d+$/.test(id),
+	);
+	if (nonNumericChatIds.length > 0) {
+		console.warn(
+			`[config] TELEGRAM_CHAT_IDS contains non-numeric entries, they will be ignored by Telegram: ${nonNumericChatIds.join(", ")}`,
+		);
+	}
+
+	for (const [name, expr] of Object.entries(config.cron)) {
+		if (!cron.validate(expr)) {
+			console.warn(
+				`[config] Invalid cron expression for CRON_${name.toUpperCase()}: "${expr}" — the job will fail to schedule`,
+			);
+		}
 	}
 }

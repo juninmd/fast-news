@@ -118,6 +118,24 @@ export async function retryFailedTelegramPosts(limit = 100): Promise<number> {
 	return failed.length;
 }
 
+export interface QueueCounts {
+	waiting: number;
+	active: number;
+	delayed: number;
+	failed: number;
+}
+
+export async function getTelegramQueueCounts(): Promise<QueueCounts> {
+	if (!queue) return { waiting: 0, active: 0, delayed: 0, failed: 0 };
+	const [waiting, active, delayed, failed] = await Promise.all([
+		queue.getWaitingCount(),
+		queue.getActiveCount(),
+		queue.getDelayedCount(),
+		queue.getFailedCount(),
+	]);
+	return { waiting, active, delayed, failed };
+}
+
 export async function waitForTelegramQueueIdle(
 	timeoutMs = 120_000,
 ): Promise<void> {

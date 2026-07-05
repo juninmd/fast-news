@@ -1,7 +1,6 @@
-import { generateObject } from "ai";
 import { z } from "zod";
 import { query } from "../database/client.js";
-import { getCloudFallbackModel, getFastModel } from "./aiProvider.js";
+import { generateWithFallback } from "./llmWithFallback.js";
 
 export const RelevanceSchema = z.object({
 	relevanceScore: z
@@ -73,36 +72,14 @@ export async function scoreRelevance(
 		reason: "Falha na análise de relevância",
 	};
 
-	let object: RelevanceResult;
-	try {
-		const model = await getFastModel();
-		const res = await generateObject({
-			model,
-			schema: RelevanceSchema,
-			prompt,
-		});
-		object = res.object;
-	} catch {
-		const fallback = await getCloudFallbackModel();
-		if (!fallback) {
-			console.warn(
-				`[relevance] No model available for ${articleId}, defaulting`,
-			);
-			return defaultResult;
-		}
-		try {
-			const res = await generateObject({
-				model: fallback,
-				schema: RelevanceSchema,
-				prompt,
-			});
-			object = res.object;
-		} catch (err) {
-			console.warn(
-				`[relevance] Fallback failed for ${articleId}: ${(err as Error).message}`,
-			);
-			return defaultResult;
-		}
+	const object = await generateWithFallback({
+		schema: RelevanceSchema,
+		prompt,
+		logTag: "relevance",
+	});
+	if (!object) {
+		console.warn(`[relevance] No model available for ${articleId}, defaulting`);
+		return defaultResult;
 	}
 
 	await query(

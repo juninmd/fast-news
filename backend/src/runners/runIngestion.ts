@@ -1,7 +1,6 @@
 import "dotenv/config";
-import { getPool } from "../database/client.js";
+import { initInfra } from "../bootstrap.js";
 import { runIngestionAndPost } from "../jobs/ingestionJob.js";
-import { getRedis } from "../services/cache.js";
 import {
 	startOllamaQueueWorker,
 	waitForOllamaQueueIdle,
@@ -14,8 +13,7 @@ import {
 async function main(): Promise<void> {
 	const start = Date.now();
 	console.log(`[Runner] Starting ingestion at ${new Date().toISOString()}`);
-	await getPool().query("SELECT 1");
-	await getRedis();
+	await initInfra();
 	// Workers must be running so credibility → Telegram pipeline completes within this pod
 	console.log("[Runner] Starting Ollama credibility queue worker...");
 	await startOllamaQueueWorker();

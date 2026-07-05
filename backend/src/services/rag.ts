@@ -1,8 +1,9 @@
 import { createHash } from "crypto";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
+import { searchInsights, searchVectors } from "../database/vectorStore.js";
 import { cacheGet, cacheSet } from "./cache.js";
-import { embedQuery, vectorToSQL } from "./embeddings.js";
+import { embedQuery } from "./embeddings.js";
 
 export interface ArticleResult {
 	id: string;
@@ -35,20 +36,25 @@ export async function searchSimilarArticles(
 	if (cached) return cached;
 
 	const embedding = await embedQuery(queryText);
-	const result = await query<ArticleResult>(
-		`SELECT id, title, content, url, source, category, published_at, image_url,
-       1 - (embedding <=> $1::vector) AS similarity
-     FROM news_articles
-     WHERE published_at > NOW() - INTERVAL '${daysBack} days'
-       AND embedding IS NOT NULL
-       AND 1 - (embedding <=> $1::vector) >= 0.55
-     ORDER BY embedding <=> $1::vector
-     LIMIT $2`,
-		[vectorToSQL(embedding), limit],
-	);
+	const results = await searchVectors(embedding, limit, {
+		daysBack,
+		minSimilarity: 0.55,
+	});
 
-	await cacheSet(cacheKey, result.rows, 1800);
-	return result.rows;
+	const mapped: ArticleResult[] = results.map((r) => ({
+		id: r.id,
+		title: r.metadata?.title ?? "",
+		content: r.metadata?.content ?? "",
+		url: r.metadata?.url ?? "",
+		source: r.metadata?.source ?? "",
+		category: r.metadata?.category ?? "",
+		published_at: r.metadata?.publishedAt ?? new Date().toISOString(),
+		image_url: r.metadata?.imageUrl ?? null,
+		similarity: r.similarity,
+	}));
+
+	await cacheSet(cacheKey, mapped, 1800);
+	return mapped;
 }
 
 export async function searchSimilarInsights(
@@ -60,18 +66,10 @@ export async function searchSimilarInsights(
 	if (cached) return cached;
 
 	const embedding = await embedQuery(queryText);
-	const result = await query<InsightResult>(
-		`SELECT id, topic, insight, confidence, created_at,
-       1 - (embedding <=> $1::vector) AS similarity
-     FROM knowledge_insights
-     WHERE embedding IS NOT NULL
-       AND 1 - (embedding <=> $1::vector) >= 0.55
-     ORDER BY embedding <=> $1::vector
-     LIMIT $2`,
-		[vectorToSQL(embedding), limit],
-	);
-	await cacheSet(cacheKey, result.rows, 1800);
-	return result.rows;
+	const results = await searchInsights(embedding, limit, 0.55);
+
+	await cacheSet(cacheKey, results, 1800);
+	return results;
 }
 
 export function buildRagContext(
