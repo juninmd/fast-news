@@ -57,8 +57,9 @@ export async function buildDigestContent(): Promise<{
 			category: string;
 			content: string;
 			published_at: string;
+			image_url: string | null;
 		}>(
-			`SELECT id, title, url, source, category, content, published_at
+			`SELECT id, title, url, source, category, content, published_at, image_url
        FROM news_articles
        WHERE created_at > NOW() - INTERVAL '8 hours'
        ORDER BY published_at DESC NULLS LAST
