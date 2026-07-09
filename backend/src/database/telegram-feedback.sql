@@ -12,3 +12,16 @@ CREATE TABLE IF NOT EXISTS telegram_article_feedback (
 
 CREATE INDEX IF NOT EXISTS idx_telegram_feedback_article
   ON telegram_article_feedback(article_id);
+
+CREATE TABLE IF NOT EXISTS telegram_user_preferences (
+  user_id TEXT PRIMARY KEY,
+  preference_vector vector(768),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS telegram_user_blocklist (
+  user_id TEXT,
+  source TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (user_id, source)
+);

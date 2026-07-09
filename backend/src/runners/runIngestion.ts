@@ -1,6 +1,7 @@
 import "dotenv/config";
-import { initInfra } from "../bootstrap.js";
+import { getPool } from "../database/client.js";
 import { runIngestionAndPost } from "../jobs/ingestionJob.js";
+import { getRedis } from "../services/cache.js";
 import {
 	startTelegramQueueWorker,
 	waitForTelegramQueueIdle,
@@ -9,7 +10,8 @@ import {
 async function main(): Promise<void> {
 	const start = Date.now();
 	console.log(`[Runner] Starting ingestion at ${new Date().toISOString()}`);
-	await initInfra();
+	await getPool().query("SELECT 1");
+	await getRedis();
 	console.log("[Runner] Starting Telegram posting queue worker...");
 	await startTelegramQueueWorker();
 	console.log("[Runner] Queue workers ready. Starting ingestion...");
