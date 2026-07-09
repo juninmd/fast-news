@@ -2,8 +2,8 @@ import cron from "node-cron";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { runIngestion } from "../services/ingestion.js";
-import { enqueueCredibilityAnalysis } from "../services/ollamaQueue.js";
 import type { TelegramArticle } from "../services/telegram.js";
+import { enqueueTelegramPosts } from "../services/telegramQueue.js";
 
 let task: cron.ScheduledTask | null = null;
 
@@ -123,9 +123,7 @@ export async function runIngestionAndPost(): Promise<void> {
 			),
 		),
 	]);
-	console.log(
-		`[IngestionJob] Stored ${result.stored} new articles — queued for credibility evaluation.`,
-	);
+	console.log(`[IngestionJob] Stored ${result.stored} new articles.`);
 
 	const allowedCategories = config.telegramNewsCategories;
 	const maxPerRun =
@@ -139,32 +137,23 @@ export async function runIngestionAndPost(): Promise<void> {
 		return filtered.slice(0, maxPerRun as number);
 	}
 
-	// New articles (unevaluated): credibility+relevance or relevance-only → Telegram
+	// New articles: send lightweight Telegram cards without background LLM.
 	const unevaluated = await fetchUnsentUnevaluatedArticles();
 	const filteredUnevaluated = filterAndCap(unevaluated);
 	if (filteredUnevaluated.length > 0) {
-		const relevanceOnly = !config.ingestion.credibilityEnabled;
-		await Promise.all(
-			filteredUnevaluated.map((a) =>
-				enqueueCredibilityAnalysis(a, { relevanceOnly }),
-			),
-		);
+		await enqueueTelegramPosts(filteredUnevaluated);
 		console.log(
-			`[IngestionJob] Requeued ${filteredUnevaluated.length} unevaluated articles (relevanceOnly=${relevanceOnly}).`,
+			`[IngestionJob] Queued ${filteredUnevaluated.length} unevaluated articles for Telegram without AI analysis.`,
 		);
 	}
 
-	// Previously evaluated articles: relevance check before Telegram
+	// Previously evaluated articles: send directly; do not re-score relevance via LLM.
 	const evaluated = await fetchUnsentEvaluatedArticles();
 	const filteredEvaluated = filterAndCap(evaluated);
 	if (filteredEvaluated.length > 0) {
-		await Promise.all(
-			filteredEvaluated.map((a) =>
-				enqueueCredibilityAnalysis(a, { relevanceOnly: true }),
-			),
-		);
+		await enqueueTelegramPosts(filteredEvaluated);
 		console.log(
-			`[IngestionJob] Queued ${filteredEvaluated.length} previously-evaluated articles for relevance check.`,
+			`[IngestionJob] Queued ${filteredEvaluated.length} previously-evaluated articles for Telegram without relevance AI.`,
 		);
 	}
 }
