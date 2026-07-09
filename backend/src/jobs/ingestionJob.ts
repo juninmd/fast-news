@@ -32,14 +32,18 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
 			storyId: string | null;
 			sentiment: string | null;
 		}>(
-			`SELECT na.id, na.title, na.url, na.source, na.category, na.company,
+			`WITH user_pref AS (
+         SELECT AVG(preference_vector) as avg_vector FROM telegram_user_preferences
+       )
+       SELECT na.id, na.title, na.url, na.source, na.category, na.company,
               na.content, na.published_at AS "publishedAt", na.image_url AS "imageUrl",
               na.fake_news_score AS "fakeNewsScore", na.political_bias AS "politicalBias",
               na.is_militant AS "isMilitant", na.has_incoherence AS "hasIncoherence",
               na.credibility_flags AS "credibilityFlags",
               na.credibility_reasoning AS "credibilityReasoning",
               sa.story_id AS "storyId",
-              na.sentiment AS "sentiment"
+              na.sentiment AS "sentiment",
+              COALESCE(1 - (na.embedding <=> (SELECT avg_vector FROM user_pref)), 0) AS "userMatchScore"
        FROM news_articles na
        LEFT JOIN LATERAL (
          SELECT story_id FROM story_articles WHERE article_id = na.id LIMIT 1
@@ -57,7 +61,10 @@ async function fetchUnsentEvaluatedArticles(): Promise<TelegramArticle[]> {
          AND na.fake_news_score <= 6
          AND na.category != 'fact_check'
          AND COALESCE(feedback.score, 0) >= -5
-       ORDER BY COALESCE(feedback.score, 0) DESC, na.published_at DESC NULLS LAST
+         AND NOT EXISTS (
+             SELECT 1 FROM telegram_user_blocklist tub WHERE tub.source = na.source
+         )
+       ORDER BY COALESCE(1 - (na.embedding <=> (SELECT avg_vector FROM user_pref)), 0) DESC, COALESCE(feedback.score, 0) DESC, na.published_at DESC NULLS LAST
        LIMIT 50`,
 		);
 		console.log(
@@ -87,6 +94,9 @@ async function fetchUnsentUnevaluatedArticles(): Promise<TelegramArticle[]> {
          AND na.fake_news_score IS NULL
          AND na.category != 'fact_check'
          AND na.created_at < NOW() - INTERVAL '5 minutes'
+         AND NOT EXISTS (
+             SELECT 1 FROM telegram_user_blocklist tub WHERE tub.source = na.source
+         )
        ORDER BY na.published_at DESC NULLS LAST
        LIMIT 30`,
 		);
