@@ -3,10 +3,6 @@ import { getPool } from "../database/client.js";
 import { runIngestionAndPost } from "../jobs/ingestionJob.js";
 import { getRedis } from "../services/cache.js";
 import {
-	startOllamaQueueWorker,
-	waitForOllamaQueueIdle,
-} from "../services/ollamaQueue.js";
-import {
 	startTelegramQueueWorker,
 	waitForTelegramQueueIdle,
 } from "../services/telegramQueue.js";
@@ -16,18 +12,10 @@ async function main(): Promise<void> {
 	console.log(`[Runner] Starting ingestion at ${new Date().toISOString()}`);
 	await getPool().query("SELECT 1");
 	await getRedis();
-	// Workers must be running so credibility → Telegram pipeline completes within this pod
-	console.log("[Runner] Starting Ollama credibility queue worker...");
-	await startOllamaQueueWorker();
 	console.log("[Runner] Starting Telegram posting queue worker...");
 	await startTelegramQueueWorker();
 	console.log("[Runner] Queue workers ready. Starting ingestion...");
 	await runIngestionAndPost();
-	// Wait for all queued jobs to finish before exiting (max 10 min)
-	console.log("[Runner] Waiting for Ollama credibility queue to drain...");
-	await waitForOllamaQueueIdle(600_000).catch((err: Error) =>
-		console.warn("[Runner] Ollama queue did not drain:", err.message),
-	);
 	console.log("[Runner] Waiting for Telegram queue to drain...");
 	await waitForTelegramQueueIdle(300_000).catch((err: Error) =>
 		console.warn("[Runner] Telegram queue did not drain:", err.message),
