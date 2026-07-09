@@ -32,10 +32,6 @@ import {
 	startLearningJob,
 	stopLearningJob,
 } from "./jobs/learningJob.js";
-import {
-	startOllamaQueueWorker,
-	stopOllamaQueueWorker,
-} from "./services/ollamaQueue.js";
 import { startBot, stopBot } from "./services/telegram.js";
 import {
 	startTelegramQueueWorker,
@@ -80,16 +76,15 @@ async function bootstrap(): Promise<void> {
 		await startTelegramQueueWorker().catch((err) =>
 			console.error("[TelegramQueue] Failed to start:", err.message),
 		);
-		await startOllamaQueueWorker().catch((err) =>
-			console.error("[OllamaQueue] Failed to start:", err.message),
-		);
 
 		// Cron jobs run as separate K8s CronJob pods — not scheduled here.
 		// Set ENABLE_INTERNAL_CRONS=true only for local dev without k8s.
 		if (process.env["ENABLE_INTERNAL_CRONS"] === "true") {
 			startIngestionJob();
 			startLearningJob();
-			startDigestJob();
+			console.log(
+				"[DigestJob] Automatic digest disabled; use Telegram summarize button on demand.",
+			);
 		}
 
 		// Run initial ingestion on startup (if needed)
@@ -148,7 +143,6 @@ async function shutdown(signal?: string): Promise<void> {
 		console.log("📱 Stopping Telegram bot...");
 		stopBot();
 		await stopTelegramQueueWorker();
-		await stopOllamaQueueWorker();
 	});
 
 	// Close Redis
