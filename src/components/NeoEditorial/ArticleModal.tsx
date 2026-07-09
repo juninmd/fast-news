@@ -4,7 +4,6 @@ import {
 	Clock,
 	ExternalLink,
 	Focus,
-	ShieldAlert,
 	X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -21,10 +20,6 @@ interface Article {
 	company: string | null;
 	published_at: string;
 	image_url: string | null;
-	fake_news_score: number | null;
-	political_bias: string | null;
-	is_militant: boolean;
-	has_incoherence: boolean;
 }
 
 interface RelatedArticle {
@@ -44,20 +39,6 @@ function formatDate(dateStr: string): string {
 		timeZone: "America/Sao_Paulo",
 	});
 }
-
-function fakeNewsLabel(score: number): { label: string; color: string } {
-	if (score <= 2) return { label: "✓ Confiável", color: "text-green-400" };
-	if (score <= 4) return { label: "⚠ Verificar", color: "text-yellow-400" };
-	if (score <= 7) return { label: "⚠ Suspeito", color: "text-orange-400" };
-	return { label: "✗ Não confiável", color: "text-red-400" };
-}
-
-const BIAS_LABELS: Record<string, string> = {
-	left: "🔵 Esquerda",
-	far_left: "🔵🔵 Esq. Radical",
-	right: "🔴 Direita",
-	far_right: "🔴🔴 Dir. Radical",
-};
 
 interface ArticleModalProps {
 	articleId: string | null;
@@ -244,41 +225,6 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 										min
 									</span>
 								</div>
-
-								{/* Credibility */}
-								{(article.fake_news_score != null ||
-									article.political_bias ||
-									article.is_militant ||
-									article.has_incoherence) && (
-									<div className="flex flex-wrap gap-2 mb-5 p-3 rounded-xl bg-bg-tertiary/50">
-										{article.fake_news_score != null && (
-											<span
-												className={`text-xs font-semibold flex items-center gap-1 ${fakeNewsLabel(article.fake_news_score).color}`}
-											>
-												<ShieldAlert className="w-3 h-3" />
-												{fakeNewsLabel(article.fake_news_score).label} (
-												{11 - article.fake_news_score}/10)
-											</span>
-										)}
-										{article.political_bias &&
-											article.political_bias !== "neutral" &&
-											BIAS_LABELS[article.political_bias] && (
-												<span className="text-xs text-text-secondary">
-													⚖️ {BIAS_LABELS[article.political_bias]}
-												</span>
-											)}
-										{article.is_militant && (
-											<span className="text-xs text-orange-400">
-												📢 Militante
-											</span>
-										)}
-										{article.has_incoherence && (
-											<span className="text-xs text-yellow-400">
-												⚡ Incoerências detectadas
-											</span>
-										)}
-									</div>
-								)}
 
 								{/* Content */}
 								<div

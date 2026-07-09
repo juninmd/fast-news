@@ -120,9 +120,14 @@ function App() {
 		setToast({ message: "Link copied!", type: "success" });
 	}, []);
 
-	const handleSummarize = useCallback(() => {
-		setToast({ message: "Generating summary...", type: "success" });
-	}, []);
+	const handleSummarize = useCallback(
+		async (id: string, title?: string) => {
+			setToast({ message: "Abrindo artigo...", type: "success" });
+			setTimeout(() => setToast(null), 1000);
+			openArticle(id, title);
+		},
+		[openArticle],
+	);
 
 	useEffect(() => {
 		const handleScroll = () => {
@@ -166,7 +171,9 @@ function App() {
 							variant="featured"
 							onBookmark={handleBookmark}
 							onShare={handleShare}
-							onSummarize={() => openArticle(articles[0].id, articles[0].title)}
+							onSummarize={() =>
+								handleSummarize(articles[0].id, articles[0].title)
+							}
 						/>
 					</section>
 				)}
@@ -240,7 +247,7 @@ function App() {
 													key={article.id}
 													{...article}
 													onSummarize={() =>
-														openArticle(article.id, article.title)
+														handleSummarize(article.id, article.title)
 													}
 													onShare={handleShare}
 												/>
@@ -465,7 +472,7 @@ function App() {
 													onBookmark={handleBookmark}
 													onShare={handleShare}
 													onSummarize={() =>
-														openArticle(
+														handleSummarize(
 															article.id as string,
 															(article as { title?: string }).title,
 														)
