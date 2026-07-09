@@ -118,7 +118,7 @@ export async function fetchRelatedArticles(
 		}>(
 			`SELECT na.title, na.url, na.source FROM article_relations ar
        JOIN news_articles na ON na.id = CASE WHEN ar.article_a = $1 THEN ar.article_b ELSE ar.article_a END
-       WHERE (ar.article_a = $1 OR ar.article_b = $1) ORDER BY ar.similarity DESC LIMIT $2`,
+       WHERE (ar.article_a = $1 OR ar.article_b = $1) AND na.published_at > NOW() - INTERVAL '72 hours' ORDER BY ar.similarity DESC LIMIT $2`,
 			[articleId, limit],
 		);
 		if (byVector.rows.length > 0) return byVector.rows;
@@ -128,7 +128,7 @@ export async function fetchRelatedArticles(
 			source: string;
 		}>(
 			`SELECT title, url, source FROM news_articles WHERE category = $1 AND id != $2
-       AND published_at > NOW() - INTERVAL '48 hours' ORDER BY published_at DESC LIMIT $3`,
+       AND published_at > NOW() - INTERVAL '72 hours' ORDER BY published_at DESC LIMIT $3`,
 			[category, articleId, limit],
 		);
 		return byCategory.rows;
