@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { getRedis } from "../services/cache.js";
-import { getOllamaQueueCounts } from "../services/ollamaQueue.js";
 import { getTelegramQueueCounts } from "../services/telegramQueue.js";
 
 interface HealthStatus {
@@ -20,16 +19,9 @@ interface HealthStatus {
 
 interface PipelineStatus {
 	ingestedLast24h: number;
-	pendingCredibility: number;
 	pendingTelegram: number;
 	sentLast24h: number;
 	queues: {
-		credibility: {
-			waiting: number;
-			active: number;
-			delayed: number;
-			failed: number;
-		};
 		telegram: {
 			waiting: number;
 			active: number;
@@ -114,34 +106,25 @@ async function checkOllama(): Promise<DependencyStatus> {
 }
 
 async function getPipelineStatus(): Promise<PipelineStatus> {
-	const [counts, credibilityQueue, telegramQueue] = await Promise.all([
+	const [counts, telegramQueue] = await Promise.all([
 		query<{
 			ingestedLast24h: string;
-			pendingCredibility: string;
 			pendingTelegram: string;
 			sentLast24h: string;
 		}>(
 			`SELECT
 				COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') AS "ingestedLast24h",
-				COUNT(*) FILTER (WHERE fake_news_score IS NULL AND telegram_sent_at IS NULL AND telegram_skipped_at IS NULL) AS "pendingCredibility",
-				COUNT(*) FILTER (WHERE fake_news_score IS NOT NULL AND telegram_sent_at IS NULL AND telegram_skipped_at IS NULL) AS "pendingTelegram",
+				COUNT(*) FILTER (WHERE telegram_sent_at IS NULL AND telegram_skipped_at IS NULL) AS "pendingTelegram",
 				COUNT(*) FILTER (WHERE telegram_sent_at > NOW() - INTERVAL '24 hours') AS "sentLast24h"
 			FROM news_articles`,
 		).catch(() => ({
 			rows: [
 				{
 					ingestedLast24h: "0",
-					pendingCredibility: "0",
 					pendingTelegram: "0",
 					sentLast24h: "0",
 				},
 			],
-		})),
-		getOllamaQueueCounts().catch(() => ({
-			waiting: 0,
-			active: 0,
-			delayed: 0,
-			failed: 0,
 		})),
 		getTelegramQueueCounts().catch(() => ({
 			waiting: 0,
@@ -154,11 +137,9 @@ async function getPipelineStatus(): Promise<PipelineStatus> {
 	const row = counts.rows[0];
 	return {
 		ingestedLast24h: parseInt(row.ingestedLast24h, 10),
-		pendingCredibility: parseInt(row.pendingCredibility, 10),
 		pendingTelegram: parseInt(row.pendingTelegram, 10),
 		sentLast24h: parseInt(row.sentLast24h, 10),
 		queues: {
-			credibility: credibilityQueue,
 			telegram: telegramQueue,
 		},
 	};
