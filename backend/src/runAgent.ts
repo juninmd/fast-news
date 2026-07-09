@@ -2,11 +2,6 @@ import "dotenv/config";
 import { initInfra, shutdownInfra } from "./bootstrap.js";
 import { validateConfig } from "./config/env.js";
 import { runIngestionAndPost } from "./jobs/ingestionJob.js";
-import {
-	startOllamaQueueWorker,
-	stopOllamaQueueWorker,
-	waitForOllamaQueueIdle,
-} from "./services/ollamaQueue.js";
 import { startBot, stopBot } from "./services/telegram.js";
 import {
 	startTelegramQueueWorker,
@@ -25,18 +20,15 @@ async function bootstrap(): Promise<void> {
 	await initInfra();
 	await startBot();
 	await startTelegramQueueWorker();
-	await startOllamaQueueWorker();
 }
 
 async function waitForPipelines(): Promise<void> {
-	await waitForOllamaQueueIdle();
 	await waitForTelegramQueueIdle();
 }
 
 async function shutdown(): Promise<void> {
 	stopBot();
 	await stopTelegramQueueWorker();
-	await stopOllamaQueueWorker();
 	await shutdownInfra();
 }
 
