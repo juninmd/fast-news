@@ -61,7 +61,7 @@ function setupCommands(bot: Telegraf): void {
 		(ctx as any).replyWithCommand("/financial"),
 	);
 	bot.hears("❓ Ajuda", (ctx) => (ctx as any).replyWithCommand("/start"));
-	bot.action(/^fb:(like|dislike):([0-9a-f-]{36})$/i, async (ctx) => {
+	bot.action(/^fb:(like|dislike|block):([0-9a-f-]{36})$/i, async (ctx) => {
 		const match = (ctx.callbackQuery as { data?: string }).data?.match(
 			/^fb:(like|dislike):(.+)$/i,
 		);
@@ -345,10 +345,12 @@ export async function postArticleToTelegram(
 		if (whatChanged)
 			storyBlock += `\n🔄 <i>${escapeHtml(whatChanged.slice(0, 160))}</i>`;
 	}
+
 	const related = await fetchRelatedArticles(article.id, article.category);
 	const relatedBlock = related.length
-		? `\n\n${SEPARATOR}\n🔗 <b>Veja também</b>\n${related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 72))}</a>`).join("\n")}`
+		? `\n\n${SEPARATOR}\n🔗 <b>Você também pode se interessar por</b>\n${related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 72))}</a>`).join("\n")}`
 		: "";
+
 	const wordCount = (article.fullContent || article.content || "").split(
 		/\s+/,
 	).length;
