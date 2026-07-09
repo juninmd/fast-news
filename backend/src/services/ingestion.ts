@@ -5,7 +5,6 @@ import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
-import { enqueueCredibilityAnalysis } from "./ollamaQueue.js";
 import { getActiveFeeds } from "./sources.js";
 
 const parser = new Parser({
@@ -293,6 +292,13 @@ export interface IngestionResult {
 
 async function isOllamaAvailable(): Promise<boolean> {
 	const base = config.ollama.baseUrl;
+	const embeddingBase = config.ollama.embeddingBaseUrl;
+	if (embeddingBase.includes("/v1") || (base.includes("/v1") && !embeddingBase)) {
+		console.warn(
+			"[ingestion] Native OLLAMA_EMBEDDING_BASE_URL is not configured; embeddings will be skipped",
+		);
+		return false;
+	}
 	// LiteLLM / OpenAI-compatible proxy exposes /v1/models; native Ollama exposes /api/tags
 	const probeUrl = base.includes("/v1")
 		? `${base.replace(/\/v1\/?$/, "")}/v1/models`
@@ -362,14 +368,6 @@ export async function runIngestion(): Promise<IngestionResult> {
 				}
 			}
 		}
-	}
-
-	const relevanceOnly = !config.ingestion.credibilityEnabled;
-	const orderedArticles = [...newArticles].sort(
-		(a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
-	);
-	for (const article of orderedArticles) {
-		await enqueueCredibilityAnalysis(article, { relevanceOnly });
 	}
 
 	console.log(
