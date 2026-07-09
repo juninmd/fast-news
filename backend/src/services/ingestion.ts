@@ -3,7 +3,7 @@ import Parser from "rss-parser";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
-import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
+import { buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
 import { getActiveFeeds } from "./sources.js";
 
@@ -51,9 +51,6 @@ class KeyedSemaphore {
 
 // Max 1 concurrent request per news portal host — avoids hammering a single portal's rate limit.
 const hostGate = new KeyedSemaphore(1);
-// Max 2 concurrent story-assignment LLM calls (fired in the background per article) — avoids
-// stacking unbounded LiteLLM requests on top of the credibility/relevance queue's own concurrency.
-const storyAssignmentGate = new KeyedSemaphore(2);
 
 /** Fetch feed XML with proper charset decoding (handles ISO-8859-1 / Windows-1252 Brazilian feeds) */
 async function fetchXml(url: string): Promise<string> {
@@ -234,6 +231,23 @@ async function upsertArticle(
 		}
 	}
 
+	// Skip if similar article already stored (embedding-based dedup)
+	if (embedding) {
+		const similar = await query<{ id: string; title: string }>(
+			`SELECT id, title FROM news_articles
+			 WHERE embedding IS NOT NULL
+			   AND 1 - (embedding <=> $1::vector) >= $2
+			 LIMIT 1`,
+			[vectorToSQL(embedding), config.telegram.similarThreshold],
+		);
+		if (similar.rows.length > 0) {
+			console.log(
+				`[ingestion] Skipping "${article.title}" — similar to "${similar.rows[0].title}" (threshold: ${config.telegram.similarThreshold})`,
+			);
+			return null;
+		}
+	}
+
 	const result = await query<{ id: string }>(
 		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -293,7 +307,10 @@ export interface IngestionResult {
 async function isOllamaAvailable(): Promise<boolean> {
 	const base = config.ollama.baseUrl;
 	const embeddingBase = config.ollama.embeddingBaseUrl;
-	if (embeddingBase.includes("/v1") || (base.includes("/v1") && !embeddingBase)) {
+	if (
+		embeddingBase.includes("/v1") ||
+		(base.includes("/v1") && !embeddingBase)
+	) {
 		console.warn(
 			"[ingestion] Native OLLAMA_EMBEDDING_BASE_URL is not configured; embeddings will be skipped",
 		);
@@ -356,9 +373,6 @@ export async function runIngestion(): Promise<IngestionResult> {
 						newArticles.push(newArticle);
 						runBackground("buildArticleRelations", () =>
 							buildArticleRelations(id),
-						);
-						runBackground("assignArticleToStory", () =>
-							storyAssignmentGate.run("global", () => assignArticleToStory(id)),
 						);
 					}
 				} catch (err) {
