@@ -12,11 +12,7 @@ import {
 	startIngestionJob,
 	stopIngestionJob,
 } from "./jobs/ingestionJob.js";
-import {
-	runLearningCycle,
-	startLearningJob,
-	stopLearningJob,
-} from "./jobs/learningJob.js";
+import { startLearningJob, stopLearningJob } from "./jobs/learningJob.js";
 import { startBot, stopBot } from "./services/telegram.js";
 import {
 	startTelegramQueueWorker,
@@ -74,9 +70,6 @@ async function bootstrap(): Promise<void> {
 			console.log("🔄 Running initial ingestion...");
 			await runIngestionAndPost().catch((err) => {
 				console.error("❌ Initial ingestion run failed:", err);
-			});
-			await runLearningCycle().catch((err) => {
-				console.error("❌ Initial learning cycle failed:", err);
 			});
 		}
 

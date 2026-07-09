@@ -80,11 +80,9 @@ export async function runLearningCycle(): Promise<void> {
 let task: cron.ScheduledTask | null = null;
 
 export function startLearningJob(): void {
-	task = cron.schedule(config.cron.learning, async () => {
-		console.log(`[LearningJob] Running at ${new Date().toISOString()}`);
-		await runLearningCycle().catch(console.error);
-	});
-	console.log(`[LearningJob] Scheduled: ${config.cron.learning}`);
+	console.log(
+		"[LearningJob] Automatic learning cycle disabled; use Telegram /analysis or HTTP API on demand.",
+	);
 }
 
 export function stopLearningJob(): void {
