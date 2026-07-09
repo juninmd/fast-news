@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { query } from "../../database/client.js";
 import { cacheGet, cacheSet } from "../../services/cache.js";
+import { analyzeCredibility } from "../../services/credibility.js";
 import { fetchFullArticle } from "../../services/fullArticle.js";
 import { searchSimilarArticles } from "../../services/rag.js";
 
@@ -211,6 +212,39 @@ newsRouter.get("/:id/related", async (req: Request, res: Response) => {
 	const response = { data: related.filter((a) => a.id !== id) };
 	await cacheSet(cacheKey, response, 900);
 	return res.json(response);
+});
+
+newsRouter.post("/:id/credibility", async (req: Request, res: Response) => {
+	const { id } = req.params;
+
+	const article = await query<{
+		title: string;
+		content: string;
+		url: string;
+		source: string;
+		category: string;
+	}>("SELECT title, content, url, source, category FROM news_articles WHERE id = $1", [
+		id,
+	]);
+	if (!article.rows[0])
+		return res.status(404).json({ error: "Article not found" });
+
+	const { title, content, url, source, category } = article.rows[0];
+	const fullContent =
+		(await fetchFullArticle(url).catch(() => null)) || content;
+
+	const result = await analyzeCredibility(
+		id as string,
+		title,
+		fullContent,
+		source,
+		category,
+		AbortSignal.timeout(120_000),
+	);
+	if (!result)
+		return res.status(500).json({ error: "Failed to analyze credibility" });
+
+	return res.json(result);
 });
 
 // --- Feed Management Endpoints ---
