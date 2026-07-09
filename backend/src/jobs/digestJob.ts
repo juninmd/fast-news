@@ -165,10 +165,10 @@ export async function buildDigestContent(): Promise<{
 let task: cron.ScheduledTask | null = null;
 
 export function startDigestJob(): void {
-	task = cron.schedule(config.cron.digest, async () => {
-		await buildAndSendDigest().catch(console.error);
-	});
-	console.log(`[DigestJob] Scheduled: ${config.cron.digest}`);
+	task = null;
+	console.log(
+		'[DigestJob] Automatic digest disabled. Use Telegram article button "📝 Resumir" on demand.',
+	);
 }
 
 export function stopDigestJob(): void {
