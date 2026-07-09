@@ -42,40 +42,9 @@ interface NewsCardProps {
 	publishedAt: Date | string;
 	imageUrl?: string;
 	variant?: "compact" | "standard" | "featured";
-	fake_news_score?: number | null;
-	political_bias?: string | null;
-	is_militant?: boolean;
-	has_incoherence?: boolean;
-	credibility_flags?: string[];
 	onBookmark?: (id: string) => void;
 	onShare?: (id: string) => void;
 	onSummarize?: (id: string) => void;
-}
-
-const BIAS_CONFIG: Record<string, { label: string; color: string }> = {
-	left: {
-		label: "Esq",
-		color: "bg-blue-500/20 text-blue-400 border-blue-500/40",
-	},
-	far_left: {
-		label: "Esq+",
-		color: "bg-blue-600/30 text-blue-300 border-blue-500/60",
-	},
-	right: {
-		label: "Dir",
-		color: "bg-red-500/20 text-red-400 border-red-500/40",
-	},
-	far_right: {
-		label: "Dir+",
-		color: "bg-red-600/30 text-red-300 border-red-500/60",
-	},
-};
-
-function fakeNewsColor(score: number): string {
-	if (score <= 3) return "bg-green-500/15 text-green-400 border-green-500/40";
-	if (score <= 6)
-		return "bg-yellow-500/15 text-yellow-400 border-yellow-500/40";
-	return "bg-red-500/15 text-red-400 border-red-500/40";
 }
 
 function fakeNewsLabel(score: number): string {
@@ -141,11 +110,6 @@ export function NewsCard({
 	publishedAt,
 	imageUrl,
 	variant = "standard",
-	fake_news_score,
-	political_bias,
-	is_militant,
-	has_incoherence,
-	credibility_flags,
 	onShare,
 	onSummarize,
 }: NewsCardProps) {
@@ -297,46 +261,6 @@ export function NewsCard({
 						)}
 						{read && (
 							<CheckCircle2 className="w-3 h-3 text-text-secondary/50 ml-auto" />
-						)}
-					</div>
-				)}
-
-				{(fake_news_score != null ||
-					(political_bias &&
-						political_bias !== "neutral" &&
-						BIAS_CONFIG[political_bias]) ||
-					is_militant ||
-					has_incoherence) && (
-					<div className="flex flex-wrap gap-1 mb-3">
-						{fake_news_score != null && (
-							<span
-								className={`px-1.5 py-0.5 rounded-md text-xs font-semibold border ${fakeNewsColor(fake_news_score)}`}
-								title={`Credibilidade: ${11 - fake_news_score}/10`}
-							>
-								{fakeNewsLabel(fake_news_score)}
-							</span>
-						)}
-						{political_bias &&
-							political_bias !== "neutral" &&
-							BIAS_CONFIG[political_bias] && (
-								<span
-									className={`px-1.5 py-0.5 rounded-md text-xs font-semibold border ${BIAS_CONFIG[political_bias].color}`}
-								>
-									{BIAS_CONFIG[political_bias].label}
-								</span>
-							)}
-						{is_militant && (
-							<span className="px-1.5 py-0.5 rounded-md text-xs font-semibold border bg-orange-500/15 text-orange-400 border-orange-500/40">
-								📢
-							</span>
-						)}
-						{has_incoherence && (
-							<span
-								className="px-1.5 py-0.5 rounded-md text-xs font-semibold border bg-yellow-500/15 text-yellow-400 border-yellow-500/40"
-								title={(credibility_flags ?? []).join(", ")}
-							>
-								⚡
-							</span>
 						)}
 					</div>
 				)}

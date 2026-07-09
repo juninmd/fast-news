@@ -17,7 +17,6 @@ import {
 	SIGNAL_EMOJI,
 } from "./telegram_format.js";
 import {
-	buildCredibilityBlock,
 	fetchRelatedArticles,
 	generateArticleBlurb,
 } from "./telegram_logic.js";
@@ -250,12 +249,6 @@ export interface TelegramArticle {
 	publishedAt?: Date | null;
 	imageUrl?: string | null;
 	storyId?: string | null;
-	fakeNewsScore?: number | null;
-	politicalBias?: string | null;
-	isMilitant?: boolean;
-	hasIncoherence?: boolean;
-	credibilityFlags?: string[];
-	credibilityReasoning?: string | null;
 	sentiment?: string | null;
 	relevanceScore?: number | null;
 	relevanceReasoning?: string | null;
@@ -274,21 +267,11 @@ export async function fetchTelegramArticle(
 		content: string;
 		publishedAt: Date | null;
 		imageUrl: string | null;
-		fakeNewsScore: number | null;
-		politicalBias: string | null;
-		isMilitant: boolean;
-		hasIncoherence: boolean;
-		credibilityFlags: string[] | null;
-		credibilityReasoning: string | null;
 		storyId: string | null;
 		sentiment: string | null;
 	}>(
 		`SELECT na.id, na.title, na.url, na.source, na.category, na.company,
             na.content, na.published_at AS "publishedAt", na.image_url AS "imageUrl",
-            na.fake_news_score AS "fakeNewsScore", na.political_bias AS "politicalBias",
-            na.is_militant AS "isMilitant", na.has_incoherence AS "hasIncoherence",
-            na.credibility_flags AS "credibilityFlags",
-            na.credibility_reasoning AS "credibilityReasoning",
             sa.story_id AS "storyId",
             na.sentiment AS "sentiment"
      FROM news_articles na
@@ -305,7 +288,6 @@ export async function fetchTelegramArticle(
 		company: article.company ?? undefined,
 		imageUrl: article.imageUrl ?? undefined,
 		storyId: article.storyId ?? undefined,
-		credibilityFlags: article.credibilityFlags ?? [],
 	};
 }
 
@@ -429,7 +411,7 @@ export async function postArticleToTelegram(
 
 	const sourceHashtag = `#${(article.company || article.source).replace(/\W+/g, "_")}`;
 	const layoutFooterTags = `#${article.category.replace(/\W/g, "_")} ${sourceHashtag}`;
-	const message = `${breakingLabel}${sourceHeader}${metaLine ? `\n${metaLine}` : ""}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>${sentimentLabel}\n\n<i>${escapeHtml(displayBlurb)}</i>${buildCredibilityBlock(article)}${storyBlock}${relatedBlock}\n\n${SEPARATOR}\n${layoutFooterTags}`;
+	const message = `${breakingLabel}${sourceHeader}${metaLine ? `\n${metaLine}` : ""}\n${SEPARATOR}\n<b>${escapeHtml(displayTitle)}</b>${sentimentLabel}\n\n<i>${escapeHtml(displayBlurb)}</i>${storyBlock}${relatedBlock}\n\n${SEPARATOR}\n${layoutFooterTags}`;
 
 	const inlineButtons = [
 		[

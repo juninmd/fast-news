@@ -1,13 +1,7 @@
 import { generateText } from "ai";
 import { query } from "../database/client.js";
 import { getFastModel } from "./aiProvider.js";
-import {
-	BIAS_LABEL,
-	escapeHtml,
-	FLAG_LABEL,
-	SCORE_EMOJI,
-	SEPARATOR,
-} from "./telegram_format.js";
+import { escapeHtml, SEPARATOR } from "./telegram_format.js";
 
 function looksPortuguese(text: string): boolean {
 	return /\b(do|da|de|em|com|que|foi|para|uma|um|no|na)\b/i.test(text);
@@ -60,31 +54,6 @@ export async function generateContext(
 	_model?: Awaited<ReturnType<typeof getFastModel>>,
 ): Promise<string> {
 	return "";
-}
-
-export function buildCredibilityBlock(article: {
-	fakeNewsScore?: number | null;
-	politicalBias?: string | null;
-	isMilitant?: boolean;
-	credibilityFlags?: string[];
-	credibilityReasoning?: string | null;
-}): string {
-	if (article.fakeNewsScore == null) return "";
-	const score = article.fakeNewsScore;
-	const emoji = SCORE_EMOJI(score);
-	const displayCredibility = 11 - score;
-	const bias = article.politicalBias
-		? (BIAS_LABEL[article.politicalBias] ?? article.politicalBias)
-		: null;
-	const flags = (article.credibilityFlags ?? []).map((f) => FLAG_LABEL[f] ?? f);
-	const lines: string[] = [
-		`${emoji} <b>Credibilidade: ${displayCredibility}/10</b>${article.isMilitant ? "  ·  📢 Panfletário" : ""}`,
-	];
-	if (bias && article.politicalBias !== "neutral") lines.push(`${bias}`);
-	if (flags.length) lines.push(flags.join("  ·  "));
-	if (article.credibilityReasoning)
-		lines.push(`<i>${escapeHtml(article.credibilityReasoning)}</i>`);
-	return `\n\n${SEPARATOR}\n${lines.join("\n")}`;
 }
 
 export async function rewriteMisleadingTitle(

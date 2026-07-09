@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { query } from "../../database/client.js";
 import { cacheGet, cacheSet } from "../../services/cache.js";
+import { fetchFullArticle } from "../../services/fullArticle.js";
 import { searchSimilarArticles } from "../../services/rag.js";
 
 export const newsRouter: Router = Router();
@@ -63,11 +64,9 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 		political_bias: string | null;
 		is_militant: boolean;
 		has_incoherence: boolean;
-		credibility_flags: string[];
 		total_count: string;
 	}>(
 		`SELECT id, title, summary, url, source, category, published_at, image_url, sentiment, importance_score,
-            fake_news_score, political_bias, is_militant, has_incoherence, credibility_flags,
             COUNT(*) OVER() AS total_count
      FROM news_articles ${where}
      ORDER BY published_at DESC NULLS LAST
