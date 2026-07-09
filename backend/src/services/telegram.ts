@@ -190,6 +190,38 @@ function setupCommands(bot: Telegraf): void {
 			.editMessageReplyMarkup({ inline_keyboard: newKeyboard })
 			.catch(console.error);
 	});
+	bot.action(/^sum:([0-9a-f-]{36})$/i, async (ctx) => {
+		const match = (ctx.callbackQuery as { data?: string }).data?.match(
+			/^sum:(.+)$/i,
+		);
+		const articleId = match?.[1];
+		if (!articleId) return;
+		await ctx.answerCbQuery("Gerando resumo...");
+		const article = await fetchTelegramArticle(articleId);
+		if (!article) {
+			await ctx.reply("❌ Notícia não encontrada.");
+			return;
+		}
+		const fullContent =
+			(await fetchFullArticle(article.url).catch(() => null)) ||
+			article.content;
+		const summary = await generateArticleBlurb(
+			article.title,
+			fullContent,
+			article.category,
+			await getFastModel(),
+		);
+		const text =
+			summary ||
+			article.content
+				.replace(/\s+/g, " ")
+				.trim()
+				.slice(0, FALLBACK_SUMMARY_MAX_LEN);
+		await ctx.replyWithHTML(
+			`📝 <b>Resumo</b>\n${SEPARATOR}\n<b>${escapeHtml(article.title)}</b>\n\n<i>${escapeHtml(text)}</i>\n\n<a href="${article.url}">Ler reportagem</a>`,
+			{ link_preview_options: { is_disabled: true } },
+		);
+	});
 	bot.command("pulse", handlePulse);
 	bot.command("topics", handleTopics);
 	bot.command("financial", handleFinancial);
@@ -260,6 +292,54 @@ export interface TelegramArticle {
 	relevanceReasoning?: string | null;
 }
 
+export async function fetchTelegramArticle(
+	id: string,
+): Promise<TelegramArticle | null> {
+	const result = await query<{
+		id: string;
+		title: string;
+		url: string;
+		source: string;
+		category: string;
+		company: string | null;
+		content: string;
+		publishedAt: Date | null;
+		imageUrl: string | null;
+		fakeNewsScore: number | null;
+		politicalBias: string | null;
+		isMilitant: boolean;
+		hasIncoherence: boolean;
+		credibilityFlags: string[] | null;
+		credibilityReasoning: string | null;
+		storyId: string | null;
+		sentiment: string | null;
+	}>(
+		`SELECT na.id, na.title, na.url, na.source, na.category, na.company,
+            na.content, na.published_at AS "publishedAt", na.image_url AS "imageUrl",
+            na.fake_news_score AS "fakeNewsScore", na.political_bias AS "politicalBias",
+            na.is_militant AS "isMilitant", na.has_incoherence AS "hasIncoherence",
+            na.credibility_flags AS "credibilityFlags",
+            na.credibility_reasoning AS "credibilityReasoning",
+            sa.story_id AS "storyId",
+            na.sentiment AS "sentiment"
+     FROM news_articles na
+     LEFT JOIN LATERAL (
+       SELECT story_id FROM story_articles WHERE article_id = na.id LIMIT 1
+     ) sa ON true
+     WHERE na.id = $1`,
+		[id],
+	);
+	const article = result.rows[0];
+	if (!article) return null;
+	return {
+		...article,
+		company: article.company ?? undefined,
+		imageUrl: article.imageUrl ?? undefined,
+		storyId: article.storyId ?? undefined,
+		credibilityFlags: article.credibilityFlags ?? [],
+	};
+}
+
 export function safeTruncateHtml(html: string, limit: number): string {
 	if (html.length <= limit) return html;
 
@@ -321,35 +401,11 @@ export async function postArticleToTelegram(
 		return;
 	const activeStories = await listActiveStories(50).catch(() => []);
 	const storyMap = new Map(activeStories.map((s) => [s.id, s]));
-	const fastModel = await getFastModel();
-	const fullContent =
-		article.fullContent ||
-		(await fetchFullArticle(article.url).catch(() => null)) ||
-		article.content;
-
-	const isMisleading = (article.credibilityFlags ?? []).some((f) =>
-		["misleading_headline", "out_of_context", "fake_news"].includes(f),
-	);
-
-	const [blurb, rewrittenTitle] = await Promise.all([
-		generateArticleBlurb(
-			article.title,
-			fullContent,
-			article.category,
-			fastModel,
-		),
-		isMisleading
-			? rewriteMisleadingTitle(article.title, fullContent, fastModel)
-			: null,
-	]);
-
-	const displayTitle = rewrittenTitle || article.title;
-	const displayBlurb =
-		blurb ||
-		article.content
-			.replace(/\s+/g, " ")
-			.trim()
-			.slice(0, FALLBACK_SUMMARY_MAX_LEN);
+	const displayTitle = article.title;
+	const displayBlurb = article.content
+		.replace(/\s+/g, " ")
+		.trim()
+		.slice(0, FALLBACK_SUMMARY_MAX_LEN);
 	const { label: ago, isBreaking: isTimeRecent } = formatPublishedAt(
 		article.publishedAt,
 	);
@@ -409,6 +465,7 @@ export async function postArticleToTelegram(
 			{ text: "👍 Curtir (0)", callback_data: `fb:like:${article.id}` },
 			{ text: "👎 Não curti (0)", callback_data: `fb:dislike:${article.id}` },
 		],
+		[{ text: "📝 Resumir", callback_data: `sum:${article.id}` }],
 		[
 			{ text: "📖 Ler reportagem", url: article.url },
 			{ text: "📱 Fast News", url: `${config.publicUrl}/?id=${article.id}` },

@@ -87,8 +87,15 @@ async function checkRedis(): Promise<DependencyStatus> {
 async function checkOllama(): Promise<DependencyStatus> {
 	const start = Date.now();
 	try {
-		const baseUrl = config.ollama.baseUrl.replace(/\/v1\/?$/, "");
-		const res = await fetch(`${baseUrl}/api/tags`, {
+		const base = config.ollama.baseUrl;
+		const isOpenAiCompat = base.includes("/v1");
+		const url = isOpenAiCompat
+			? `${base.replace(/\/v1\/?$/, "")}/v1/models`
+			: `${base.replace(/\/v1\/?$/, "")}/api/tags`;
+		const apiKey =
+			process.env["OLLAMA_API_KEY"] || process.env["OPENAI_API_KEY"] || "";
+		const res = await fetch(url, {
+			headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
 			signal: AbortSignal.timeout(3000),
 		});
 		if (res.ok) return { status: "up", latencyMs: Date.now() - start };
