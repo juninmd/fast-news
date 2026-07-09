@@ -122,8 +122,13 @@ function App() {
 
 	const handleSummarize = useCallback(
 		async (id: string, title?: string) => {
-			setToast({ message: "Abrindo artigo...", type: "success" });
-			setTimeout(() => setToast(null), 1000);
+			setToast({ message: "Analisando credibilidade...", type: "success" });
+			try {
+				await fetch(`/api/news/${id}/credibility`, { method: "POST" });
+			} catch {
+				// modal will show whatever data is available
+			}
+			setToast(null);
 			openArticle(id, title);
 		},
 		[openArticle],
