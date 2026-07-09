@@ -237,9 +237,10 @@ export interface IngestionResult {
 
 async function isOllamaAvailable(): Promise<boolean> {
 	const base = config.ollama.baseUrl;
-	if (base.includes("/v1") && !config.ollama.embeddingBaseUrl) {
+	const embeddingBase = config.ollama.embeddingBaseUrl;
+	if (embeddingBase.includes("/v1") || (base.includes("/v1") && !embeddingBase)) {
 		console.warn(
-			"[ingestion] OpenAI-compatible Ollama URL detected without OLLAMA_EMBEDDING_BASE_URL; embeddings will be skipped",
+			"[ingestion] Native OLLAMA_EMBEDDING_BASE_URL is not configured; embeddings will be skipped",
 		);
 		return false;
 	}
