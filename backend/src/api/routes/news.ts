@@ -223,9 +223,10 @@ newsRouter.post("/:id/credibility", async (req: Request, res: Response) => {
 		url: string;
 		source: string;
 		category: string;
-	}>("SELECT title, content, url, source, category FROM news_articles WHERE id = $1", [
-		id,
-	]);
+	}>(
+		"SELECT title, content, url, source, category FROM news_articles WHERE id = $1",
+		[id],
+	);
 	if (!article.rows[0])
 		return res.status(404).json({ error: "Article not found" });
 
