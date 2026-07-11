@@ -61,11 +61,35 @@ function setupCommands(bot: Telegraf): void {
 	bot.hears("❓ Ajuda", (ctx) => (ctx as any).replyWithCommand("/start"));
 	bot.action(/^fb:(like|dislike|block):([0-9a-f-]{36})$/i, async (ctx) => {
 		const match = (ctx.callbackQuery as { data?: string }).data?.match(
-			/^fb:(like|dislike):(.+)$/i,
+			/^fb:(like|dislike|block):(.+)$/i,
 		);
 		if (!match) return;
 		const action = match[1];
 		const articleId = match[2];
+
+		if (action === "block") {
+			const userId = ctx.from?.id ? String(ctx.from.id) : null;
+			if (!userId) {
+				await ctx.answerCbQuery("Erro: Usuário não identificado.");
+				return;
+			}
+			const articleRes = await query<{ source: string }>(
+				"SELECT source FROM news_articles WHERE id = $1",
+				[articleId],
+			);
+			const source = articleRes.rows[0]?.source;
+			if (source) {
+				await query(
+					"INSERT INTO telegram_user_blocklist (user_id, source) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+					[userId, source],
+				).catch(console.error);
+				await ctx.answerCbQuery(`Portal "${source}" bloqueado.`);
+			} else {
+				await ctx.answerCbQuery("Erro: Fonte não encontrada.");
+			}
+			return;
+		}
+
 		await saveFeedback(ctx, articleId, action as "like" | "dislike");
 		await ctx.answerCbQuery(
 			action === "like" ? "Preferência registrada." : "Dislike registrado.",
@@ -418,7 +442,10 @@ export async function postArticleToTelegram(
 			{ text: "👍 Curtir (0)", callback_data: `fb:like:${article.id}` },
 			{ text: "👎 Não curti (0)", callback_data: `fb:dislike:${article.id}` },
 		],
-		[{ text: "📝 Resumir", callback_data: `sum:${article.id}` }],
+		[
+			{ text: "📝 Resumir", callback_data: `sum:${article.id}` },
+			{ text: "🚫 Excluir Portal", callback_data: `fb:block:${article.id}` },
+		],
 		[
 			{ text: "📖 Ler reportagem", url: article.url },
 			{ text: "📱 Fast News", url: `${FAST_NEWS_URL}/?id=${article.id}` },
