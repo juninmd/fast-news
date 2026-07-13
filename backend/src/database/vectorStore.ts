@@ -346,6 +346,84 @@ async function searchPgvector(
 	}));
 }
 
+export async function updateUserPreference(
+	userId: string,
+	articleEmbedding: number[],
+	reaction: "like" | "dislike",
+): Promise<void> {
+	// Adjust these weights as necessary
+	const LEARNING_RATE = reaction === "like" ? 0.2 : -0.2;
+
+	try {
+		// Get current preference vector
+		const res = await query<{ preference_vector: string }>(
+			"SELECT preference_vector::text FROM telegram_user_preferences WHERE user_id = $1",
+			[userId],
+		);
+
+		let newVector: number[];
+
+		if (res.rowCount && res.rows[0]?.preference_vector) {
+			const currentVector: number[] = JSON.parse(res.rows[0].preference_vector);
+
+			// Compute new vector
+			newVector = currentVector.map((val, idx) => {
+				const diff = (articleEmbedding[idx] || 0) * LEARNING_RATE;
+				return val + diff;
+			});
+
+			// Optional: Normalize the new vector
+			const magnitude = Math.sqrt(
+				newVector.reduce((sum, val) => sum + val * val, 0),
+			);
+			if (magnitude > 0) {
+				newVector = newVector.map((val) => val / magnitude);
+			}
+		} else {
+			// If no preference vector exists, initialize it (if like) or use zero-ish vector
+			if (reaction === "like") {
+				newVector = [...articleEmbedding];
+			} else {
+				// Initialize with slightly negative article embedding or just ignore
+				newVector = articleEmbedding.map((v) => v * -0.1);
+			}
+		}
+
+		const vectorString = `[${newVector.join(",")}]`;
+
+		await query(
+			`INSERT INTO telegram_user_preferences (user_id, preference_vector, updated_at)
+			 VALUES ($1, $2::vector, NOW())
+			 ON CONFLICT (user_id)
+			 DO UPDATE SET preference_vector = EXCLUDED.preference_vector, updated_at = NOW()`,
+			[userId, vectorString],
+		);
+	} catch (err: any) {
+		console.error(
+			"[vectorStore] Failed to update user preference vector:",
+			err.message,
+		);
+	}
+}
+
+export async function getArticleEmbedding(
+	id: string,
+): Promise<number[] | null> {
+	const res = await query<{ embedding: string }>(
+		"SELECT embedding::text FROM news_articles WHERE id = $1 AND embedding IS NOT NULL",
+		[id],
+	);
+	if (res.rowCount === 0 || !res.rows[0]?.embedding) {
+		return null;
+	}
+
+	try {
+		return JSON.parse(res.rows[0].embedding);
+	} catch {
+		return null;
+	}
+}
+
 export async function getStorySimilarities(
 	embedding: number[],
 	threshold: number,
