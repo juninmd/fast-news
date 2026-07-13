@@ -3,7 +3,7 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- TECNOLOGIA (MUNDO) ---
 	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
-
+	{ url: "https://www.theverge.com/rss/index.xml", category: "Tecnologia" },
 	{ url: "https://arstechnica.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.engadget.com/rss.xml", category: "Tecnologia" },
 	{ url: "https://www.cnet.com/rss/news/", category: "Tecnologia" },
@@ -188,6 +188,7 @@ export const FEED_SOURCES = [
 	{ url: "https://www.brasildefato.com.br/rss2.xml", category: "Brasil" },
 
 	// --- MUNDO ---
+	{ url: "https://www.rfi.fr/br/rss", category: "Mundo" },
 	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
 		category: "Mundo",
