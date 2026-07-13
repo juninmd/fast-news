@@ -1,5 +1,6 @@
 import { generateText } from "ai";
 import { query } from "../database/client.js";
+import { getArticleEmbedding, searchVectors } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
 import { escapeHtml, SEPARATOR } from "./telegram_format.js";
 
@@ -80,17 +81,28 @@ export async function fetchRelatedArticles(
 	limit = 2,
 ): Promise<Array<{ title: string; url: string; source: string }>> {
 	try {
-		const byVector = await query<{
-			title: string;
-			url: string;
-			source: string;
-		}>(
-			`SELECT na.title, na.url, na.source FROM article_relations ar
-       JOIN news_articles na ON na.id = CASE WHEN ar.article_a = $1 THEN ar.article_b ELSE ar.article_a END
-       WHERE (ar.article_a = $1 OR ar.article_b = $1) AND na.published_at > NOW() - INTERVAL '72 hours' ORDER BY ar.similarity DESC LIMIT $2`,
-			[articleId, limit],
-		);
-		if (byVector.rows.length > 0) return byVector.rows;
+		const embedding = await getArticleEmbedding(articleId);
+		if (embedding) {
+			const results = await searchVectors(embedding, limit + 1, {
+				daysBack: 3,
+				minSimilarity: 0.55,
+			});
+
+			// Filter out the original article itself
+			const filtered = results
+				.filter((r) => r.id !== articleId)
+				.slice(0, limit);
+
+			if (filtered.length > 0) {
+				return filtered.map((r) => ({
+					title: r.metadata?.title ?? "",
+					url: r.metadata?.url ?? "",
+					source: r.metadata?.source ?? "",
+				}));
+			}
+		}
+
+		// Fallback to category based
 		const byCategory = await query<{
 			title: string;
 			url: string;
