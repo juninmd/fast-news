@@ -1,6 +1,10 @@
 import { Context, Telegraf } from "telegraf";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
+import {
+	getArticleEmbedding,
+	updateUserPreference,
+} from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
 import { analyzeTopicWithRAG, getAllTrackedTopics } from "./analysis.js";
 import { getStoryGraph, listActiveStories } from "./correlation.js";
@@ -259,6 +263,13 @@ async function saveFeedback(
 		`INSERT INTO telegram_article_feedback (article_id, chat_id, user_id, username, reaction) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (article_id, chat_id, user_id) DO UPDATE SET reaction = EXCLUDED.reaction, updated_at = NOW()`,
 		[articleId, chatId, userId, ctx.from?.username ?? null, reaction],
 	).catch(console.error);
+
+	if (userId) {
+		const embedding = await getArticleEmbedding(articleId);
+		if (embedding) {
+			await updateUserPreference(userId, embedding, reaction);
+		}
+	}
 }
 
 export interface TelegramArticle {
