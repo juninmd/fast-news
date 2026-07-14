@@ -346,6 +346,23 @@ async function searchPgvector(
 	}));
 }
 
+export async function getUserPreferenceVector(
+	userId: string,
+): Promise<number[] | null> {
+	const res = await query<{ preference_vector: string }>(
+		"SELECT preference_vector::text FROM telegram_user_preferences WHERE user_id = $1",
+		[userId],
+	);
+	if (res.rowCount === 0 || !res.rows[0]?.preference_vector) {
+		return null;
+	}
+	try {
+		return JSON.parse(res.rows[0].preference_vector);
+	} catch {
+		return null;
+	}
+}
+
 export async function updateUserPreference(
 	userId: string,
 	articleEmbedding: number[],
