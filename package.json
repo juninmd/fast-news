@@ -21,6 +21,7 @@
 	},
 	"dependencies": {
 		"@google/generative-ai": "^0.24.1",
+		"@qdrant/js-client-rest": "^1.18.0",
 		"@vitejs/plugin-react": "^6.0.3",
 		"autoprefixer": "^10.5.2",
 		"dotenv": "^17.4.2",
