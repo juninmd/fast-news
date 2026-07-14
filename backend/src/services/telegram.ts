@@ -1,15 +1,10 @@
 import { Context, Telegraf } from "telegraf";
 import { config } from "../config/env.js";
-import {
-	bulkGetUserPreferences,
-	bulkGetUsersWhoBlockedSource,
-} from "../database/bulk.js";
 import { query } from "../database/client.js";
 import {
 	getArticleEmbedding,
 	updateUserPreference,
 } from "../database/vectorStore.js";
-import { cosineSim } from "../mathUtils.js";
 import { getFastModel } from "./aiProvider.js";
 import { analyzeTopicWithRAG, getAllTrackedTopics } from "./analysis.js";
 import { getStoryGraph, listActiveStories } from "./correlation.js";
@@ -483,36 +478,14 @@ export async function postArticleToTelegram(
 		},
 		reply_markup: { inline_keyboard: inlineButtons },
 	};
-
-	const chatIdsStr = config.telegramChatIds.map(String);
-	const [userPrefsMap, blockedSet, articleEmbedding] = await Promise.all([
-		bulkGetUserPreferences(chatIdsStr),
-		bulkGetUsersWhoBlockedSource(chatIdsStr, article.source),
-		getArticleEmbedding(article.id),
-	]);
-
 	await Promise.allSettled(
-		config.telegramChatIds.map((chatId) => {
-			const userId = String(chatId);
-
-			if (blockedSet.has(userId)) {
-				return;
-			}
-
-			if (articleEmbedding && userPrefsMap[userId]) {
-				const prefVector = userPrefsMap[userId];
-				const similarity = cosineSim(articleEmbedding, prefVector);
-				if (similarity < 0.3) {
-					return; // Skip if semantic distance is too far from user preferences
-				}
-			}
-
-			return getBot().telegram.sendMessage(
+		config.telegramChatIds.map((chatId) =>
+			getBot().telegram.sendMessage(
 				chatId,
 				safeTruncateHtml(message, 3800),
 				sendOpts,
-			);
-		}),
+			),
+		),
 	);
 	await query(
 		`UPDATE news_articles SET telegram_sent_at = NOW() WHERE id = $1`,

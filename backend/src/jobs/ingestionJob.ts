@@ -21,6 +21,9 @@ async function fetchUnsentUnevaluatedArticles(): Promise<TelegramArticle[]> {
          AND na.fake_news_score IS NULL
          AND na.category != 'fact_check'
          AND na.created_at < NOW() - INTERVAL '5 minutes'
+         AND NOT EXISTS (
+             SELECT 1 FROM telegram_user_blocklist tub WHERE tub.source = na.source
+         )
        ORDER BY na.published_at DESC NULLS LAST
        LIMIT 30`,
 		);

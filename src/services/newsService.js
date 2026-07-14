@@ -2,7 +2,6 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- TECNOLOGIA (MUNDO) ---
-	{ url: "https://www.wired.com/feed/rss", category: "Tecnologia" },
 	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.theverge.com/rss/index.xml", category: "Tecnologia" },
 	{ url: "https://arstechnica.com/feed/", category: "Tecnologia" },
