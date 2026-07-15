@@ -21,6 +21,7 @@ export const CATEGORY_EMOJI: Record<string, string> = {
 	Segurança: "🔐",
 	Startups: "🚀",
 	Anime: "🍜",
+	Cripto: "🪙",
 };
 
 export const IMPACT_EMOJI: Record<string, string> = {
