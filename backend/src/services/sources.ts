@@ -1,6 +1,13 @@
 import { query } from "../database/client.js";
 
 export const FEED_SOURCES = [
+	// ── Cripto ─────────────────────────────────────────────────────────────
+	{
+		url: "https://cointelegraph.com/rss",
+		category: "Cripto",
+		company: "Cointelegraph",
+	},
+
 	// ── AI Frontier ─────────────────────────────────────────────────────────────
 	{
 		// Mirror comunitário — anthropic.com não publica RSS oficial
