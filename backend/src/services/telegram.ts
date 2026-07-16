@@ -478,15 +478,68 @@ export async function postArticleToTelegram(
 		},
 		reply_markup: { inline_keyboard: inlineButtons },
 	};
-	await Promise.allSettled(
-		config.telegramChatIds.map((chatId) =>
-			getBot().telegram.sendMessage(
+
+	const articleEmbedding = await getArticleEmbedding(article.id);
+
+	let blockedUsers = new Set<string>();
+	let prefMap = new Map<string, number[]>();
+
+	if (config.telegramChatIds.length > 0) {
+		const stringChatIds = config.telegramChatIds.map(id => String(id));
+		const blockRes = await query<{ user_id: string }>(
+			"SELECT user_id FROM telegram_user_blocklist WHERE source = $1 AND user_id = ANY($2::text[])",
+			[article.source, stringChatIds]
+		);
+		blockedUsers = new Set(blockRes.rows.map(r => String(r.user_id)));
+
+		if (articleEmbedding) {
+			const prefRes = await query<{ user_id: string; preference_vector: string }>(
+				"SELECT user_id, preference_vector::text FROM telegram_user_preferences WHERE user_id = ANY($1::text[])",
+				[stringChatIds]
+			);
+			for (const row of prefRes.rows) {
+				if (row.preference_vector) {
+					prefMap.set(String(row.user_id), JSON.parse(row.preference_vector));
+				}
+			}
+		}
+	}
+
+	for (const chatId of config.telegramChatIds) {
+		const chatIdStr = String(chatId);
+		if (blockedUsers.has(chatIdStr)) {
+			continue;
+		}
+
+		if (articleEmbedding) {
+			const prefVector = prefMap.get(chatIdStr);
+			if (prefVector) {
+				const dotProduct = articleEmbedding.reduce((sum, val, idx) => sum + val * (prefVector[idx] || 0), 0);
+
+				const normA = Math.sqrt(articleEmbedding.reduce((sum, val) => sum + val * val, 0));
+				const normB = Math.sqrt(prefVector.reduce((sum, val) => sum + val * val, 0));
+
+				const similarity = (normA > 0 && normB > 0) ? (dotProduct / (normA * normB)) : 0;
+
+				// Optional threshold filter logic: if preference similarity is too low, skip
+				// For now keeping threshold to a conservative 0.2 like previously considered
+				if (similarity < 0.2) {
+					continue;
+				}
+			}
+		}
+
+		try {
+			await getBot().telegram.sendMessage(
 				chatId,
 				safeTruncateHtml(message, 3800),
 				sendOpts,
-			),
-		),
-	);
+			);
+		} catch (err) {
+			console.error(`[Telegram] Failed to send article to ${chatId}:`, err);
+		}
+	}
+
 	await query(
 		`UPDATE news_articles SET telegram_sent_at = NOW() WHERE id = $1`,
 		[article.id],
