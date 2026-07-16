@@ -2,6 +2,7 @@ import { generateText } from "ai";
 import { query } from "../database/client.js";
 import { getArticleEmbedding, searchVectors } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
+import { ragCache } from "./cache.js";
 import { escapeHtml, SEPARATOR } from "./telegram_format.js";
 
 function looksPortuguese(text: string): boolean {
@@ -78,9 +79,12 @@ export async function rewriteMisleadingTitle(
 export async function fetchRelatedArticles(
 	articleId: string,
 	category: string,
-	limit = 2,
+	limit = 3,
 ): Promise<Array<{ title: string; url: string; source: string }>> {
 	try {
+		const cached = await ragCache.get(`related:${articleId}`);
+		if (cached) return cached as Array<{ title: string; url: string; source: string }>;
+
 		const embedding = await getArticleEmbedding(articleId);
 		if (embedding) {
 			const results = await searchVectors(embedding, limit + 1, {
@@ -94,11 +98,13 @@ export async function fetchRelatedArticles(
 				.slice(0, limit);
 
 			if (filtered.length > 0) {
-				return filtered.map((r) => ({
+				const related = filtered.map((r) => ({
 					title: r.metadata?.title ?? "",
 					url: r.metadata?.url ?? "",
 					source: r.metadata?.source ?? "",
 				}));
+				await ragCache.set(related, `related:${articleId}`);
+				return related;
 			}
 		}
 
