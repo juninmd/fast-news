@@ -232,6 +232,11 @@ export const FEED_SOURCES = [
 		company: "Tecnoblog",
 	},
 	{
+		url: "https://gizmodo.uol.com.br/feed/",
+		category: "Tecnologia",
+		company: "Gizmodo Brasil",
+	},
+	{
 		url: "https://veja.abril.com.br/politica/feed/",
 		category: "Brasil",
 		company: "Veja",
