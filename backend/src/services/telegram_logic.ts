@@ -83,7 +83,8 @@ export async function fetchRelatedArticles(
 ): Promise<Array<{ title: string; url: string; source: string }>> {
 	try {
 		const cached = await ragCache.get(`related:${articleId}`);
-		if (cached) return cached as Array<{ title: string; url: string; source: string }>;
+		if (cached)
+			return cached as Array<{ title: string; url: string; source: string }>;
 
 		const embedding = await getArticleEmbedding(articleId);
 		if (embedding) {

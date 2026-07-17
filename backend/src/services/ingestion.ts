@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
+import { generateText } from "ai";
 import Parser from "rss-parser";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
+import { getFastModel } from "./aiProvider.js";
 import { buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
 import { getActiveFeeds } from "./sources.js";
@@ -199,6 +201,32 @@ async function fetchFeed(source: {
 	}
 }
 
+async function summarizeForEmbedding(
+	title: string,
+	content: string,
+): Promise<string> {
+	try {
+		const model = await getFastModel();
+		const prompt = `Extraia as entidades principais, palavras-chave e o contexto central desta notícia para criar um resumo hiper-denso voltado para busca vetorial. Não inclua jargões genéricos, tags HTML ou introduções. Apenas dados puros (nomes, empresas, locais, eventos) e o fato principal. Limite a 50 palavras.
+
+Título: ${title}
+
+Conteúdo: ${content.slice(0, 4000)}`;
+		const { text } = await generateText({
+			model,
+			prompt,
+			maxTokens: 150,
+		});
+		return text.trim();
+	} catch (e) {
+		console.warn(
+			"[ingestion] summarizeForEmbedding failed, falling back to raw content:",
+			(e as Error).message.slice(0, 80),
+		);
+		return `${title}. ${content}`.slice(0, 1000);
+	}
+}
+
 async function upsertArticle(
 	article: RawArticle,
 	ollamaUp: boolean,
@@ -211,9 +239,9 @@ async function upsertArticle(
 	);
 	if (existing.rowCount && existing.rowCount > 0) return null;
 
-	const textToEmbed = `${article.title}. ${article.content}`.slice(
-		0,
-		config.ingestion.embedTruncateChars,
+	const textToEmbed = await summarizeForEmbedding(
+		article.title,
+		article.content || "",
 	);
 	// Embedding is best-effort — if Ollama is unavailable, store without vector
 	let embedding: number[] | null = null;
