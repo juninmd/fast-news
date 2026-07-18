@@ -63,6 +63,7 @@ export const FEED_SOURCES = [
 	{ url: "https://computerworld.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://itforum.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://imasters.com.br/feed", category: "Tecnologia" },
+	{ url: "https://www.wired.com/feed/rss", category: "Tecnologia" },
 	{ url: "https://g1.globo.com/rss/g1/tecnologia/", category: "Tecnologia" },
 	{ url: "https://nucleo.jor.br/feed/", category: "Tecnologia" },
 	{ url: "https://mittechreview.com.br/feed/", category: "Tecnologia" },
