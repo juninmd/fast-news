@@ -595,6 +595,11 @@ export const FEED_SOURCES = [
 
 	// ── Tecnologia ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.wired.com/feed/rss",
+		category: "Tecnologia",
+		company: "Wired",
+	},
+	{
 		url: "https://www.infoworld.com/feed/",
 		category: "Tecnologia",
 		company: "InfoWorld",
