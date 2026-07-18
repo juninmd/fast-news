@@ -116,9 +116,9 @@ function setupCommands(bot: Telegraf): void {
 			(ctx.callbackQuery as any).message?.reply_markup?.inline_keyboard || [];
 		const newKeyboard = [
 			[
-				{ text: `👍 Curtir (${likes})`, callback_data: `fb:like:${articleId}` },
+				{ text: `👍 [Like] (${likes})`, callback_data: `fb:like:${articleId}` },
 				{
-					text: `👎 Não curti (${dislikes})`,
+					text: `👎 [Dislike] (${dislikes})`,
 					callback_data: `fb:dislike:${articleId}`,
 				},
 			],
@@ -450,12 +450,12 @@ export async function postArticleToTelegram(
 
 	const inlineButtons = [
 		[
-			{ text: "👍 Curtir (0)", callback_data: `fb:like:${article.id}` },
-			{ text: "👎 Não curti (0)", callback_data: `fb:dislike:${article.id}` },
+			{ text: "👍 [Like] (0)", callback_data: `fb:like:${article.id}` },
+			{ text: "👎 [Dislike] (0)", callback_data: `fb:dislike:${article.id}` },
 		],
 		[
 			{ text: "📝 Resumir", callback_data: `sum:${article.id}` },
-			{ text: "🚫 Excluir Portal", callback_data: `fb:block:${article.id}` },
+			{ text: "🚫 [Excluir Portal]", callback_data: `fb:block:${article.id}` },
 		],
 		[
 			{ text: "📖 Ler reportagem", url: article.url },
