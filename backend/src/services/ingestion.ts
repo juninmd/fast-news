@@ -207,11 +207,15 @@ async function summarizeForEmbedding(
 ): Promise<string> {
 	try {
 		const model = await getFastModel();
+		const cleanContent = content
+			.replace(/<\/?[^>]+(>|$)/g, " ")
+			.replace(/\s+/g, " ")
+			.trim();
 		const prompt = `Extraia as entidades principais, palavras-chave e o contexto central desta notícia para criar um resumo hiper-denso voltado para busca vetorial. Não inclua jargões genéricos, tags HTML ou introduções. Apenas dados puros (nomes, empresas, locais, eventos) e o fato principal. Limite a 50 palavras.
 
 Título: ${title}
 
-Conteúdo: ${content.slice(0, 4000)}`;
+Conteúdo: ${cleanContent.slice(0, 4000)}`;
 		const { text } = await generateText({
 			model,
 			prompt,
