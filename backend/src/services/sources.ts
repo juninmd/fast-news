@@ -246,6 +246,16 @@ export const FEED_SOURCES = [
 		category: "Negócios",
 		company: "Veja",
 	},
+	{
+		url: "https://www.terra.com.br/rss/noticias",
+		category: "Brasil",
+		company: "Terra",
+	},
+	{
+		url: "https://www.band.uol.com.br/rss",
+		category: "Brasil",
+		company: "Band",
+	},
 
 	// ── Dev Tools ─────────────────────────────────────────────────────────────
 	{
