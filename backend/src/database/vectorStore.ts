@@ -1,5 +1,7 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
+import { createHash } from "crypto";
 import { config } from "../config/env.js";
+import { cacheGet, cacheSet } from "../services/cache.js";
 import { query } from "./client.js";
 import { searchSimilarInSqlite, upsertArticleToSqlite } from "./sqliteStore.js";
 
@@ -428,10 +430,15 @@ export async function getStorySimilarities(
 	embedding: number[],
 	threshold: number,
 ): Promise<Array<{ story_id: string; avg_sim: number }>> {
+	const vectorString = `[${embedding.join(",")}]`;
+	const cacheKey = `story:similarities:${createHash("sha256").update(vectorString).digest("hex").slice(0, 32)}:${threshold}`;
+	const cached =
+		await cacheGet<Array<{ story_id: string; avg_sim: number }>>(cacheKey);
+	if (cached) return cached;
+
 	const provider = config.vectorStore;
 
 	if (provider === "postgres") {
-		const vectorString = `[${embedding.join(",")}]`;
 		const res = await query<{ story_id: string; avg_sim: string }>(
 			`SELECT sa.story_id, AVG(1 - (na.embedding <=> $1::vector)) AS avg_sim
 			 FROM story_articles sa
@@ -446,10 +453,12 @@ export async function getStorySimilarities(
 			 LIMIT 5`,
 			[vectorString, threshold],
 		);
-		return res.rows.map((r) => ({
+		const finalRes = res.rows.map((r) => ({
 			story_id: r.story_id,
 			avg_sim: parseFloat(r.avg_sim),
 		}));
+		await cacheSet(cacheKey, finalRes, 1800);
+		return finalRes;
 	}
 
 	// For Qdrant or SQLite:
@@ -532,7 +541,9 @@ export async function getStorySimilarities(
 		}
 	}
 
-	return results.sort((a, b) => b.avg_sim - a.avg_sim).slice(0, 5);
+	const finalRes = results.sort((a, b) => b.avg_sim - a.avg_sim).slice(0, 5);
+	await cacheSet(cacheKey, finalRes, 1800);
+	return finalRes;
 }
 
 export interface InsightSearchResult {
