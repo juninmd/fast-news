@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { Request, Response, Router } from "express";
 import { query } from "../../database/client.js";
 import {
@@ -5,6 +6,7 @@ import {
 	getSqliteStats,
 	searchSimilarInSqlite,
 } from "../../database/sqliteStore.js";
+import { cacheGet, cacheSet } from "../../services/cache.js";
 import { embedQuery } from "../../services/embeddings.js";
 import { searchSimilarArticles } from "../../services/rag.js";
 
@@ -26,14 +28,27 @@ ragRouter.get("/search", async (req: Request, res: Response) => {
 		return res.json({ query: q, total: results.length, results, graph });
 	} catch (err) {
 		try {
+			const fallbackCacheKey = `rag:search:sqlite:${createHash("sha256").update(q).digest("hex").slice(0, 32)}:${limit}`;
+			const cachedFallback = await cacheGet<{
+				query: string;
+				total: number;
+				results: any[];
+				graph: any;
+			}>(fallbackCacheKey);
+			if (cachedFallback) return res.json(cachedFallback);
+
 			const queryEmbedding = await embedQuery(q);
 			const results = searchSimilarInSqlite(queryEmbedding, limit);
-			return res.json({
+
+			const responseData = {
 				query: q,
 				total: results.length,
 				results,
 				graph: { nodes: [], edges: [] },
-			});
+			};
+			await cacheSet(fallbackCacheKey, responseData, 600); // 10 minutes cache
+
+			return res.json(responseData);
 		} catch {
 			const msg = err instanceof Error ? err.message : "Erro ao buscar";
 			return res.status(500).json({ error: msg });
@@ -41,7 +56,7 @@ ragRouter.get("/search", async (req: Request, res: Response) => {
 	}
 });
 
-async function buildSearchGraph(articleIds: string[]): Promise<{
+type SearchGraphData = {
 	nodes: Array<{
 		id: string;
 		title: string;
@@ -57,8 +72,18 @@ async function buildSearchGraph(articleIds: string[]): Promise<{
 		similarity: number;
 		relationType: string;
 	}>;
-}> {
+};
+
+async function buildSearchGraph(
+	articleIds: string[],
+): Promise<SearchGraphData> {
 	if (articleIds.length === 0) return { nodes: [], edges: [] };
+
+	const sortedIds = [...articleIds].sort().join(",");
+	const cacheKey = `rag:graph:${createHash("sha256").update(sortedIds).digest("hex").slice(0, 32)}`;
+	const cached = await cacheGet<SearchGraphData>(cacheKey);
+	if (cached) return cached;
+
 	const nodes = await query<{
 		id: string;
 		title: string;
@@ -87,7 +112,7 @@ async function buildSearchGraph(articleIds: string[]): Promise<{
 					[articleIds],
 				)
 			: { rows: [] };
-	return {
+	const graphData = {
 		nodes: nodes.rows,
 		edges: edges.rows.map((edge) => ({
 			source: edge.article_a,
@@ -96,6 +121,8 @@ async function buildSearchGraph(articleIds: string[]): Promise<{
 			relationType: edge.relationType,
 		})),
 	};
+	await cacheSet(cacheKey, graphData, 300); // 5 minutes cache
+	return graphData;
 }
 
 ragRouter.get("/stats", (_req: Request, res: Response) => {
