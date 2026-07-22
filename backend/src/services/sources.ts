@@ -1,6 +1,13 @@
 import { query } from "../database/client.js";
 
 export const FEED_SOURCES = [
+	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{
+		url: "https://gizmodo.uol.com.br/feed/",
+		category: "Tecnologia",
+		company: "Gizmodo Brasil",
+	},
+
 	// ── Cripto ─────────────────────────────────────────────────────────────
 	{
 		url: "https://cointelegraph.com/rss",
