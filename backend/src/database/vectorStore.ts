@@ -354,7 +354,7 @@ export async function updateUserPreference(
 	reaction: "like" | "dislike",
 ): Promise<void> {
 	// Adjust these weights as necessary
-	const LEARNING_RATE = reaction === "like" ? 0.2 : -0.2;
+	const LEARNING_RATE = reaction === "like" ? 0.2 : -0.5;
 
 	try {
 		// Get current preference vector
