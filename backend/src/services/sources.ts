@@ -2,11 +2,7 @@ import { query } from "../database/client.js";
 
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
-	{
-		url: "https://gizmodo.uol.com.br/feed/",
-		category: "Tecnologia",
-		company: "Gizmodo Brasil",
-	},
+	{},
 
 	// ── Cripto ─────────────────────────────────────────────────────────────
 	{
@@ -238,11 +234,7 @@ export const FEED_SOURCES = [
 		category: "Brasil",
 		company: "Tecnoblog",
 	},
-	{
-		url: "https://gizmodo.uol.com.br/feed/",
-		category: "Tecnologia",
-		company: "Gizmodo Brasil",
-	},
+	{},
 	{
 		url: "https://veja.abril.com.br/politica/feed/",
 		category: "Brasil",
@@ -257,11 +249,6 @@ export const FEED_SOURCES = [
 		url: "https://www.terra.com.br/rss/noticias",
 		category: "Brasil",
 		company: "Terra",
-	},
-	{
-		url: "https://www.band.uol.com.br/rss",
-		category: "Brasil",
-		company: "Band",
 	},
 
 	// ── Dev Tools ─────────────────────────────────────────────────────────────
@@ -611,6 +598,17 @@ export const FEED_SOURCES = [
 	{ url: "https://sifted.eu/feed/", category: "Startups", company: "Sifted" },
 
 	// ── Tecnologia ─────────────────────────────────────────────────────────────
+	{
+		url: "https://www.tudocelular.com/rss/",
+		category: "Tecnologia",
+		company: "TudoCelular",
+	},
+	{
+		url: "https://meiobit.com/feed/",
+		category: "Tecnologia",
+		company: "Meio Bit",
+	},
+
 	{
 		url: "https://www.wired.com/feed/rss",
 		category: "Tecnologia",
