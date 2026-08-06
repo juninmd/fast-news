@@ -2,8 +2,8 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
-	{ url: "https://gizmodo.uol.com.br/feed/", category: "Tecnologia" },
 	// --- TECNOLOGIA (MUNDO) ---
+	{ url: "https://meiobit.com/feed/", category: "Tecnologia" },
 	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.theverge.com/rss/index.xml", category: "Tecnologia" },
 	{ url: "https://arstechnica.com/feed/", category: "Tecnologia" },
@@ -53,7 +53,6 @@ export const FEED_SOURCES = [
 	{ url: "https://teletime.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://canaltech.com.br/rss/", category: "Tecnologia" },
 	{ url: "https://canaltech.com.br/rss/produtos", category: "Tecnologia" },
-	{ url: "https://rss.techtudo.com.br/feed", category: "Tecnologia" },
 	{ url: "https://olhardigital.com.br/rss", category: "Tecnologia" },
 	{ url: "https://olhardigital.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://tecnoblog.net/feed/", category: "Tecnologia" },
@@ -69,7 +68,6 @@ export const FEED_SOURCES = [
 	{ url: "https://g1.globo.com/rss/g1/tecnologia/", category: "Tecnologia" },
 	{ url: "https://nucleo.jor.br/feed/", category: "Tecnologia" },
 	{ url: "https://mittechreview.com.br/feed/", category: "Tecnologia" },
-	{ url: "https://gizmodo.uol.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://www.hardware.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://adrena.me/feed/", category: "Tecnologia" },
 	{ url: "https://www.showmetech.com.br/feed/", category: "Tecnologia" },
@@ -107,7 +105,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.jota.info/feed", category: "Brasil" },
 	{ url: "https://g1.globo.com/rss/g1/politica/", category: "Brasil" },
 	{ url: "https://oantagonista.uol.com.br/feed/", category: "Brasil" },
-	{ url: "https://www.band.uol.com.br/rss", category: "Brasil" },
 	{ url: "https://rss.uol.com.br/feed/noticias.xml", category: "Brasil" },
 	{
 		url: "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml",
@@ -130,9 +127,7 @@ export const FEED_SOURCES = [
 		category: "Brasil",
 	},
 	{ url: "https://istoe.com.br/feed/", category: "Brasil" },
-	{ url: "https://noticias.r7.com/feed.xml", category: "Brasil" },
 	{ url: "https://www.em.com.br/rss/noticias/", category: "Brasil" },
-	{ url: "https://jc.ne10.uol.com.br/rss", category: "Brasil" },
 	{ url: "https://www.diariodepernambuco.com.br/rss/", category: "Brasil" },
 	{
 		url: "https://www.correiobraziliense.com.br/rss/noticias",
@@ -163,7 +158,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.diariodocentrodomundo.com.br/feed/", category: "Brasil" },
 	{ url: "https://revistaforum.com.br/feed", category: "Brasil" },
 	{ url: "https://www.conjur.com.br/rss.xml", category: "Brasil" },
-	{ url: "https://noticias.uol.com.br/rss.xml", category: "Brasil" },
 	{ url: "https://oglobo.globo.com/rss/brasil.xml", category: "Brasil" },
 	{ url: "https://oglobo.globo.com/rss/economia.xml", category: "Brasil" },
 	{ url: "https://g1.globo.com/rss/g1/educacao/", category: "Brasil" },
@@ -174,7 +168,6 @@ export const FEED_SOURCES = [
 		category: "Brasil",
 	},
 	{ url: "https://br.noticias.yahoo.com/rss", category: "Brasil" },
-	{ url: "https://noticias.uol.com.br/cotidiano/rss.xml", category: "Brasil" },
 	{ url: "https://agenciapublica.org/feed/", category: "Brasil" },
 	{ url: "https://piaui.folha.uol.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.sbtnews.com.br/feed", category: "Brasil" },
@@ -183,7 +176,6 @@ export const FEED_SOURCES = [
 		url: "https://www.gazetadopovo.com.br/feed/rss/brasil.xml",
 		category: "Brasil",
 	},
-	{ url: "https://noticias.uol.com.br/politica/rss.xml", category: "Brasil" },
 	{ url: "https://diplomatique.org.br/feed/", category: "Brasil" },
 	{ url: "https://guiadoestudante.abril.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.nexojornal.com.br/rss.xml", category: "Brasil" },
@@ -317,7 +309,6 @@ export const FEED_SOURCES = [
 		url: "https://www.nationalgeographicbrasil.com/rss.xml",
 		category: "Ciência",
 	},
-	{ url: "https://gizmodo.uol.com.br/ciencia/feed/", category: "Ciência" },
 	{ url: "https://www.newscientist.com/feed/home/", category: "Ciência" },
 	{ url: "https://phys.org/rss-feed/", category: "Ciência" },
 	{ url: "https://socientifica.com.br/feed/", category: "Ciência" },
