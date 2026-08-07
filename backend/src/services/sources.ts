@@ -2,7 +2,11 @@ import { query } from "../database/client.js";
 
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
-	{},
+	{
+		url: "https://jornal.usp.br/feed/",
+		category: "Brasil",
+		company: "Jornal da USP",
+	},
 
 	// ── Cripto ─────────────────────────────────────────────────────────────
 	{
@@ -234,7 +238,6 @@ export const FEED_SOURCES = [
 		category: "Brasil",
 		company: "Tecnoblog",
 	},
-	{},
 	{
 		url: "https://veja.abril.com.br/politica/feed/",
 		category: "Brasil",
