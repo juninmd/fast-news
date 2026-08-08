@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.band.uol.com.br/rss",
+		category: "Geral",
+		company: "Band Notícias",
+	},
+	{
 		url: "https://jornal.usp.br/feed/",
 		category: "Brasil",
 		company: "Jornal da USP",
