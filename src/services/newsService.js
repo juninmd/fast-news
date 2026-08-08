@@ -2,6 +2,7 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://www.band.uol.com.br/rss", category: "Geral" },
 	{ url: "https://jornal.usp.br/feed/", category: "Brasil" },
 	// --- TECNOLOGIA (MUNDO) ---
 	{ url: "https://meiobit.com/feed/", category: "Tecnologia" },
@@ -520,20 +521,26 @@ const fetchWithConcurrency = async (sources, apiKey) => {
 export const fetchNews = async (sources = FEED_SOURCES, apiKey = null) => {
 	const results = await fetchWithConcurrency(sources, apiKey);
 
-	let allNews = [];
+	const dedupeMap = new Map();
 	results.forEach((result) => {
 		if (result && result.status === "ok") {
 			const sourceTitle = result.feed.title;
 			const category = result.category;
-			const items = result.items.map((item) => ({
-				...item,
-				source: sourceTitle,
-				category: category,
-				id: item.guid || item.link,
-			}));
-			allNews = [...allNews, ...items];
+			result.items.forEach((item) => {
+				const hydratedItem = {
+					...item,
+					source: sourceTitle,
+					category: category,
+					id: item.guid || item.link,
+				};
+				if (!dedupeMap.has(hydratedItem.id)) {
+					dedupeMap.set(hydratedItem.id, hydratedItem);
+				}
+			});
 		}
 	});
+
+	let allNews = Array.from(dedupeMap.values());
 
 	// Sort by date (newest first)
 	allNews.sort((a, b) => {
