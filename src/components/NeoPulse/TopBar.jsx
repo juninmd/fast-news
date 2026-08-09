@@ -4,10 +4,13 @@ import {
 	Moon,
 	RefreshCcw,
 	Search,
-	Settings,
+	Settings as SettingsIcon,
 	Sun,
 	Zap,
 } from "lucide-react";
+import React, { lazy, Suspense, useState } from "react";
+
+const Settings = lazy(() => import("../Settings"));
 
 export function TopBar({
 	query,
@@ -16,10 +19,10 @@ export function TopBar({
 	toggleTheme,
 	refresh,
 	loading,
-	settings,
 	sources,
 	onRagSearch,
 }) {
+	const [settingsOpen, setSettingsOpen] = useState(false);
 	return (
 		<header className="sticky top-0 z-40 border-b border-ink bg-canvas/90 backdrop-blur-xl">
 			<div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
@@ -69,8 +72,12 @@ export function TopBar({
 						<Moon className="h-5 w-5" />
 					)}
 				</button>
-				<button onClick={settings} className="neo-icon" title="Configuracoes">
-					<Settings className="h-5 w-5" />
+				<button
+					onClick={() => setSettingsOpen(true)}
+					className="neo-icon"
+					title="Configuracoes"
+				>
+					<SettingsIcon className="h-5 w-5" />
 				</button>
 			</div>
 			<div className="px-4 pb-3 md:hidden">
@@ -90,6 +97,20 @@ export function TopBar({
 					</button>
 				</div>
 			</div>
+			{settingsOpen && (
+				<Suspense
+					fallback={
+						<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+							<span className="text-white">Carregando...</span>
+						</div>
+					}
+				>
+					<Settings
+						isOpen={settingsOpen}
+						onClose={() => setSettingsOpen(false)}
+					/>
+				</Suspense>
+			)}
 		</header>
 	);
 }

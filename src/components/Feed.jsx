@@ -209,6 +209,58 @@ const Feed = ({
 	const heroItem = showHero ? filteredNews[0] : null;
 	const gridItems = showHero ? filteredNews.slice(1) : filteredNews;
 
+	const sentinelRef = useRef(null);
+	useEffect(() => {
+		const target = sentinelRef.current;
+		if (!target || !hasMore || loading) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					loadMoreNews();
+				}
+			},
+			{ rootMargin: "400px" },
+		);
+
+		observer.observe(target);
+		return () => {
+			if (target) observer.unobserve(target);
+		};
+	}, [hasMore, loading, loadMoreNews]);
+
+	const renderedSkeleton = useMemo(() => {
+		return Array.from({ length: 6 }).map((_, i) => (
+			<div key={i} className="break-inside-avoid mb-6">
+				<SkeletonCard />
+			</div>
+		));
+	}, []);
+
+	const renderedGridItems = useMemo(() => {
+		return gridItems.map((item) => (
+			<div key={item.id} className="break-inside-avoid mb-6">
+				<NewsCard
+					item={item}
+					aiProvider={aiProvider}
+					apiKey={apiKey}
+					autoSummarize={autoSummarize}
+					aiModel={aiModel}
+					telegramBotToken={telegramBotToken}
+					telegramChatId={telegramChatId}
+				/>
+			</div>
+		));
+	}, [
+		gridItems,
+		aiProvider,
+		apiKey,
+		autoSummarize,
+		aiModel,
+		telegramBotToken,
+		telegramChatId,
+	]);
+
 	return (
 		<div>
 			{lastUpdate && (
@@ -253,27 +305,11 @@ const Feed = ({
 
 			{isLoadingInitial ? (
 				<div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-					{Array.from({ length: 6 }).map((_, i) => (
-						<div key={i} className="break-inside-avoid mb-6">
-							<SkeletonCard />
-						</div>
-					))}
+					{renderedSkeleton}
 				</div>
 			) : (
 				<div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-					{gridItems.map((item) => (
-						<div key={item.id} className="break-inside-avoid mb-6">
-							<NewsCard
-								item={item}
-								aiProvider={aiProvider}
-								apiKey={apiKey}
-								autoSummarize={autoSummarize}
-								aiModel={aiModel}
-								telegramBotToken={telegramBotToken}
-								telegramChatId={telegramChatId}
-							/>
-						</div>
-					))}
+					{renderedGridItems}
 				</div>
 			)}
 
@@ -304,7 +340,7 @@ const Feed = ({
 				</div>
 			)}
 
-			<div className="mt-12 text-center pb-8">
+			<div ref={sentinelRef} className="mt-12 text-center pb-8">
 				{loading && !isLoadingInitial ? (
 					<div className="flex flex-col items-center justify-center">
 						<RefreshCw className="animate-spin text-blue-600 mb-2" size={32} />
@@ -313,16 +349,9 @@ const Feed = ({
 						</p>
 					</div>
 				) : hasMore ? (
-					<button
-						onClick={() => loadMoreNews()}
-						className="group relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
-					>
-						<PlusCircle
-							className="mr-2 group-hover:rotate-90 transition-transform"
-							size={20}
-						/>
-						Carregar mais fontes
-					</button>
+					<p className="text-gray-400 dark:text-gray-500 text-sm opacity-0">
+						Carregando mais fontes...
+					</p>
 				) : (
 					filteredNews.length > 0 && (
 						<p className="text-gray-400 dark:text-gray-500 text-sm">
@@ -334,5 +363,7 @@ const Feed = ({
 		</div>
 	);
 };
+
+Feed.displayName = "Feed";
 
 export default Feed;
