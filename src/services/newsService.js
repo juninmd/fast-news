@@ -2,6 +2,7 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://jornaldebrasilia.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.band.uol.com.br/rss", category: "Geral" },
 	{ url: "https://jornal.usp.br/feed/", category: "Brasil" },
 	// --- TECNOLOGIA (MUNDO) ---
