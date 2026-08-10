@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://jornaldebrasilia.com.br/feed/",
+		category: "Brasil",
+		company: "Jornal de Brasília",
+	},
+	{
 		url: "https://www.band.uol.com.br/rss",
 		category: "Geral",
 		company: "Band Notícias",
