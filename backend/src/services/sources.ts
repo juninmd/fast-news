@@ -17,6 +17,11 @@ export const FEED_SOURCES = [
 		category: "Brasil",
 		company: "Jornal da USP",
 	},
+	{
+		url: "https://www.poder360.com.br/feed/",
+		category: "Brasil",
+		company: "Poder360",
+	},
 
 	// ── Cripto ─────────────────────────────────────────────────────────────
 	{

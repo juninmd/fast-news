@@ -5,6 +5,7 @@ export const FEED_SOURCES = [
 	{ url: "https://jornaldebrasilia.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.band.uol.com.br/rss", category: "Geral" },
 	{ url: "https://jornal.usp.br/feed/", category: "Brasil" },
+	{ url: "https://www.poder360.com.br/feed/", category: "Brasil" },
 	// --- TECNOLOGIA (MUNDO) ---
 	{ url: "https://meiobit.com/feed/", category: "Tecnologia" },
 	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
