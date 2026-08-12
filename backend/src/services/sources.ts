@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://g1.globo.com/rss/g1/carros/",
+		category: "Automóveis",
+		company: "G1",
+	},
+	{
 		url: "https://jornaldebrasilia.com.br/feed/",
 		category: "Brasil",
 		company: "Jornal de Brasília",
