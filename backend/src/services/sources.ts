@@ -416,6 +416,11 @@ export const FEED_SOURCES = [
 		company: "GameSpot",
 	},
 	{
+		url: "https://news.xbox.com/pt-br/feed/",
+		category: "Games",
+		company: "Xbox",
+	},
+	{
 		url: "https://www.gamesradar.com/rss/",
 		category: "Gaming",
 		company: "GamesRadar",
