@@ -342,6 +342,8 @@ export const FEED_SOURCES = [
 	{ url: "https://www.discovermagazine.com/feed", category: "Ciência" },
 
 	// --- GAMES ---
+	{ url: "https://blog.playstation.com/feed/", category: "Games" },
+	{ url: "https://news.xbox.com/pt-br/feed/", category: "Games" },
 	{ url: "https://br.ign.com/feed.xml", category: "Games" },
 	{ url: "https://www.nintendolife.com/feeds/latest", category: "Games" },
 	{ url: "https://www.theenemy.com.br/rss", category: "Games" },
