@@ -188,6 +188,7 @@ export const FEED_SOURCES = [
 	{ url: "https://www.brasildefato.com.br/rss2.xml", category: "Brasil" },
 
 	// --- MUNDO ---
+	{ url: "https://www.cnnbrasil.com.br/feed/", category: "Mundo" },
 	{ url: "https://www.rfi.fr/br/rss", category: "Mundo" },
 	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
@@ -230,6 +231,7 @@ export const FEED_SOURCES = [
 	{ url: "https://slate.com/feeds/all.rss", category: "Mundo" },
 
 	// --- NEGÓCIOS & FINANÇAS ---
+	{ url: "https://www.jornaldenegocios.pt/rss", category: "Negócios" },
 	{ url: "https://feeds.bloomberg.com/markets/news.rss", category: "Negócios" },
 	{
 		url: "https://www.cnbc.com/id/10000664/device/rss/rss.html",
