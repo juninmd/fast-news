@@ -227,7 +227,11 @@ Conteúdo: ${cleanContent.slice(0, 4000)}`;
 			"[ingestion] summarizeForEmbedding failed, falling back to raw content:",
 			(e as Error).message.slice(0, 80),
 		);
-		return `${title}. ${content}`.slice(0, 1000);
+		const cleanContentFallback = content
+			.replace(/<\/?[^>]+(>|$)/g, " ")
+			.replace(/\s+/g, " ")
+			.trim();
+		return `${title}. ${cleanContentFallback}`.slice(0, 1000);
 	}
 }
 
