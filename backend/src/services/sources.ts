@@ -479,6 +479,11 @@ export const FEED_SOURCES = [
 
 	// ── Mundo ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.cnnbrasil.com.br/feed/",
+		category: "Mundo",
+		company: "CNN Brasil",
+	},
+	{
 		url: "https://www.aljazeera.com/xml/rss/all.xml",
 		category: "Mundo",
 		company: "Al Jazeera",
@@ -505,6 +510,11 @@ export const FEED_SOURCES = [
 	},
 
 	// ── Negócios ─────────────────────────────────────────────────────────────
+	{
+		url: "https://www.jornaldenegocios.pt/rss",
+		category: "Negócios",
+		company: "Jornal de Negócios",
+	},
 	{ url: "https://exame.com/feed/", category: "Negócios", company: "Exame" },
 	{
 		url: "https://www.infomoney.com.br/feed/",
