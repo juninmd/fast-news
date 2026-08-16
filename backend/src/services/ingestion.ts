@@ -209,6 +209,7 @@ async function summarizeForEmbedding(
 		const model = await getFastModel();
 		const cleanContent = content
 			.replace(/<\/?[^>]+(>|$)/g, " ")
+			.replace(/https?:\/\/\S+/g, " ")
 			.replace(/\s+/g, " ")
 			.trim();
 		const prompt = `Extraia as entidades principais, palavras-chave e o contexto central desta notícia para criar um resumo hiper-denso voltado para busca vetorial. Não inclua jargões genéricos, tags HTML ou introduções. Apenas dados puros (nomes, empresas, locais, eventos) e o fato principal. Limite a 50 palavras.
@@ -229,6 +230,7 @@ Conteúdo: ${cleanContent.slice(0, 4000)}`;
 		);
 		const cleanContentFallback = content
 			.replace(/<\/?[^>]+(>|$)/g, " ")
+			.replace(/https?:\/\/\S+/g, " ")
 			.replace(/\s+/g, " ")
 			.trim();
 		return `${title}. ${cleanContentFallback}`.slice(0, 1000);
