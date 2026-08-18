@@ -55,9 +55,9 @@ export const FEED_SOURCES = [
 
 	// --- TECNOLOGIA (BRASIL) ---
 	{ url: "https://rss.tecmundo.com.br/feed", category: "Tecnologia" },
-	{ url: "https://teletime.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://canaltech.com.br/rss/", category: "Tecnologia" },
 	{ url: "https://canaltech.com.br/rss/produtos", category: "Tecnologia" },
+	{ url: "https://teletime.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://olhardigital.com.br/rss", category: "Tecnologia" },
 	{ url: "https://olhardigital.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://tecnoblog.net/feed/", category: "Tecnologia" },
