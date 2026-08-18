@@ -55,6 +55,9 @@ export const FEED_SOURCES = [
 
 	// --- TECNOLOGIA (BRASIL) ---
 	{ url: "https://rss.tecmundo.com.br/feed", category: "Tecnologia" },
+	{ url: "https://canaltech.com.br/rss/", category: "Tecnologia" },
+	{ url: "https://canaltech.com.br/rss/produtos", category: "Tecnologia" },
+	{ url: "https://rss.tecmundo.com.br/feed", category: "Tecnologia" },
 	{ url: "https://teletime.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://canaltech.com.br/rss/", category: "Tecnologia" },
 	{ url: "https://canaltech.com.br/rss/produtos", category: "Tecnologia" },
@@ -292,6 +295,7 @@ export const FEED_SOURCES = [
 	{ url: "https://blog.coinbase.com/feed", category: "Cripto" },
 
 	// --- CIÊNCIA & ESPAÇO ---
+	{ url: "https://canaltech.com.br/rss/ciencia", category: "Ciência" },
 	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
 		category: "Ciência",
