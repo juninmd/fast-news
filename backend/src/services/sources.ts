@@ -642,6 +642,21 @@ export const FEED_SOURCES = [
 
 	// ── Tecnologia ─────────────────────────────────────────────────────────────
 	{
+		url: "https://rss.tecmundo.com.br/feed",
+		category: "Tecnologia",
+		company: "TecMundo",
+	},
+	{
+		url: "https://canaltech.com.br/rss/",
+		category: "Tecnologia",
+		company: "Canaltech",
+	},
+	{
+		url: "https://canaltech.com.br/rss/produtos",
+		category: "Tecnologia",
+		company: "Canaltech",
+	},
+	{
 		url: "https://www.tudocelular.com/rss/",
 		category: "Tecnologia",
 		company: "TudoCelular",
@@ -661,6 +676,13 @@ export const FEED_SOURCES = [
 		url: "https://www.infoworld.com/feed/",
 		category: "Tecnologia",
 		company: "InfoWorld",
+	},
+
+	// ── Ciência ─────────────────────────────────────────────────────────────
+	{
+		url: "https://canaltech.com.br/rss/ciencia",
+		category: "Ciência",
+		company: "Canaltech",
 	},
 
 	// ── fact_check ─────────────────────────────────────────────────────────────
