@@ -22,7 +22,7 @@ const Settings = ({
 		() => localStorage.getItem("rss2json_api_key") || "",
 	);
 	const [autoSummarize, setAutoSummarize] = useState(
-		() => localStorage.getItem("auto_summarize") === "true",
+		() => localStorage.getItem("auto_summarize") !== "false",
 	);
 	const [customFeeds, setCustomFeeds] = useState(initialCustomFeeds);
 	const [newFeedUrl, setNewFeedUrl] = useState("");
