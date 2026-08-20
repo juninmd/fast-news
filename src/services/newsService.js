@@ -31,6 +31,11 @@ export const FEED_SOURCES = [
 	{ url: "https://thenextweb.com/feed/", category: "Tecnologia" },
 	{ url: "https://mashable.com/feed/", category: "Tecnologia" },
 	{ url: "https://gizmodo.com/rss", category: "Tecnologia" },
+	{
+		url: "https://www.gizmodo.com.br/feed",
+		category: "Tecnologia",
+		company: "Gizmodo Brasil",
+	},
 	{ url: "https://9to5mac.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.macrumors.com/macrumors.xml", category: "Tecnologia" },
 	{ url: "https://www.androidauthority.com/feed/", category: "Tecnologia" },
