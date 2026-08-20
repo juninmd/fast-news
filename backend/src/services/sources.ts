@@ -673,6 +673,11 @@ export const FEED_SOURCES = [
 		company: "Wired",
 	},
 	{
+		url: "https://www.gizmodo.com.br/feed",
+		category: "Tecnologia",
+		company: "Gizmodo Brasil",
+	},
+	{
 		url: "https://www.infoworld.com/feed/",
 		category: "Tecnologia",
 		company: "InfoWorld",
