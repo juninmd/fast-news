@@ -43,13 +43,21 @@ describe("newsService", () => {
 			],
 		};
 
-		fetch
-			.mockResolvedValueOnce({
-				json: () => Promise.resolve(mockResponse1),
-			})
-			.mockResolvedValueOnce({
-				json: () => Promise.resolve(mockResponse2),
+		fetch.mockImplementation((url) => {
+			if (url.includes("source1.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse1),
+				});
+			}
+			if (url.includes("source2.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse2),
+				});
+			}
+			return Promise.resolve({
+				json: () => Promise.resolve({ status: "error" }),
 			});
+		});
 
 		const news = await fetchNews(mockSources);
 
@@ -112,8 +120,15 @@ describe("newsService", () => {
 			],
 		};
 
-		fetch.mockResolvedValueOnce({
-			json: () => Promise.resolve(mockResponse),
+		fetch.mockImplementation((url) => {
+			if (url.includes("source1.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse),
+				});
+			}
+			return Promise.resolve({
+				json: () => Promise.resolve({ status: "error" }),
+			});
 		});
 
 		const news = await fetchNews(mockSources);
