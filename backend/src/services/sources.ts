@@ -33,6 +33,13 @@ export const FEED_SOURCES = [
 		company: "Poder360",
 	},
 
+	// ── Esportes ─────────────────────────────────────────────────────────────
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml",
+		category: "Esportes",
+		company: "NYT",
+	},
+
 	// ── Cripto ─────────────────────────────────────────────────────────────
 	{
 		url: "https://cointelegraph.com/rss",
