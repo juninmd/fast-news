@@ -43,13 +43,21 @@ describe("newsService", () => {
 			],
 		};
 
-		fetch
-			.mockResolvedValueOnce({
-				json: () => Promise.resolve(mockResponse1),
-			})
-			.mockResolvedValueOnce({
-				json: () => Promise.resolve(mockResponse2),
+		fetch.mockImplementation((url) => {
+			if (url.includes("source1.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse1),
+				});
+			}
+			if (url.includes("source2.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse2),
+				});
+			}
+			return Promise.resolve({
+				json: () => Promise.resolve({ status: "error" }),
 			});
+		});
 
 		const news = await fetchNews(mockSources);
 
@@ -86,8 +94,15 @@ describe("newsService", () => {
 	it("should ignore failed api responses (status != ok)", async () => {
 		const mockSources = [{ url: "http://source1.com/rss", category: "Tech" }];
 
-		fetch.mockResolvedValueOnce({
-			json: () => Promise.resolve({ status: "error" }),
+		fetch.mockImplementation((url) => {
+			if (url.includes("source1.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve({ status: "error" }),
+				});
+			}
+			return Promise.resolve({
+				json: () => Promise.resolve({ status: "error" }),
+			});
 		});
 
 		const news = await fetchNews(mockSources);
@@ -112,8 +127,15 @@ describe("newsService", () => {
 			],
 		};
 
-		fetch.mockResolvedValueOnce({
-			json: () => Promise.resolve(mockResponse),
+		fetch.mockImplementation((url) => {
+			if (url.includes("source1.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse),
+				});
+			}
+			return Promise.resolve({
+				json: () => Promise.resolve({ status: "error" }),
+			});
 		});
 
 		const news = await fetchNews(mockSources);
@@ -142,8 +164,15 @@ describe("newsService", () => {
 			],
 		};
 
-		fetch.mockResolvedValueOnce({
-			json: () => Promise.resolve(mockResponse),
+		fetch.mockImplementation((url) => {
+			if (url.includes("source1.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse),
+				});
+			}
+			return Promise.resolve({
+				json: () => Promise.resolve({ status: "error" }),
+			});
 		});
 
 		const news = await fetchNews(mockSources);
@@ -162,8 +191,15 @@ describe("newsService", () => {
 			],
 		};
 
-		fetch.mockResolvedValueOnce({
-			json: () => Promise.resolve(mockResponse),
+		fetch.mockImplementation((url) => {
+			if (url.includes("source1.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse),
+				});
+			}
+			return Promise.resolve({
+				json: () => Promise.resolve({ status: "error" }),
+			});
 		});
 
 		const news = await fetchNews(mockSources);
@@ -221,8 +257,15 @@ describe("newsService", () => {
 			],
 		};
 
-		fetch.mockResolvedValueOnce({
-			json: () => Promise.resolve(mockResponse2),
+		fetch.mockImplementation((url) => {
+			if (url.includes("source1.com")) {
+				return Promise.resolve({
+					json: () => Promise.resolve(mockResponse2),
+				});
+			}
+			return Promise.resolve({
+				json: () => Promise.resolve({ status: "error" }),
+			});
 		});
 
 		const news = await fetchNews(mockSources);
