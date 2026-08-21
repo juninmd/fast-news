@@ -375,6 +375,10 @@ export const FEED_SOURCES = [
 
 	// --- ESPORTES ---
 	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml",
+		category: "Esportes",
+	},
+	{
 		url: "https://www.uol.com.br/esporte/ultimas-noticias/rss.xml",
 		category: "Esportes",
 	},
