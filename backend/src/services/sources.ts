@@ -336,11 +336,7 @@ export const FEED_SOURCES = [
 		category: "Negócios",
 		company: "Metrópoles",
 	},
-	{
-		url: "https://www.poder360.com.br/feed/",
-		category: "Brasil",
-		company: "Poder360",
-	},
+
 	{
 		url: "https://tecnoblog.net/feed/",
 		category: "Brasil",
@@ -566,11 +562,6 @@ export const FEED_SOURCES = [
 	},
 
 	// ── Mundo ─────────────────────────────────────────────────────────────
-	{
-		url: "https://www.cnnbrasil.com.br/feed/",
-		category: "Mundo",
-		company: "CNN Brasil",
-	},
 	{
 		url: "https://www.aljazeera.com/xml/rss/all.xml",
 		category: "Mundo",

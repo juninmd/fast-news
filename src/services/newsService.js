@@ -112,7 +112,6 @@ export const FEED_SOURCES = [
 	{ url: "https://olhardigital.com.br/rss", category: "Tecnologia" },
 	{ url: "https://olhardigital.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://tecnoblog.net/feed/", category: "Tecnologia" },
-	{ url: "https://meiobit.com/feed/", category: "Tecnologia" },
 	{ url: "https://mundoconectado.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://www.tudocelular.com/rss/", category: "Tecnologia" },
 	{ url: "https://macmagazine.com.br/feed/", category: "Tecnologia" },
@@ -173,7 +172,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.cnnbrasil.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.estadao.com.br/rss/ultimas", category: "Brasil" },
 	{ url: "https://www.poder360.com.br/feed", category: "Brasil" },
-	{ url: "https://www.poder360.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.cartacapital.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.bbc.com/portuguese/index.xml", category: "Brasil" },
 	{ url: "https://veja.abril.com.br/feed/", category: "Brasil" },
@@ -198,7 +196,6 @@ export const FEED_SOURCES = [
 		url: "https://noticias.uol.com.br/ultimas-noticias/rss.xml",
 		category: "Geral",
 	},
-	{ url: "https://www.cnnbrasil.com.br/feed/", category: "Geral" },
 	{
 		url: "https://www.em.com.br/rss/noticia/gerais/rss.xml",
 		category: "Geral",
@@ -219,10 +216,6 @@ export const FEED_SOURCES = [
 	{ url: "https://g1.globo.com/rss/g1/educacao/", category: "Brasil" },
 	{ url: "https://apublica.org/feed/", category: "Brasil" },
 	{ url: "https://joioeotrigo.com.br/feed/", category: "Brasil" },
-	{
-		url: "https://www.correiobraziliense.com.br/rss/noticia/brasil/rss.xml",
-		category: "Brasil",
-	},
 	{ url: "https://br.noticias.yahoo.com/rss", category: "Brasil" },
 	{ url: "https://agenciapublica.org/feed/", category: "Brasil" },
 	{ url: "https://piaui.folha.uol.com.br/feed/", category: "Brasil" },
@@ -239,7 +232,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.brasildefato.com.br/rss2.xml", category: "Brasil" },
 
 	// --- MUNDO ---
-	{ url: "https://www.cnnbrasil.com.br/feed/", category: "Mundo" },
 	{ url: "https://www.rfi.fr/br/rss", category: "Mundo" },
 	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
