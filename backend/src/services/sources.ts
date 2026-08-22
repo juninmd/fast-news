@@ -3,6 +3,82 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml",
+		category: "Brasil",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/ilustrada/rss091.xml",
+		category: "Entretenimento",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/esporte/rss091.xml",
+		category: "Esportes",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/cotidiano/rss091.xml",
+		category: "Brasil",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/educacao/rss091.xml",
+		category: "Educação",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/tec/rss091.xml",
+		category: "Tecnologia",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/ambiente/rss091.xml",
+		category: "Ciência",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/equilibrioesaude/rss091.xml",
+		category: "Saúde",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/turismo/rss091.xml",
+		category: "Geral",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/comida/rss091.xml",
+		category: "Geral",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://rss.uol.com.br/feed/economia.xml",
+		category: "Negócios",
+		company: "UOL",
+	},
+	{
+		url: "https://rss.uol.com.br/feed/tecnologia.xml",
+		category: "Tecnologia",
+		company: "UOL",
+	},
+	{
+		url: "https://rss.uol.com.br/feed/carros.xml",
+		category: "Automóveis",
+		company: "UOL",
+	},
+	{
+		url: "https://rss.uol.com.br/feed/jogos.xml",
+		category: "Tecnologia",
+		company: "UOL",
+	},
+	{
+		url: "https://rss.uol.com.br/feed/educacao.xml",
+		category: "Educação",
+		company: "UOL",
+	},
+	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{
 		url: "https://g1.globo.com/rss/g1/tecnologia/",
 		category: "Tecnologia",
 		company: "G1",
@@ -260,11 +336,7 @@ export const FEED_SOURCES = [
 		category: "Negócios",
 		company: "Metrópoles",
 	},
-	{
-		url: "https://www.poder360.com.br/feed/",
-		category: "Brasil",
-		company: "Poder360",
-	},
+
 	{
 		url: "https://tecnoblog.net/feed/",
 		category: "Brasil",
@@ -490,11 +562,6 @@ export const FEED_SOURCES = [
 	},
 
 	// ── Mundo ─────────────────────────────────────────────────────────────
-	{
-		url: "https://www.cnnbrasil.com.br/feed/",
-		category: "Mundo",
-		company: "CNN Brasil",
-	},
 	{
 		url: "https://www.aljazeera.com/xml/rss/all.xml",
 		category: "Mundo",

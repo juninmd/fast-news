@@ -2,6 +2,52 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://feeds.folha.uol.com.br/mercado/rss091.xml",
+		category: "Negócios",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/ilustrada/rss091.xml",
+		category: "Entretenimento",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/esporte/rss091.xml",
+		category: "Esportes",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/cotidiano/rss091.xml",
+		category: "Brasil",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/educacao/rss091.xml",
+		category: "Educação",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/tec/rss091.xml",
+		category: "Tecnologia",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/ambiente/rss091.xml",
+		category: "Ciência",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/equilibrioesaude/rss091.xml",
+		category: "Saúde",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/turismo/rss091.xml",
+		category: "Geral",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/comida/rss091.xml",
+		category: "Geral",
+	},
+	{ url: "https://rss.uol.com.br/feed/economia.xml", category: "Negócios" },
+	{ url: "https://rss.uol.com.br/feed/tecnologia.xml", category: "Tecnologia" },
+	{ url: "https://rss.uol.com.br/feed/carros.xml", category: "Automóveis" },
+	{ url: "https://rss.uol.com.br/feed/jogos.xml", category: "Tecnologia" },
+	{ url: "https://rss.uol.com.br/feed/educacao.xml", category: "Educação" },
+	// --- EXPANSÃO CONTÍNUA ---
 	{ url: "https://g1.globo.com/rss/g1/carros/", category: "Automóveis" },
 	{ url: "https://jornaldebrasilia.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.band.uol.com.br/rss", category: "Geral" },
@@ -66,7 +112,6 @@ export const FEED_SOURCES = [
 	{ url: "https://olhardigital.com.br/rss", category: "Tecnologia" },
 	{ url: "https://olhardigital.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://tecnoblog.net/feed/", category: "Tecnologia" },
-	{ url: "https://meiobit.com/feed/", category: "Tecnologia" },
 	{ url: "https://mundoconectado.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://www.tudocelular.com/rss/", category: "Tecnologia" },
 	{ url: "https://macmagazine.com.br/feed/", category: "Tecnologia" },
@@ -127,7 +172,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.cnnbrasil.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.estadao.com.br/rss/ultimas", category: "Brasil" },
 	{ url: "https://www.poder360.com.br/feed", category: "Brasil" },
-	{ url: "https://www.poder360.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.cartacapital.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.bbc.com/portuguese/index.xml", category: "Brasil" },
 	{ url: "https://veja.abril.com.br/feed/", category: "Brasil" },
@@ -152,7 +196,6 @@ export const FEED_SOURCES = [
 		url: "https://noticias.uol.com.br/ultimas-noticias/rss.xml",
 		category: "Geral",
 	},
-	{ url: "https://www.cnnbrasil.com.br/feed/", category: "Geral" },
 	{
 		url: "https://www.em.com.br/rss/noticia/gerais/rss.xml",
 		category: "Geral",
@@ -173,10 +216,6 @@ export const FEED_SOURCES = [
 	{ url: "https://g1.globo.com/rss/g1/educacao/", category: "Brasil" },
 	{ url: "https://apublica.org/feed/", category: "Brasil" },
 	{ url: "https://joioeotrigo.com.br/feed/", category: "Brasil" },
-	{
-		url: "https://www.correiobraziliense.com.br/rss/noticia/brasil/rss.xml",
-		category: "Brasil",
-	},
 	{ url: "https://br.noticias.yahoo.com/rss", category: "Brasil" },
 	{ url: "https://agenciapublica.org/feed/", category: "Brasil" },
 	{ url: "https://piaui.folha.uol.com.br/feed/", category: "Brasil" },
@@ -193,7 +232,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.brasildefato.com.br/rss2.xml", category: "Brasil" },
 
 	// --- MUNDO ---
-	{ url: "https://www.cnnbrasil.com.br/feed/", category: "Mundo" },
 	{ url: "https://www.rfi.fr/br/rss", category: "Mundo" },
 	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
