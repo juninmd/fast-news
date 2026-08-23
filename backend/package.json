@@ -8,6 +8,7 @@
 		"build": "tsc && node -e \"const fs=require('fs'); fs.mkdirSync('dist/database',{recursive:true}); for (const f of fs.readdirSync('src/database').filter(f=>f.endsWith('.sql'))) fs.copyFileSync('src/database/'+f,'dist/database/'+f)\"",
 		"start": "node dist/index.js",
 		"db:migrate": "tsx src/database/migrate.ts",
+		"homolog:ingestion": "tsx scripts/homolog-ingestion.ts",
 		"lint": "biome check --write src"
 	},
 	"dependencies": {

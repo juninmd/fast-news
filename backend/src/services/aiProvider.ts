@@ -83,17 +83,26 @@ export async function getFastModel(): Promise<LanguageModel> {
 	return registry.languageModel(`${p}:${id}`);
 }
 
+/**
+ * Model id embeddings will actually run against. Callers use it to pick the
+ * model's task prefixes (nomic/E5/BGE) and to key the embedding cache, so a
+ * model swap never reuses vectors from the previous one.
+ */
+export function getEmbeddingModelId(): string {
+	const p = provider();
+	if (p === "google") return config.ai.embeddingModel || "text-embedding-004";
+	if (p === "openai")
+		return config.ai.embeddingModel || "text-embedding-3-small";
+	return config.ollama.embeddingModel;
+}
+
 export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
 	const p = provider();
 	if (p === "google") {
-		return google.textEmbeddingModel(
-			config.ai.embeddingModel || "text-embedding-004",
-		);
+		return google.textEmbeddingModel(getEmbeddingModelId());
 	}
 	if (p === "openai") {
-		return openaiProvider.embedding(
-			config.ai.embeddingModel || "text-embedding-3-small",
-		);
+		return openaiProvider.embedding(getEmbeddingModelId());
 	}
 	// Always use native Ollama (createOllama) for embeddings, even when the
 	// main inference provider points to LiteLLM/OpenAI-compat endpoint.
