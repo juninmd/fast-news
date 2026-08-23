@@ -587,6 +587,11 @@ export const FEED_SOURCES = [
 		category: "Mundo",
 		company: "The Guardian",
 	},
+	{
+		url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada",
+		category: "Mundo",
+		company: "El País Brasil",
+	},
 
 	// ── Negócios ─────────────────────────────────────────────────────────────
 	{
