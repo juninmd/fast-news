@@ -1,3 +1,9 @@
+import {
+	cleanMarkdownLine,
+	plainText,
+	stripReaderChrome,
+} from "../utils/text.js";
+
 const STOP_SECTIONS = [
 	"leia tambem",
 	"leia também",
@@ -27,29 +33,8 @@ const NOISE_PATTERNS = [
 	/clique aqui|click here|voltar ao topo/i,
 ];
 
-function stripReaderChrome(text: string): string {
-	return text
-		.replace(/^Title:.*$/gim, "")
-		.replace(/^URL Source:.*$/gim, "")
-		.replace(/^Markdown Content:\s*/gim, "")
-		.replace(/\r/g, "")
-		.trim();
-}
-
-function plain(value = ""): string {
-	return value
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-		.replace(/\[[^\]]+\]\([^)]*\)/g, "$1")
-		.replace(/[#*_`>[\]()|:.,;!?'"-]/g, " ")
-		.replace(/\s+/g, " ")
-		.trim()
-		.toLowerCase();
-}
-
 function isNoise(line: string): boolean {
-	const normalized = plain(line);
+	const normalized = plainText(line);
 	if (!normalized) return true;
 	if (/^https?:\/\//i.test(line)) return true;
 	if (line.length < 28 && !/[.!?]$/.test(line)) return true;
@@ -57,24 +42,14 @@ function isNoise(line: string): boolean {
 }
 
 function isStopSection(line: string): boolean {
-	const normalized = plain(line);
+	const normalized = plainText(line);
 	return STOP_SECTIONS.some(
 		(s) => normalized === s || normalized.startsWith(`${s} `),
 	);
 }
 
-function cleanLine(line: string): string {
-	return line
-		.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-		.replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
-		.replace(/^\s{0,3}#{1,6}\s*/, "")
-		.replace(/^\s*[-*]\s+/, "")
-		.replace(/\s+/g, " ")
-		.trim();
-}
-
 function extractArticleText(markdown: string): string {
-	const lines = stripReaderChrome(markdown).split("\n").map(cleanLine);
+	const lines = stripReaderChrome(markdown).split("\n").map(cleanMarkdownLine);
 	const picked: string[] = [];
 	for (const line of lines) {
 		if (picked.join("\n\n").length > 700 && isStopSection(line)) break;

@@ -1,3 +1,9 @@
+import {
+	cleanMarkdownLine,
+	plainText,
+	stripReaderChrome,
+} from "../utils/text.js";
+
 const STOP_SECTIONS = [
 	"leia tambem",
 	"leia também",
@@ -27,49 +33,21 @@ const NOISE_PATTERNS = [
 	/clique aqui|click here|voltar ao topo/i,
 ];
 
-const stripReaderChrome = (text) =>
-	text
-		.replace(/^Title:.*$/gim, "")
-		.replace(/^URL Source:.*$/gim, "")
-		.replace(/^Markdown Content:\s*/gim, "")
-		.replace(/\r/g, "")
-		.trim();
-
-const plain = (value = "") =>
-	value
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/!\[[^\]]*]\([^)]*\)/g, "")
-		.replace(/\[[^\]]+]\([^)]*\)/g, "$1")
-		.replace(/[#*_`>[\]()|:.,;!?'"-]/g, " ")
-		.replace(/\s+/g, " ")
-		.trim()
-		.toLowerCase();
-
 const titleWords = (title) =>
-	plain(title)
+	plainText(title)
 		.split(" ")
 		.filter((word) => word.length > 3);
 
 const resemblesTitle = (line, articleTitle) => {
 	const words = titleWords(articleTitle);
 	if (words.length < 3) return false;
-	const normalized = plain(line);
+	const normalized = plainText(line);
 	const hits = words.filter((word) => normalized.includes(word)).length;
 	return hits >= Math.min(5, Math.ceil(words.length * 0.55));
 };
 
-const cleanLine = (line) =>
-	line
-		.replace(/!\[[^\]]*]\([^)]*\)/g, "")
-		.replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
-		.replace(/^\s{0,3}#{1,6}\s*/, "")
-		.replace(/^\s*[-*]\s+/, "")
-		.replace(/\s+/g, " ")
-		.trim();
-
 const isNoise = (line) => {
-	const normalized = plain(line);
+	const normalized = plainText(line);
 	if (!normalized) return true;
 	if (/^https?:\/\//i.test(line)) return true;
 	if (line.length < 28 && !/[.!?]$/.test(line)) return true;
@@ -77,14 +55,14 @@ const isNoise = (line) => {
 };
 
 const isStopSection = (line) => {
-	const normalized = plain(line);
+	const normalized = plainText(line);
 	return STOP_SECTIONS.some(
 		(section) => normalized === section || normalized.startsWith(`${section} `),
 	);
 };
 
 export function extractArticleText(markdown, article) {
-	const lines = stripReaderChrome(markdown).split("\n").map(cleanLine);
+	const lines = stripReaderChrome(markdown).split("\n").map(cleanMarkdownLine);
 	const titleIndex = lines.findIndex((line) =>
 		resemblesTitle(line, article?.title),
 	);
@@ -108,7 +86,7 @@ export function extractArticleText(markdown, article) {
 const hasEnoughTitleContext = (text, article) => {
 	const words = titleWords(article?.title);
 	if (!words.length) return true;
-	const normalized = plain(text);
+	const normalized = plainText(text);
 	const hits = words.filter((word) => normalized.includes(word)).length;
 	return hits >= Math.min(4, Math.ceil(words.length * 0.35));
 };
