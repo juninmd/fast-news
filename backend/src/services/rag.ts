@@ -1,7 +1,7 @@
-import { createHash } from "crypto";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { searchInsights, searchVectors } from "../database/vectorStore.js";
+import { generateCacheKey } from "../utils/crypto.js";
 import { cacheGet, cacheSet } from "./cache.js";
 import { embedQuery } from "./embeddings.js";
 
@@ -31,7 +31,7 @@ export async function searchSimilarArticles(
 	daysBack = 30,
 	limit = config.rag.topK,
 ): Promise<ArticleResult[]> {
-	const cacheKey = `rag:articles:${createHash("sha256").update(`${queryText}:${daysBack}:${limit}`).digest("hex").slice(0, 32)}`;
+	const cacheKey = generateCacheKey("rag:articles", queryText, daysBack, limit);
 	const cached = await cacheGet<ArticleResult[]>(cacheKey);
 	if (cached) return cached;
 
@@ -61,7 +61,7 @@ export async function searchSimilarInsights(
 	queryText: string,
 	limit = 5,
 ): Promise<InsightResult[]> {
-	const cacheKey = `rag:insights:${createHash("sha256").update(`${queryText}:${limit}`).digest("hex").slice(0, 32)}`;
+	const cacheKey = generateCacheKey("rag:insights", queryText, limit);
 	const cached = await cacheGet<InsightResult[]>(cacheKey);
 	if (cached) return cached;
 

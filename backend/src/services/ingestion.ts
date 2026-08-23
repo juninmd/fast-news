@@ -4,6 +4,7 @@ import Parser from "rss-parser";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
+import { stripHtml } from "../utils/text.js";
 import { getFastModel } from "./aiProvider.js";
 import { buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
@@ -207,11 +208,7 @@ async function summarizeForEmbedding(
 ): Promise<string> {
 	try {
 		const model = await getFastModel();
-		const cleanContent = content
-			.replace(/<\/?[^>]+(>|$)/g, " ")
-			.replace(/https?:\/\/\S+/g, " ")
-			.replace(/\s+/g, " ")
-			.trim();
+		const cleanContent = stripHtml(content);
 		const prompt = `Extraia as entidades principais, palavras-chave e o contexto central desta notícia para criar um resumo hiper-denso voltado para busca vetorial. Não inclua jargões genéricos, tags HTML ou introduções. Apenas dados puros (nomes, empresas, locais, eventos) e o fato principal. Limite a 50 palavras.
 
 Título: ${title}
@@ -228,11 +225,7 @@ Conteúdo: ${cleanContent.slice(0, 4000)}`;
 			"[ingestion] summarizeForEmbedding failed, falling back to raw content:",
 			(e as Error).message.slice(0, 80),
 		);
-		const cleanContentFallback = content
-			.replace(/<\/?[^>]+(>|$)/g, " ")
-			.replace(/https?:\/\/\S+/g, " ")
-			.replace(/\s+/g, " ")
-			.trim();
+		const cleanContentFallback = stripHtml(content);
 		return `${title}. ${cleanContentFallback}`.slice(0, 1000);
 	}
 }
