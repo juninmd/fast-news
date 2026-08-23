@@ -4,6 +4,8 @@ import { query } from "../database/client.js";
 import { searchInsights, searchVectors } from "../database/vectorStore.js";
 import { cacheGet, cacheSet } from "./cache.js";
 import { embedQuery } from "./embeddings.js";
+import { cleanForEmbedding, truncateOnBoundary } from "./embeddingText.js";
+import { rerankArticles } from "./ragRanking.js";
 
 export interface ArticleResult {
 	id: string;
@@ -26,19 +28,35 @@ export interface InsightResult {
 	similarity: number;
 }
 
+/**
+ * Normalizes free text into a query string worth embedding: strips markup and
+ * URLs, then trims to the model budget on a sentence boundary. Callers often
+ * pass a whole article ("more like this"), where the raw tail is pure noise.
+ */
+export function buildSearchQuery(queryText: string): string {
+	return truncateOnBoundary(cleanForEmbedding(queryText), 1_000);
+}
+
 export async function searchSimilarArticles(
 	queryText: string,
 	daysBack = 30,
 	limit = config.rag.topK,
 ): Promise<ArticleResult[]> {
-	const cacheKey = `rag:articles:${createHash("sha256").update(`${queryText}:${daysBack}:${limit}`).digest("hex").slice(0, 32)}`;
+	const normalizedQuery = buildSearchQuery(queryText);
+	const cacheKey = `rag:articles:${createHash("sha256").update(`${normalizedQuery}:${daysBack}:${limit}`).digest("hex").slice(0, 32)}`;
 	const cached = await cacheGet<ArticleResult[]>(cacheKey);
 	if (cached) return cached;
+	if (!normalizedQuery) return [];
 
-	const embedding = await embedQuery(queryText);
-	const results = await searchVectors(embedding, limit, {
+	const embedding = await embedQuery(normalizedQuery);
+	// Over-fetch, then re-rank: dedup and recency need spare candidates to work with.
+	const candidateLimit = Math.max(
+		limit,
+		Math.ceil(limit * config.rag.candidateMultiplier),
+	);
+	const results = await searchVectors(embedding, candidateLimit, {
 		daysBack,
-		minSimilarity: 0.55,
+		minSimilarity: config.rag.minSimilarity,
 	});
 
 	const mapped: ArticleResult[] = results.map((r) => ({
@@ -53,8 +71,14 @@ export async function searchSimilarArticles(
 		similarity: r.similarity,
 	}));
 
-	await cacheSet(cacheKey, mapped, 1800);
-	return mapped;
+	const ranked = rerankArticles(mapped, {
+		halfLifeDays: config.rag.recencyHalfLifeDays,
+		maxPerSource: config.rag.maxPerSource,
+		limit,
+	});
+
+	await cacheSet(cacheKey, ranked, 1800);
+	return ranked;
 }
 
 export async function searchSimilarInsights(
@@ -65,8 +89,12 @@ export async function searchSimilarInsights(
 	const cached = await cacheGet<InsightResult[]>(cacheKey);
 	if (cached) return cached;
 
-	const embedding = await embedQuery(queryText);
-	const results = await searchInsights(embedding, limit, 0.55);
+	const embedding = await embedQuery(buildSearchQuery(queryText));
+	const results = await searchInsights(
+		embedding,
+		limit,
+		config.rag.minSimilarity,
+	);
 
 	await cacheSet(cacheKey, results, 1800);
 	return results;

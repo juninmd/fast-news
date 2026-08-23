@@ -1,105 +1,96 @@
-const STOP_SECTIONS = [
-	"leia tambem",
-	"leia também",
-	"mais lidas",
-	"mais noticias",
-	"mais notícias",
-	"relacionadas",
-	"related stories",
-	"related articles",
-	"recommended",
-	"newsletter",
-	"publicidade",
-	"advertisement",
-	"comments",
-	"comentarios",
-	"compartilhe",
-	"share this",
-	"siga-nos",
-	"follow us",
-];
+import {
+	extractArticleText,
+	isUsableArticleText,
+	MIN_TITLE_COVERAGE,
+	sanitizeFeedContent,
+	stripHtml,
+	titleCoverage,
+} from "./articleText.js";
 
-const NOISE_PATTERNS = [
-	/^(menu|buscar|search|login|assine|subscribe|entrar|cadastre-se)$/i,
-	/^(facebook|twitter|x|whatsapp|telegram|linkedin|instagram)$/i,
-	/cookie|privacy policy|politica de privacidade|termos de uso/i,
-	/all rights reserved|todos os direitos reservados/i,
-	/clique aqui|click here|voltar ao topo/i,
-];
+const READER_TIMEOUT_MS = 15_000;
+const DIRECT_TIMEOUT_MS = 12_000;
 
-function stripReaderChrome(text: string): string {
-	return text
-		.replace(/^Title:.*$/gim, "")
-		.replace(/^URL Source:.*$/gim, "")
-		.replace(/^Markdown Content:\s*/gim, "")
-		.replace(/\r/g, "")
-		.trim();
+export interface FullArticleOptions {
+	/** Headline — anchors extraction and validates that the right page was read. */
+	title?: string;
+	/** RSS summary used when the fetched body fails the quality gate. */
+	fallback?: string;
+	signal?: AbortSignal;
 }
 
-function plain(value = ""): string {
-	return value
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-		.replace(/\[[^\]]+\]\([^)]*\)/g, "$1")
-		.replace(/[#*_`>[\]()|:.,;!?'"-]/g, " ")
-		.replace(/\s+/g, " ")
-		.trim()
-		.toLowerCase();
+async function fetchReaderMarkdown(
+	url: string,
+	signal?: AbortSignal,
+): Promise<string> {
+	const response = await fetch(`https://r.jina.ai/${url}`, {
+		signal: signal ?? AbortSignal.timeout(READER_TIMEOUT_MS),
+		headers: { Accept: "text/plain" },
+	});
+	if (!response.ok) throw new Error(`Reader HTTP ${response.status}`);
+	return response.text();
 }
 
-function isNoise(line: string): boolean {
-	const normalized = plain(line);
-	if (!normalized) return true;
-	if (/^https?:\/\//i.test(line)) return true;
-	if (line.length < 28 && !/[.!?]$/.test(line)) return true;
-	return NOISE_PATTERNS.some((p) => p.test(line));
+/** Last resort when the reader is down: pull the page and keep its `<article>`. */
+async function fetchDirectHtml(
+	url: string,
+	signal?: AbortSignal,
+): Promise<string> {
+	const response = await fetch(url, {
+		signal: signal ?? AbortSignal.timeout(DIRECT_TIMEOUT_MS),
+		headers: {
+			"User-Agent": "FastNews/1.0 (+https://github.com/juninmd/fast-news)",
+			Accept: "text/html,application/xhtml+xml",
+		},
+	});
+	if (!response.ok) throw new Error(`HTTP ${response.status}`);
+	const html = await response.text();
+	const body =
+		html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1] ??
+		html.match(
+			/<div[^>]+(?:class|id)\s*=\s*["'][^"']*(?:article|content|post)-?(?:body|text|content)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
+		)?.[1] ??
+		html;
+	return stripHtml(body);
 }
 
-function isStopSection(line: string): boolean {
-	const normalized = plain(line);
-	return STOP_SECTIONS.some(
-		(s) => normalized === s || normalized.startsWith(`${s} `),
-	);
-}
+/**
+ * Best-effort full text for an article URL.
+ *
+ * Tries the reader service, falls back to fetching the page directly, and
+ * accepts a result only when it looks like article prose about *this* headline.
+ * Otherwise returns the sanitized RSS summary — a short accurate summary beats
+ * a long body full of another page's content.
+ */
+export async function fetchFullArticle(
+	url: string,
+	options: FullArticleOptions = {},
+): Promise<string> {
+	const { title, fallback = "", signal } = options;
+	const cleanFallback = sanitizeFeedContent(fallback);
+	if (!url) return cleanFallback;
 
-function cleanLine(line: string): string {
-	return line
-		.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-		.replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
-		.replace(/^\s{0,3}#{1,6}\s*/, "")
-		.replace(/^\s*[-*]\s+/, "")
-		.replace(/\s+/g, " ")
-		.trim();
-}
+	const attempts: Array<() => Promise<string>> = [
+		() => fetchReaderMarkdown(url, signal),
+		() => fetchDirectHtml(url, signal),
+	];
 
-function extractArticleText(markdown: string): string {
-	const lines = stripReaderChrome(markdown).split("\n").map(cleanLine);
-	const picked: string[] = [];
-	for (const line of lines) {
-		if (picked.join("\n\n").length > 700 && isStopSection(line)) break;
-		if (isNoise(line) || isStopSection(line)) continue;
-		if (picked[picked.length - 1] === line) continue;
-		picked.push(line);
-		if (picked.join("\n\n").length > 8000) break;
+	let best = "";
+	for (const attempt of attempts) {
+		let raw: string;
+		try {
+			raw = await attempt();
+		} catch {
+			continue;
+		}
+		const text = extractArticleText(raw, { title });
+		if (isUsableArticleText(text, { title })) return text;
+		// Keep the longest near-miss: better than nothing if every attempt fails.
+		if (text.length > best.length) best = text;
 	}
-	return picked
-		.join("\n\n")
-		.replace(/\n{3,}/g, "\n\n")
-		.trim();
-}
 
-export async function fetchFullArticle(url: string): Promise<string> {
-	const ac = new AbortController();
-	const t = setTimeout(() => ac.abort(), 15_000);
-	try {
-		const resp = await fetch(`https://r.jina.ai/${url}`, {
-			signal: ac.signal,
-			headers: { Accept: "text/plain" },
-		});
-		if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-		return extractArticleText(await resp.text());
-	} finally {
-		clearTimeout(t);
-	}
+	if (!cleanFallback) return best;
+	// A near-miss still wins when it is clearly richer and stays on topic.
+	const richer = best.length > cleanFallback.length + 400;
+	const onTopic = !title || titleCoverage(best, title) >= MIN_TITLE_COVERAGE;
+	return richer && onTopic ? best : cleanFallback;
 }
