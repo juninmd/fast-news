@@ -232,7 +232,9 @@ newsRouter.post("/:id/credibility", async (req: Request, res: Response) => {
 
 	const { title, content, url, source, category } = article.rows[0];
 	const fullContent =
-		(await fetchFullArticle(url).catch(() => null)) || content;
+		(await fetchFullArticle(url, { title, fallback: content }).catch(
+			() => null,
+		)) || content;
 
 	const result = await analyzeCredibility(
 		id as string,
