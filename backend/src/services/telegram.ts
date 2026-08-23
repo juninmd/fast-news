@@ -142,8 +142,10 @@ function setupCommands(bot: Telegraf): void {
 			return;
 		}
 		const fullContent =
-			(await fetchFullArticle(article.url).catch(() => null)) ||
-			article.content;
+			(await fetchFullArticle(article.url, {
+				title: article.title,
+				fallback: article.content,
+			}).catch(() => null)) || article.content;
 		const summary = await generateArticleBlurb(
 			article.title,
 			fullContent,
