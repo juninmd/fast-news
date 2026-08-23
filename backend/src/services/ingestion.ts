@@ -10,6 +10,7 @@ import { sanitizeFeedContent } from "./articleText.js";
 import { buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
 import { buildEmbeddingText } from "./embeddingText.js";
+import { decodeFeedBuffer } from "./feedDecode.js";
 import { fetchFullArticle } from "./fullArticle.js";
 import { getActiveFeeds } from "./sources.js";
 
@@ -69,7 +70,7 @@ class KeyedSemaphore {
 // Max 1 concurrent request per news portal host — avoids hammering a single portal's rate limit.
 const hostGate = new KeyedSemaphore(1);
 
-/** Fetch feed XML with proper charset decoding (handles ISO-8859-1 / Windows-1252 Brazilian feeds) */
+/** Fetch feed XML, decoding whatever charset the portal actually served. */
 async function fetchXml(url: string): Promise<string> {
 	const ac = new AbortController();
 	const t = setTimeout(() => ac.abort(), config.ingestion.feedFetchTimeoutMs);
@@ -79,30 +80,10 @@ async function fetchXml(url: string): Promise<string> {
 			headers: { "User-Agent": "FastNews/1.0" },
 		});
 		if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-		const buf = await resp.arrayBuffer();
-		const contentType = resp.headers.get("content-type") ?? "";
-		const headerCharset = contentType.match(/charset=([^\s;'"]+)/i)?.[1];
-		// XML prolog encoding wins over a generic/absent HTTP charset — BR feeds
-		// often serve ISO-8859-1 bodies while declaring utf-8 (or nothing) in HTTP.
-		const prolog = new TextDecoder("ascii").decode(buf.slice(0, 200));
-		const prologCharset = prolog.match(/encoding=["']([^"']+)["']/i)?.[1];
-		let charset = (prologCharset ?? headerCharset ?? "utf-8").toLowerCase();
-		// Normalize: TextDecoder accepts 'windows-1252' as alias for latin-1 variants
-		if (["iso-8859-1", "latin1", "latin-1", "cp1252"].includes(charset))
-			charset = "windows-1252";
-		let decoded: string;
-		try {
-			decoded = new TextDecoder(charset, { fatal: false }).decode(buf);
-		} catch {
-			decoded = new TextDecoder("utf-8").decode(buf);
-		}
-		// Safety net: U+FFFD means the charset guess was wrong (e.g. utf-8 header on a
-		// latin-1 body with no prolog). windows-1252 maps every byte, so it never
-		// yields U+FFFD — retry there before persisting irrecoverable mojibake.
-		if (charset !== "windows-1252" && decoded.includes("�")) {
-			decoded = new TextDecoder("windows-1252").decode(buf);
-		}
-		return decoded;
+		return decodeFeedBuffer(
+			await resp.arrayBuffer(),
+			resp.headers.get("content-type") ?? "",
+		);
 	} finally {
 		clearTimeout(t);
 	}
