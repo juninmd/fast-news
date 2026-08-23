@@ -103,11 +103,49 @@ export const config = {
 			optional("INGESTION_JOB_TIMEOUT_MS", String(25 * 60 * 1_000)),
 			10,
 		),
+
+		// Fetch the article page when the RSS summary is too thin to embed well.
+		// Off by default: it costs one extra request per article.
+		fullTextEnabled: optional("INGESTION_FULLTEXT_ENABLED", "false") === "true",
+		fullTextMinChars: parseInt(
+			optional("INGESTION_FULLTEXT_MIN_CHARS", "600"),
+			10,
+		),
+		fullTextMaxPerRun: parseInt(
+			optional("INGESTION_FULLTEXT_MAX_PER_RUN", "40"),
+			10,
+		),
+
+		// og:image lookup for feed items that ship no usable image.
+		imageFallbackEnabled:
+			optional("INGESTION_IMAGE_FALLBACK", "true") === "true",
+		imageFallbackMaxPerRun: parseInt(
+			optional("INGESTION_IMAGE_FALLBACK_MAX_PER_RUN", "40"),
+			10,
+		),
+
+		// Adds an LLM-distilled entity line to the embedding text. Off by default:
+		// the deterministic builder already covers the common case.
+		llmEmbeddingKeywords:
+			optional("INGESTION_LLM_EMBED_KEYWORDS", "false") === "true",
+
+		// Near-duplicate check only looks back this far — keeps the vector scan
+		// bounded and stops a story from being blocked by last month's coverage.
+		dedupWindowDays: parseInt(optional("INGESTION_DEDUP_WINDOW_DAYS", "7"), 10),
 	},
 
 	rag: {
 		topK: parseInt(optional("RAG_TOP_K", "10"), 10),
 		embeddingDimensions: parseInt(optional("EMBEDDING_DIMENSIONS", "768"), 10),
+		minSimilarity: parseFloat(optional("RAG_MIN_SIMILARITY", "0.55")),
+		// Over-fetch before re-ranking so dedup/recency have candidates to work with.
+		candidateMultiplier: parseFloat(
+			optional("RAG_CANDIDATE_MULTIPLIER", "2.5"),
+		),
+		recencyHalfLifeDays: parseFloat(
+			optional("RAG_RECENCY_HALF_LIFE_DAYS", "7"),
+		),
+		maxPerSource: parseInt(optional("RAG_MAX_PER_SOURCE", "3"), 10),
 	},
 
 	vectorStore: optional("VECTOR_STORE", "postgres") as
