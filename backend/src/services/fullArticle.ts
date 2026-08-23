@@ -18,6 +18,27 @@ export interface FullArticleOptions {
 	signal?: AbortSignal;
 }
 
+/**
+ * Loopback and private addresses: the external reader cannot reach them, so
+ * going straight to a direct fetch saves a guaranteed round-trip failure.
+ */
+function isLocalAddress(url: string): boolean {
+	try {
+		const { hostname } = new URL(url);
+		return (
+			hostname === "localhost" ||
+			hostname === "::1" ||
+			hostname.endsWith(".local") ||
+			/^127\./.test(hostname) ||
+			/^10\./.test(hostname) ||
+			/^192\.168\./.test(hostname) ||
+			/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+		);
+	} catch {
+		return false;
+	}
+}
+
 async function fetchReaderMarkdown(
 	url: string,
 	signal?: AbortSignal,
@@ -69,10 +90,12 @@ export async function fetchFullArticle(
 	const cleanFallback = sanitizeFeedContent(fallback);
 	if (!url) return cleanFallback;
 
-	const attempts: Array<() => Promise<string>> = [
-		() => fetchReaderMarkdown(url, signal),
-		() => fetchDirectHtml(url, signal),
-	];
+	const attempts: Array<() => Promise<string>> = isLocalAddress(url)
+		? [() => fetchDirectHtml(url, signal)]
+		: [
+				() => fetchReaderMarkdown(url, signal),
+				() => fetchDirectHtml(url, signal),
+			];
 
 	let best = "";
 	for (const attempt of attempts) {
