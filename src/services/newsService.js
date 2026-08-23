@@ -247,6 +247,10 @@ export const FEED_SOURCES = [
 	{ url: "https://www.aljazeera.com/xml/rss/all.xml", category: "Mundo" },
 	{ url: "https://feeds.reuters.com/reuters/worldNews", category: "Mundo" },
 	{ url: "https://www.theguardian.com/world/rss", category: "Mundo" },
+	{
+		url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada",
+		category: "Mundo",
+	},
 	{ url: "https://feeds.washingtonpost.com/rss/world", category: "Mundo" },
 	{ url: "https://rss.cnn.com/rss/edition.rss", category: "Mundo" },
 	{ url: "https://feeds.npr.org/1001/rss.xml", category: "Mundo" },
