@@ -219,7 +219,7 @@ export const FEED_SOURCES = [
 	{ url: "https://br.noticias.yahoo.com/rss", category: "Brasil" },
 	{ url: "https://agenciapublica.org/feed/", category: "Brasil" },
 	{ url: "https://piaui.folha.uol.com.br/feed/", category: "Brasil" },
-	{ url: "https://www.sbtnews.com.br/feed", category: "Brasil" },
+	{ url: "https://www.sbtnews.com.br/rss.xml", category: "Brasil" },
 	{ url: "https://jovempan.com.br/feed", category: "Brasil" },
 	{
 		url: "https://www.gazetadopovo.com.br/feed/rss/brasil.xml",
