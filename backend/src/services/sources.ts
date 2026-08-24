@@ -3,6 +3,16 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.sbtnews.com.br/rss.xml",
+		category: "Brasil",
+		company: "SBT News",
+	},
+	{
+		url: "https://www.jota.info/feed",
+		category: "Brasil",
+		company: "JOTA",
+	},
+	{
 		url: "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml",
 		category: "Brasil",
 		company: "Folha de S.Paulo",
