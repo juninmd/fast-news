@@ -2,6 +2,7 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://g1.globo.com/rss/g1/brasil/", category: "Brasil" },
 	{
 		url: "https://feeds.folha.uol.com.br/mercado/rss091.xml",
 		category: "Negócios",
