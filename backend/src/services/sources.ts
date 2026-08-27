@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://g1.globo.com/rss/g1/brasil/",
+		category: "Brasil",
+		company: "G1",
+	},
+	{
 		url: "https://www.sbtnews.com.br/rss.xml",
 		category: "Brasil",
 		company: "SBT News",
