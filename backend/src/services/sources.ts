@@ -3,6 +3,16 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://vidadestartup.org/feed/",
+		category: "Startups",
+		company: "Vida de Startup",
+	},
+	{
+		url: "https://tiinside.com.br/feed/",
+		category: "Tecnologia",
+		company: "TI Inside",
+	},
+	{
 		url: "https://g1.globo.com/rss/g1/brasil/",
 		category: "Brasil",
 		company: "G1",
