@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://olhardigital.com.br/feed/",
+		category: "Tecnologia",
+		company: "Olhar Digital",
+	},
+	{
 		url: "https://vidadestartup.org/feed/",
 		category: "Startups",
 		company: "Vida de Startup",
