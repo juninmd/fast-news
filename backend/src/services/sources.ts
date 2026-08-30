@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.correiobraziliense.com.br/rss/noticia/tecnologia/rss.xml",
+		category: "Tecnologia",
+		company: "Correio Braziliense",
+	},
+	{
 		url: "https://olhardigital.com.br/feed/",
 		category: "Tecnologia",
 		company: "Olhar Digital",
