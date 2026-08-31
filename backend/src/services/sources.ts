@@ -3,6 +3,16 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.infomoney.com.br/feed/",
+		category: "Negócios",
+		company: "InfoMoney",
+	},
+	{
+		url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada",
+		category: "Mundo",
+		company: "El País",
+	},
+	{
 		url: "https://www.correiobraziliense.com.br/rss/noticia/tecnologia/rss.xml",
 		category: "Tecnologia",
 		company: "Correio Braziliense",
