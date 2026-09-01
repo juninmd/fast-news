@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://noticiasdatv.uol.com.br/feed",
+		category: "Entretenimento",
+		company: "Notícias da TV",
+	},
+	{
 		url: "https://www.infomoney.com.br/feed/",
 		category: "Negócios",
 		company: "InfoMoney",
