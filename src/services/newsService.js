@@ -2,6 +2,10 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://noticiasdatv.uol.com.br/feed",
+		category: "Entretenimento",
+	},
 	{ url: "https://www.infomoney.com.br/feed/", category: "Negócios" },
 	{
 		url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada",
