@@ -3,6 +3,16 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://g1.globo.com/rss/g1/loterias/",
+		category: "Brasil",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/trabalho-e-carreira/",
+		category: "Negócios",
+		company: "G1",
+	},
+	{
 		url: "https://noticiasdatv.uol.com.br/feed",
 		category: "Entretenimento",
 		company: "Notícias da TV",
