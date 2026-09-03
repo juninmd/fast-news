@@ -3,6 +3,31 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://g1.globo.com/rss/g1/ciencia/",
+		category: "Ciência",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/saude/",
+		category: "Saúde",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/fato-ou-fake/",
+		category: "Brasil",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/economia/agronegocios/",
+		category: "Negócios",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/meio-ambiente/",
+		category: "Ciência",
+		company: "G1",
+	},
+	{
 		url: "https://g1.globo.com/rss/g1/loterias/",
 		category: "Brasil",
 		company: "G1",

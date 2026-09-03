@@ -2,6 +2,14 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://g1.globo.com/rss/g1/ciencia/", category: "Ciência" },
+	{ url: "https://g1.globo.com/rss/g1/saude/", category: "Saúde" },
+	{ url: "https://g1.globo.com/rss/g1/fato-ou-fake/", category: "Brasil" },
+	{
+		url: "https://g1.globo.com/rss/g1/economia/agronegocios/",
+		category: "Negócios",
+	},
+	{ url: "https://g1.globo.com/rss/g1/meio-ambiente/", category: "Ciência" },
 	{ url: "https://g1.globo.com/rss/g1/loterias/", category: "Brasil" },
 	{
 		url: "https://g1.globo.com/rss/g1/trabalho-e-carreira/",
