@@ -683,7 +683,6 @@ export const FEED_SOURCES = [
 		company: "The Guardian",
 	},
 	{
-		url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada",
 		category: "Mundo",
 		company: "El País Brasil",
 	},
@@ -696,7 +695,6 @@ export const FEED_SOURCES = [
 	},
 	{ url: "https://exame.com/feed/", category: "Negócios", company: "Exame" },
 	{
-		url: "https://www.infomoney.com.br/feed/",
 		category: "Negócios",
 		company: "InfoMoney",
 	},
