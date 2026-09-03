@@ -2,6 +2,14 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://g1.globo.com/rss/g1/ciencia/", category: "Ciência" },
+	{ url: "https://g1.globo.com/rss/g1/saude/", category: "Saúde" },
+	{ url: "https://g1.globo.com/rss/g1/fato-ou-fake/", category: "Brasil" },
+	{
+		url: "https://g1.globo.com/rss/g1/economia/agronegocios/",
+		category: "Negócios",
+	},
+	{ url: "https://g1.globo.com/rss/g1/meio-ambiente/", category: "Ciência" },
 	{ url: "https://g1.globo.com/rss/g1/loterias/", category: "Brasil" },
 	{
 		url: "https://g1.globo.com/rss/g1/trabalho-e-carreira/",
@@ -134,7 +142,6 @@ export const FEED_SOURCES = [
 	{ url: "https://canaltech.com.br/rss/produtos", category: "Tecnologia" },
 	{ url: "https://teletime.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://olhardigital.com.br/rss", category: "Tecnologia" },
-	{ url: "https://olhardigital.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://tecnoblog.net/feed/", category: "Tecnologia" },
 	{ url: "https://mundoconectado.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://www.tudocelular.com/rss/", category: "Tecnologia" },
@@ -271,10 +278,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.aljazeera.com/xml/rss/all.xml", category: "Mundo" },
 	{ url: "https://feeds.reuters.com/reuters/worldNews", category: "Mundo" },
 	{ url: "https://www.theguardian.com/world/rss", category: "Mundo" },
-	{
-		url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada",
-		category: "Mundo",
-	},
 	{ url: "https://feeds.washingtonpost.com/rss/world", category: "Mundo" },
 	{ url: "https://rss.cnn.com/rss/edition.rss", category: "Mundo" },
 	{ url: "https://feeds.npr.org/1001/rss.xml", category: "Mundo" },
@@ -308,7 +311,6 @@ export const FEED_SOURCES = [
 		url: "https://www.cnbc.com/id/10000664/device/rss/rss.html",
 		category: "Negócios",
 	},
-	{ url: "https://www.infomoney.com.br/feed/", category: "Negócios" },
 	{ url: "https://exame.com/feed/", category: "Negócios" },
 	{ url: "https://www.forbes.com/business/feed/", category: "Negócios" },
 	{ url: "https://www.economist.com/business/rss.xml", category: "Negócios" },

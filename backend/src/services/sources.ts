@@ -3,6 +3,31 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://g1.globo.com/rss/g1/ciencia/",
+		category: "Ciência",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/saude/",
+		category: "Saúde",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/fato-ou-fake/",
+		category: "Brasil",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/economia/agronegocios/",
+		category: "Negócios",
+		company: "G1",
+	},
+	{
+		url: "https://g1.globo.com/rss/g1/meio-ambiente/",
+		category: "Ciência",
+		company: "G1",
+	},
+	{
 		url: "https://g1.globo.com/rss/g1/loterias/",
 		category: "Brasil",
 		company: "G1",
@@ -657,11 +682,6 @@ export const FEED_SOURCES = [
 		category: "Mundo",
 		company: "The Guardian",
 	},
-	{
-		url: "https://feeds.elpais.com/mrss-s/pages/ep/site/brasil.elpais.com/portada",
-		category: "Mundo",
-		company: "El País Brasil",
-	},
 
 	// ── Negócios ─────────────────────────────────────────────────────────────
 	{
@@ -670,12 +690,6 @@ export const FEED_SOURCES = [
 		company: "Jornal de Negócios",
 	},
 	{ url: "https://exame.com/feed/", category: "Negócios", company: "Exame" },
-	{
-		url: "https://www.infomoney.com.br/feed/",
-		category: "Negócios",
-		company: "InfoMoney",
-	},
-
 	// ── Open Source ─────────────────────────────────────────────────────────────
 	{
 		url: "https://about.gitlab.com/atom.xml",
@@ -909,7 +923,7 @@ export async function syncDefaultFeeds(): Promise<void> {
 }
 
 export async function getActiveFeeds(): Promise<
-	Array<{ url: string; category: string; company?: string }>
+	Array<{ url: string; category: string; company?: string | undefined }>
 > {
 	try {
 		const res = await query<{ url: string; category: string; company: string }>(
