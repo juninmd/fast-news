@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml",
+		category: "Mundo",
+		company: "NYT",
+	},
+	{
 		url: "https://g1.globo.com/rss/g1/ciencia/",
 		category: "Ciência",
 		company: "G1",
