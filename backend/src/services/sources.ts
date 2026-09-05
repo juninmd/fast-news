@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.techrepublic.com/rssfeeds/articles/",
+		category: "Tecnologia",
+		company: "TechRepublic",
+	},
+	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml",
 		category: "Mundo",
 		company: "NYT",
