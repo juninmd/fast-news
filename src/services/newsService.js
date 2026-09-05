@@ -3,6 +3,10 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{
+		url: "https://www.techrepublic.com/rssfeeds/articles/",
+		category: "Tecnologia",
+	},
+	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml",
 		category: "Mundo",
 	},
