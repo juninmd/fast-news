@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.npr.org/1007/rss.xml",
+		category: "Ciência",
+		company: "NPR",
+	},
+	{
 		url: "https://www.techrepublic.com/rssfeeds/articles/",
 		category: "Tecnologia",
 		company: "TechRepublic",
