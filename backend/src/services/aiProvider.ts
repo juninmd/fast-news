@@ -28,18 +28,23 @@ const ollamaProvider = config.ollama.baseUrl.includes("/v1")
 			baseURL: config.ollama.baseUrl.replace(/\/v1$/, "/api"),
 		});
 
-// Dedicated native Ollama provider for embeddings.
-// Always uses createOllama (not OpenAI-compat) to avoid the
-// encoding_format:float rejection from LiteLLM / other proxies.
-const _embeddingNativeBase = (() => {
-	const explicit = config.ollama.embeddingBaseUrl;
-	if (explicit) return explicit.replace(/\/$/, "");
-	// Derive from main baseUrl: strip /v1 suffix → bare Ollama host
-	return config.ollama.baseUrl.replace(/\/v1\/?$/, "");
-})();
-const ollamaEmbeddingProvider = createOllama({
-	baseURL: `${_embeddingNativeBase}/api`,
-});
+// Embeddings: use the OpenAI-compatible endpoint when the base URL targets a
+// proxy (LiteLLM etc, signalled by the /v1 suffix), like the chat provider does.
+// The native Ollama /api/embed route is only available on a real Ollama host,
+// and LiteLLM responds 404 on it. encoding_format:float is accepted by the
+// OpenAI-compat path, so there is no reason to force native Ollama anymore.
+const ollamaEmbeddingProvider =
+	config.ollama.baseUrl.includes("/v1") || config.ollama.embeddingBaseUrl
+		? createOpenAI({
+				baseURL: config.ollama.embeddingBaseUrl || config.ollama.baseUrl,
+				apiKey:
+					process.env["OLLAMA_API_KEY"] ||
+					process.env["OPENAI_API_KEY"] ||
+					"placeholder",
+			})
+		: createOllama({
+				baseURL: `${config.ollama.baseUrl.replace(/\/v1\/?$/, "")}/api`,
+			});
 
 const googleProvider = google;
 const openaiProvider = createOpenAI({ apiKey: config.openaiApiKey });
