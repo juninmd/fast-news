@@ -3,6 +3,16 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.androidpolice.com/feed/",
+		category: "Tecnologia",
+		company: "Android Police",
+	},
+	{
+		url: "https://www.bgr.com/feed/",
+		category: "Tecnologia",
+		company: "BGR",
+	},
+	{
 		url: "https://feeds.npr.org/1007/rss.xml",
 		category: "Ciência",
 		company: "NPR",
