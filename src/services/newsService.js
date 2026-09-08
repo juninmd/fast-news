@@ -89,6 +89,7 @@ export const FEED_SOURCES = [
 	{ url: "https://rss.uol.com.br/feed/jogos.xml", category: "Tecnologia" },
 	{ url: "https://rss.uol.com.br/feed/educacao.xml", category: "Educação" },
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://feeds.npr.org/1004/rss.xml", category: "Mundo" },
 	{ url: "https://g1.globo.com/rss/g1/natureza/", category: "Ciência" },
 	{ url: "https://g1.globo.com/rss/g1/pop-arte/", category: "Entretenimento" },
 	{ url: "https://g1.globo.com/rss/g1/carros/", category: "Automóveis" },
