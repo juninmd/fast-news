@@ -189,6 +189,11 @@ export const FEED_SOURCES = [
 	},
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.npr.org/1004/rss.xml",
+		category: "Mundo",
+		company: "NPR",
+	},
+	{
 		url: "https://g1.globo.com/rss/g1/natureza/",
 		category: "Ciência",
 		company: "G1",
