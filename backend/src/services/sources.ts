@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.technologyreview.com/feed/",
+		category: "Tecnologia",
+		company: "MIT Technology Review",
+	},
+	{
 		url: "https://www.androidpolice.com/feed/",
 		category: "Tecnologia",
 		company: "Android Police",
