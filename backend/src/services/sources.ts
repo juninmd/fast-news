@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://dev.to/feed",
+		category: "Tecnologia",
+		company: "Dev.to",
+	},
+	{
 		url: "https://hnrss.org/frontpage",
 		category: "Tecnologia",
 		company: "Hacker News",
