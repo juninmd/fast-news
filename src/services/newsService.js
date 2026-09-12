@@ -2,6 +2,14 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+		category: "Ciência",
+	},
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Space.xml",
+		category: "Ciência",
+	},
 	{ url: "https://dev.to/feed", category: "Tecnologia" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },
 	{ url: "https://www.technologyreview.com/feed/", category: "Tecnologia" },

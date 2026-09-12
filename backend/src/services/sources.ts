@@ -3,6 +3,16 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+		category: "Ciência",
+		company: "BBC",
+	},
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Space.xml",
+		category: "Ciência",
+		company: "New York Times",
+	},
+	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",
