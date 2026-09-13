@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://blog.google/rss/",
+		category: "Tecnologia",
+		company: "Google",
+	},
+	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",
