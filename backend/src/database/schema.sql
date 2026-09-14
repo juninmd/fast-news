@@ -179,7 +179,12 @@ CREATE TABLE IF NOT EXISTS story_timeline (
 
 CREATE INDEX IF NOT EXISTS idx_timeline_story ON story_timeline(story_id, occurred_at ASC);
 
-INSERT INTO tracked_topics (name, description, keywords) VALUES
+-- This file runs on every boot and tracked_topics.name has no unique key, so the old
+-- ON CONFLICT DO NOTHING never fired and each boot duplicated every topic. The lock
+-- serializes concurrent boots; existing copies are merged by scripts/dedupe-tracked-topics.sql.
+SELECT pg_advisory_xact_lock(hashtext('fast-news:tracked_topics_seed'));
+INSERT INTO tracked_topics (name, description, keywords)
+SELECT v.name, v.description, v.keywords FROM (VALUES
   ('Guerra EUA vs Irã', 'Conflito geopolítico entre Estados Unidos e Irã', ARRAY['eua', 'irã', 'iran', 'guerra', 'conflito', 'oriente médio', 'sanções', 'nuclear']),
   ('Petróleo e Energia', 'Mercado de petróleo, gás e energia global', ARRAY['petróleo', 'oil', 'opep', 'brent', 'wti', 'energia', 'gás', 'combustível']),
   ('Política Brasileira', 'Cenário político no Brasil', ARRAY['lula', 'congresso', 'stf', 'política', 'governo', 'brasil', 'câmara', 'senado']),
@@ -189,4 +194,5 @@ INSERT INTO tracked_topics (name, description, keywords) VALUES
   ('Open Source', 'Projetos e comunidades open source', ARRAY['open source', 'rust', 'golang', 'typescript', 'linux', 'nodejs', 'github', 'contribuição']),
   ('Segurança', 'Cibersegurança, vulnerabilidades e privacidade', ARRAY['segurança', 'vulnerability', 'cve', 'hack', 'privacy', 'exploit', 'breach', 'zero-day']),
   ('Startups & VC', 'Ecossistema de startups e venture capital', ARRAY['startup', 'funding', 'series a', 'ipo', 'venture capital', 'unicorn', 'vc'])
-ON CONFLICT DO NOTHING;
+) AS v(name, description, keywords)
+WHERE NOT EXISTS (SELECT 1 FROM tracked_topics t WHERE t.name = v.name);
