@@ -95,7 +95,8 @@ export async function analyzeTopicWithRAG(
 
 export async function getAllTrackedTopics(): Promise<TrackedTopic[]> {
 	const result = await query<TrackedTopic>(
-		"SELECT id, name, description, keywords FROM tracked_topics WHERE is_active = TRUE ORDER BY name",
+		// DISTINCT ON: legacy boots left thousands of copies per name; use the oldest one.
+		"SELECT DISTINCT ON (name) id, name, description, keywords FROM tracked_topics WHERE is_active = TRUE ORDER BY name, created_at, id",
 	);
 	return result.rows;
 }
