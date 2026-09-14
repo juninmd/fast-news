@@ -221,6 +221,8 @@ Conteúdo: ${cleanContent.slice(0, 4000)}`;
 			model,
 			prompt,
 			maxTokens: 150,
+			// LiteLLM upstream hangs do not trigger fallback; bound the call.
+			abortSignal: timeoutSignal(config.ai.backgroundTaskTimeoutMs),
 		});
 		return text.trim();
 	} catch (e) {
@@ -249,14 +251,16 @@ async function upsertArticle(
 	);
 	if (existing.rowCount && existing.rowCount > 0) return null;
 
-	const textToEmbed = await summarizeForEmbedding(
-		article.title,
-		article.content || "",
-	);
 	// Embedding is best-effort — if Ollama is unavailable, store without vector
 	let embedding: number[] | null = null;
 	if (ollamaUp) {
 		try {
+			// The summary only feeds the embedding; calling the LLM without one wasted a
+			// request per article and could hang the whole ingestion run.
+			const textToEmbed = await summarizeForEmbedding(
+				article.title,
+				article.content || "",
+			);
 			embedding = await embedDocument(
 				textToEmbed,
 				timeoutSignal(config.ai.embeddingTimeoutMs),
