@@ -61,6 +61,22 @@ pnpm news-agent
 pnpm start-agent
 ```
 
+## 🗞 O Fio: edições diárias no Telegram
+
+Duas edições de jornal por dia, montadas por LLM a partir das notícias captadas e enviadas ao `TELEGRAM_CHAT_IDS` como mensagem-resumo mais o jornal completo em `.html`.
+
+| Edição | Horário (CronJob) | Cobre |
+|---|---|---|
+| Manhã | 07h05 | 19h do dia anterior até 07h |
+| Noite | 19h05 | 07h até 19h |
+
+```bash
+cd backend && pnpm build
+node dist/runners/runEdition.js manha   # ou: noite
+```
+
+A tabela `news_editions` impede envio duplicado em retentativas. Variáveis opcionais: `EDITION_MAX_HEADLINES` (350), `EDITION_PER_SOURCE` (12), `EDITION_EXCLUDED_CATEGORIES` (`Gaming,Games,Anime`), `EDITION_AI_TIMEOUT_MS` (300000). Os CronJobs ficam em `app-charts/fast-news/cronjobs.yaml`.
+
 ## 📜 Licença
 
 MIT
