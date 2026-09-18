@@ -12,13 +12,18 @@ const story = z.object({
 	fontes: ids,
 });
 
-export const draftSchema = z.object({
+// The edition is generated in three calls so each output stays small enough
+// for the free LiteLLM backends, which time out long structured answers.
+export const frontSchema = z.object({
 	manchete: story.extend({
 		linhaFina: text,
 		paragrafos: z.array(z.string()).default([]),
 		citacao: z.object({ texto: z.string(), autor: z.string() }).optional(),
 	}),
 	destaques: z.array(story).default([]),
+});
+
+export const sectionsSchema = z.object({
 	secoes: z
 		.array(
 			z.object({
@@ -28,6 +33,9 @@ export const draftSchema = z.object({
 			}),
 		)
 		.default([]),
+});
+
+export const extrasSchema = z.object({
 	fio: z
 		.array(
 			z.object({
