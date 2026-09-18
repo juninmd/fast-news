@@ -12,15 +12,27 @@ export async function generateWithFallback<T>({
 	prompt,
 	abortSignal,
 	logTag,
+	mode,
+	maxTokens,
 }: {
 	schema: z.ZodType<T>;
 	prompt: string;
 	abortSignal?: AbortSignal;
 	logTag: string;
+	/** "json" suits pools where some backends never call tools. */
+	mode?: "auto" | "json" | "tool";
+	maxTokens?: number;
 }): Promise<T | null> {
 	const model = await getFastModel();
 	try {
-		const res = await generateObject({ model, schema, prompt, abortSignal });
+		const res = await generateObject({
+			model,
+			schema,
+			prompt,
+			abortSignal,
+			mode,
+			maxTokens,
+		});
 		return res.object;
 	} catch (err) {
 		console.warn(
@@ -37,6 +49,8 @@ export async function generateWithFallback<T>({
 				schema,
 				prompt,
 				abortSignal,
+				mode,
+				maxTokens,
 			});
 			console.log(`[${logTag}] Analysis succeeded using cloud fallback model`);
 			return res.object;

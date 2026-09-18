@@ -73,7 +73,7 @@ export function renderEditionHtml(e: Edition): string {
 <div class="ear r"><b>${esc(range)}</b>período coberto, horário de Brasília</div></div>
 <div class="folio"><span class="ed">${LABEL[w.kind]}</span><span>${esc(formatLocalDate(w.day))}</span><span>fast-news</span></div></header>
 ${ticker(e)}${front(e)}${threads(draft.fio, e.headlines)}${sections(e)}
-<section class="sec"><div class="grid2"><div>${sectionHead(closing)}${brief(draft.leve.map(esc))}</div>${quiz(draft.quiz)}</div></section>
+${draft.leve.length || draft.quiz.length ? `<section class="sec"><div class="grid2"><div>${draft.leve.length ? sectionHead(closing) + brief(draft.leve.map(esc)) : ""}</div>${quiz(draft.quiz)}</div></section>` : ""}
 ${pulse(e.hourly, w.start)}
 <footer class="colophon">O Fio é montado automaticamente a partir das notícias captadas pelo fast-news. Os links levam à matéria original.</footer>
 </main><script>${QUIZ_SCRIPT}</script></body></html>`;
