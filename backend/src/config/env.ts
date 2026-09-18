@@ -137,6 +137,19 @@ export const config = {
 		maxTokens: parseInt(optional("DIGEST_MAX_TOKENS", "1800"), 10),
 	},
 
+	editions: {
+		maxHeadlines: parseInt(optional("EDITION_MAX_HEADLINES", "350"), 10),
+		perSource: parseInt(optional("EDITION_PER_SOURCE", "12"), 10),
+		excludedCategories: optional(
+			"EDITION_EXCLUDED_CATEGORIES",
+			"Gaming,Games,Anime",
+		)
+			.split(",")
+			.map((c) => c.trim())
+			.filter(Boolean),
+		aiTimeoutMs: parseInt(optional("EDITION_AI_TIMEOUT_MS", "300000"), 10),
+	},
+
 	ai: {
 		analysisModel: optional("ANALYSIS_MODEL", ""),
 		fastModel: optional("FAST_MODEL", ""),
