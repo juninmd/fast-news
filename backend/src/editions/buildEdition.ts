@@ -19,9 +19,12 @@ import type {
 } from "./types.js";
 
 const MIN_HEADLINES = 20;
-// Some pool backends loop forever in JSON mode; a cap turns that into a
-// fast parse failure instead of a call that never returns.
-const MAX_OUTPUT_TOKENS = 4000;
+// Some pool backends loop in JSON mode; a cap turns that into a parse
+// failure instead of a call that never returns.
+const MAX_OUTPUT_TOKENS = 3000;
+// Each attempt lands on a random pool backend, so retrying is what gets past
+// the ones that answer with reasoning text instead of JSON.
+const ATTEMPTS = 3;
 
 // generateObject resolves to the parsed output (defaults applied), which the
 // shared helper types as the schema input; the cast restores the output type.
@@ -32,19 +35,25 @@ async function generatePart<S extends z.ZodTypeAny>(
 	picked: Headline[],
 	onFront: string[] = [],
 ): Promise<z.output<S> | null> {
-	const started = Date.now();
-	const result = (await generateWithFallback({
-		schema,
-		prompt: buildEditionPrompt(window, picked, part, onFront),
-		abortSignal: AbortSignal.timeout(config.editions.aiTimeoutMs),
-		logTag: `Edition:${part}`,
-		mode: "json",
-		maxTokens: MAX_OUTPUT_TOKENS,
-	})) as z.output<S> | null;
-	console.log(
-		`[Edition:${part}] ${result ? "ok" : "failed"} in ${Date.now() - started} ms`,
-	);
-	return result;
+	const prompt = buildEditionPrompt(window, picked, part, onFront);
+	for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+		const started = Date.now();
+		// LiteLLM caches responses by prompt, bad ones included; a unique
+		// request line makes every attempt a fresh call.
+		const result = (await generateWithFallback({
+			schema,
+			prompt: `Pedido ${started}-${attempt}.\n${prompt}`,
+			abortSignal: AbortSignal.timeout(config.editions.aiTimeoutMs),
+			logTag: `Edition:${part}`,
+			mode: "json",
+			maxTokens: MAX_OUTPUT_TOKENS,
+		})) as z.output<S> | null;
+		console.log(
+			`[Edition:${part}] attempt ${attempt} ${result ? "ok" : "failed"} in ${Date.now() - started} ms`,
+		);
+		if (result) return result;
+	}
+	return null;
 }
 
 export async function buildEdition(window: EditionWindow): Promise<Edition> {

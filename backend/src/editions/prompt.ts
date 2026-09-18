@@ -45,7 +45,8 @@ REGRAS
 - Use somente fatos presentes nas manchetes e trechos. Nunca invente números, nomes, citações ou placares.
 - Todo item cita em "fontes" os ids das manchetes que o sustentam. Ids que não existem serão descartados, e itens sem fonte válida também.
 ${TASK[part]}${front}
-- Ignore propaganda, sorteios, horóscopo e promoções.
+- Ignore propaganda, loterias, sorteios, horóscopo e promoções: nunca são manchete nem destaque.
+- Escreva tudo em português do Brasil, traduzindo títulos, valores e unidades de fontes estrangeiras (ex.: "124 milhas", "25 segundos").
 - Sem emojis, sem markdown, sem aspas de enfeite.
 
 MANCHETES
