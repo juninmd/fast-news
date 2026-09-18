@@ -13,7 +13,7 @@ const TASK: Record<EditionPart, string> = {
 	front: `- Responda só com "manchete" e "destaques".
 - A manchete é a história com mais cobertura e impacto no Brasil. Escreva 2 a 3 parágrafos factuais, frases curtas, voz ativa.
 - "destaques": 2 a 3 histórias fortes que não são a manchete.`,
-	sections: `- Responda só com "secoes": 3 a 5 editorias (ex.: Política, Economia, Mundo, Tecnologia, Esportes, Cultura), cada uma com 1 a 3 matérias e até 4 notas curtas de uma frase.
+	sections: `- Responda só com "secoes": 3 a 4 editorias (ex.: Política, Economia, Mundo, Tecnologia, Esportes, Cultura), cada uma com 1 a 2 matérias de até 60 palavras e até 3 notas curtas de uma frase.
 - Não repita a mesma notícia em seções diferentes.`,
 	extras: `- Responda só com "fio", "numeros", "leve" e "quiz".
 - "fio": até 3 histórias que evoluíram ao longo das horas. Cada evento aponta para UMA manchete (campo fonte) e resume o que ela acrescentou. Mínimo 3 eventos por história, em ordem cronológica.
