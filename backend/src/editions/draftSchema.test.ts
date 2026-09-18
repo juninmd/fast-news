@@ -14,6 +14,15 @@ describe("draft schemas", () => {
 		expect(r.leve).toEqual([]);
 	});
 
+	it("never turns null, false or blank into answer 0", () => {
+		for (const correta of [null, false, ""])
+			expect(() =>
+				extrasSchema.parse({
+					quiz: [{ pergunta: "p", opcoes: ["a", "b", "c"], correta }],
+				}),
+			).toThrow();
+	});
+
 	it("still rejects ids that are not numbers, so sanitize never sees NaN", () => {
 		expect(() =>
 			frontSchema.parse({

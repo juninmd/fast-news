@@ -46,9 +46,13 @@ export async function publishEdition(
 		const doc = { source: file, filename: editionFilename(w) };
 		try {
 			// One retry: large uploads sometimes lose the socket mid-request.
-			await telegram
-				.sendDocument(chatId, doc)
-				.catch(() => telegram.sendDocument(chatId, doc));
+			await telegram.sendDocument(chatId, doc).catch((err) => {
+				// The first upload may have landed, so a duplicate is possible.
+				console.warn(
+					`[Edition] Retrying file for ${chatId}: ${safeMessage(err)}`,
+				);
+				return telegram.sendDocument(chatId, doc);
+			});
 		} catch (err) {
 			result.failed.push({ chatId, error: `document: ${safeMessage(err)}` });
 		}

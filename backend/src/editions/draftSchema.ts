@@ -2,8 +2,12 @@ import { z } from "zod";
 
 // Deliberately lenient: sizes and id validity are enforced by sanitizeDraft,
 // so a model that returns 4 destaques instead of 3 does not fail the edition.
-// Numbers are coerced because pool models often quote ids and indexes.
-const id = z.coerce.number().int();
+// Pool models often quote ids and indexes; only digit strings are accepted so
+// null, false or "" never become 0.
+const id = z.union([
+	z.number().int(),
+	z.string().regex(/^\d+$/).transform(Number),
+]);
 const ids = z.array(id).default([]);
 const text = z.string().default("");
 
