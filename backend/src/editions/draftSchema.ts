@@ -2,7 +2,9 @@ import { z } from "zod";
 
 // Deliberately lenient: sizes and id validity are enforced by sanitizeDraft,
 // so a model that returns 4 destaques instead of 3 does not fail the edition.
-const ids = z.array(z.number().int()).default([]);
+// Numbers are coerced because pool models often quote ids and indexes.
+const id = z.coerce.number().int();
+const ids = z.array(id).default([]);
 const text = z.string().default("");
 
 const story = z.object({
@@ -41,21 +43,23 @@ export const extrasSchema = z.object({
 			z.object({
 				tema: z.string(),
 				eventos: z
-					.array(z.object({ fonte: z.number().int(), texto: z.string() }))
+					.array(z.object({ fonte: id, texto: z.string() }))
 					.default([]),
 			}),
 		)
 		.default([]),
 	numeros: z
-		.array(z.object({ rotulo: z.string(), valor: z.string(), nota: text }))
+		.array(
+			z.object({ rotulo: z.string(), valor: z.coerce.string(), nota: text }),
+		)
 		.default([]),
 	leve: z.array(z.string()).default([]),
 	quiz: z
 		.array(
 			z.object({
 				pergunta: z.string(),
-				opcoes: z.array(z.string()),
-				correta: z.number().int(),
+				opcoes: z.array(z.coerce.string()),
+				correta: id,
 			}),
 		)
 		.default([]),
