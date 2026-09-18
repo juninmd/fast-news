@@ -1,8 +1,9 @@
+import type { z } from "zod";
 import { config } from "../config/env.js";
 import { generateWithFallback } from "../services/llmWithFallback.js";
 import { collectHeadlines } from "./collect.js";
-import { draftSchema } from "./draftSchema.js";
-import { buildEditionPrompt } from "./prompt.js";
+import { extrasSchema, frontSchema, sectionsSchema } from "./draftSchema.js";
+import { buildEditionPrompt, type EditionPart } from "./prompt.js";
 import { sanitizeDraft } from "./sanitize.js";
 import {
 	cleanHeadlines,
@@ -18,6 +19,33 @@ import type {
 } from "./types.js";
 
 const MIN_HEADLINES = 20;
+// Some pool backends loop forever in JSON mode; a cap turns that into a
+// fast parse failure instead of a call that never returns.
+const MAX_OUTPUT_TOKENS = 4000;
+
+// generateObject resolves to the parsed output (defaults applied), which the
+// shared helper types as the schema input; the cast restores the output type.
+async function generatePart<S extends z.ZodTypeAny>(
+	schema: S,
+	part: EditionPart,
+	window: EditionWindow,
+	picked: Headline[],
+	onFront: string[] = [],
+): Promise<z.output<S> | null> {
+	const started = Date.now();
+	const result = (await generateWithFallback({
+		schema,
+		prompt: buildEditionPrompt(window, picked, part, onFront),
+		abortSignal: AbortSignal.timeout(config.editions.aiTimeoutMs),
+		logTag: `Edition:${part}`,
+		mode: "json",
+		maxTokens: MAX_OUTPUT_TOKENS,
+	})) as z.output<S> | null;
+	console.log(
+		`[Edition:${part}] ${result ? "ok" : "failed"} in ${Date.now() - started} ms`,
+	);
+	return result;
+}
 
 export async function buildEdition(window: EditionWindow): Promise<Edition> {
 	const all = await collectHeadlines(window);
@@ -39,13 +67,19 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		`[Edition] ${window.kind} ${window.day}: ${all.length} articles, ${clean.length} clean, ${picked.length} sent to the model`,
 	);
 
-	const raw = await generateWithFallback({
-		schema: draftSchema,
-		prompt: buildEditionPrompt(window, picked),
-		abortSignal: AbortSignal.timeout(config.editions.aiTimeoutMs),
-		logTag: "Edition",
-	});
-	if (!raw) throw new Error("[Edition] Model returned no draft");
+	const front = await generatePart(frontSchema, "front", window, picked);
+	if (!front) throw new Error("[Edition] Model returned no front page");
+	const onFront = [front.manchete, ...front.destaques].map((s) => s.titulo);
+	// Sections and extras are optional: a failed call drops them, not the edition.
+	const [sections, extras] = await Promise.all([
+		generatePart(sectionsSchema, "sections", window, picked, onFront),
+		generatePart(extrasSchema, "extras", window, picked, onFront),
+	]);
+	const raw = {
+		...front,
+		secoes: sections?.secoes ?? [],
+		...(extras ?? { fio: [], numeros: [], leve: [], quiz: [] }),
+	};
 	const draft = sanitizeDraft(raw as EditionDraft, known);
 	for (const h of checagens) known.set(h.id, h);
 
