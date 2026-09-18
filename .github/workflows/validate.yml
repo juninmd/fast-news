@@ -42,11 +42,14 @@ jobs:
       - name: Lint frontend workspace
         run: pnpm exec biome check .
 
+      # Root vitest also runs backend/src tests, which import backend-only deps.
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pnpm install --frozen-lockfile --ignore-workspace --ignore-scripts
+
       - name: Test frontend workspace
         run: pnpm exec vitest run
 
       - name: Validate backend types
         working-directory: backend
-        run: |
-          pnpm install --frozen-lockfile --ignore-workspace --ignore-scripts
-          pnpm exec tsc --noEmit
+        run: pnpm exec tsc --noEmit
