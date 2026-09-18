@@ -4,6 +4,7 @@ import { generateWithFallback } from "../services/llmWithFallback.js";
 import { collectHeadlines } from "./collect.js";
 import { extrasSchema, frontSchema, sectionsSchema } from "./draftSchema.js";
 import { buildEditionPrompt, type EditionPart } from "./prompt.js";
+import { extractJsonObject } from "./repairJson.js";
 import { sanitizeDraft } from "./sanitize.js";
 import {
 	cleanHeadlines,
@@ -30,6 +31,8 @@ const ATTEMPTS = 3;
 // shared helper types as the schema input; the cast restores the output type.
 async function generatePart<S extends z.ZodTypeAny>(
 	schema: S,
+	// Schema defaults turn "{}" into a valid empty part; this rejects that.
+	useful: (result: z.output<S>) => boolean,
 	part: EditionPart,
 	window: EditionWindow,
 	picked: Headline[],
@@ -47,11 +50,13 @@ async function generatePart<S extends z.ZodTypeAny>(
 			logTag: `Edition:${part}`,
 			mode: "json",
 			maxTokens: MAX_OUTPUT_TOKENS,
+			repairText: extractJsonObject,
 		})) as z.output<S> | null;
+		const ok = result !== null && useful(result);
 		console.log(
-			`[Edition:${part}] attempt ${attempt} ${result ? "ok" : "failed"} in ${Date.now() - started} ms`,
+			`[Edition:${part}] attempt ${attempt} ${ok ? "ok" : result ? "empty" : "failed"} in ${Date.now() - started} ms`,
 		);
-		if (result) return result;
+		if (ok) return result;
 	}
 	return null;
 }
@@ -76,13 +81,34 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		`[Edition] ${window.kind} ${window.day}: ${all.length} articles, ${clean.length} clean, ${picked.length} sent to the model`,
 	);
 
-	const front = await generatePart(frontSchema, "front", window, picked);
+	const front = await generatePart(
+		frontSchema,
+		(r) => [r.manchete, ...r.destaques].some((s) => s.fontes.length > 0),
+		"front",
+		window,
+		picked,
+	);
 	if (!front) throw new Error("[Edition] Model returned no front page");
 	const onFront = [front.manchete, ...front.destaques].map((s) => s.titulo);
 	// Sections and extras are optional: a failed call drops them, not the edition.
 	const [sections, extras] = await Promise.all([
-		generatePart(sectionsSchema, "sections", window, picked, onFront),
-		generatePart(extrasSchema, "extras", window, picked, onFront),
+		generatePart(
+			sectionsSchema,
+			(r) => r.secoes.some((s) => s.materias.length + s.notas.length > 0),
+			"sections",
+			window,
+			picked,
+			onFront,
+		),
+		generatePart(
+			extrasSchema,
+			(r) =>
+				r.fio.length + r.numeros.length + r.leve.length + r.quiz.length > 0,
+			"extras",
+			window,
+			picked,
+			onFront,
+		),
 	]);
 	const raw = {
 		...front,
