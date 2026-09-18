@@ -190,3 +190,17 @@ INSERT INTO tracked_topics (name, description, keywords) VALUES
   ('Segurança', 'Cibersegurança, vulnerabilidades e privacidade', ARRAY['segurança', 'vulnerability', 'cve', 'hack', 'privacy', 'exploit', 'breach', 'zero-day']),
   ('Startups & VC', 'Ecossistema de startups e venture capital', ARRAY['startup', 'funding', 'series a', 'ipo', 'venture capital', 'unicorn', 'vc'])
 ON CONFLICT DO NOTHING;
+
+-- Daily newspaper editions (O Fio): one row per edition, guards against double posting.
+-- Rollback: DROP TABLE IF EXISTS news_editions; DROP INDEX IF EXISTS idx_articles_created_at;
+CREATE TABLE IF NOT EXISTS news_editions (
+    id           SERIAL PRIMARY KEY,
+    edition_key  TEXT NOT NULL UNIQUE,
+    kind         TEXT NOT NULL CHECK (kind IN ('manha', 'noite')),
+    window_start TIMESTAMPTZ NOT NULL,
+    window_end   TIMESTAMPTZ NOT NULL,
+    claimed_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    sent_at      TIMESTAMPTZ,
+    payload      JSONB
+);
+CREATE INDEX IF NOT EXISTS idx_articles_created_at ON news_articles(created_at);
