@@ -126,6 +126,7 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		hourly: hourlyCounts(
 			all.map((h) => h.createdAt),
 			window.start,
+			Math.round((window.end.getTime() - window.start.getTime()) / 3_600_000),
 		),
 		totalArticles: all.length,
 		totalSources: new Set(all.map((h) => h.source)).size,

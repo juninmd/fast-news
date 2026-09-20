@@ -8,6 +8,7 @@ import { getFastModel } from "./aiProvider.js";
 import { buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
 import { getActiveFeeds } from "./sources.js";
+import { classifyTheme } from "./themeClassification.js";
 
 const parser = new Parser({
 	customFields: { item: [["media:content", "mediaContent"], "enclosure"] },
@@ -253,6 +254,18 @@ async function upsertArticle(
 		article.title,
 		article.content || "",
 	);
+
+	// Per-article editorial theme, separate from the static feed `category`.
+	// fact_check articles keep no theme — they are a sentinel, not editorial
+	// content (see editions/select.ts isFactCheck).
+	const themeCategory =
+		article.category === "fact_check"
+			? null
+			: await classifyTheme(
+					article.title,
+					article.content || "",
+					article.category,
+				);
 	// Embedding is best-effort — if Ollama is unavailable, store without vector
 	let embedding: number[] | null = null;
 	if (ollamaUp) {
@@ -287,8 +300,8 @@ async function upsertArticle(
 	}
 
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -302,6 +315,7 @@ async function upsertArticle(
 			article.publishedAt,
 			embedding ? vectorToSQL(embedding) : null,
 			article.imageUrl ?? null,
+			themeCategory,
 		],
 	);
 
