@@ -15,6 +15,20 @@ function link(e: Edition, s: Story): string {
 	return url ? ` <a href="${esc(url)}">↗</a>` : "";
 }
 
+function marketLine(e: Edition): string {
+	const { usdBrl, ibovespa, selicRate } = e.market;
+	const bits: string[] = [];
+	if (usdBrl)
+		bits.push(`Dólar: <b>R$ ${usdBrl.value.toFixed(2).replace(".", ",")}</b>`);
+	if (ibovespa)
+		bits.push(
+			`Ibovespa: <b>${Math.round(ibovespa.value).toLocaleString("pt-BR")}</b>`,
+		);
+	if (selicRate !== null)
+		bits.push(`Selic: <b>${selicRate.toFixed(2).replace(".", ",")}%</b>`);
+	return bits.join(" · ");
+}
+
 function build(e: Edition, stories: number, threads: number): string {
 	const { draft, window: w } = e;
 	const parts = [
@@ -24,6 +38,8 @@ function build(e: Edition, stories: number, threads: number): string {
 		`<b>${esc(draft.manchete.titulo)}</b>${link(e, draft.manchete)}`,
 		esc(draft.manchete.linhaFina || draft.manchete.texto),
 	];
+	const market = marketLine(e);
+	if (market) parts.push("", market);
 	if (draft.numeros.length)
 		parts.push(
 			"",

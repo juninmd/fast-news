@@ -6,14 +6,21 @@ import { generateWithFallback } from "./llmWithFallback.js";
  * from the categories already assigned to feeds in sources.ts (deduped,
  * dropping the "fact_check" sentinel used by editions/select.ts and the
  * "Games" variant of "Gaming"), so it matches how the codebase already
- * classifies news rather than inventing a new one.
+ * classifies news rather than inventing a new one. "Política", "Economia",
+ * "Clima" and "Regional" widen coverage on user request; none is a
+ * gossip/celebrity bucket — that content is filtered upstream in sources.ts
+ * (see RETIRED_FEED_URLS) and never reaches this classifier.
  */
 export const THEME_TAXONOMY = [
 	"Mundo",
 	"Negócios",
+	"Economia",
+	"Política",
 	"Brasil",
+	"Regional",
 	"Tecnologia",
 	"Ciência",
+	"Clima",
 	"Saúde",
 	"Entretenimento",
 	"Esportes",

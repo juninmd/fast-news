@@ -25,6 +25,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 .tick span{display:block;font:600 12px/1.2 var(--label);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 .tick b{font:700 21px/1.2 var(--serif);font-variant-numeric:tabular-nums}
 .tick small{font:500 13px/1.3 var(--label);color:var(--muted);display:block}
+.tick small.up{color:#1a7f37}
+.tick small.down{color:#cf222e}
+body.noite .tick small.up{color:#4ade80}
+body.noite .tick small.down{color:#f87171}
+.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:2px;margin:0 0 10px;display:block;background:var(--raised)}
 .kicker{font:700 12.5px/1.2 var(--label);text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:0 0 6px}
 h2,h3,h4{text-wrap:balance;margin:0}
 .lead h2{font:750 clamp(34px,5.2vw,56px)/1.03 var(--serif);letter-spacing:-.015em}
