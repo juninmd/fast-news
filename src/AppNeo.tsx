@@ -169,8 +169,8 @@ function App() {
 			<main className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8">
 				<TopNewsSection onArticleClick={openArticle} />
 
-				<section className="mb-6">
-					<div className="glass flex items-center gap-1 p-1.5 overflow-x-auto scrollbar-hide">
+				<section className="mb-8 border-b border-border-subtle">
+					<div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
 						{(
 							[
 								"feed",
@@ -195,10 +195,10 @@ function App() {
 								<button
 									key={v}
 									onClick={() => setActiveView(v)}
-									className={`text-sm font-medium px-3.5 py-1.5 rounded-xl transition-colors whitespace-nowrap ${
+									className={`whitespace-nowrap border-b-2 py-2.5 font-mono text-xs font-semibold uppercase tracking-wide transition-colors ${
 										activeView === v
-											? "bg-gradient-to-r from-accent-primary to-accent-primary/80 text-white shadow-glow"
-											: "text-text-secondary hover:text-text-primary hover:bg-white/5"
+											? "border-accent-primary text-text-primary"
+											: "border-transparent text-text-secondary hover:text-text-primary"
 									}`}
 								>
 									{labels[v]}
@@ -230,7 +230,7 @@ function App() {
 										salvar.
 									</p>
 								) : (
-									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+									<div className="divide-y divide-border-subtle border-t border-border-subtle">
 										{articles
 											.filter((a) => isBookmarked(a.id))
 											.map((article) => (
@@ -445,7 +445,7 @@ function App() {
 										)}
 									</div>
 								)}
-								<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 stagger-reveal">
+								<div className="divide-y divide-border-subtle border-t border-border-subtle stagger-reveal">
 									{loading && articles.length === 0
 										? Array.from({ length: 6 }).map((_, i) => (
 												<SkeletonCard key={i} />
@@ -475,7 +475,7 @@ function App() {
 						)}
 
 						{activeView === "feed" && loading && articles.length > 0 && (
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+							<div className="divide-y divide-border-subtle">
 								{Array.from({ length: 3 }).map((_, i) => (
 									<SkeletonCard key={`loading-${i}`} />
 								))}

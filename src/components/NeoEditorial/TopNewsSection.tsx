@@ -1,139 +1,107 @@
-import { ExternalLink, Flame } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import type { TopNewsArticle } from "../../hooks/useTopNews";
 import { useTopNews } from "../../hooks/useTopNews";
-
-const categoryColors: Record<string, string> = {
-	"AI Frontier": "bg-accent-primary/15 text-accent-primary",
-	"Big Techs": "bg-accent-secondary/15 text-accent-secondary",
-	"Dev Tools": "bg-accent-secondary/15 text-accent-secondary",
-	Tecnologia: "bg-accent-secondary/15 text-accent-secondary",
-	Mundo: "bg-bg-tertiary text-text-secondary",
-	Brasil: "bg-bg-tertiary text-text-secondary",
-	default: "bg-bg-tertiary text-text-secondary",
-};
-
-function importanceColor(score: number): string {
-	if (score >= 80) return "from-accent-primary to-accent-tertiary";
-	if (score >= 60) return "from-accent-tertiary to-accent-secondary";
-	if (score >= 40) return "from-accent-secondary to-accent-primary";
-	return "from-accent-secondary to-accent-tertiary";
-}
 
 function timeAgo(dateStr: string): string {
 	const diff = Date.now() - new Date(dateStr).getTime();
 	if (diff < 0) return new Date(dateStr).toLocaleDateString("pt-BR");
 	const h = Math.floor(diff / 3_600_000);
-	if (h < 1) return `${Math.max(1, Math.floor(diff / 60_000))}m`;
+	if (h < 1) return `${Math.max(1, Math.floor(diff / 60_000))}min`;
 	if (h < 24) return `${h}h`;
 	return `${Math.floor(h / 24)}d`;
 }
 
-function TopCard({
+function WireRow({
 	article,
+	rank,
 	onClick,
-	featured = false,
+	lead = false,
 }: {
 	article: TopNewsArticle;
+	rank: number;
 	onClick: () => void;
-	featured?: boolean;
+	lead?: boolean;
 }) {
-	const catClass = categoryColors[article.category] ?? categoryColors.default;
 	const score = Math.round(article.importance_score ?? 0);
 
 	return (
 		<button
 			onClick={onClick}
-			className={`group glass relative flex flex-col overflow-hidden text-left transition-all duration-200 hover:-translate-y-1 hover:border-accent-primary/40 ${
-				featured ? "min-h-[420px]" : ""
-			}`}
+			className="group flex w-full items-start gap-4 border-b border-border-subtle py-4 text-left last:border-b-0"
 		>
-			<div
-				className={`relative shrink-0 overflow-hidden bg-bg-tertiary ${featured ? "aspect-[16/9]" : "aspect-[16/10]"}`}
+			<span
+				className={`shrink-0 pt-0.5 font-mono tabular-nums text-text-secondary/60 ${
+					lead ? "text-3xl" : "text-lg"
+				}`}
 			>
-				{article.image_url ? (
-					<>
-						<img
-							src={article.image_url}
-							alt=""
-							aria-hidden="true"
-							className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl"
-							loading="lazy"
-						/>
-						<img
-							src={article.image_url}
-							alt=""
-							className="relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-							loading="lazy"
-						/>
-					</>
-				) : (
-					<div className="flex h-full items-center justify-center bg-gradient-to-br from-bg-tertiary to-bg-secondary">
-						<Flame className="h-10 w-10 text-accent-primary/30" />
-					</div>
-				)}
-				<div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent" />
-			</div>
+				{String(rank).padStart(2, "0")}
+			</span>
 
-			<div className={`flex flex-1 flex-col ${featured ? "p-5" : "p-3"}`}>
-				<div className="mb-2 flex items-center gap-1.5">
-					<span
-						className={`rounded-full px-2 py-0.5 text-xs font-medium ${catClass}`}
-					>
-						{article.category}
-					</span>
-					<span className="ml-auto text-xs text-text-secondary">
-						{timeAgo(article.published_at)}
-					</span>
+			<div className="min-w-0 flex-1">
+				<div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
+					<span>{article.category}</span>
+					<span className="text-faint">·</span>
+					<span className="truncate">{article.source}</span>
+					<span className="text-faint">·</span>
+					<span className="tabular-nums">{timeAgo(article.published_at)}</span>
 				</div>
-
-				<h4
-					className={`mb-2 font-bold leading-tight text-text-primary transition-colors group-hover:text-accent-primary ${
-						featured ? "line-clamp-3 text-2xl" : "line-clamp-2 text-sm"
+				<h3
+					className={`font-display font-medium leading-snug text-text-primary transition-colors group-hover:text-accent-primary ${
+						lead ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
 					}`}
 				>
 					{article.title}
-				</h4>
-				{featured && article.summary && (
-					<p className="mb-4 line-clamp-3 text-sm leading-relaxed text-text-secondary">
+				</h3>
+				{lead && article.summary && (
+					<p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
 						{article.summary}
 					</p>
 				)}
+			</div>
 
-				<div className="flex items-center justify-between gap-3">
-					<span className="min-w-0 flex-1 truncate text-xs text-text-secondary">
-						{article.source}
-					</span>
-					<div className="flex items-center gap-1 shrink-0">
-						<div className="h-1 w-16 overflow-hidden rounded-full bg-bg-tertiary">
-							<div
-								className={`h-full rounded-full bg-gradient-to-r ${importanceColor(score)}`}
-								style={{ width: `${score}%` }}
-							/>
-						</div>
-						<span className="font-numbers text-xs text-text-secondary">
-							{score}
-						</span>
-					</div>
+			{article.image_url && (
+				<div
+					className={`hidden shrink-0 overflow-hidden border border-border-subtle bg-bg-tertiary sm:block ${
+						lead ? "h-24 w-40" : "h-16 w-24"
+					}`}
+				>
+					<img
+						src={article.image_url}
+						alt=""
+						loading="lazy"
+						className="h-full w-full object-cover"
+					/>
+				</div>
+			)}
+
+			<div className="hidden shrink-0 flex-col items-end gap-1 pt-0.5 sm:flex">
+				<span className="font-mono text-xs tabular-nums text-text-secondary">
+					{score}
+				</span>
+				<div className="h-1 w-10 overflow-hidden bg-bg-tertiary">
+					<div
+						className="h-full bg-accent-primary"
+						style={{ width: `${score}%` }}
+					/>
 				</div>
 			</div>
 
-			<div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
-				<div className="glass rounded-lg p-1">
-					<ExternalLink className="h-3 w-3 text-accent-primary" />
-				</div>
-			</div>
+			<ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 text-text-secondary opacity-0 transition-opacity group-hover:opacity-100" />
 		</button>
 	);
 }
 
-function SkeletonCard() {
+function SkeletonRow({ lead = false }: { lead?: boolean }) {
 	return (
-		<div className="glass min-h-56 animate-pulse">
-			<div className="h-32 bg-bg-tertiary" />
-			<div className="space-y-2 p-3">
-				<div className="h-3 w-1/2 rounded bg-bg-tertiary" />
-				<div className="h-4 rounded bg-bg-tertiary" />
-				<div className="h-4 w-3/4 rounded bg-bg-tertiary" />
+		<div className="flex items-start gap-4 border-b border-border-subtle py-4 last:border-b-0">
+			<div
+				className={`shrink-0 animate-pulse bg-bg-tertiary ${lead ? "h-8 w-6" : "h-5 w-5"}`}
+			/>
+			<div className="flex-1 space-y-2">
+				<div className="h-3 w-1/4 animate-pulse bg-bg-tertiary" />
+				<div
+					className={`animate-pulse bg-bg-tertiary ${lead ? "h-8 w-3/4" : "h-5 w-2/3"}`}
+				/>
 			</div>
 		</div>
 	);
@@ -149,34 +117,36 @@ export function TopNewsSection({
 	if (!loading && articles.length === 0) return null;
 
 	return (
-		<section className="mb-8">
-			<div className="mb-4 flex items-baseline gap-2">
-				<Flame className="h-5 w-5 text-accent-primary" />
-				<h2 className="font-display text-xl font-semibold text-text-primary">
+		<section className="mb-10 border border-border-subtle">
+			<div className="flex items-center justify-between border-b border-border-subtle bg-bg-secondary px-4 py-2">
+				<h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-text-primary">
 					Em alta agora
 				</h2>
+				<span className="font-mono text-[11px] text-text-secondary">
+					ranking por relevância
+				</span>
 			</div>
 
-			<div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
+			<div className="px-4">
 				{loading ? (
-					Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-				) : (
 					<>
-						<TopCard
-							article={articles[0]}
-							featured
-							onClick={() => onArticleClick(articles[0].id)}
-						/>
-						<div className="grid gap-3">
-							{articles.slice(1, 5).map((a) => (
-								<TopCard
-									key={a.id}
-									article={a}
-									onClick={() => onArticleClick(a.id)}
-								/>
-							))}
-						</div>
+						<SkeletonRow lead />
+						{Array.from({ length: 4 }).map((_, i) => (
+							<SkeletonRow key={i} />
+						))}
 					</>
+				) : (
+					articles
+						.slice(0, 5)
+						.map((a, i) => (
+							<WireRow
+								key={a.id}
+								article={a}
+								rank={i + 1}
+								lead={i === 0}
+								onClick={() => onArticleClick(a.id)}
+							/>
+						))
 				)}
 			</div>
 		</section>

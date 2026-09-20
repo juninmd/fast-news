@@ -35,10 +35,10 @@ export default {
 				},
 			},
 			fontFamily: {
-				display: ["Space Grotesk", "system-ui", "sans-serif"],
-				sans: ["Manrope", "system-ui", "sans-serif"],
-				mono: ["JetBrains Mono", "monospace"],
-				numbers: ["Space Grotesk", "sans-serif"],
+				display: ["Fraunces", "Georgia", "serif"],
+				sans: ["IBM Plex Sans", "system-ui", "sans-serif"],
+				mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+				numbers: ["IBM Plex Mono", "ui-monospace", "monospace"],
 			},
 			animation: {
 				"glow-pulse": "glow-pulse 2s ease-in-out infinite",
