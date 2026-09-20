@@ -21,7 +21,8 @@ function importanceColor(score: number): string {
 
 function timeAgo(dateStr: string): string {
 	const diff = Date.now() - new Date(dateStr).getTime();
-	const h = Math.max(0, Math.floor(diff / 3_600_000));
+	if (diff < 0) return new Date(dateStr).toLocaleDateString("pt-BR");
+	const h = Math.floor(diff / 3_600_000);
 	if (h < 1) return `${Math.max(1, Math.floor(diff / 60_000))}m`;
 	if (h < 24) return `${h}h`;
 	return `${Math.floor(h / 24)}d`;
@@ -42,10 +43,8 @@ function TopCard({
 	return (
 		<button
 			onClick={onClick}
-			className={`group relative overflow-hidden rounded-xl bg-bg-secondary text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-accent-primary/40 ${
-				featured
-					? "min-h-[420px] border border-accent-primary/30 shadow-glow"
-					: "border border-border-subtle"
+			className={`group glass relative overflow-hidden text-left transition-all duration-200 hover:-translate-y-1 hover:border-accent-primary/40 ${
+				featured ? "min-h-[420px]" : ""
 			}`}
 		>
 			<div className={`relative overflow-hidden ${featured ? "h-64" : "h-28"}`}>
@@ -67,7 +66,7 @@ function TopCard({
 			<div className={featured ? "p-5" : "p-3"}>
 				<div className="mb-2 flex items-center gap-1.5">
 					<span
-						className={`rounded-full px-1.5 py-0.5 font-mono text-xs uppercase tracking-wider ${catClass}`}
+						className={`rounded-full px-2 py-0.5 text-xs font-medium ${catClass}`}
 					>
 						{article.category}
 					</span>
@@ -89,11 +88,11 @@ function TopCard({
 					</p>
 				)}
 
-				<div className="flex items-center justify-between">
-					<span className="max-w-[140px] truncate font-mono text-xs text-text-secondary">
+				<div className="flex items-center justify-between gap-3">
+					<span className="min-w-0 flex-1 truncate text-xs text-text-secondary">
 						{article.source}
 					</span>
-					<div className="flex items-center gap-1">
+					<div className="flex items-center gap-1 shrink-0">
 						<div className="h-1 w-16 overflow-hidden rounded-full bg-bg-tertiary">
 							<div
 								className={`h-full rounded-full bg-gradient-to-r ${importanceColor(score)}`}
@@ -108,7 +107,7 @@ function TopCard({
 			</div>
 
 			<div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
-				<div className="rounded-lg bg-bg-secondary/80 p-1 backdrop-blur-sm">
+				<div className="glass rounded-lg p-1">
 					<ExternalLink className="h-3 w-3 text-accent-primary" />
 				</div>
 			</div>
@@ -118,7 +117,7 @@ function TopCard({
 
 function SkeletonCard() {
 	return (
-		<div className="min-h-56 rounded-xl border border-border-subtle bg-bg-secondary animate-pulse">
+		<div className="glass min-h-56 animate-pulse">
 			<div className="h-32 bg-bg-tertiary" />
 			<div className="space-y-2 p-3">
 				<div className="h-3 w-1/2 rounded bg-bg-tertiary" />
@@ -140,14 +139,11 @@ export function TopNewsSection({
 
 	return (
 		<section className="mb-8">
-			<div className="mb-4 flex items-center gap-2">
+			<div className="mb-4 flex items-baseline gap-2">
 				<Flame className="h-5 w-5 text-accent-primary" />
-				<h2 className="font-display text-base font-bold text-text-primary">
-					Noticias principais
+				<h2 className="font-display text-xl font-semibold text-text-primary">
+					Em alta agora
 				</h2>
-				<span className="ml-1 text-xs text-text-secondary">
-					rankeadas por IA
-				</span>
 			</div>
 
 			<div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">

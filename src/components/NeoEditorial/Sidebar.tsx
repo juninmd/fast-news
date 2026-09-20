@@ -116,10 +116,10 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 
 	return (
 		<aside className="w-72 flex-shrink-0 space-y-4">
-			<section className="bg-bg-secondary rounded-xl border border-border-subtle overflow-hidden">
+			<section className="glass overflow-hidden">
 				<button
 					onClick={() => toggleSection("trending")}
-					className="w-full flex items-center justify-between p-4 hover:bg-bg-tertiary transition-colors"
+					className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
 				>
 					<span className="flex items-center gap-2 font-sans font-medium text-text-primary">
 						<TrendingUp className="w-4 h-4 text-accent-primary" />
@@ -152,10 +152,10 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 				)}
 			</section>
 
-			<section className="bg-bg-secondary rounded-xl border border-border-subtle overflow-hidden">
+			<section className="glass overflow-hidden">
 				<button
 					onClick={() => toggleSection("filters")}
-					className="w-full flex items-center justify-between p-4 hover:bg-bg-tertiary transition-colors"
+					className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
 				>
 					<span className="flex items-center gap-2 font-sans font-medium text-text-primary">
 						<Filter className="w-4 h-4 text-accent-secondary" />
@@ -170,7 +170,7 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 				{expandedSections.filters && (
 					<div className="px-4 pb-4 space-y-4">
 						<div>
-							<label className="block text-xs text-text-secondary mb-2 uppercase tracking-wider">
+							<label className="block text-xs text-text-secondary mb-2">
 								Company
 							</label>
 							<select
@@ -187,7 +187,7 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 							</select>
 						</div>
 						<div>
-							<label className="block text-xs text-text-secondary mb-2 uppercase tracking-wider">
+							<label className="block text-xs text-text-secondary mb-2">
 								Category
 							</label>
 							<select
@@ -207,10 +207,10 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 				)}
 			</section>
 
-			<section className="bg-bg-secondary rounded-xl border border-border-subtle overflow-hidden">
+			<section className="glass overflow-hidden">
 				<button
 					onClick={() => toggleSection("stats")}
-					className="w-full flex items-center justify-between p-4 hover:bg-bg-tertiary transition-colors"
+					className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
 				>
 					<span className="flex items-center gap-2 font-sans font-medium text-text-primary">
 						<BarChart3 className="w-4 h-4 text-accent-tertiary" />
@@ -248,10 +248,10 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 				)}
 			</section>
 
-			<section className="bg-bg-secondary rounded-xl border border-border-subtle overflow-hidden">
+			<section className="glass overflow-hidden">
 				<button
 					onClick={() => toggleSection("ai")}
-					className="w-full flex items-center justify-between p-4 hover:bg-bg-tertiary transition-colors"
+					className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
 				>
 					<span className="flex items-center gap-2 font-sans font-medium text-text-primary">
 						<Sparkles className="w-4 h-4 text-accent-primary" />

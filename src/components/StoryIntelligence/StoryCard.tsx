@@ -33,10 +33,10 @@ export function StoryCard({ story, onClick, selected }: Props) {
 	return (
 		<div
 			onClick={onClick}
-			className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 ${
+			className={`glass cursor-pointer p-4 transition-all duration-200 hover:-translate-y-0.5 ${
 				selected
-					? "border-accent bg-accent/10"
-					: "border-border bg-surface hover:border-accent/50 hover:bg-surface/80"
+					? "border-accent-primary/60 shadow-glow"
+					: "hover:border-accent-primary/40"
 			}`}
 		>
 			<div className="flex items-start justify-between gap-2 mb-2">
@@ -67,7 +67,7 @@ export function StoryCard({ story, onClick, selected }: Props) {
 					{story.affectedAssets.slice(0, 4).map((asset) => (
 						<span
 							key={asset}
-							className="text-xs px-1.5 py-0.5 rounded bg-accent/10 text-accent font-mono"
+							className="text-xs px-1.5 py-0.5 rounded bg-accent-primary/10 text-accent-primary font-numbers"
 						>
 							{asset}
 						</span>
@@ -76,7 +76,7 @@ export function StoryCard({ story, onClick, selected }: Props) {
 			)}
 
 			<div className="flex items-center justify-between text-xs text-text-secondary">
-				<span className="px-1.5 py-0.5 rounded bg-surface-elevated">
+				<span className="px-1.5 py-0.5 rounded bg-white/10">
 					{story.category}
 				</span>
 				<span>{story.articleCount} artigos</span>
