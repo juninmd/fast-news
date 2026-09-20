@@ -7,7 +7,11 @@ import {
 } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
 
-export const SIMILARITY_THRESHOLD = 0.75;
+// 0.75 was stricter than the app's own default (0.55 in vectorStore.ts) and
+// left the graph almost edgeless for normal daily news diversity — only
+// near-duplicate coverage of the same story crossed it. STORY_MERGE_THRESHOLD
+// stays high since it drives story clustering, not just a "related" edge.
+export const SIMILARITY_THRESHOLD = 0.62;
 const STORY_MERGE_THRESHOLD = 0.8;
 
 const StorySchema = z.object({
