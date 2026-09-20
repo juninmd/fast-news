@@ -34,6 +34,38 @@ export function editionFilename(w: EditionWindow): string {
 	return `o-fio-${w.day}-${w.kind}.html`;
 }
 
+const DOCUMENT_SEND_ATTEMPTS = 3;
+const DOCUMENT_RETRY_DELAY_MS = 4000;
+
+/**
+ * The edition file upload is a single large multipart request and loses the
+ * socket to transient network blips more often than a plain text message.
+ * One retry wasn't enough in production (two straight "socket hang up"s on
+ * the same edition), so this backs off between attempts instead of firing
+ * the retry immediately into the same failure.
+ */
+async function sendDocumentWithRetry(
+	telegram: ReturnType<typeof getBot>["telegram"],
+	chatId: string,
+	doc: { source: Buffer; filename: string },
+): Promise<{ message_id: number }> {
+	let lastErr: unknown;
+	for (let attempt = 1; attempt <= DOCUMENT_SEND_ATTEMPTS; attempt++) {
+		try {
+			return await telegram.sendDocument(chatId, doc);
+		} catch (err) {
+			lastErr = err;
+			if (attempt < DOCUMENT_SEND_ATTEMPTS) {
+				console.warn(
+					`[Edition] Retrying file for ${chatId} (attempt ${attempt + 1}/${DOCUMENT_SEND_ATTEMPTS}): ${safeMessage(err)}`,
+				);
+				await new Promise((r) => setTimeout(r, DOCUMENT_RETRY_DELAY_MS));
+			}
+		}
+	}
+	throw lastErr;
+}
+
 /** Sends the summary message and the full newspaper file to every chat. */
 export async function publishEdition(
 	w: EditionWindow,
@@ -63,14 +95,7 @@ export async function publishEdition(
 		result.delivered.push(chatId);
 		const doc = { source: file, filename: editionFilename(w) };
 		try {
-			// One retry: large uploads sometimes lose the socket mid-request.
-			const sent = await telegram.sendDocument(chatId, doc).catch((err) => {
-				// The first upload may have landed, so a duplicate is possible.
-				console.warn(
-					`[Edition] Retrying file for ${chatId}: ${safeMessage(err)}`,
-				);
-				return telegram.sendDocument(chatId, doc);
-			});
+			const sent = await sendDocumentWithRetry(telegram, chatId, doc);
 			result.links[chatId] = messageLink(chatId, sent.message_id);
 		} catch (err) {
 			result.failed.push({ chatId, error: `document: ${safeMessage(err)}` });
