@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://news.mit.edu/rss/feed",
+		category: "Tecnologia",
+		company: "MIT News",
+	},
+	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",
