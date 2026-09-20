@@ -13,21 +13,34 @@ import { useBookmarks } from "../../hooks/useBookmarks";
 import { useReadingHistory } from "../../hooks/useReadingHistory";
 import { sendArticleToTelegram } from "../../services/telegramService";
 
+// Editorial, restrained palette: accent tokens for AI/tech signal, muted
+// neutrals for everything else — avoids the "rainbow SaaS badge" look.
 const categoryColors: Record<string, string> = {
-	"AI Frontier": "bg-violet-500/20 text-violet-400 border-violet-500/30",
-	"Big Techs": "bg-blue-500/20 text-blue-400 border-blue-500/30",
-	"Dev Tools": "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-	Engenharia: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-	"Open Source": "bg-orange-500/20 text-orange-400 border-orange-500/30",
-	Segurança: "bg-red-500/20 text-red-400 border-red-500/30",
-	Startups: "bg-pink-500/20 text-pink-400 border-pink-500/30",
-	Gaming: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-	Tecnologia: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-	Mundo: "bg-teal-500/20 text-teal-400 border-teal-500/30",
-	Negocios: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-	Brasil: "bg-green-500/20 text-green-400 border-green-500/30",
-	Ciencia: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-	IA: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+	"AI Frontier":
+		"bg-accent-primary/15 text-accent-primary border-accent-primary/30",
+	IA: "bg-accent-primary/15 text-accent-primary border-accent-primary/30",
+	"Big Techs":
+		"bg-accent-secondary/15 text-accent-secondary border-accent-secondary/30",
+	"Dev Tools":
+		"bg-accent-secondary/15 text-accent-secondary border-accent-secondary/30",
+	Engenharia:
+		"bg-accent-secondary/15 text-accent-secondary border-accent-secondary/30",
+	"Open Source":
+		"bg-accent-tertiary/15 text-accent-tertiary border-accent-tertiary/30",
+	Segurança:
+		"bg-accent-primary/15 text-accent-primary border-accent-primary/30",
+	Startups:
+		"bg-accent-tertiary/15 text-accent-tertiary border-accent-tertiary/30",
+	Gaming:
+		"bg-accent-tertiary/15 text-accent-tertiary border-accent-tertiary/30",
+	Tecnologia:
+		"bg-accent-secondary/15 text-accent-secondary border-accent-secondary/30",
+	Mundo: "bg-bg-tertiary text-text-secondary border-border-subtle",
+	Negocios:
+		"bg-accent-tertiary/15 text-accent-tertiary border-accent-tertiary/30",
+	Brasil: "bg-bg-tertiary text-text-secondary border-border-subtle",
+	Ciencia:
+		"bg-accent-secondary/15 text-accent-secondary border-accent-secondary/30",
 	default: "bg-bg-tertiary text-text-secondary border-transparent",
 };
 

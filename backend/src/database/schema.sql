@@ -158,6 +158,14 @@ ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS telegram_skipped_at TIMESTAMP
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS relevance_reasoning TEXT DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS is_spam_or_promo BOOLEAN DEFAULT FALSE;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS should_post_telegram BOOLEAN DEFAULT TRUE;
+-- Per-article editorial theme (LLM-classified), separate from `category`
+-- which is the static source/feed classification and also carries the
+-- 'fact_check' sentinel (see editions/select.ts isFactCheck) and the
+-- excludedCategories exact-match list (EDITION_EXCLUDED_CATEGORIES) — both
+-- would break if `category` were repurposed. NULL means not yet classified
+-- (falls back to `category` at read time).
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS theme_category TEXT DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_theme_category ON news_articles(theme_category);
 
 DROP INDEX IF EXISTS idx_articles_telegram_unsent;
 CREATE INDEX IF NOT EXISTS idx_articles_telegram_unsent ON news_articles(created_at DESC) WHERE telegram_sent_at IS NULL AND telegram_skipped_at IS NULL;

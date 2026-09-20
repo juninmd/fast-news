@@ -26,9 +26,18 @@ describe("editionWindow", () => {
 		expect(w.end.toISOString()).toBe("2026-09-17T10:00:00.000Z");
 	});
 
-	it("noite covers 07h to 19h of the same local day", () => {
-		const w = editionWindow("noite", at("2026-09-18T22:05:00Z"));
+	it("tarde closes at 13h and covers the 6h since manhã's 07h close", () => {
+		const w = editionWindow("tarde", at("2026-09-18T16:05:00Z"));
 		expect(w.start.toISOString()).toBe("2026-09-18T10:00:00.000Z");
+		expect(w.end.toISOString()).toBe("2026-09-18T16:00:00.000Z");
+		expect(w.day).toBe("2026-09-18");
+		expect(formatLocalTime(w.start)).toBe("07h00");
+		expect(formatLocalTime(w.end)).toBe("13h00");
+	});
+
+	it("noite closes at 19h and covers the 6h since tarde's 13h close", () => {
+		const w = editionWindow("noite", at("2026-09-18T22:05:00Z"));
+		expect(w.start.toISOString()).toBe("2026-09-18T16:00:00.000Z");
 		expect(w.end.toISOString()).toBe("2026-09-18T22:00:00.000Z");
 		expect(w.day).toBe("2026-09-18");
 	});
