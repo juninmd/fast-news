@@ -224,17 +224,25 @@ export function NewsCard({
 				</div>
 			) : showImage ? (
 				<div
-					className={`relative overflow-hidden ${variant === "compact" ? "h-32" : variant === "featured" ? "h-64" : "h-44"}`}
+					className={`relative overflow-hidden bg-bg-tertiary ${variant === "compact" ? "aspect-[16/10]" : variant === "featured" ? "aspect-[16/9]" : "aspect-[4/3]"}`}
 				>
+					<img
+						src={imageUrl}
+						alt=""
+						aria-hidden="true"
+						loading="lazy"
+						decoding="async"
+						className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50"
+					/>
 					<img
 						src={imageUrl}
 						alt=""
 						loading="lazy"
 						decoding="async"
 						onError={() => setImageError(true)}
-						className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+						className="relative w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.04]"
 					/>
-					<div className="absolute inset-0 bg-gradient-to-t from-bg-secondary/90 via-bg-secondary/20 to-transparent" />
+					<div className="absolute inset-0 bg-gradient-to-t from-bg-secondary/90 via-transparent to-transparent" />
 					<div className="absolute top-3 left-3">
 						<span
 							className={`px-2 py-0.5 rounded-full text-xs font-medium border ${catClass} backdrop-blur-sm`}

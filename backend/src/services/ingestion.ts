@@ -5,7 +5,7 @@ import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
-import { buildArticleRelations } from "./correlation.js";
+import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
 import { getActiveFeeds } from "./sources.js";
 import { classifyTheme } from "./themeClassification.js";
@@ -359,12 +359,9 @@ export interface IngestionResult {
 async function isOllamaAvailable(): Promise<boolean> {
 	const base = config.ollama.baseUrl;
 	const embeddingBase = config.ollama.embeddingBaseUrl;
-	if (
-		embeddingBase.includes("/v1") ||
-		(base.includes("/v1") && !embeddingBase)
-	) {
+	if (base.includes("/v1") && !embeddingBase) {
 		console.warn(
-			"[ingestion] Native OLLAMA_EMBEDDING_BASE_URL is not configured; embeddings will be skipped",
+			"[ingestion] OLLAMA_EMBEDDING_BASE_URL is not configured; embeddings will be skipped",
 		);
 		return false;
 	}
@@ -425,6 +422,9 @@ export async function runIngestion(): Promise<IngestionResult> {
 						newArticles.push(newArticle);
 						runBackground("buildArticleRelations", () =>
 							buildArticleRelations(id),
+						);
+						runBackground("assignArticleToStory", () =>
+							assignArticleToStory(id),
 						);
 					}
 				} catch (err) {

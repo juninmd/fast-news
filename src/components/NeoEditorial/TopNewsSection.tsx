@@ -47,20 +47,31 @@ function TopCard({
 				featured ? "min-h-[420px]" : ""
 			}`}
 		>
-			<div className={`relative overflow-hidden ${featured ? "h-64" : "h-28"}`}>
+			<div
+				className={`relative overflow-hidden bg-bg-tertiary ${featured ? "aspect-[16/9]" : "aspect-[16/10]"}`}
+			>
 				{article.image_url ? (
-					<img
-						src={article.image_url}
-						alt=""
-						className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-						loading="lazy"
-					/>
+					<>
+						<img
+							src={article.image_url}
+							alt=""
+							aria-hidden="true"
+							className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl"
+							loading="lazy"
+						/>
+						<img
+							src={article.image_url}
+							alt=""
+							className="relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+							loading="lazy"
+						/>
+					</>
 				) : (
 					<div className="flex h-full items-center justify-center bg-gradient-to-br from-bg-tertiary to-bg-secondary">
 						<Flame className="h-10 w-10 text-accent-primary/30" />
 					</div>
 				)}
-				<div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-bg-secondary/10 to-transparent" />
+				<div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent" />
 			</div>
 
 			<div className={featured ? "p-5" : "p-3"}>
