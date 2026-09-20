@@ -43,12 +43,12 @@ function TopCard({
 	return (
 		<button
 			onClick={onClick}
-			className={`group glass relative overflow-hidden text-left transition-all duration-200 hover:-translate-y-1 hover:border-accent-primary/40 ${
+			className={`group glass relative flex flex-col overflow-hidden text-left transition-all duration-200 hover:-translate-y-1 hover:border-accent-primary/40 ${
 				featured ? "min-h-[420px]" : ""
 			}`}
 		>
 			<div
-				className={`relative overflow-hidden bg-bg-tertiary ${featured ? "aspect-[16/9]" : "aspect-[16/10]"}`}
+				className={`relative shrink-0 overflow-hidden bg-bg-tertiary ${featured ? "aspect-[16/9]" : "aspect-[16/10]"}`}
 			>
 				{article.image_url ? (
 					<>
@@ -74,7 +74,7 @@ function TopCard({
 				<div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent" />
 			</div>
 
-			<div className={featured ? "p-5" : "p-3"}>
+			<div className={`flex flex-1 flex-col ${featured ? "p-5" : "p-3"}`}>
 				<div className="mb-2 flex items-center gap-1.5">
 					<span
 						className={`rounded-full px-2 py-0.5 text-xs font-medium ${catClass}`}
