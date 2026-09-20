@@ -52,6 +52,30 @@ function sections(e: Edition): string {
 		.join("");
 }
 
+function pct(v: number): string {
+	const sign = v > 0 ? "+" : "";
+	return `${sign}${v.toFixed(2).replace(".", ",")}%`;
+}
+
+function market(e: Edition): string {
+	const { usdBrl, ibovespa, selicRate } = e.market;
+	if (!usdBrl && !ibovespa && selicRate === null) return "";
+	const tiles: string[] = [];
+	if (usdBrl)
+		tiles.push(
+			`<div class="tick"><span>Dólar</span><b>R$ ${usdBrl.value.toFixed(2).replace(".", ",")}</b><small class="${usdBrl.changePct >= 0 ? "up" : "down"}">${pct(usdBrl.changePct)}</small></div>`,
+		);
+	if (ibovespa)
+		tiles.push(
+			`<div class="tick"><span>Ibovespa</span><b>${nf.format(Math.round(ibovespa.value))}</b><small class="${ibovespa.changePct >= 0 ? "up" : "down"}">${pct(ibovespa.changePct)}</small></div>`,
+		);
+	if (selicRate !== null)
+		tiles.push(
+			`<div class="tick"><span>Selic</span><b>${selicRate.toFixed(2).replace(".", ",")}%</b><small>meta a.a.</small></div>`,
+		);
+	return `<div class="ticker">${tiles.join("")}</div>`;
+}
+
 function ticker(e: Edition): string {
 	if (!e.draft.numeros.length) return "";
 	return `<div class="ticker">${e.draft.numeros
@@ -80,7 +104,7 @@ export function renderEditionHtml(e: Edition): string {
 <h1 class="name">O <i>F</i>io</h1>
 <div class="ear r"><b>${esc(range)}</b>período coberto, horário de Brasília</div></div>
 <div class="folio"><span class="ed">${LABEL[w.kind]}</span><span>${esc(formatLocalDate(w.day))}</span><span>fast-news</span></div></header>
-${ticker(e)}${front(e)}${threads(draft.fio, e.headlines)}${sections(e)}
+${market(e)}${ticker(e)}${front(e)}${threads(draft.fio, e.headlines)}${sections(e)}
 ${draft.leve.length || draft.quiz.length ? `<section class="sec"><div class="grid2"><div>${draft.leve.length ? sectionHead(closing) + brief(draft.leve.map(esc)) : ""}</div>${quiz(draft.quiz)}</div></section>` : ""}
 ${pulse(e.hourly, w.start)}
 <footer class="colophon">O Fio é montado automaticamente a partir das notícias captadas pelo fast-news. Os links levam à matéria original.</footer>

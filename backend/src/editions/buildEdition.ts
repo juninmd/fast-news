@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import { config } from "../config/env.js";
 import { generateWithFallback } from "../services/llmWithFallback.js";
+import { fetchMarketSnapshot } from "../services/marketData.js";
 import { collectHeadlines } from "./collect.js";
 import { extrasSchema, frontSchema, sectionsSchema } from "./draftSchema.js";
 import { buildEditionPrompt, type EditionPart } from "./prompt.js";
@@ -90,8 +91,9 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 	);
 	if (!front) throw new Error("[Edition] Model returned no front page");
 	const onFront = [front.manchete, ...front.destaques].map((s) => s.titulo);
-	// Sections and extras are optional: a failed call drops them, not the edition.
-	const [sections, extras] = await Promise.all([
+	// Sections, extras and the market snapshot are optional: a failed call
+	// drops them, not the edition.
+	const [sections, extras, market] = await Promise.all([
 		generatePart(
 			sectionsSchema,
 			(r) => r.secoes.some((s) => s.materias.length + s.notas.length > 0),
@@ -109,6 +111,7 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 			picked,
 			onFront,
 		),
+		fetchMarketSnapshot(),
 	]);
 	const raw = {
 		...front,
@@ -130,5 +133,6 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		),
 		totalArticles: all.length,
 		totalSources: new Set(all.map((h) => h.source)).size,
+		market,
 	};
 }
