@@ -45,10 +45,16 @@ async function main(): Promise<number> {
 				`[Edition] Delivery failed for chat ${f.chatId}: ${f.error}`,
 			);
 		if (!delivered) throw new Error("[Edition] No chat received the edition");
-		await markEditionSent(window, edition.draft);
+		await markEditionSent(window, {
+			draft: edition.draft,
+			links: result.links,
+		});
 		console.log(
 			`[Edition] Sent ${editionKey(window)} to ${delivered} chat(s), ${Math.round(html.length / 1024)} KB, in ${Date.now() - started}ms`,
 		);
+		for (const [chatId, link] of Object.entries(result.links)) {
+			console.log(`[Edition] ${chatId}: ${link}`);
+		}
 		return result.failed.length ? 1 : 0;
 	} catch (err) {
 		if (!delivered) await releaseEdition(window);
