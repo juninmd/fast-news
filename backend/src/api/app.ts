@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { healthHandler } from "./health.js";
 import { aiRouter } from "./routes/ai.js";
+import { editionsRouter } from "./routes/editions.js";
 import { financialRouter } from "./routes/financial.js";
 import { newsRouter } from "./routes/news.js";
 import { ragRouter } from "./routes/rag.js";
@@ -29,6 +30,7 @@ export function createApp(): express.Application {
 	app.use("/api/financial", financialRouter);
 	app.use("/api/rag", ragRouter);
 	app.use("/api/stories", storiesRouter);
+	app.use("/api/editions", editionsRouter);
 	app.use("/api/telegram", telegramRouter);
 	app.use("/api/ai", aiRouter);
 
