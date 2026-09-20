@@ -128,12 +128,13 @@ newsRouter.get("/top", async (_req: Request, res: Response) => {
 		is_militant: boolean;
 	}>(
 		`SELECT id, title, summary, url, source, category, company,
-            published_at, image_url, importance_score,
+            published_at, image_url,
+            COALESCE(relevance_score, importance_score) AS importance_score,
             fake_news_score, political_bias, is_militant
      FROM news_articles
      WHERE published_at > NOW() - INTERVAL '48 hours'
-       AND importance_score IS NOT NULL
-     ORDER BY importance_score DESC NULLS LAST, published_at DESC
+       AND COALESCE(is_spam_or_promo, FALSE) = FALSE
+     ORDER BY relevance_score DESC NULLS LAST, published_at DESC
      LIMIT 10`,
 	);
 
