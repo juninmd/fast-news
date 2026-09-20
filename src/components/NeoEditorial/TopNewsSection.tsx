@@ -3,20 +3,20 @@ import type { TopNewsArticle } from "../../hooks/useTopNews";
 import { useTopNews } from "../../hooks/useTopNews";
 
 const categoryColors: Record<string, string> = {
-	"AI Frontier": "bg-violet-500/20 text-violet-300",
-	"Big Techs": "bg-blue-500/20 text-blue-300",
-	"Dev Tools": "bg-emerald-500/20 text-emerald-300",
-	Tecnologia: "bg-sky-500/20 text-sky-300",
-	Mundo: "bg-teal-500/20 text-teal-300",
-	Brasil: "bg-green-500/20 text-green-300",
+	"AI Frontier": "bg-accent-primary/15 text-accent-primary",
+	"Big Techs": "bg-accent-secondary/15 text-accent-secondary",
+	"Dev Tools": "bg-accent-secondary/15 text-accent-secondary",
+	Tecnologia: "bg-accent-secondary/15 text-accent-secondary",
+	Mundo: "bg-bg-tertiary text-text-secondary",
+	Brasil: "bg-bg-tertiary text-text-secondary",
 	default: "bg-bg-tertiary text-text-secondary",
 };
 
 function importanceColor(score: number): string {
-	if (score >= 80) return "from-red-500 to-orange-500";
-	if (score >= 60) return "from-orange-500 to-yellow-500";
-	if (score >= 40) return "from-yellow-500 to-green-500";
-	return "from-green-500 to-teal-500";
+	if (score >= 80) return "from-accent-primary to-accent-tertiary";
+	if (score >= 60) return "from-accent-tertiary to-accent-secondary";
+	if (score >= 40) return "from-accent-secondary to-accent-primary";
+	return "from-accent-secondary to-accent-tertiary";
 }
 
 function timeAgo(dateStr: string): string {
@@ -141,7 +141,7 @@ export function TopNewsSection({
 	return (
 		<section className="mb-8">
 			<div className="mb-4 flex items-center gap-2">
-				<Flame className="h-5 w-5 text-orange-400" />
+				<Flame className="h-5 w-5 text-accent-primary" />
 				<h2 className="font-display text-base font-bold text-text-primary">
 					Noticias principais
 				</h2>

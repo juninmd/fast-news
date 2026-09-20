@@ -67,11 +67,11 @@ export function pickForPrompt(
 }
 
 /** Articles per local hour; index 0 is the window's first hour. */
-export function hourlyCounts(dates: Date[], start: Date): number[] {
-	const counts = new Array<number>(12).fill(0);
+export function hourlyCounts(dates: Date[], start: Date, hours = 12): number[] {
+	const counts = new Array<number>(hours).fill(0);
 	for (const d of dates) {
 		const slot = Math.floor((d.getTime() - start.getTime()) / 3_600_000);
-		if (slot >= 0 && slot < 12) counts[slot] = (counts[slot] ?? 0) + 1;
+		if (slot >= 0 && slot < hours) counts[slot] = (counts[slot] ?? 0) + 1;
 	}
 	return counts;
 }

@@ -12,7 +12,11 @@ import { EDITION_CSS, FONTS_HREF, QUIZ_SCRIPT } from "./htmlStyles.js";
 import type { Edition } from "./types.js";
 import { formatLocalDate, formatLocalTime } from "./window.js";
 
-const LABEL = { manha: "Edição da Manhã", noite: "Edição da Noite" };
+const LABEL = {
+	manha: "Edição da Manhã",
+	tarde: "Edição da Tarde",
+	noite: "Edição da Noite",
+};
 const nf = new Intl.NumberFormat("pt-BR");
 
 function front(e: Edition): string {
@@ -61,7 +65,11 @@ function ticker(e: Edition): string {
 export function renderEditionHtml(e: Edition): string {
 	const { window: w, draft } = e;
 	const closing =
-		w.kind === "manha" ? "Para ler com o café" : "Antes de dormir";
+		w.kind === "manha"
+			? "Para ler com o café"
+			: w.kind === "tarde"
+				? "Para a pausa da tarde"
+				: "Antes de dormir";
 	const range = `${formatLocalTime(w.start)} → ${formatLocalTime(w.end)}`;
 	return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

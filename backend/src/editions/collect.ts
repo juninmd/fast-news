@@ -18,7 +18,7 @@ export async function collectHeadlines(
 	window: EditionWindow,
 ): Promise<Headline[]> {
 	const res = await query<Row>(
-		`SELECT title, source, category, url, created_at,
+		`SELECT title, source, coalesce(theme_category, category) AS category, url, created_at,
 		        left(regexp_replace(coalesce(nullif(summary, ''), content, ''), '\\s+', ' ', 'g'), 220) AS snippet
 		   FROM news_articles
 		  WHERE created_at >= $1 AND created_at < $2

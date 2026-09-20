@@ -44,14 +44,19 @@ export function Header({
 								<Menu className="w-5 h-5" />
 							)}
 						</button>
-						<a href="/" className="flex items-center gap-2">
-							<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center">
+						<a href="/" className="flex items-center gap-2.5">
+							<div className="w-8 h-8 rounded-lg bg-accent-primary flex items-center justify-center">
 								<span className="text-white font-display font-bold text-lg">
 									F
 								</span>
 							</div>
-							<span className="hidden sm:block font-display font-bold text-xl text-text-primary">
-								Fast<span className="text-accent-primary">News</span>
+							<span className="hidden sm:flex flex-col leading-none">
+								<span className="font-display font-bold text-xl text-text-primary tracking-tight">
+									Fast<span className="text-accent-primary">News</span>
+								</span>
+								<span className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-secondary">
+									Curadoria por IA
+								</span>
 							</span>
 						</a>
 					</div>

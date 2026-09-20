@@ -15,6 +15,11 @@
 		--text-primary: var(--strong);
 		--text-secondary: var(--muted);
 		--border-subtle: var(--ink);
+		/* Editorial accent: terracotta ink for emphasis, deep teal + ochre for secondary signal */
+		--accent-primary: #b3401f;
+		--accent-secondary: #1f6f5c;
+		--accent-tertiary: #b3841f;
+		--accent-glow: rgba(179, 64, 31, 0.18);
 	}
 
 	.dark {
@@ -30,14 +35,21 @@
 		--text-primary: var(--strong);
 		--text-secondary: var(--muted);
 		--border-subtle: var(--ink);
+		--accent-primary: #e2703f;
+		--accent-secondary: #3fa893;
+		--accent-tertiary: #d9a64b;
+		--accent-glow: rgba(226, 112, 63, 0.22);
 	}
 
 	body {
-		background:
-			linear-gradient(90deg, rgba(20, 184, 166, 0.05) 1px, transparent 1px),
-			linear-gradient(0deg, rgba(20, 184, 166, 0.04) 1px, transparent 1px),
-			var(--canvas);
-		background-size: 48px 48px;
+		background: var(--canvas);
+	}
+
+	/* WCAG 2.4.11 Focus Appearance: visible 2px accent outline on every interactive element */
+	:focus-visible {
+		outline: 2px solid var(--accent-primary);
+		outline-offset: 2px;
+		border-radius: 2px;
 	}
 }
 

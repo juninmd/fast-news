@@ -31,7 +31,9 @@ export function buildEditionPrompt(
 	const period =
 		window.kind === "manha"
 			? "Edição da Manhã: cobre o que chegou da noite anterior até as 7h. O leitor está acordando; privilegie o que ele precisa saber para o dia."
-			: "Edição da Noite: cobre o que chegou entre 7h e 19h. O leitor está voltando para casa; conte como o dia andou.";
+			: window.kind === "tarde"
+				? "Edição da Tarde: cobre o que chegou entre 7h e 13h. O leitor está no meio do expediente; foque no que mudou desde a manhã."
+				: "Edição da Noite: cobre o que chegou entre 13h e 19h. O leitor está voltando para casa; conte como o resto do dia andou.";
 	const front = onFront.length
 		? `\n- Já estão na capa e não devem ser repetidas: ${onFront.map((t) => t.replace(/[\r\n]+/g, " ")).join(" / ")}`
 		: "";
