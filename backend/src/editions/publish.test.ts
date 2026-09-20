@@ -9,7 +9,7 @@ vi.mock("../config/env.js", () => ({
 	config: {
 		telegramEnabled: true,
 		telegramBotToken: "123:secret",
-		telegramChatIds: ["-100"],
+		telegramChatIds: ["-1001234567890"],
 	},
 }));
 
@@ -39,10 +39,16 @@ describe("publishEdition", () => {
 	});
 
 	it("retries the file once so a dropped connection still delivers it", async () => {
-		sendDocument.mockRejectedValueOnce(hangUp).mockResolvedValueOnce({});
+		sendDocument
+			.mockRejectedValueOnce(hangUp)
+			.mockResolvedValueOnce({ message_id: 42 });
 		const r = await publishEdition(w, "s", "<html>");
 		expect(sendDocument).toHaveBeenCalledTimes(2);
 		expect(sendMessage).toHaveBeenCalledTimes(1);
-		expect(r).toEqual({ delivered: ["-100"], failed: [] });
+		expect(r).toEqual({
+			delivered: ["-1001234567890"],
+			failed: [],
+			links: { "-1001234567890": "https://t.me/c/1234567890/42" },
+		});
 	});
 });
