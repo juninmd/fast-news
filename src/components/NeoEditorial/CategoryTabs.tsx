@@ -23,27 +23,29 @@ export function CategoryTabs({
 	onCategoryChange,
 }: CategoryTabsProps) {
 	return (
-		<nav aria-label="Categorias" className="glass p-2">
-			<div className="grid gap-1">
-				{CATEGORIES.map((category) => (
-					<button
-						key={category}
-						onClick={() => onCategoryChange(category)}
-						className={`
-              flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors
+		<nav aria-label="Categorias" className="border border-border-subtle">
+			<div className="flex flex-col">
+				{CATEGORIES.map((category, i) => {
+					const active = category === activeCategory;
+					return (
+						<button
+							key={category}
+							onClick={() => onCategoryChange(category)}
+							className={`
+              flex items-center justify-between px-3 py-2.5 text-left text-sm transition-colors
+              ${i > 0 ? "border-t border-border-subtle" : ""}
               ${
-								category === activeCategory
-									? "bg-gradient-to-r from-accent-primary to-accent-primary/80 text-white shadow-glow"
-									: "text-text-secondary hover:bg-white/5 hover:text-text-primary"
+								active
+									? "bg-accent-primary/10 text-accent-primary font-medium"
+									: "text-text-secondary hover:text-text-primary"
 							}
             `}
-					>
-						<span className="font-medium">{category}</span>
-						{category === activeCategory && (
-							<span className="h-1.5 w-1.5 rounded-full bg-white" />
-						)}
-					</button>
-				))}
+						>
+							<span>{category}</span>
+							{active && <span className="h-1.5 w-1.5 bg-accent-primary" />}
+						</button>
+					);
+				})}
 			</div>
 		</nav>
 	);

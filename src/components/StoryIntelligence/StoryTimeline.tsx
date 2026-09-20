@@ -1,12 +1,11 @@
-import React from "react";
 import type { TimelineEvent } from "../../hooks/useStories";
 
 const EVENT_STYLES: Record<string, { color: string; icon: string }> = {
-	new_development: { color: "bg-blue-400", icon: "●" },
-	escalation: { color: "bg-red-400", icon: "▲" },
-	contradiction: { color: "bg-yellow-400", icon: "⚡" },
-	resolution: { color: "bg-green-400", icon: "✓" },
-	impact_update: { color: "bg-purple-400", icon: "◆" },
+	new_development: { color: "bg-accent-primary", icon: "●" },
+	escalation: { color: "bg-accent-tertiary", icon: "▲" },
+	contradiction: { color: "bg-accent-tertiary/70", icon: "⚡" },
+	resolution: { color: "bg-accent-secondary", icon: "✓" },
+	impact_update: { color: "bg-text-secondary", icon: "◆" },
 };
 
 interface Props {
@@ -16,34 +15,32 @@ interface Props {
 export function StoryTimeline({ events }: Props) {
 	if (!events.length)
 		return (
-			<p className="text-xs text-text-secondary text-center py-6">
+			<p className="py-6 text-center font-mono text-xs text-text-secondary">
 				Sem eventos na linha do tempo
 			</p>
 		);
 
 	return (
 		<div className="relative pl-6">
-			{/* vertical line */}
-			<div className="absolute left-2.5 top-0 bottom-0 w-px bg-white/10" />
+			<div className="absolute bottom-0 left-2.5 top-0 w-px bg-border-subtle" />
 
-			<div className="space-y-4">
-				{events.map((event, i) => {
+			<div className="space-y-3">
+				{events.map((event) => {
 					const style =
 						EVENT_STYLES[event.eventType] ?? EVENT_STYLES.new_development;
 					const date = new Date(event.occurredAt);
 					return (
 						<div key={event.id} className="relative">
-							{/* dot */}
 							<div
-								className={`absolute -left-6 top-1.5 w-3 h-3 rounded-full ${style.color} flex items-center justify-center`}
+								className={`absolute -left-6 top-1.5 h-3 w-3 ${style.color}`}
 							/>
 
-							<div className="glass p-3">
-								<div className="flex items-center gap-2 mb-1">
-									<span className="text-xs px-1.5 py-0.5 rounded bg-white/10 text-text-secondary capitalize">
+							<div className="border border-border-subtle p-3">
+								<div className="mb-1 flex items-center gap-2">
+									<span className="border border-border-subtle px-1.5 py-0.5 font-mono text-[11px] capitalize text-text-secondary">
 										{event.eventType.replace("_", " ")}
 									</span>
-									<span className="text-xs text-text-secondary ml-auto">
+									<span className="ml-auto font-mono text-[11px] text-text-secondary">
 										{date.toLocaleDateString("pt-BR")}{" "}
 										{date.toLocaleTimeString("pt-BR", {
 											hour: "2-digit",
@@ -51,11 +48,11 @@ export function StoryTimeline({ events }: Props) {
 										})}
 									</span>
 								</div>
-								<p className="text-sm font-medium text-text-primary line-clamp-2">
+								<p className="line-clamp-2 text-sm font-medium text-text-primary">
 									{event.headline}
 								</p>
 								{event.whatChanged && (
-									<p className="text-xs text-text-secondary mt-1 italic border-l-2 border-accent-primary/50 pl-2">
+									<p className="mt-1 border-l-2 border-accent-primary/50 pl-2 text-xs text-text-secondary">
 										{event.whatChanged}
 									</p>
 								)}
