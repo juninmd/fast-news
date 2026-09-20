@@ -3,46 +3,80 @@
 
 @layer base {
 	:root {
-		--canvas: #f7f4ed;
-		--panel: rgba(255, 255, 255, 0.72);
-		--strong: #15130f;
-		--muted: #625d52;
-		--faint: #8c8578;
-		--ink: rgba(21, 19, 15, 0.12);
+		--canvas: #f4f5fa;
+		--panel: rgba(255, 255, 255, 0.78);
+		--strong: #12131f;
+		--muted: #565c73;
+		--faint: #8b90a6;
+		--ink: rgba(18, 19, 31, 0.1);
 		--bg-primary: var(--canvas);
 		--bg-secondary: var(--panel);
-		--bg-tertiary: #eee7da;
+		--bg-tertiary: #e8eaf3;
 		--text-primary: var(--strong);
 		--text-secondary: var(--muted);
 		--border-subtle: var(--ink);
-		/* Editorial accent: terracotta ink for emphasis, deep teal + ochre for secondary signal */
-		--accent-primary: #b3401f;
+		--accent-primary: #e2551f;
 		--accent-secondary: #1f6f5c;
 		--accent-tertiary: #b3841f;
-		--accent-glow: rgba(179, 64, 31, 0.18);
+		--accent-glow: rgba(226, 85, 31, 0.16);
+		--glass-fill: rgba(255, 255, 255, 0.55);
+		--glass-edge: rgba(255, 255, 255, 0.7);
+		--bg-gradient:
+			radial-gradient(
+				60% 45% at 12% 0%,
+				rgba(226, 85, 31, 0.09),
+				transparent 60%
+			),
+			radial-gradient(
+				50% 40% at 100% 20%,
+				rgba(31, 111, 92, 0.08),
+				transparent 60%
+			),
+			var(--canvas);
 	}
 
 	.dark {
-		--canvas: #09090b;
-		--panel: rgba(255, 255, 255, 0.045);
-		--strong: #fafafa;
-		--muted: #a1a1aa;
-		--faint: #71717a;
+		--canvas: #0a0e1d;
+		--panel: rgba(226, 233, 255, 0.05);
+		--strong: #f2f4ff;
+		--muted: #9fa9c9;
+		--faint: #6c7396;
 		--ink: rgba(255, 255, 255, 0.1);
 		--bg-primary: var(--canvas);
 		--bg-secondary: var(--panel);
-		--bg-tertiary: #18181b;
+		--bg-tertiary: #131a30;
 		--text-primary: var(--strong);
 		--text-secondary: var(--muted);
 		--border-subtle: var(--ink);
-		--accent-primary: #e2703f;
-		--accent-secondary: #3fa893;
-		--accent-tertiary: #d9a64b;
-		--accent-glow: rgba(226, 112, 63, 0.22);
+		--accent-primary: #ff6a39;
+		--accent-secondary: #ffc15c;
+		--accent-tertiary: #7fb8ff;
+		--accent-glow: rgba(255, 106, 57, 0.24);
+		--glass-fill: rgba(226, 233, 255, 0.06);
+		--glass-edge: rgba(255, 255, 255, 0.14);
+		--bg-gradient:
+			radial-gradient(
+				50% 40% at 12% -8%,
+				rgba(255, 106, 57, 0.28),
+				transparent 62%
+			),
+			radial-gradient(
+				42% 38% at 102% 6%,
+				rgba(127, 184, 255, 0.22),
+				transparent 60%
+			),
+			radial-gradient(
+				55% 45% at 30% 105%,
+				rgba(255, 193, 92, 0.14),
+				transparent 65%
+			),
+			var(--canvas);
 	}
 
 	body {
-		background: var(--canvas);
+		background: var(--bg-gradient);
+		background-attachment: fixed;
+		min-height: 100vh;
 	}
 
 	/* WCAG 2.4.11 Focus Appearance: visible 2px accent outline on every interactive element */
@@ -54,20 +88,35 @@
 }
 
 @layer utilities {
+	/* Frosted glass surface: translucent fill + blur + a single light-catching
+	   edge on top, instead of a uniform border and flat grey shadow. */
+	.glass {
+		@apply relative bg-glass-fill backdrop-blur-xl border border-white/5 rounded-2xl shadow-glass;
+	}
+
+	.glass::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		border-top: 1px solid var(--glass-edge);
+		pointer-events: none;
+	}
+
 	.neo-icon {
-		@apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-ink bg-panel text-muted transition-colors hover:border-cyan-300/50 hover:text-cyan-500 dark:hover:text-cyan-200;
+		@apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-ink bg-panel text-muted transition-colors hover:border-accent-primary/40 hover:text-accent-primary;
 	}
 
 	.neo-action {
-		@apply inline-flex items-center gap-2 rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-bold text-cyan-700 transition-colors hover:border-cyan-300/60 hover:bg-cyan-300/20 dark:text-cyan-100;
+		@apply inline-flex items-center gap-2 rounded-lg border border-accent-primary/30 bg-accent-primary/10 px-3 py-2 text-sm font-bold text-accent-primary transition-colors hover:border-accent-primary/60 hover:bg-accent-primary/20;
 	}
 
 	.neo-chip {
-		@apply shrink-0 rounded-lg border border-ink bg-panel px-3 py-2 text-sm font-bold text-muted transition-colors hover:border-cyan-300/50 hover:text-strong;
+		@apply shrink-0 rounded-lg border border-ink bg-panel px-3 py-2 text-sm font-bold text-muted transition-colors hover:border-accent-primary/40 hover:text-strong;
 	}
 
 	.neo-tile {
-		@apply overflow-hidden rounded-lg border bg-panel transition-transform duration-200 hover:-translate-y-1 hover:border-cyan-300/50;
+		@apply overflow-hidden rounded-lg border bg-panel transition-transform duration-200 hover:-translate-y-1 hover:border-accent-primary/40;
 	}
 
 	.scrollbar-hide {

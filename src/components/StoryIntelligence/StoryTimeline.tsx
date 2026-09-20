@@ -24,7 +24,7 @@ export function StoryTimeline({ events }: Props) {
 	return (
 		<div className="relative pl-6">
 			{/* vertical line */}
-			<div className="absolute left-2.5 top-0 bottom-0 w-px bg-border" />
+			<div className="absolute left-2.5 top-0 bottom-0 w-px bg-white/10" />
 
 			<div className="space-y-4">
 				{events.map((event, i) => {
@@ -38,9 +38,9 @@ export function StoryTimeline({ events }: Props) {
 								className={`absolute -left-6 top-1.5 w-3 h-3 rounded-full ${style.color} flex items-center justify-center`}
 							/>
 
-							<div className="bg-surface rounded-lg border border-border p-3">
+							<div className="glass p-3">
 								<div className="flex items-center gap-2 mb-1">
-									<span className="text-xs px-1.5 py-0.5 rounded bg-surface-elevated text-text-secondary capitalize">
+									<span className="text-xs px-1.5 py-0.5 rounded bg-white/10 text-text-secondary capitalize">
 										{event.eventType.replace("_", " ")}
 									</span>
 									<span className="text-xs text-text-secondary ml-auto">
@@ -55,7 +55,7 @@ export function StoryTimeline({ events }: Props) {
 									{event.headline}
 								</p>
 								{event.whatChanged && (
-									<p className="text-xs text-text-secondary mt-1 italic border-l-2 border-accent/50 pl-2">
+									<p className="text-xs text-text-secondary mt-1 italic border-l-2 border-accent-primary/50 pl-2">
 										{event.whatChanged}
 									</p>
 								)}

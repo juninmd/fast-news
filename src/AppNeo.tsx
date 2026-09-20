@@ -166,25 +166,11 @@ function App() {
 				onThemeToggle={toggleTheme}
 			/>
 
-			<main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+			<main className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8">
 				<TopNewsSection onArticleClick={openArticle} />
 
-				{articles.length > 0 && activeView === "feed" && !searchResults && (
-					<section className="mb-8">
-						<NewsCard
-							{...articles[0]}
-							variant="featured"
-							onBookmark={handleBookmark}
-							onShare={handleShare}
-							onSummarize={() =>
-								handleSummarize(articles[0].id, articles[0].title)
-							}
-						/>
-					</section>
-				)}
-
 				<section className="mb-6">
-					<div className="flex items-center gap-4 mb-4">
+					<div className="glass flex items-center gap-1 p-1.5 overflow-x-auto scrollbar-hide">
 						{(
 							[
 								"feed",
@@ -197,22 +183,22 @@ function App() {
 							] as const
 						).map((v) => {
 							const labels: Record<string, string> = {
-								feed: "📰 Feed",
-								stories: "🔗 Histórias",
-								graph: "🕸 Grafo",
-								intelligence: "💡 Inteligência",
-								bookmarks: `🔖 Salvos${bookmarks.length > 0 ? ` (${bookmarks.length})` : ""}`,
-								history: `📖 Lidos${readHistory.length > 0 ? ` (${readHistory.length})` : ""}`,
-								status: "⚡ Status",
+								feed: "Feed",
+								stories: "Histórias",
+								graph: "Grafo",
+								intelligence: "Inteligência",
+								bookmarks: `Salvos${bookmarks.length > 0 ? ` (${bookmarks.length})` : ""}`,
+								history: `Lidos${readHistory.length > 0 ? ` (${readHistory.length})` : ""}`,
+								status: "Status",
 							};
 							return (
 								<button
 									key={v}
 									onClick={() => setActiveView(v)}
-									className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+									className={`text-sm font-medium px-3.5 py-1.5 rounded-xl transition-colors whitespace-nowrap ${
 										activeView === v
-											? "bg-accent-primary text-white"
-											: "text-text-secondary hover:text-text-primary hover:bg-bg-tertiary"
+											? "bg-gradient-to-r from-accent-primary to-accent-primary/80 text-white shadow-glow"
+											: "text-text-secondary hover:text-text-primary hover:bg-white/5"
 									}`}
 								>
 									{labels[v]}
@@ -222,7 +208,7 @@ function App() {
 					</div>
 				</section>
 
-				<div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)_280px]">
+				<div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_300px] xl:grid-cols-[240px_minmax(0,1fr)_320px]">
 					<aside className="lg:sticky lg:top-24 lg:self-start">
 						<CategoryTabs
 							activeCategory={activeCategory}
@@ -459,7 +445,7 @@ function App() {
 										)}
 									</div>
 								)}
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-reveal">
+								<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 stagger-reveal">
 									{loading && articles.length === 0
 										? Array.from({ length: 6 }).map((_, i) => (
 												<SkeletonCard key={i} />
@@ -469,7 +455,7 @@ function App() {
 														id: string;
 														[k: string]: unknown;
 													}>)
-												: articles.slice(1)
+												: articles
 											).map((article) => (
 												<NewsCard
 													key={article.id as string}
