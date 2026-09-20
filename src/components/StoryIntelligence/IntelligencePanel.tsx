@@ -1,32 +1,16 @@
-import React from "react";
 import type { StoryNode } from "../../hooks/useStories";
 
 const SIGNAL_CONFIG = {
-	bullish: {
-		label: "Alta",
-		color: "text-green-400",
-		bg: "bg-green-500/10 border-green-500/30",
-		arrow: "↑",
-	},
-	bearish: {
-		label: "Baixa",
-		color: "text-red-400",
-		bg: "bg-red-500/10 border-red-500/30",
-		arrow: "↓",
-	},
-	neutral: {
-		label: "Neutro",
-		color: "text-gray-400",
-		bg: "bg-gray-500/10 border-gray-500/30",
-		arrow: "→",
-	},
+	bullish: { label: "Alta", color: "text-accent-secondary", arrow: "↑" },
+	bearish: { label: "Baixa", color: "text-accent-tertiary", arrow: "↓" },
+	neutral: { label: "Neutro", color: "text-text-secondary", arrow: "→" },
 };
 
 const IMPACT_BADGE: Record<string, string> = {
-	critical: "bg-red-500 text-white",
-	high: "bg-orange-500 text-white",
-	medium: "bg-yellow-500 text-black",
-	low: "bg-green-600 text-white",
+	critical: "border-accent-tertiary text-accent-tertiary",
+	high: "border-accent-tertiary/70 text-accent-tertiary/90",
+	medium: "border-border-subtle text-text-secondary",
+	low: "border-accent-secondary/60 text-accent-secondary",
 };
 
 interface Props {
@@ -44,13 +28,12 @@ export function IntelligencePanel({ stories, onStoryClick }: Props) {
 
 	return (
 		<div className="space-y-4">
-			{/* Market Signals */}
 			{opportunities.length > 0 && (
 				<section>
-					<h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+					<h3 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
 						Sinais de Mercado
 					</h3>
-					<div className="space-y-2">
+					<div className="divide-y divide-border-subtle border border-border-subtle">
 						{opportunities.slice(0, 5).map((story) => {
 							const signal = story.financialSignal ?? "neutral";
 							const cfg =
@@ -60,24 +43,26 @@ export function IntelligencePanel({ stories, onStoryClick }: Props) {
 								<div
 									key={story.id}
 									onClick={() => onStoryClick?.(story)}
-									className={`glass cursor-pointer p-3 ${cfg.bg} transition-opacity hover:opacity-80`}
+									className="cursor-pointer p-3 transition-colors hover:bg-bg-tertiary/40"
 								>
-									<div className="flex items-center justify-between mb-1">
-										<span className={`text-sm font-bold ${cfg.color}`}>
+									<div className="mb-1 flex items-center justify-between">
+										<span
+											className={`font-mono text-sm font-bold ${cfg.color}`}
+										>
 											{cfg.arrow} {cfg.label}
 										</span>
-										<div className="flex flex-wrap gap-1 justify-end">
+										<div className="flex flex-wrap justify-end gap-1">
 											{story.affectedAssets.slice(0, 3).map((a) => (
 												<span
 													key={a}
-													className="text-xs px-1.5 py-0.5 rounded bg-black/20 font-mono text-white"
+													className="border border-border-subtle px-1.5 py-0.5 font-mono text-[11px] text-text-primary"
 												>
 													{a}
 												</span>
 											))}
 										</div>
 									</div>
-									<p className="text-xs text-text-primary line-clamp-2">
+									<p className="line-clamp-2 text-xs text-text-primary">
 										{story.title}
 									</p>
 								</div>
@@ -87,31 +72,30 @@ export function IntelligencePanel({ stories, onStoryClick }: Props) {
 				</section>
 			)}
 
-			{/* High Impact Risks */}
 			{critical.length > 0 && (
 				<section>
-					<h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+					<h3 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
 						Riscos Geopolíticos
 					</h3>
-					<div className="space-y-2">
+					<div className="divide-y divide-border-subtle border border-border-subtle">
 						{critical.slice(0, 4).map((story) => (
 							<div
 								key={story.id}
 								onClick={() => onStoryClick?.(story)}
-								className="glass cursor-pointer p-3 hover:border-accent-primary/40 transition-colors"
+								className="cursor-pointer p-3 transition-colors hover:bg-bg-tertiary/40"
 							>
-								<div className="flex items-start gap-2 mb-1">
+								<div className="mb-1 flex items-start gap-2">
 									<span
-										className={`text-xs font-bold px-1.5 py-0.5 rounded ${IMPACT_BADGE[story.impactLevel]}`}
+										className={`border px-1.5 py-0.5 font-mono text-[11px] uppercase ${IMPACT_BADGE[story.impactLevel]}`}
 									>
-										{story.impactLevel.toUpperCase()}
+										{story.impactLevel}
 									</span>
 								</div>
-								<p className="text-xs font-medium text-text-primary line-clamp-2">
+								<p className="line-clamp-2 text-xs font-medium text-text-primary">
 									{story.title}
 								</p>
 								{story.worldImpact && (
-									<p className="text-xs text-text-secondary line-clamp-2 mt-1">
+									<p className="mt-1 line-clamp-2 text-xs text-text-secondary">
 										{story.worldImpact}
 									</p>
 								)}
@@ -122,7 +106,7 @@ export function IntelligencePanel({ stories, onStoryClick }: Props) {
 			)}
 
 			{opportunities.length === 0 && critical.length === 0 && (
-				<p className="text-xs text-text-secondary text-center py-6">
+				<p className="py-6 text-center font-mono text-xs text-text-secondary">
 					Aguardando análise de histórias...
 				</p>
 			)}
