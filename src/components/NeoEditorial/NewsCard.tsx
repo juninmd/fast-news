@@ -71,8 +71,9 @@ function formatDate(date: Date | string): string {
 	const now = new Date();
 	const d = new Date(date);
 	const diff = now.getTime() - d.getTime();
+	if (diff < 0) return d.toLocaleDateString("pt-BR");
 	const hours = Math.floor(diff / 3_600_000);
-	if (hours < 1) return `${Math.floor(diff / 60_000)}m atrás`;
+	if (hours < 1) return `${Math.max(1, Math.floor(diff / 60_000))}m atrás`;
 	if (hours < 24) return `${hours}h atrás`;
 	const days = Math.floor(hours / 24);
 	if (days < 7) return `${days}d atrás`;
@@ -193,10 +194,9 @@ export function NewsCard({
 	return (
 		<article
 			className={`
-        group relative rounded-2xl overflow-hidden
-        bg-bg-secondary border transition-all duration-300 ease-out
-        ${read ? "border-border-subtle opacity-80" : "border-border-subtle hover:border-accent-primary/30"}
-        hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20
+        group glass overflow-hidden transition-all duration-300 ease-out
+        ${read ? "opacity-75" : "hover:border-accent-primary/30"}
+        hover:-translate-y-1
         ${variant === "featured" ? "col-span-2 row-span-2" : ""}
       `}
 		>
@@ -205,8 +205,7 @@ export function NewsCard({
 					<span className="font-semibold text-text-primary truncate max-w-[140px]">
 						{source}
 					</span>
-					<span className="opacity-40">—</span>
-					<span className="font-numbers whitespace-nowrap">
+					<span className="font-numbers whitespace-nowrap ml-auto">
 						{formatFullDate(publishedAt)}
 					</span>
 				</div>
@@ -238,7 +237,7 @@ export function NewsCard({
 					<div className="absolute inset-0 bg-gradient-to-t from-bg-secondary/90 via-bg-secondary/20 to-transparent" />
 					<div className="absolute top-3 left-3">
 						<span
-							className={`px-2 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider border ${catClass} backdrop-blur-sm`}
+							className={`px-2 py-0.5 rounded-full text-xs font-medium border ${catClass} backdrop-blur-sm`}
 						>
 							{category}
 						</span>
@@ -253,7 +252,7 @@ export function NewsCard({
 				variant !== "compact" && (
 					<div className="px-5 pt-1">
 						<span
-							className={`inline-block px-2 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider border ${catClass}`}
+							className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${catClass}`}
 						>
 							{category}
 						</span>
@@ -265,7 +264,7 @@ export function NewsCard({
 				{variant === "compact" && (
 					<div className="flex flex-wrap items-center gap-1.5 mb-2">
 						<span
-							className={`px-2 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider border ${catClass}`}
+							className={`px-2 py-0.5 rounded-full text-xs font-medium border ${catClass}`}
 						>
 							{category}
 						</span>
@@ -308,7 +307,7 @@ export function NewsCard({
 					</div>
 				)}
 
-				<div className="flex items-center gap-1 pt-3 border-t border-border-subtle/60 mb-2">
+				<div className="flex items-center gap-1 pt-3 border-t border-white/5 mb-2">
 					<button
 						onClick={() => handleReaction("like")}
 						className={`p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 ${
@@ -354,11 +353,12 @@ export function NewsCard({
 					)}
 				</div>
 
-				<div className="flex items-center justify-between mt-auto pt-3 border-t border-border-subtle/60">
-					<div className="flex items-center gap-1.5 text-text-secondary text-xs min-w-0">
-						<span className="font-numbers">{formatDate(publishedAt)}</span>
-						<span className="mx-1 opacity-40">·</span>
-						<span className="font-mono truncate max-w-[100px]">{source}</span>
+				<div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5 gap-3">
+					<div className="flex items-center gap-2 text-text-secondary text-xs min-w-0 flex-1">
+						<span className="font-numbers shrink-0">
+							{formatDate(publishedAt)}
+						</span>
+						<span className="truncate">{source}</span>
 					</div>
 
 					<div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex-shrink-0">

@@ -31,14 +31,14 @@ export function StoryDetailModal({ detail, onClose, onArticleClick }: Props) {
 			onClick={onClose}
 		>
 			<div
-				className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-bg-primary rounded-2xl border border-border shadow-2xl"
+				className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto glass bg-bg-primary shadow-2xl"
 				onClick={(e) => e.stopPropagation()}
 			>
 				{/* Header */}
-				<div className="sticky top-0 bg-bg-primary border-b border-border p-4 flex items-start gap-3">
+				<div className="sticky top-0 bg-bg-primary/95 backdrop-blur-xl border-b border-white/10 p-4 flex items-start gap-3">
 					<div className="flex-1">
 						<div className="flex items-center gap-2 mb-1">
-							<span className="text-xs px-2 py-0.5 rounded-full bg-surface-elevated text-text-secondary">
+							<span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-text-secondary">
 								{story.category}
 							</span>
 							<span
@@ -80,7 +80,7 @@ export function StoryDetailModal({ detail, onClose, onArticleClick }: Props) {
 							<h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
 								Impacto no Mundo
 							</h3>
-							<p className="text-sm text-text-primary bg-surface rounded-lg p-3 border border-border">
+							<p className="text-sm text-text-primary glass p-3">
 								{story.worldImpact}
 							</p>
 						</section>
@@ -101,7 +101,7 @@ export function StoryDetailModal({ detail, onClose, onArticleClick }: Props) {
 												? "bg-green-500/10 text-green-400 border-green-500/30"
 												: signal === "bearish"
 													? "bg-red-500/10 text-red-400 border-red-500/30"
-													: "bg-accent/10 text-accent border-accent/30"
+													: "bg-accent-primary/10 text-accent-primary border-accent-primary/30"
 										}`}
 									>
 										{asset}
@@ -137,10 +137,10 @@ export function StoryDetailModal({ detail, onClose, onArticleClick }: Props) {
 										e.stopPropagation();
 										onArticleClick?.(article);
 									}}
-									className="flex items-start gap-2 p-2 rounded-lg hover:bg-surface transition-colors group"
+									className="flex items-start gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors group"
 								>
 									<div className="flex-1 min-w-0">
-										<p className="text-xs font-medium text-text-primary line-clamp-2 group-hover:text-accent">
+										<p className="text-xs font-medium text-text-primary line-clamp-2 group-hover:text-accent-primary">
 											{article.title}
 										</p>
 										<p className="text-xs text-text-secondary mt-0.5">

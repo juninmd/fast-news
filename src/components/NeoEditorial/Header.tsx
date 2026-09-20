@@ -27,16 +27,16 @@ export function Header({
 	return (
 		<header
 			className={`
-        sticky top-0 z-40 transition-all duration-200
-        ${isScrolled ? "bg-bg-primary/80 backdrop-blur-xl border-b border-border-subtle" : "bg-transparent"}
+        sticky top-0 z-40 transition-all duration-300
+        ${isScrolled ? "glass rounded-none border-x-0 border-t-0" : "bg-transparent"}
       `}
 		>
-			<div className="max-w-7xl mx-auto px-4 sm:px-6">
+			<div className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10">
 				<div className="flex items-center justify-between h-16">
 					<div className="flex items-center gap-3">
 						<button
 							onClick={onMenuToggle}
-							className="lg:hidden p-2 rounded-lg hover:bg-bg-tertiary text-text-secondary"
+							className="lg:hidden p-2 rounded-lg hover:bg-white/5 text-text-secondary"
 						>
 							{isMenuOpen ? (
 								<X className="w-5 h-5" />
@@ -45,7 +45,7 @@ export function Header({
 							)}
 						</button>
 						<a href="/" className="flex items-center gap-2.5">
-							<div className="w-8 h-8 rounded-lg bg-accent-primary flex items-center justify-center">
+							<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center shadow-glow">
 								<span className="text-white font-display font-bold text-lg">
 									F
 								</span>
@@ -54,8 +54,8 @@ export function Header({
 								<span className="font-display font-bold text-xl text-text-primary tracking-tight">
 									Fast<span className="text-accent-primary">News</span>
 								</span>
-								<span className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-secondary">
-									Curadoria por IA
+								<span className="text-[11px] text-text-secondary">
+									Curadoria por IA, em tempo real
 								</span>
 							</span>
 						</a>
@@ -64,13 +64,13 @@ export function Header({
 					<div className="hidden md:flex flex-1 max-w-xl mx-8">
 						<button
 							onClick={onSearchOpen}
-							className="w-full flex items-center gap-3 px-4 py-2 rounded-xl bg-bg-secondary border border-border-subtle hover:border-accent-primary/30 transition-colors group"
+							className="glass w-full flex items-center gap-3 px-4 py-2 hover:border-accent-primary/30 transition-colors group"
 						>
 							<Search className="w-4 h-4 text-text-secondary" />
 							<span className="text-text-secondary text-sm">
-								Search news...
+								Buscar notícias...
 							</span>
-							<kbd className="ml-auto hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-lg bg-bg-tertiary text-text-secondary text-xs font-mono">
+							<kbd className="ml-auto hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/5 text-text-secondary text-xs font-mono">
 								Ctrl+K
 							</kbd>
 						</button>
@@ -79,15 +79,15 @@ export function Header({
 					<div className="flex items-center gap-2">
 						<button
 							onClick={onSearchOpen}
-							className="md:hidden p-2 rounded-lg hover:bg-bg-tertiary text-text-secondary"
+							className="md:hidden p-2 rounded-lg hover:bg-white/5 text-text-secondary"
 						>
 							<Search className="w-5 h-5" />
 						</button>
 
 						<button
 							onClick={onThemeToggle}
-							className="p-2 rounded-lg hover:bg-bg-tertiary text-text-secondary hover:text-accent-primary transition-colors"
-							title="Toggle theme"
+							className="p-2 rounded-lg hover:bg-white/5 text-text-secondary hover:text-accent-primary transition-colors"
+							title="Alternar tema"
 						>
 							{theme === "dark" ? (
 								<Sun className="w-5 h-5" />
