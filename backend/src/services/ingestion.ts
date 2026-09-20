@@ -6,8 +6,8 @@ import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
-import { scoreRelevance } from "./relevance.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
+import { scoreRelevance } from "./relevance.js";
 import { getActiveFeeds } from "./sources.js";
 import { classifyTheme } from "./themeClassification.js";
 
