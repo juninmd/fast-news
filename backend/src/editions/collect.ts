@@ -6,6 +6,7 @@ import type { EditionWindow, Headline } from "./types.js";
 const MAX_ROWS = 5000;
 
 interface Row {
+	id: string;
 	title: string;
 	source: string | null;
 	category: string | null;
@@ -19,12 +20,12 @@ export async function collectHeadlines(
 	window: EditionWindow,
 ): Promise<Headline[]> {
 	const res = await query<Row>(
-		`SELECT title, source, coalesce(theme_category, category) AS category, url, created_at, image_url,
+		`SELECT id, title, source, coalesce(theme_category, category) AS category, url, created_at, image_url,
 		        left(regexp_replace(coalesce(nullif(summary, ''), content, ''), '\\s+', ' ', 'g'), 220) AS snippet
 		   FROM news_articles
 		  WHERE created_at >= $1 AND created_at < $2
 		    AND coalesce(title, '') <> ''
-		  ORDER BY created_at
+		  ORDER BY created_at, id
 		  LIMIT $3`,
 		[window.start, window.end, MAX_ROWS],
 	);

@@ -15,7 +15,7 @@ export interface PublishResult {
  * of (t.me/c/<internal id>/<id>) — Telegram strips the -100 prefix that
  * bot APIs use for supergroup/channel ids in that second form.
  */
-function messageLink(chatId: string, messageId: number): string {
+export function messageLink(chatId: string, messageId: number): string {
 	if (chatId.startsWith("-100")) {
 		return `https://t.me/c/${chatId.slice(4)}/${messageId}`;
 	}
@@ -26,7 +26,7 @@ function messageLink(chatId: string, messageId: number): string {
 }
 
 // Telegraf puts the request URL, bot token included, in network errors.
-function safeMessage(err: unknown): string {
+export function safeMessage(err: unknown): string {
 	return (err as Error).message.replace(/bot\d+:[\w-]+/g, "bot<redacted>");
 }
 
@@ -38,21 +38,54 @@ const DOCUMENT_SEND_ATTEMPTS = 3;
 const DOCUMENT_RETRY_DELAY_MS = 4000;
 
 /**
- * The edition file upload is a single large multipart request and loses the
- * socket to transient network blips more often than a plain text message.
- * One retry wasn't enough in production (two straight "socket hang up"s on
- * the same edition), so this backs off between attempts instead of firing
- * the retry immediately into the same failure.
+ * Telegraf's sendDocument reliably hung with "socket hang up" in production
+ * even on a fresh connection with no prior traffic (confirmed live: a plain
+ * curl multipart POST of a larger file to the same endpoint from the same
+ * pod succeeded in under 2s while Telegraf's client failed 3/3 times in a
+ * row). The fault is in Telegraf's client for this call, not the network or
+ * file size, so this bypasses it with a direct multipart POST instead of
+ * retrying into the same broken path.
  */
-async function sendDocumentWithRetry(
-	telegram: ReturnType<typeof getBot>["telegram"],
+async function sendDocumentRaw(
+	token: string,
 	chatId: string,
-	doc: { source: Buffer; filename: string },
+	filename: string,
+	file: Buffer,
+): Promise<{ message_id: number }> {
+	const form = new FormData();
+	form.set("chat_id", chatId);
+	form.set(
+		"document",
+		new Blob([Uint8Array.from(file)], { type: "text/html" }),
+		filename,
+	);
+	const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+		method: "POST",
+		body: form,
+	});
+	const body = (await res.json().catch(() => null)) as {
+		ok?: boolean;
+		description?: string;
+		result?: { message_id: number };
+	} | null;
+	if (!res.ok || !body?.ok || !body.result) {
+		throw new Error(
+			`sendDocument failed: ${res.status} ${body?.description ?? res.statusText}`,
+		);
+	}
+	return body.result;
+}
+
+export async function sendDocumentWithRetry(
+	token: string,
+	chatId: string,
+	filename: string,
+	file: Buffer,
 ): Promise<{ message_id: number }> {
 	let lastErr: unknown;
 	for (let attempt = 1; attempt <= DOCUMENT_SEND_ATTEMPTS; attempt++) {
 		try {
-			return await telegram.sendDocument(chatId, doc);
+			return await sendDocumentRaw(token, chatId, filename, file);
 		} catch (err) {
 			lastErr = err;
 			if (attempt < DOCUMENT_SEND_ATTEMPTS) {
@@ -93,9 +126,13 @@ export async function publishEdition(
 		// Once the summary is out the chat counts as delivered, so a retry never
 		// repeats it; a failed attachment is still reported and fails the job.
 		result.delivered.push(chatId);
-		const doc = { source: file, filename: editionFilename(w) };
 		try {
-			const sent = await sendDocumentWithRetry(telegram, chatId, doc);
+			const sent = await sendDocumentWithRetry(
+				config.telegramBotToken,
+				chatId,
+				editionFilename(w),
+				file,
+			);
 			result.links[chatId] = messageLink(chatId, sent.message_id);
 		} catch (err) {
 			result.failed.push({ chatId, error: `document: ${safeMessage(err)}` });
