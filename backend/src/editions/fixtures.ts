@@ -12,6 +12,7 @@ export function headline(over: Partial<Headline> = {}): Headline {
 		url: `https://example.com/${seq}`,
 		snippet: "",
 		createdAt: new Date(Date.UTC(2026, 8, 18, 12, seq % 60)),
+		imageUrl: null,
 		...over,
 	};
 }
@@ -42,6 +43,7 @@ export function draft(over: Partial<EditionDraft> = {}): EditionDraft {
 export function edition(
 	d: EditionDraft,
 	known: Map<number, Headline>,
+	over: Partial<Edition> = {},
 ): Edition {
 	const end = new Date("2026-09-18T22:00:00Z");
 	return {
@@ -57,5 +59,7 @@ export function edition(
 		hourly: new Array(12).fill(3),
 		totalArticles: 36,
 		totalSources: 5,
+		market: { usdBrl: null, ibovespa: null, selicRate: null },
+		...over,
 	};
 }

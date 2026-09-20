@@ -1,4 +1,4 @@
-import { directUrl, esc } from "./escape.js";
+import { directUrl, esc, safeUrl } from "./escape.js";
 import { hourLabels } from "./select.js";
 import type { Headline, QuizItem, Story, Thread } from "./types.js";
 import { formatLocalTime } from "./window.js";
@@ -19,9 +19,19 @@ export function sources(ids: number[], known: Known): string {
 	return links.length ? `<span class="src">${links.join(" · ")}</span>` : "";
 }
 
+function thumb(ids: number[], known: Known): string {
+	const url = ids
+		.map((id) => known.get(id)?.imageUrl)
+		.map((u) => (u ? safeUrl(u) : null))
+		.find((u): u is string => Boolean(u));
+	return url
+		? `<img class="thumb" src="${esc(url)}" alt="" loading="lazy" width="640" height="360">`
+		: "";
+}
+
 export function story(s: Story, known: Known, tag = "article"): string {
 	const kicker = s.chapeu ? `<p class="kicker">${esc(s.chapeu)}</p>` : "";
-	return `<${tag}>${kicker}<h3>${esc(s.titulo)}</h3>${s.texto ? `<p>${esc(s.texto)}</p>` : ""}${sources(s.fontes, known)}</${tag}>`;
+	return `<${tag}>${thumb(s.fontes, known)}${kicker}<h3>${esc(s.titulo)}</h3>${s.texto ? `<p>${esc(s.texto)}</p>` : ""}${sources(s.fontes, known)}</${tag}>`;
 }
 
 export function brief(items: string[]): string {
