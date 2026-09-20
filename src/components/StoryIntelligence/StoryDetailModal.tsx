@@ -1,18 +1,17 @@
-import React from "react";
 import type { ArticleNode, StoryDetail } from "../../hooks/useStories";
 import { StoryTimeline } from "./StoryTimeline";
 
 const IMPACT_COLORS: Record<string, string> = {
-	critical: "text-red-400",
-	high: "text-orange-400",
-	medium: "text-yellow-400",
-	low: "text-green-400",
+	critical: "text-accent-tertiary",
+	high: "text-accent-tertiary/90",
+	medium: "text-text-secondary",
+	low: "text-accent-secondary",
 };
 
 const SIGNAL_COLORS: Record<string, string> = {
-	bullish: "text-green-400",
-	bearish: "text-red-400",
-	neutral: "text-gray-400",
+	bullish: "text-accent-secondary",
+	bearish: "text-accent-tertiary",
+	neutral: "text-text-secondary",
 };
 
 interface Props {
@@ -27,27 +26,28 @@ export function StoryDetailModal({ detail, onClose, onArticleClick }: Props) {
 
 	return (
 		<div
-			className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+			className="fixed inset-0 z-50 flex items-center justify-center bg-strong/60 p-4"
 			onClick={onClose}
 		>
 			<div
-				className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto glass bg-bg-primary shadow-2xl"
+				className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto border border-border-subtle bg-bg-primary"
 				onClick={(e) => e.stopPropagation()}
 			>
-				{/* Header */}
-				<div className="sticky top-0 bg-bg-primary/95 backdrop-blur-xl border-b border-white/10 p-4 flex items-start gap-3">
+				<div className="sticky top-0 flex items-start gap-3 border-b border-border-subtle bg-bg-primary p-4">
 					<div className="flex-1">
-						<div className="flex items-center gap-2 mb-1">
-							<span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-text-secondary">
+						<div className="mb-1 flex items-center gap-2">
+							<span className="border border-border-subtle px-2 py-0.5 font-mono text-[11px] text-text-secondary">
 								{story.category}
 							</span>
 							<span
-								className={`text-xs font-semibold ${IMPACT_COLORS[story.impactLevel]}`}
+								className={`font-mono text-[11px] font-semibold uppercase ${IMPACT_COLORS[story.impactLevel]}`}
 							>
-								IMPACTO {story.impactLevel.toUpperCase()}
+								Impacto {story.impactLevel}
 							</span>
 							{story.financialSignal && (
-								<span className={`text-xs font-bold ${SIGNAL_COLORS[signal]}`}>
+								<span
+									className={`font-mono text-xs font-bold ${SIGNAL_COLORS[signal]}`}
+								>
 									{signal === "bullish"
 										? "↑ Alta"
 										: signal === "bearish"
@@ -56,52 +56,50 @@ export function StoryDetailModal({ detail, onClose, onArticleClick }: Props) {
 								</span>
 							)}
 						</div>
-						<h2 className="text-base font-bold text-text-primary">
+						<h2 className="font-display text-lg font-semibold text-text-primary">
 							{story.title}
 						</h2>
 						{story.summary && (
-							<p className="text-sm text-text-secondary mt-1">
+							<p className="mt-1 text-sm text-text-secondary">
 								{story.summary}
 							</p>
 						)}
 					</div>
 					<button
 						onClick={onClose}
-						className="text-text-secondary hover:text-text-primary text-xl leading-none px-2"
+						className="border border-border-subtle px-2 py-1 text-lg leading-none text-text-secondary transition-colors hover:text-text-primary"
 					>
 						✕
 					</button>
 				</div>
 
-				<div className="p-4 space-y-6">
-					{/* World Impact */}
+				<div className="space-y-6 p-4">
 					{story.worldImpact && (
 						<section>
-							<h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+							<h3 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
 								Impacto no Mundo
 							</h3>
-							<p className="text-sm text-text-primary glass p-3">
+							<p className="border border-border-subtle p-3 text-sm text-text-primary">
 								{story.worldImpact}
 							</p>
 						</section>
 					)}
 
-					{/* Affected Assets */}
 					{story.affectedAssets?.length > 0 && (
 						<section>
-							<h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+							<h3 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
 								Ativos Afetados
 							</h3>
 							<div className="flex flex-wrap gap-2">
 								{story.affectedAssets.map((asset) => (
 									<span
 										key={asset}
-										className={`px-3 py-1 rounded-full text-xs font-mono font-semibold border ${
+										className={`border px-3 py-1 font-mono text-xs font-semibold ${
 											signal === "bullish"
-												? "bg-green-500/10 text-green-400 border-green-500/30"
+												? "border-accent-secondary/40 text-accent-secondary"
 												: signal === "bearish"
-													? "bg-red-500/10 text-red-400 border-red-500/30"
-													: "bg-accent-primary/10 text-accent-primary border-accent-primary/30"
+													? "border-accent-tertiary/40 text-accent-tertiary"
+													: "border-accent-primary/40 text-accent-primary"
 										}`}
 									>
 										{asset}
@@ -111,22 +109,20 @@ export function StoryDetailModal({ detail, onClose, onArticleClick }: Props) {
 						</section>
 					)}
 
-					{/* Timeline */}
 					{timeline.length > 0 && (
 						<section>
-							<h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">
+							<h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
 								Linha do Tempo ({timeline.length} eventos)
 							</h3>
 							<StoryTimeline events={timeline} />
 						</section>
 					)}
 
-					{/* Articles */}
 					<section>
-						<h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+						<h3 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
 							{articles.length} Artigos Correlacionados
 						</h3>
-						<div className="space-y-2">
+						<div className="divide-y divide-border-subtle border border-border-subtle">
 							{articles.map((article) => (
 								<a
 									key={article.id}
@@ -137,17 +133,17 @@ export function StoryDetailModal({ detail, onClose, onArticleClick }: Props) {
 										e.stopPropagation();
 										onArticleClick?.(article);
 									}}
-									className="flex items-start gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors group"
+									className="group flex items-start gap-2 p-3 transition-colors hover:bg-bg-tertiary/40"
 								>
-									<div className="flex-1 min-w-0">
-										<p className="text-xs font-medium text-text-primary line-clamp-2 group-hover:text-accent-primary">
+									<div className="min-w-0 flex-1">
+										<p className="line-clamp-2 text-xs font-medium text-text-primary group-hover:text-accent-primary">
 											{article.title}
 										</p>
-										<p className="text-xs text-text-secondary mt-0.5">
+										<p className="mt-0.5 font-mono text-[11px] text-text-secondary">
 											{article.source}
 										</p>
 									</div>
-									<span className="text-xs text-text-secondary shrink-0">
+									<span className="shrink-0 text-xs text-text-secondary">
 										↗
 									</span>
 								</a>
