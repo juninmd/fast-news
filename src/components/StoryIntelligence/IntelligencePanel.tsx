@@ -60,7 +60,7 @@ export function IntelligencePanel({ stories, onStoryClick }: Props) {
 								<div
 									key={story.id}
 									onClick={() => onStoryClick?.(story)}
-									className={`cursor-pointer rounded-lg border p-3 ${cfg.bg} transition-opacity hover:opacity-80`}
+									className={`glass cursor-pointer p-3 ${cfg.bg} transition-opacity hover:opacity-80`}
 								>
 									<div className="flex items-center justify-between mb-1">
 										<span className={`text-sm font-bold ${cfg.color}`}>
@@ -98,7 +98,7 @@ export function IntelligencePanel({ stories, onStoryClick }: Props) {
 							<div
 								key={story.id}
 								onClick={() => onStoryClick?.(story)}
-								className="cursor-pointer rounded-lg border border-border bg-surface p-3 hover:border-accent/50 transition-colors"
+								className="glass cursor-pointer p-3 hover:border-accent-primary/40 transition-colors"
 							>
 								<div className="flex items-start gap-2 mb-1">
 									<span
