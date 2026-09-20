@@ -194,14 +194,14 @@ export function NewsCard({
 	return (
 		<article
 			className={`
-        group glass overflow-hidden transition-all duration-300 ease-out
+        group glass flex flex-col overflow-hidden transition-all duration-300 ease-out
         ${read ? "opacity-75" : "hover:border-accent-primary/30"}
         hover:-translate-y-1
         ${variant === "featured" ? "col-span-2 row-span-2" : ""}
       `}
 		>
 			{variant !== "compact" && (
-				<div className="px-5 pt-4 pb-1 flex items-center gap-2 text-xs text-text-secondary">
+				<div className="px-5 pt-4 pb-1 flex shrink-0 items-center gap-2 text-xs text-text-secondary">
 					<span className="font-semibold text-text-primary truncate max-w-[140px]">
 						{source}
 					</span>
@@ -212,7 +212,7 @@ export function NewsCard({
 			)}
 
 			{videoEmbedUrl ? (
-				<div className="aspect-video w-full overflow-hidden bg-black">
+				<div className="aspect-video w-full shrink-0 overflow-hidden bg-black">
 					<iframe
 						src={videoEmbedUrl}
 						title={title}
@@ -224,7 +224,7 @@ export function NewsCard({
 				</div>
 			) : showImage ? (
 				<div
-					className={`relative overflow-hidden bg-bg-tertiary ${variant === "compact" ? "aspect-[16/10]" : variant === "featured" ? "aspect-[16/9]" : "aspect-[4/3]"}`}
+					className={`relative shrink-0 overflow-hidden bg-bg-tertiary ${variant === "compact" ? "aspect-[16/10]" : variant === "featured" ? "aspect-[16/9]" : "aspect-[4/3]"}`}
 				>
 					<img
 						src={imageUrl}
@@ -268,7 +268,9 @@ export function NewsCard({
 				)
 			)}
 
-			<div className={`p-5 ${variant === "featured" ? "p-6" : ""}`}>
+			<div
+				className={`flex flex-1 flex-col p-5 ${variant === "featured" ? "p-6" : ""}`}
+			>
 				{variant === "compact" && (
 					<div className="flex flex-wrap items-center gap-1.5 mb-2">
 						<span
