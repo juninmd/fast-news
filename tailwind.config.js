@@ -21,11 +21,11 @@ export default {
 					secondary: "var(--text-secondary)",
 				},
 				accent: {
-					primary: "#6366F1",
-					secondary: "#22D3EE",
-					tertiary: "#F472B6",
+					primary: "var(--accent-primary)",
+					secondary: "var(--accent-secondary)",
+					tertiary: "var(--accent-tertiary)",
 				},
-				glow: "rgba(99, 102, 241, 0.15)",
+				glow: "var(--accent-glow)",
 				border: {
 					subtle: "var(--border-subtle)",
 				},
@@ -61,8 +61,8 @@ export default {
 				},
 			},
 			boxShadow: {
-				glow: "0 0 30px rgba(99, 102, 241, 0.2)",
-				"glow-lg": "0 0 60px rgba(99, 102, 241, 0.3)",
+				glow: "0 0 30px var(--accent-glow)",
+				"glow-lg": "0 0 60px var(--accent-glow)",
 			},
 		},
 	},
