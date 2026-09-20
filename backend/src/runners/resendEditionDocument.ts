@@ -3,18 +3,25 @@ import { runMigrations } from "../bootstrap.js";
 import { config } from "../config/env.js";
 import { closePool, query } from "../database/client.js";
 import { collectHeadlines } from "../editions/collect.js";
-import { editionFilename } from "../editions/publish.js";
+import {
+	editionFilename,
+	messageLink,
+	safeMessage,
+	sendDocumentWithRetry,
+} from "../editions/publish.js";
 import { renderEditionHtml } from "../editions/renderHtml.js";
-import { hourlyCounts, isFactCheck } from "../editions/select.js";
+import {
+	cleanHeadlines,
+	hourlyCounts,
+	isFactCheck,
+} from "../editions/select.js";
 import type {
 	Edition,
 	EditionDraft,
 	EditionWindow,
-	Headline,
 } from "../editions/types.js";
 import { editionWindow } from "../editions/window.js";
 import { fetchMarketSnapshot } from "../services/marketData.js";
-import { getBot } from "../services/telegram.js";
 
 /**
  * Recovers an edition whose summary message was delivered but whose file
@@ -23,7 +30,10 @@ import { getBot } from "../services/telegram.js";
  * already closed, so re-running collectHeadlines() for it reproduces the
  * exact same rows in the exact same order — and the stored draft's `fontes`
  * are indices into that list — so the original document can be rebuilt
- * byte-for-byte without calling the model again.
+ * byte-for-byte without calling the model again, as long as every derived
+ * value mirrors buildEdition.ts's own derivation exactly (checagens in
+ * particular must come from the same cleaned/deduped list, not the raw
+ * collect() output, or the fact-check section can silently drift).
  */
 async function main(): Promise<number> {
 	const editionKey = process.argv[2];
@@ -40,7 +50,9 @@ async function main(): Promise<number> {
 	}
 	await runMigrations();
 
-	const row = await query<{ payload: { draft: EditionDraft } }>(
+	const row = await query<{
+		payload: { draft: EditionDraft; links?: Record<string, string> };
+	}>(
 		"SELECT payload FROM news_editions WHERE edition_key = $1 AND sent_at IS NOT NULL",
 		[editionKey],
 	);
@@ -48,6 +60,16 @@ async function main(): Promise<number> {
 	if (!draft) {
 		console.error(`[ResendEdition] No sent edition found for ${editionKey}`);
 		return 1;
+	}
+	const existingLinks = row.rows[0]?.payload?.links ?? {};
+	const pendingChatIds = config.telegramChatIds.filter(
+		(id) => !existingLinks[id],
+	);
+	if (!pendingChatIds.length) {
+		console.error(
+			`[ResendEdition] ${editionKey} already has links for every chat — nothing to do.`,
+		);
+		return 0;
 	}
 
 	// Same close-hour math as the original run: as long as "now" falls on the
@@ -62,13 +84,13 @@ async function main(): Promise<number> {
 	}
 
 	const all = await collectHeadlines(window);
-	const headlines = new Map<number, Headline>(all.map((h) => [h.id, h]));
-	const checagens = all.filter(isFactCheck).slice(-4);
+	const clean = cleanHeadlines(all, config.editions.excludedCategories);
+	const checagens = clean.filter(isFactCheck).slice(-4);
 
 	const edition: Edition = {
 		window,
 		draft,
-		headlines,
+		headlines: new Map(all.map((h) => [h.id, h])),
 		checagens,
 		hourly: hourlyCounts(
 			all.map((h) => h.createdAt),
@@ -81,38 +103,38 @@ async function main(): Promise<number> {
 	};
 	const html = renderEditionHtml(edition);
 	const file = Buffer.from(html, "utf-8");
-	const doc = { source: file, filename: editionFilename(window) };
+	const filename = editionFilename(window);
 
-	const telegram = getBot().telegram;
 	const links: Record<string, string> = {};
 	let anyFailed = false;
-	for (const chatId of config.telegramChatIds) {
-		let sent: { message_id: number } | null = null;
-		for (let attempt = 1; attempt <= 3; attempt++) {
-			try {
-				sent = await telegram.sendDocument(chatId, doc);
-				break;
-			} catch (err) {
-				console.warn(
-					`[ResendEdition] Attempt ${attempt}/3 failed for ${chatId}: ${(err as Error).message}`,
-				);
-				if (attempt < 3) await new Promise((r) => setTimeout(r, 4000));
-			}
-		}
-		if (!sent) {
+	for (const chatId of pendingChatIds) {
+		try {
+			const sent = await sendDocumentWithRetry(
+				config.telegramBotToken,
+				chatId,
+				filename,
+				file,
+			);
+			links[chatId] = messageLink(chatId, sent.message_id);
+			console.log(`[ResendEdition] ${chatId}: ${links[chatId]}`);
+		} catch (err) {
 			anyFailed = true;
-			continue;
+			console.error(
+				`[ResendEdition] Gave up on ${chatId}: ${safeMessage(err)}`,
+			);
 		}
-		links[chatId] = chatId.startsWith("-100")
-			? `https://t.me/c/${chatId.slice(4)}/${sent.message_id}`
-			: `https://t.me/c/${chatId.replace(/^-/, "")}/${sent.message_id}`;
-		console.log(`[ResendEdition] ${chatId}: ${links[chatId]}`);
 	}
 
-	await query(
-		"UPDATE news_editions SET payload = jsonb_set(payload, '{links}', $2::jsonb) WHERE edition_key = $1",
-		[editionKey, JSON.stringify(links)],
-	);
+	if (Object.keys(links).length > 0) {
+		// Merges into whatever the row holds now rather than overwriting it, so
+		// a concurrent successful send (e.g. the real CronJob finishing mid-run)
+		// can't be clobbered by this script's result.
+		await query(
+			`UPDATE news_editions SET payload = jsonb_set(payload, '{links}', payload->'links' || $2::jsonb)
+			 WHERE edition_key = $1`,
+			[editionKey, JSON.stringify(links)],
+		);
+	}
 
 	return anyFailed ? 1 : 0;
 }
@@ -123,7 +145,7 @@ main()
 		process.exit(code);
 	})
 	.catch(async (err) => {
-		console.error("[ResendEdition] Failed:", (err as Error).message);
+		console.error("[ResendEdition] Failed:", safeMessage(err));
 		await closePool().catch(() => undefined);
 		process.exit(1);
 	});
