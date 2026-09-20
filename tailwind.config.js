@@ -29,10 +29,14 @@ export default {
 				border: {
 					subtle: "var(--border-subtle)",
 				},
+				glass: {
+					fill: "var(--glass-fill)",
+					edge: "var(--glass-edge)",
+				},
 			},
 			fontFamily: {
-				display: ["Playfair Display", "Georgia", "serif"],
-				sans: ["Inter", "system-ui", "sans-serif"],
+				display: ["Space Grotesk", "system-ui", "sans-serif"],
+				sans: ["Manrope", "system-ui", "sans-serif"],
 				mono: ["JetBrains Mono", "monospace"],
 				numbers: ["Space Grotesk", "sans-serif"],
 			},
@@ -63,6 +67,8 @@ export default {
 			boxShadow: {
 				glow: "0 0 30px var(--accent-glow)",
 				"glow-lg": "0 0 60px var(--accent-glow)",
+				glass:
+					"inset 0 1px 0 0 var(--glass-edge), 0 8px 30px rgba(4, 6, 16, 0.35)",
 			},
 		},
 	},
