@@ -67,16 +67,23 @@ function TopStoryWidget() {
 			.then((d) => setStory(d.data?.[0] ?? null))
 			.catch(() => {});
 	}, []);
-	if (!story) return <p className="text-text-secondary">Carregando...</p>;
+	if (!story)
+		return (
+			<p className="font-mono text-xs text-text-secondary">Carregando...</p>
+		);
 	return (
 		<>
-			<p className="mb-2">Top notícia agora:</p>
-			<p className="text-text-primary font-medium leading-snug line-clamp-3">
+			<p className="mb-2 font-mono text-[11px] uppercase text-text-secondary">
+				Top notícia agora
+			</p>
+			<p className="font-sans text-sm font-medium leading-snug text-text-primary line-clamp-3">
 				{story.title}
 			</p>
-			<p className="mt-2 text-text-secondary">— {story.source}</p>
-			<p className="mt-1 text-accent-primary flex items-center gap-1">
-				<Sparkles className="w-3 h-3" />
+			<p className="mt-2 font-mono text-xs text-text-secondary">
+				— {story.source}
+			</p>
+			<p className="mt-1 flex items-center gap-1 font-mono text-xs text-accent-primary">
+				<Sparkles className="h-3 w-3" />
 				{new Date(story.published_at).toLocaleTimeString("pt-BR", {
 					hour: "2-digit",
 					minute: "2-digit",
@@ -84,6 +91,44 @@ function TopStoryWidget() {
 				})}
 			</p>
 		</>
+	);
+}
+
+function SidebarSection({
+	icon,
+	title,
+	expanded,
+	onToggle,
+	children,
+}: {
+	icon: React.ReactNode;
+	title: string;
+	expanded: boolean;
+	onToggle: () => void;
+	children: React.ReactNode;
+}) {
+	return (
+		<section className="border border-border-subtle">
+			<button
+				onClick={onToggle}
+				className="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-bg-tertiary/40"
+			>
+				<span className="flex items-center gap-2 font-mono text-xs uppercase tracking-wide text-text-primary">
+					{icon}
+					{title}
+				</span>
+				{expanded ? (
+					<ChevronUp className="h-4 w-4 text-text-secondary" />
+				) : (
+					<ChevronDown className="h-4 w-4 text-text-secondary" />
+				)}
+			</button>
+			{expanded && (
+				<div className="border-t border-border-subtle px-4 py-3">
+					{children}
+				</div>
+			)}
+		</section>
 	);
 }
 
@@ -115,162 +160,113 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 	};
 
 	return (
-		<aside className="w-72 flex-shrink-0 space-y-4">
-			<section className="glass overflow-hidden">
-				<button
-					onClick={() => toggleSection("trending")}
-					className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
-				>
-					<span className="flex items-center gap-2 font-sans font-medium text-text-primary">
-						<TrendingUp className="w-4 h-4 text-accent-primary" />
-						Trending
-					</span>
-					{expandedSections.trending ? (
-						<ChevronUp className="w-4 h-4 text-text-secondary" />
-					) : (
-						<ChevronDown className="w-4 h-4 text-text-secondary" />
-					)}
-				</button>
-				{expandedSections.trending && (
-					<div className="px-4 pb-4 space-y-2">
-						{topics.length === 0
-							? Array.from({ length: 5 }).map((_, i) => (
-									<div
-										key={i}
-										className="h-8 bg-bg-tertiary rounded-lg animate-pulse"
-									/>
-								))
-							: topics.map((topic) => (
-									<button
-										key={topic.id}
-										className="block w-full text-left px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-accent-primary transition-colors"
-									>
-										#{topic.name}
-									</button>
-								))}
-					</div>
-				)}
-			</section>
-
-			<section className="glass overflow-hidden">
-				<button
-					onClick={() => toggleSection("filters")}
-					className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
-				>
-					<span className="flex items-center gap-2 font-sans font-medium text-text-primary">
-						<Filter className="w-4 h-4 text-accent-secondary" />
-						Filters
-					</span>
-					{expandedSections.filters ? (
-						<ChevronUp className="w-4 h-4 text-text-secondary" />
-					) : (
-						<ChevronDown className="w-4 h-4 text-text-secondary" />
-					)}
-				</button>
-				{expandedSections.filters && (
-					<div className="px-4 pb-4 space-y-4">
-						<div>
-							<label className="block text-xs text-text-secondary mb-2">
-								Company
-							</label>
-							<select
-								value={filters.company || ""}
-								onChange={(e) => handleFilterChange("company", e.target.value)}
-								className="w-full bg-bg-tertiary text-text-primary text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-accent-primary"
-							>
-								<option value="">All Companies</option>
-								{COMPANIES.filter((c) => c !== "Todas").map((c) => (
-									<option key={c} value={c}>
-										{c}
-									</option>
-								))}
-							</select>
-						</div>
-						<div>
-							<label className="block text-xs text-text-secondary mb-2">
-								Category
-							</label>
-							<select
-								value={filters.category || ""}
-								onChange={(e) => handleFilterChange("category", e.target.value)}
-								className="w-full bg-bg-tertiary text-text-primary text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-accent-primary"
-							>
-								<option value="">All Categories</option>
-								{CATEGORIES.filter((c) => c !== "Todas").map((c) => (
-									<option key={c} value={c}>
-										{c}
-									</option>
-								))}
-							</select>
-						</div>
-					</div>
-				)}
-			</section>
-
-			<section className="glass overflow-hidden">
-				<button
-					onClick={() => toggleSection("stats")}
-					className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
-				>
-					<span className="flex items-center gap-2 font-sans font-medium text-text-primary">
-						<BarChart3 className="w-4 h-4 text-accent-tertiary" />
-						Sources
-					</span>
-					{expandedSections.stats ? (
-						<ChevronUp className="w-4 h-4 text-text-secondary" />
-					) : (
-						<ChevronDown className="w-4 h-4 text-text-secondary" />
-					)}
-				</button>
-				{expandedSections.stats && (
-					<div className="px-4 pb-4 space-y-3">
-						{sourcesStats.length > 0 ? (
-							sourcesStats.map((source) => (
-								<div key={source.name} className="space-y-1">
-									<div className="flex items-center justify-between text-xs">
-										<span className="text-text-secondary">{source.name}</span>
-										<span className="font-numbers text-accent-primary">
-											{source.count}
-										</span>
-									</div>
-									<div className="h-1 bg-bg-tertiary rounded-full overflow-hidden">
-										<div
-											className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full transition-all"
-											style={{ width: `${source.percentage}%` }}
-										/>
-									</div>
-								</div>
+		<aside className="w-72 flex-shrink-0 space-y-3">
+			<SidebarSection
+				icon={<TrendingUp className="h-3.5 w-3.5 text-accent-primary" />}
+				title="Trending"
+				expanded={expandedSections.trending}
+				onToggle={() => toggleSection("trending")}
+			>
+				<div className="space-y-1">
+					{topics.length === 0
+						? Array.from({ length: 5 }).map((_, i) => (
+								<div key={i} className="h-7 animate-pulse bg-bg-tertiary" />
 							))
-						) : (
-							<p className="text-xs text-text-secondary">Loading stats...</p>
-						)}
-					</div>
-				)}
-			</section>
+						: topics.map((topic) => (
+								<button
+									key={topic.id}
+									className="block w-full px-2 py-1.5 text-left font-mono text-xs text-text-secondary transition-colors hover:text-accent-primary"
+								>
+									#{topic.name}
+								</button>
+							))}
+				</div>
+			</SidebarSection>
 
-			<section className="glass overflow-hidden">
-				<button
-					onClick={() => toggleSection("ai")}
-					className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
-				>
-					<span className="flex items-center gap-2 font-sans font-medium text-text-primary">
-						<Sparkles className="w-4 h-4 text-accent-primary" />
-						AI Summary
-					</span>
-					{expandedSections.ai ? (
-						<ChevronUp className="w-4 h-4 text-text-secondary" />
-					) : (
-						<ChevronDown className="w-4 h-4 text-text-secondary" />
-					)}
-				</button>
-				{expandedSections.ai && (
-					<div className="px-4 pb-4">
-						<div className="p-3 rounded-lg bg-bg-tertiary text-xs text-text-secondary">
-							<TopStoryWidget />
-						</div>
+			<SidebarSection
+				icon={<Filter className="h-3.5 w-3.5 text-accent-secondary" />}
+				title="Filtros"
+				expanded={expandedSections.filters}
+				onToggle={() => toggleSection("filters")}
+			>
+				<div className="space-y-4">
+					<div>
+						<label className="mb-2 block font-mono text-[11px] uppercase text-text-secondary">
+							Empresa
+						</label>
+						<select
+							value={filters.company || ""}
+							onChange={(e) => handleFilterChange("company", e.target.value)}
+							className="w-full border border-border-subtle bg-bg-secondary px-3 py-2 text-sm text-text-primary outline-none focus-visible:border-accent-primary"
+						>
+							<option value="">Todas as empresas</option>
+							{COMPANIES.filter((c) => c !== "Todas").map((c) => (
+								<option key={c} value={c}>
+									{c}
+								</option>
+							))}
+						</select>
 					</div>
-				)}
-			</section>
+					<div>
+						<label className="mb-2 block font-mono text-[11px] uppercase text-text-secondary">
+							Categoria
+						</label>
+						<select
+							value={filters.category || ""}
+							onChange={(e) => handleFilterChange("category", e.target.value)}
+							className="w-full border border-border-subtle bg-bg-secondary px-3 py-2 text-sm text-text-primary outline-none focus-visible:border-accent-primary"
+						>
+							<option value="">Todas as categorias</option>
+							{CATEGORIES.filter((c) => c !== "Todas").map((c) => (
+								<option key={c} value={c}>
+									{c}
+								</option>
+							))}
+						</select>
+					</div>
+				</div>
+			</SidebarSection>
+
+			<SidebarSection
+				icon={<BarChart3 className="h-3.5 w-3.5 text-accent-tertiary" />}
+				title="Fontes"
+				expanded={expandedSections.stats}
+				onToggle={() => toggleSection("stats")}
+			>
+				<div className="space-y-3">
+					{sourcesStats.length > 0 ? (
+						sourcesStats.map((source) => (
+							<div key={source.name} className="space-y-1">
+								<div className="flex items-center justify-between text-xs">
+									<span className="text-text-secondary">{source.name}</span>
+									<span className="font-mono text-accent-primary">
+										{source.count}
+									</span>
+								</div>
+								<div className="h-1 bg-bg-tertiary">
+									<div
+										className="h-full bg-accent-primary"
+										style={{ width: `${source.percentage}%` }}
+									/>
+								</div>
+							</div>
+						))
+					) : (
+						<p className="font-mono text-xs text-text-secondary">
+							Carregando estatísticas...
+						</p>
+					)}
+				</div>
+			</SidebarSection>
+
+			<SidebarSection
+				icon={<Sparkles className="h-3.5 w-3.5 text-accent-primary" />}
+				title="Resumo IA"
+				expanded={expandedSections.ai}
+				onToggle={() => toggleSection("ai")}
+			>
+				<TopStoryWidget />
+			</SidebarSection>
 		</aside>
 	);
 }
