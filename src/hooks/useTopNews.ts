@@ -24,7 +24,9 @@ export function useTopNews() {
 		fetch("/api/news/top")
 			.then((r) => r.json())
 			.then((d) => setArticles(d.data ?? []))
-			.catch(() => {})
+			.catch(() => {
+				// top-news widget is optional; ignore fetch failures
+			})
 			.finally(() => setLoading(false));
 	}, []);
 
