@@ -65,7 +65,9 @@ function TopStoryWidget() {
 		fetch("/api/news/top")
 			.then((r) => r.json())
 			.then((d) => setStory(d.data?.[0] ?? null))
-			.catch(() => {});
+			.catch(() => {
+				// keep loading state; sidebar simply stays empty on failure
+			});
 	}, []);
 	if (!story)
 		return (
@@ -146,7 +148,9 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 		fetch("/api/topics")
 			.then((r) => r.json())
 			.then((d) => setTopics((d.data ?? d).slice(0, 8)))
-			.catch(() => {});
+			.catch(() => {
+				// trending topics are optional; ignore fetch failures
+			});
 	}, []);
 
 	const toggleSection = (section: keyof typeof expandedSections) => {

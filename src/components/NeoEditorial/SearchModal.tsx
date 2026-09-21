@@ -94,15 +94,7 @@ export function SearchModal({
 			window.addEventListener("keydown", handleKeyDown);
 			return () => window.removeEventListener("keydown", handleKeyDown);
 		}
-	}, [
-		isOpen,
-		query,
-		filters,
-		recentSearches,
-		selectedIndex,
-		onSearch,
-		onClose,
-	]);
+	}, [isOpen, query, filters, recentSearches, onSearch, onClose]);
 
 	if (!isOpen) return null;
 
