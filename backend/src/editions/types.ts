@@ -1,4 +1,4 @@
-export type EditionKind = "manha" | "tarde" | "noite";
+export type EditionKind = "manha" | "meiodia" | "tarde" | "noite";
 
 export interface EditionWindow {
 	kind: EditionKind;
