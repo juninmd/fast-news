@@ -4,16 +4,22 @@ import type { EditionKind, EditionWindow } from "./types.js";
 const OFFSET_MS = 3 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
 const CLOSE_HOUR: Record<EditionKind, number> = {
-	manha: 7,
-	tarde: 13,
-	noite: 19,
+	manha: 6,
+	meiodia: 11,
+	tarde: 15,
+	noite: 20,
 };
 // Cycle order within a day; each edition's window covers the gap since the
 // previous one in this order (wrapping noite -> manha across midnight).
-const EDITION_ORDER: EditionKind[] = ["manha", "tarde", "noite"];
+const EDITION_ORDER: EditionKind[] = ["manha", "meiodia", "tarde", "noite"];
 
 export function isEditionKind(value: unknown): value is EditionKind {
-	return value === "manha" || value === "tarde" || value === "noite";
+	return (
+		value === "manha" ||
+		value === "meiodia" ||
+		value === "tarde" ||
+		value === "noite"
+	);
 }
 
 function windowHours(kind: EditionKind): number {
@@ -24,9 +30,9 @@ function windowHours(kind: EditionKind): number {
 }
 
 /**
- * Each edition closes at a fixed local hour (07h manhã, 13h tarde, 19h
- * noite) and covers the gap since the previous edition in that cycle
- * (12h/6h/6h respectively), so the three windows are contiguous and
+ * Each edition closes at a fixed local hour (06h manhã, 11h meio-dia, 15h
+ * tarde, 20h noite) and covers the gap since the previous edition in that
+ * cycle (10h/5h/4h/5h respectively), so the four windows are contiguous and
  * non-overlapping across the day. Uses the most recent close <= now, so a
  * late or retried job still produces the same window.
  */

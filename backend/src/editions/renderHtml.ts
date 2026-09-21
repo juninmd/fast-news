@@ -14,6 +14,7 @@ import { formatLocalDate, formatLocalTime } from "./window.js";
 
 const LABEL = {
 	manha: "Edição da Manhã",
+	meiodia: "Edição do Meio-dia",
 	tarde: "Edição da Tarde",
 	noite: "Edição da Noite",
 };
@@ -91,9 +92,11 @@ export function renderEditionHtml(e: Edition): string {
 	const closing =
 		w.kind === "manha"
 			? "Para ler com o café"
-			: w.kind === "tarde"
-				? "Para a pausa da tarde"
-				: "Antes de dormir";
+			: w.kind === "meiodia"
+				? "Para a pausa do almoço"
+				: w.kind === "tarde"
+					? "Para a pausa da tarde"
+					: "Para o fim do dia";
 	const range = `${formatLocalTime(w.start)} → ${formatLocalTime(w.end)}`;
 	return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

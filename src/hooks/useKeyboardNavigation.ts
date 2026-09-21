@@ -83,13 +83,14 @@ export function useKeyboardNavigation<T>({
 					onSelect?.(items[0], 0);
 					break;
 
-				case "End":
+				case "End": {
 					e.preventDefault();
 					const lastIndex = items.length - 1;
 					setFocusedIndex(lastIndex);
 					scrollToFocused(lastIndex);
 					onSelect?.(items[lastIndex], lastIndex);
 					break;
+				}
 			}
 		};
 

@@ -29,5 +29,7 @@ history.json
 .env
 # Generated files
 coverage
+test-results
+playwright-report
 .env
 history.json

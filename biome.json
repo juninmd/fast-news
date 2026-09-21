@@ -9,7 +9,6 @@
 		"includes": [
 			"**",
 			"!dist",
-			"!scripts",
 			"!coverage",
 			"!backend/dist",
 			"**",
@@ -40,7 +39,7 @@
 			}
 		},
 		{
-			"includes": ["**/*.{js,jsx}"],
+			"includes": ["**/*.{js,jsx,ts,tsx}"],
 			"linter": {
 				"rules": {
 					"complexity": {
@@ -108,7 +107,7 @@
 			}
 		},
 		{
-			"includes": ["**/*.{js,jsx}"],
+			"includes": ["**/*.{js,jsx,ts,tsx}"],
 			"linter": {
 				"rules": {
 					"correctness": {
@@ -118,9 +117,18 @@
 				}
 			}
 		},
-		{ "includes": ["**/*.{js,jsx}"], "linter": { "rules": {} } },
 		{
-			"includes": ["**/*.{js,jsx}"],
+			"includes": ["**/*.{ts,tsx}"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUndeclaredVariables": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*.{js,jsx,ts,tsx}"],
 			"javascript": {
 				"globals": [
 					"onanimationend",

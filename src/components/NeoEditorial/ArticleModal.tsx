@@ -85,7 +85,9 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 		fetch(`/api/news/${articleId}/related`)
 			.then((r) => r.json())
 			.then((d) => setRelated((d.data ?? []).slice(0, 4)))
-			.catch(() => {});
+			.catch(() => {
+				// related articles are optional; ignore fetch failures
+			});
 	}, [articleId]);
 
 	// Track reading progress
