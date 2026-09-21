@@ -25,7 +25,10 @@ CREATE TABLE IF NOT EXISTS news_articles (
   credibility_reasoning TEXT DEFAULT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_articles_published_at ON news_articles(published_at DESC);
+-- NULLS LAST must match the app's ORDER BY exactly, or Postgres falls back to a
+-- full seq scan + sort instead of using this index (measured: 6.6s vs 3ms on prod).
+DROP INDEX IF EXISTS idx_articles_published_at;
+CREATE INDEX IF NOT EXISTS idx_articles_published_at ON news_articles(published_at DESC NULLS LAST);
 CREATE INDEX IF NOT EXISTS idx_articles_category ON news_articles(category);
 CREATE INDEX IF NOT EXISTS idx_articles_company ON news_articles(company);
 CREATE INDEX IF NOT EXISTS idx_articles_embedding ON news_articles
