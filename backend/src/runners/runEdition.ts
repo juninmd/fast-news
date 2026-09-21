@@ -16,7 +16,7 @@ import { editionWindow, isEditionKind } from "../editions/window.js";
 async function main(): Promise<number> {
 	const kind = process.argv[2] ?? process.env["EDITION_KIND"];
 	if (!isEditionKind(kind)) {
-		console.error("[Edition] Usage: runEdition.js <manha|tarde|noite>");
+		console.error("[Edition] Usage: runEdition.js <manha|meiodia|tarde|noite>");
 		return 2;
 	}
 	const started = Date.now();

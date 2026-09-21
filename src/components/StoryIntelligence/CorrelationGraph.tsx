@@ -9,6 +9,20 @@ interface Props {
 	height?: number;
 }
 
+// Aligned with the app's glass palette (ember/spark/mist) instead of a
+// generic rainbow set, so the graph reads as part of the same product.
+const CATEGORY_COLORS: Record<string, string> = {
+	"AI Frontier": "#ff6a39",
+	"Big Techs": "#7fb8ff",
+	"Dev Tools": "#ffc15c",
+	Gaming: "#ff8f66",
+	Tecnologia: "#7fb8ff",
+	Mundo: "#c9a7ff",
+	Negocios: "#ffc15c",
+	Brasil: "#7ee787",
+	Ciencia: "#c9a7ff",
+};
+
 // Simple canvas-based force graph (no deps)
 export function CorrelationGraph({
 	nodes,
@@ -23,20 +37,6 @@ export function CorrelationGraph({
 		Map<string, { x: number; y: number; vx: number; vy: number }>
 	>(new Map());
 	const [hoveredId, setHoveredId] = useState<string | null>(null);
-
-	// Aligned with the app's glass palette (ember/spark/mist) instead of a
-	// generic rainbow set, so the graph reads as part of the same product.
-	const CATEGORY_COLORS: Record<string, string> = {
-		"AI Frontier": "#ff6a39",
-		"Big Techs": "#7fb8ff",
-		"Dev Tools": "#ffc15c",
-		Gaming: "#ff8f66",
-		Tecnologia: "#7fb8ff",
-		Mundo: "#c9a7ff",
-		Negocios: "#ffc15c",
-		Brasil: "#7ee787",
-		Ciencia: "#c9a7ff",
-	};
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
