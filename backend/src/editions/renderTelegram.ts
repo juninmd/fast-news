@@ -5,6 +5,7 @@ import { formatLocalDate, formatLocalTime } from "./window.js";
 export const TELEGRAM_LIMIT = 4096;
 const LABEL = {
 	manha: "Edição da Manhã",
+	meiodia: "Edição do Meio-dia",
 	tarde: "Edição da Tarde",
 	noite: "Edição da Noite",
 };

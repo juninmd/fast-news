@@ -15,7 +15,7 @@ import type {
 	EditionDraft,
 	EditionWindow,
 } from "../editions/types.js";
-import { editionWindow } from "../editions/window.js";
+import { editionWindow, isEditionKind } from "../editions/window.js";
 import { fetchMarketSnapshot } from "../services/marketData.js";
 
 /**
@@ -38,7 +38,7 @@ async function main(): Promise<number> {
 		return 2;
 	}
 	const [day, kind] = editionKey.split(":");
-	if (!day || (kind !== "manha" && kind !== "tarde" && kind !== "noite")) {
+	if (!day || !isEditionKind(kind)) {
 		console.error(`[ResendEdition] Bad edition key: ${editionKey}`);
 		return 2;
 	}
