@@ -44,6 +44,14 @@ function WireRow({
 					<span className="truncate">{article.source}</span>
 					<span className="text-faint">·</span>
 					<span className="tabular-nums">{timeAgo(article.published_at)}</span>
+					{article.sourceCount > 1 && (
+						<>
+							<span className="text-faint">·</span>
+							<span className="tabular-nums text-accent-primary">
+								{article.sourceCount} fontes
+							</span>
+						</>
+					)}
 				</div>
 				<h3
 					className={`font-display font-medium leading-snug text-text-primary transition-colors group-hover:text-accent-primary ${
@@ -123,7 +131,7 @@ export function TopNewsSection({
 					Em alta agora
 				</h2>
 				<span className="font-mono text-[11px] text-text-secondary">
-					ranking por relevância
+					cobertura entre portais + relevância
 				</span>
 			</div>
 
