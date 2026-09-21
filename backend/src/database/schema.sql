@@ -27,8 +27,21 @@ CREATE TABLE IF NOT EXISTS news_articles (
 
 -- NULLS LAST must match the app's ORDER BY exactly, or Postgres falls back to a
 -- full seq scan + sort instead of using this index (measured: 6.6s vs 3ms on prod).
-DROP INDEX IF EXISTS idx_articles_published_at;
-CREATE INDEX IF NOT EXISTS idx_articles_published_at ON news_articles(published_at DESC NULLS LAST);
+-- Guarded: an unconditional DROP+CREATE re-rebuilds this index (5.7s over 234k
+-- rows) on every single boot, which pushed migrate()'s 15s query_timeout past
+-- its limit under load and crash-looped the app (prod incident). Only rebuild
+-- when the live definition doesn't already match.
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE indexname = 'idx_articles_published_at'
+          AND indexdef ILIKE '%NULLS LAST%'
+    ) THEN
+        DROP INDEX IF EXISTS idx_articles_published_at;
+        CREATE INDEX idx_articles_published_at ON news_articles(published_at DESC NULLS LAST);
+    END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_articles_category ON news_articles(category);
 CREATE INDEX IF NOT EXISTS idx_articles_company ON news_articles(company);
 CREATE INDEX IF NOT EXISTS idx_articles_embedding ON news_articles
