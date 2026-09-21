@@ -62,11 +62,29 @@ async function generatePart<S extends z.ZodTypeAny>(
 	return null;
 }
 
-export async function buildEdition(window: EditionWindow): Promise<Edition> {
+/**
+ * Collects and derives the window's headline sets: the one place that turns
+ * a raw collect() result into clean/checagens/news. buildEdition and the
+ * recovery runner (resendEditionDocument) both call this so a stored
+ * edition can be rebuilt byte-for-byte without re-deriving checagens by
+ * hand and drifting from the original (the fact-check section silently
+ * diverged this way once already).
+ */
+export async function deriveWindowHeadlines(window: EditionWindow): Promise<{
+	all: Headline[];
+	clean: Headline[];
+	checagens: Headline[];
+	news: Headline[];
+}> {
 	const all = await collectHeadlines(window);
 	const clean = cleanHeadlines(all, config.editions.excludedCategories);
 	const checagens = clean.filter(isFactCheck).slice(-4);
 	const news = clean.filter((h) => !isFactCheck(h));
+	return { all, clean, checagens, news };
+}
+
+export async function buildEdition(window: EditionWindow): Promise<Edition> {
+	const { all, checagens, news } = await deriveWindowHeadlines(window);
 	if (news.length < MIN_HEADLINES)
 		throw new Error(
 			`[Edition] Only ${news.length} usable headlines in ${window.start.toISOString()}..${window.end.toISOString()}; ingestion may be down`,
@@ -79,7 +97,7 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 	);
 	const known = new Map<number, Headline>(picked.map((h) => [h.id, h]));
 	console.log(
-		`[Edition] ${window.kind} ${window.day}: ${all.length} articles, ${clean.length} clean, ${picked.length} sent to the model`,
+		`[Edition] ${window.kind} ${window.day}: ${all.length} articles, ${news.length + checagens.length} clean, ${picked.length} sent to the model`,
 	);
 
 	const front = await generatePart(
