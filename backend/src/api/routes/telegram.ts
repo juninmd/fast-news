@@ -1,10 +1,7 @@
 import { Request, Response, Router } from "express";
 import { config } from "../../config/env.js";
-import {
-	fetchTelegramArticle,
-	getBot,
-	postArticleToTelegram,
-} from "../../services/telegram.js";
+import { fetchTelegramArticle, getBot } from "../../services/telegram.js";
+import { postArticleToTelegram } from "../../services/telegramBroadcast.js";
 
 export const telegramRouter: Router = Router();
 

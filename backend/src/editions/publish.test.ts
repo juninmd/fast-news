@@ -61,8 +61,9 @@ describe("publishEdition", () => {
 	it("never lets the bot token reach logs through an error message", async () => {
 		fetchMock.mockRejectedValue(hangUp);
 		const r = await runPublish(w, "s", "<html>");
-		expect(r.failed[0]?.error).not.toContain("AAH-fake_token");
-		expect(r.failed[0]?.error).toContain("socket hang up");
+		const chat = r.chats["-1001234567890"];
+		expect(chat?.error).not.toContain("AAH-fake_token");
+		expect(chat?.error).toContain("socket hang up");
 	});
 
 	it("retries the file up to 3 times so a couple of dropped connections still deliver it", async () => {
@@ -74,19 +75,23 @@ describe("publishEdition", () => {
 		expect(fetchMock).toHaveBeenCalledTimes(3);
 		expect(sendMessage).toHaveBeenCalledTimes(1);
 		expect(r).toEqual({
-			delivered: ["-1001234567890"],
-			failed: [],
-			links: { "-1001234567890": "https://t.me/c/1234567890/42" },
+			chats: {
+				"-1001234567890": {
+					status: "full",
+					link: "https://t.me/c/1234567890/42",
+				},
+			},
 		});
 	});
 
-	it("gives up after 3 straight failures and reports the chat as failed", async () => {
+	it("gives up after 3 straight failures and reports the chat as summary-only", async () => {
 		fetchMock.mockRejectedValue(hangUp);
 		const r = await runPublish(w, "s", "<html>");
 		expect(fetchMock).toHaveBeenCalledTimes(3);
-		expect(r.delivered).toEqual(["-1001234567890"]);
-		expect(r.links).toEqual({});
-		expect(r.failed[0]?.error).toContain("socket hang up");
+		const chat = r.chats["-1001234567890"];
+		expect(chat?.status).toBe("summaryOnly");
+		expect(chat?.link).toBeUndefined();
+		expect(chat?.error).toContain("socket hang up");
 	});
 
 	it("treats a Telegram-side error response as a failure without retrying forever", async () => {
@@ -98,6 +103,6 @@ describe("publishEdition", () => {
 		});
 		const r = await runPublish(w, "s", "<html>");
 		expect(fetchMock).toHaveBeenCalledTimes(3);
-		expect(r.failed[0]?.error).toContain("chat not found");
+		expect(r.chats["-1001234567890"]?.error).toContain("chat not found");
 	});
 });
