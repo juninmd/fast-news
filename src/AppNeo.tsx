@@ -108,7 +108,9 @@ function App() {
 				setSearchGraph(d.graph ?? null);
 				setActiveView("feed");
 			})
-			.catch(() => {});
+			.catch(() => {
+				// best-effort deep-link routing; ignore navigation failures
+			});
 	}, []);
 
 	const handleBookmark = useCallback(() => {

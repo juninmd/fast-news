@@ -360,9 +360,9 @@ export async function startBot(): Promise<void> {
 	}
 
 	// Clear any stale webhook that may block polling
-	await b.telegram
-		.deleteWebhook({ drop_pending_updates: true })
-		.catch(() => {});
+	await b.telegram.deleteWebhook({ drop_pending_updates: true }).catch(() => {
+		// webhook may not exist yet; safe to ignore
+	});
 
 	async function launchWithRetry(attempt = 1): Promise<void> {
 		try {
