@@ -14,6 +14,7 @@ export interface TopNewsArticle {
 	fake_news_score: number | null;
 	political_bias: string | null;
 	is_militant: boolean;
+	sourceCount: number;
 }
 
 export function useTopNews() {

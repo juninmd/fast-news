@@ -283,18 +283,27 @@ async function upsertArticle(
 		}
 	}
 
-	// Skip if similar article already stored (embedding-based dedup)
+	// Skip if similar article already stored (embedding-based dedup).
+	// ORDER BY ... LIMIT 1 lets Postgres use the ivfflat index for an ANN
+	// lookup; a WHERE threshold on the same expression forces a full seq
+	// scan instead, which timed out once news_articles passed ~200k rows.
 	if (embedding) {
-		const similar = await query<{ id: string; title: string }>(
-			`SELECT id, title FROM news_articles
+		const nearest = await query<{
+			id: string;
+			title: string;
+			similarity: number;
+		}>(
+			`SELECT id, title, 1 - (embedding <=> $1::vector) AS similarity
+			 FROM news_articles
 			 WHERE embedding IS NOT NULL
-			   AND 1 - (embedding <=> $1::vector) >= $2
+			 ORDER BY embedding <=> $1::vector
 			 LIMIT 1`,
-			[vectorToSQL(embedding), config.telegram.similarThreshold],
+			[vectorToSQL(embedding)],
 		);
-		if (similar.rows.length > 0) {
+		const match = nearest.rows[0];
+		if (match && match.similarity >= config.telegram.similarThreshold) {
 			console.log(
-				`[ingestion] Skipping "${article.title}" — similar to "${similar.rows[0].title}" (threshold: ${config.telegram.similarThreshold})`,
+				`[ingestion] Skipping "${article.title}" — similar to "${match.title}" (threshold: ${config.telegram.similarThreshold})`,
 			);
 			return null;
 		}
