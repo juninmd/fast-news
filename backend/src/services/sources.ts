@@ -3,6 +3,15 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://9to5google.com/feed/",
+		company: "9to5Google",
+	},
+	{
+		url: "https://feeds.feedburner.com/TheHackersNews",
+		company: "The Hacker News",
+	},
+
+	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",

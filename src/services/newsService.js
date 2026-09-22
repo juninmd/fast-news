@@ -2,6 +2,12 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://9to5google.com/feed/", category: "Tecnologia" },
+	{
+		url: "https://feeds.feedburner.com/TheHackersNews",
+		category: "Tecnologia",
+	},
+
 	{ url: "https://dev.to/feed", category: "Tecnologia" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },
 	{ url: "https://www.technologyreview.com/feed/", category: "Tecnologia" },
