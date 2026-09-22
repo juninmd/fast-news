@@ -4,10 +4,12 @@ export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
 		url: "https://9to5google.com/feed/",
+		category: "Tecnologia",
 		company: "9to5Google",
 	},
 	{
 		url: "https://feeds.feedburner.com/TheHackersNews",
+		category: "Tecnologia",
 		company: "The Hacker News",
 	},
 
