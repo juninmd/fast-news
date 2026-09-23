@@ -93,4 +93,68 @@ describe("sanitizeDraft", () => {
 		expect(out.fio).toHaveLength(1);
 		expect(out.fio[0]?.eventos.map((e) => e.fonte)).toEqual([a, b, d]);
 	});
+
+	it("drops stories carrying model self-talk or decode garbage", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: { ...draft().manchete, fontes: [a] },
+				destaques: [
+					{
+						...story([b]),
+						texto: "Pronto. Verifiquei tudo e não há conteúdo proibido.",
+					},
+					{ ...story([c]), titulo: "Flamengo <unk> <unk>" },
+					{ ...story([d]), titulo: "Datafolha" },
+				],
+			}),
+			known,
+		);
+		expect(out.destaques.map((s) => s.titulo)).toEqual(["Datafolha"]);
+	});
+
+	it("drops polluted lead paragraphs but keeps the clean ones", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: {
+					...draft().manchete,
+					fontes: [a],
+					paragrafos: [
+						"Copom corta a Selic.",
+						"As an AI language model, I cannot.",
+					],
+				},
+			}),
+			known,
+		);
+		expect(out.manchete.paragrafos).toEqual(["Copom corta a Selic."]);
+	});
+
+	it("blanks a polluted subtitle and quote instead of publishing them", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: {
+					...draft().manchete,
+					fontes: [a],
+					linhaFina: "Verifiquei tudo e não há conteúdo proibido.",
+					citacao: { texto: "Juros � caem", autor: "Copom" },
+				},
+			}),
+			known,
+		);
+		expect(out.manchete.linhaFina).toBe("");
+		expect(out.manchete.citacao).toBeUndefined();
+	});
+
+	it("drops polluted notes and light items", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: { ...draft().manchete, fontes: [a] },
+				secoes: [{ nome: "Economia", materias: [], notas: ["ok", "<pad>"] }],
+				leve: ["Verifiquei tudo.", "Gato resgatado"],
+			}),
+			known,
+		);
+		expect(out.secoes[0]?.notas).toEqual(["ok"]);
+		expect(out.leve).toEqual(["Gato resgatado"]);
+	});
 });
