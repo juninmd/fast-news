@@ -39,6 +39,9 @@ git clone https://github.com/juninmd/fast-news.git
 cd fast-news
 
 # Instalar dependências
+# @juninmd/digest-kit vem do GitHub Packages, que exige token mesmo para pacote
+# público: PAT classic com read:packages no seu ~/.npmrc (também usado pelo compose)
+npm config set //npm.pkg.github.com/:_authToken <PAT>
 pnpm install
 
 # Desenvolvimento
