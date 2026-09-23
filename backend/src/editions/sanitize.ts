@@ -41,12 +41,14 @@ function lead(l: Lead, known: Map<number, Headline>): Lead | null {
 		.filter(Boolean);
 	return {
 		...base,
-		linhaFina: clip(l.linhaFina, 320),
+		linhaFina: isPollutedProse(l.linhaFina) ? "" : clip(l.linhaFina, 320),
 		paragrafos: (paragrafos.length ? paragrafos : [base.texto])
 			.filter(Boolean)
 			.slice(0, 4),
 		citacao:
-			l.citacao?.texto && l.citacao.autor
+			l.citacao?.texto &&
+			l.citacao.autor &&
+			!isPollutedProse(`${l.citacao.texto} ${l.citacao.autor}`)
 				? {
 						texto: clip(l.citacao.texto, 220),
 						autor: clip(l.citacao.autor, 80),

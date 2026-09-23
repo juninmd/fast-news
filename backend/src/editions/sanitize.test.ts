@@ -129,6 +129,22 @@ describe("sanitizeDraft", () => {
 		expect(out.manchete.paragrafos).toEqual(["Copom corta a Selic."]);
 	});
 
+	it("blanks a polluted subtitle and quote instead of publishing them", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: {
+					...draft().manchete,
+					fontes: [a],
+					linhaFina: "Verifiquei tudo e não há conteúdo proibido.",
+					citacao: { texto: "Juros � caem", autor: "Copom" },
+				},
+			}),
+			known,
+		);
+		expect(out.manchete.linhaFina).toBe("");
+		expect(out.manchete.citacao).toBeUndefined();
+	});
+
 	it("drops polluted notes and light items", () => {
 		const out = sanitizeDraft(
 			draft({
