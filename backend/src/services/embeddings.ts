@@ -6,10 +6,16 @@ export async function embedDocument(
 	abortSignal?: AbortSignal,
 ): Promise<number[]> {
 	const model = await getEmbeddingModel();
+	// Caller treats embedding failure as best-effort (stores without vector).
+	// The AI SDK's default retries are useless against a LiteLLM deployment
+	// cooldown ("try again in 300 seconds") and were adding retry/backoff
+	// overhead to every article during a rate-limited window, multiplying into
+	// tens of minutes across a run and starving the CronJob's time budget.
 	const { embedding } = await embed({
 		model,
 		value: text.slice(0, 2048),
 		abortSignal,
+		maxRetries: 0,
 	});
 	return embedding;
 }
