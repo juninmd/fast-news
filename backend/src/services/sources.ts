@@ -4,6 +4,7 @@ export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
 		url: "https://www.freecodecamp.org/news/rss/",
+		category: "Tecnologia",
 		company: "freeCodeCamp",
 	},
 	{
@@ -986,11 +987,11 @@ export async function getActiveFeeds(): Promise<
 			"SELECT url, category, company FROM source_feeds WHERE is_active = true",
 		);
 		if (res.rows.length > 0) {
-			return res.rows.map((r) => ({
+			return res.rows.map((r: any) => ({
 				url: r.url,
 				category: r.category,
 				company: r.company || undefined,
-			}));
+			} as { url: string; category: string; company?: string | undefined; }));
 		}
 	} catch (err) {
 		console.error(
