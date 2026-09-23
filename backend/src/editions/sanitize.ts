@@ -1,3 +1,4 @@
+import { isPollutedProse } from "./proseGuards.js";
 import type {
 	EditionDraft,
 	Figure,
@@ -22,6 +23,7 @@ function story(s: Story, known: Map<number, Headline>): Story | null {
 	const fontes = validIds(s.fontes, known);
 	const titulo = clip(s.titulo, 160);
 	if (!titulo || fontes.length === 0) return null;
+	if (isPollutedProse(s.titulo) || isPollutedProse(s.texto)) return null;
 	return {
 		chapeu: s.chapeu ? clip(s.chapeu, 40) : undefined,
 		titulo,
@@ -33,7 +35,10 @@ function story(s: Story, known: Map<number, Headline>): Story | null {
 function lead(l: Lead, known: Map<number, Headline>): Lead | null {
 	const base = story(l, known);
 	if (!base) return null;
-	const paragrafos = l.paragrafos.map((p) => clip(p, 900)).filter(Boolean);
+	const paragrafos = l.paragrafos
+		.filter((p) => !isPollutedProse(p))
+		.map((p) => clip(p, 900))
+		.filter(Boolean);
 	return {
 		...base,
 		linhaFina: clip(l.linhaFina, 320),
@@ -137,6 +142,7 @@ export function sanitizeDraft(
 				.filter((s): s is Story => s !== null)
 				.slice(0, 3),
 			notas: sec.notas
+				.filter((n) => !isPollutedProse(n))
 				.map((n) => clip(n, 220))
 				.filter(Boolean)
 				.slice(0, 4),
@@ -153,6 +159,7 @@ export function sanitizeDraft(
 		fio: threads(draft.fio, known),
 		numeros: figures(draft.numeros, corpus),
 		leve: draft.leve
+			.filter((l) => !isPollutedProse(l))
 			.map((l) => clip(l, 220))
 			.filter(Boolean)
 			.slice(0, 4),
