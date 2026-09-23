@@ -3,6 +3,10 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.freecodecamp.org/news/rss/",
+		company: "freeCodeCamp",
+	},
+	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",
