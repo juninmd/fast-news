@@ -21,3 +21,11 @@ describe("extractJsonObject", () => {
 		expect(await repair("")).toBeNull();
 	});
 });
+
+describe("extractJsonObject trailing prose", () => {
+	it("ignores braces the model writes after the JSON", async () => {
+		expect(await repair('{"leve":[]}\nObs.: campo {x} omitido')).toBe(
+			'{"leve":[]}',
+		);
+	});
+});
