@@ -2,10 +2,8 @@ import { query } from "../database/client.js";
 
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
-	{
-		url: "https://catracalivre.com.br/viagem-livre/feed/",
-		company: "Catraca Livre",
-	},
+	{ url: "https://catracalivre.com.br/viagem-livre/feed/", company: "Catraca Livre" },
+
 	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
