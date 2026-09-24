@@ -27,7 +27,7 @@ export const config = {
 
 	ollama: {
 		baseUrl: optional("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
-		model: optional("OLLAMA_MODEL", "gemma4"),
+		model: optional("OLLAMA_MODEL", "cloud/auto"),
 		embeddingModel: optional("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text"),
 		// Separate URL for embeddings — use native Ollama (no /v1) to avoid
 		// encoding_format:float rejection from LiteLLM OpenAI-compat proxies.
