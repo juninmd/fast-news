@@ -1,8 +1,8 @@
 FROM node:22-alpine AS builder
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --ignore-scripts
+COPY package*.json .npmrc ./
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci --ignore-scripts
 
 COPY tsconfig.json ./
 COPY src ./src
@@ -14,8 +14,8 @@ FROM node:22-alpine AS runtime
 RUN apk add --no-cache curl
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev --ignore-scripts
+COPY package*.json .npmrc ./
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci --omit=dev --ignore-scripts
 
 COPY --from=builder /app/dist ./dist
 COPY src/database/schema.sql ./dist/database/schema.sql
