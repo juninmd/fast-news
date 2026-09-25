@@ -2,6 +2,10 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
+		category: "Ciência",
+	},
 	{ url: "https://www.pushsquare.com/feeds/latest", category: "Games" },
 	{ url: "https://dev.to/feed", category: "Tecnologia" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },

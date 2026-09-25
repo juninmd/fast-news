@@ -3,7 +3,13 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
+		category: "Ciência",
+		company: "NYT",
+	},
+	{
 		url: "https://www.pushsquare.com/feeds/latest",
+		category: "Games",
 		company: "Push Square",
 	},
 	{
