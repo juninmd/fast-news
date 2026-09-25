@@ -2,38 +2,32 @@ import "dotenv/config";
 import { runMigrations } from "../bootstrap.js";
 import { config } from "../config/env.js";
 import { closePool, query } from "../database/client.js";
-import { collectHeadlines } from "../editions/collect.js";
+import { deriveWindowHeadlines } from "../editions/buildEdition.js";
 import {
+	deliverEditionDocument,
 	editionFilename,
-	messageLink,
 	safeMessage,
-	sendDocumentWithRetry,
 } from "../editions/publish.js";
 import { renderEditionHtml } from "../editions/renderHtml.js";
-import {
-	cleanHeadlines,
-	hourlyCounts,
-	isFactCheck,
-} from "../editions/select.js";
+import { hourlyCounts } from "../editions/select.js";
 import type {
 	Edition,
 	EditionDraft,
 	EditionWindow,
 } from "../editions/types.js";
-import { editionWindow } from "../editions/window.js";
+import { editionWindow, isEditionKind } from "../editions/window.js";
 import { fetchMarketSnapshot } from "../services/marketData.js";
 
 /**
  * Recovers an edition whose summary message was delivered but whose file
  * upload never made it (the delivered/failed split in publish.ts leaves
  * such an edition permanently "sent" with no link). The edition's window is
- * already closed, so re-running collectHeadlines() for it reproduces the
- * exact same rows in the exact same order — and the stored draft's `fontes`
- * are indices into that list — so the original document can be rebuilt
- * byte-for-byte without calling the model again, as long as every derived
- * value mirrors buildEdition.ts's own derivation exactly (checagens in
- * particular must come from the same cleaned/deduped list, not the raw
- * collect() output, or the fact-check section can silently drift).
+ * already closed, so re-running deriveWindowHeadlines() for it reproduces
+ * the exact same rows in the exact same order — and the stored draft's
+ * `fontes` are indices into that list — so the original document can be
+ * rebuilt byte-for-byte without calling the model again. deriveWindowHeadlines
+ * is the same function buildEdition.ts uses, so checagens can't drift from
+ * the original run the way it once did.
  */
 async function main(): Promise<number> {
 	const editionKey = process.argv[2];
@@ -44,7 +38,7 @@ async function main(): Promise<number> {
 		return 2;
 	}
 	const [day, kind] = editionKey.split(":");
-	if (!day || (kind !== "manha" && kind !== "tarde" && kind !== "noite")) {
+	if (!day || !isEditionKind(kind)) {
 		console.error(`[ResendEdition] Bad edition key: ${editionKey}`);
 		return 2;
 	}
@@ -83,9 +77,7 @@ async function main(): Promise<number> {
 		return 1;
 	}
 
-	const all = await collectHeadlines(window);
-	const clean = cleanHeadlines(all, config.editions.excludedCategories);
-	const checagens = clean.filter(isFactCheck).slice(-4);
+	const { all, checagens } = await deriveWindowHeadlines(window);
 
 	const edition: Edition = {
 		window,
@@ -105,25 +97,15 @@ async function main(): Promise<number> {
 	const file = Buffer.from(html, "utf-8");
 	const filename = editionFilename(window);
 
-	const links: Record<string, string> = {};
-	let anyFailed = false;
-	for (const chatId of pendingChatIds) {
-		try {
-			const sent = await sendDocumentWithRetry(
-				config.telegramBotToken,
-				chatId,
-				filename,
-				file,
-			);
-			links[chatId] = messageLink(chatId, sent.message_id);
-			console.log(`[ResendEdition] ${chatId}: ${links[chatId]}`);
-		} catch (err) {
-			anyFailed = true;
-			console.error(
-				`[ResendEdition] Gave up on ${chatId}: ${safeMessage(err)}`,
-			);
-		}
+	const delivery = await deliverEditionDocument(pendingChatIds, filename, file);
+	for (const [chatId, link] of Object.entries(delivery.links)) {
+		console.log(`[ResendEdition] ${chatId}: ${link}`);
 	}
+	for (const f of delivery.failed) {
+		console.error(`[ResendEdition] Gave up on ${f.chatId}: ${f.error}`);
+	}
+	const links = delivery.links;
+	const anyFailed = delivery.failed.length > 0;
 
 	if (Object.keys(links).length > 0) {
 		// Merges into whatever the row holds now rather than overwriting it, so

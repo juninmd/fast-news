@@ -8,6 +8,10 @@ export const FEED_SOURCES = [
 		company: "Windows",
 	},
 	{
+		url: "https://www.pushsquare.com/feeds/latest",
+		company: "Push Square",
+	},
+	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",

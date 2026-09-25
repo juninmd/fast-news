@@ -1,0 +1,3 @@
+# Local docker-compose Postgres default (dev container only; prod reads
+# fast-news-secret). The compose now takes it from ${POSTGRES_PASSWORD}.
+01fb4c4d5c4bcc7e72eb08b592a747b99e680003:docker-compose.yml:juninmd-db-uri-credentials:87

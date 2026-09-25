@@ -2,11 +2,18 @@ import { config } from "../config/env.js";
 import { getBot } from "../services/telegram.js";
 import type { EditionWindow } from "./types.js";
 
+export type ChatDeliveryStatus = "full" | "summaryOnly" | "failed";
+
+export interface ChatDeliveryOutcome {
+	status: ChatDeliveryStatus;
+	/** t.me link to the posted file. Present only when status is "full". */
+	link?: string;
+	/** Set when status is "summaryOnly" (file failed) or "failed" (message failed). */
+	error?: string;
+}
+
 export interface PublishResult {
-	delivered: string[];
-	failed: { chatId: string; error: string }[];
-	/** t.me links to the posted file, one per chat that received it. */
-	links: Record<string, string>;
+	chats: Record<string, ChatDeliveryOutcome>;
 }
 
 /**
@@ -76,7 +83,7 @@ async function sendDocumentRaw(
 	return body.result;
 }
 
-export async function sendDocumentWithRetry(
+async function sendDocumentWithRetry(
 	token: string,
 	chatId: string,
 	filename: string,
@@ -99,6 +106,42 @@ export async function sendDocumentWithRetry(
 	throw lastErr;
 }
 
+export interface DocumentDeliveryResult {
+	links: Record<string, string>;
+	failed: { chatId: string; error: string }[];
+}
+
+/**
+ * Delivers the edition file to a set of chats, hiding retry and the Telegraf
+ * bypass behind one seam. Both the first-send path (publishEdition, one chat
+ * at a time) and the recovery runner (resendEditionDocument, a batch of
+ * still-pending chats) call this instead of each owning their own copy of
+ * the delivery mechanics.
+ */
+export async function deliverEditionDocument(
+	chatIds: string[],
+	filename: string,
+	file: Buffer,
+): Promise<DocumentDeliveryResult> {
+	if (!config.telegramBotToken)
+		throw new Error("[Edition] Telegram is disabled or has no bot token");
+	const result: DocumentDeliveryResult = { links: {}, failed: [] };
+	for (const chatId of chatIds) {
+		try {
+			const sent = await sendDocumentWithRetry(
+				config.telegramBotToken,
+				chatId,
+				filename,
+				file,
+			);
+			result.links[chatId] = messageLink(chatId, sent.message_id);
+		} catch (err) {
+			result.failed.push({ chatId, error: safeMessage(err) });
+		}
+	}
+	return result;
+}
+
 /** Sends the summary message and the full newspaper file to every chat. */
 export async function publishEdition(
 	w: EditionWindow,
@@ -112,7 +155,8 @@ export async function publishEdition(
 
 	const telegram = getBot().telegram;
 	const file = Buffer.from(html, "utf-8");
-	const result: PublishResult = { delivered: [], failed: [], links: {} };
+	const filename = editionFilename(w);
+	const result: PublishResult = { chats: {} };
 	for (const chatId of config.telegramChatIds) {
 		try {
 			await telegram.sendMessage(chatId, summary, {
@@ -120,23 +164,17 @@ export async function publishEdition(
 				link_preview_options: { is_disabled: true },
 			});
 		} catch (err) {
-			result.failed.push({ chatId, error: safeMessage(err) });
+			result.chats[chatId] = { status: "failed", error: safeMessage(err) };
 			continue;
 		}
-		// Once the summary is out the chat counts as delivered, so a retry never
-		// repeats it; a failed attachment is still reported and fails the job.
-		result.delivered.push(chatId);
-		try {
-			const sent = await sendDocumentWithRetry(
-				config.telegramBotToken,
-				chatId,
-				editionFilename(w),
-				file,
-			);
-			result.links[chatId] = messageLink(chatId, sent.message_id);
-		} catch (err) {
-			result.failed.push({ chatId, error: `document: ${safeMessage(err)}` });
-		}
+		// Once the summary is out a retry never repeats it; a failed attachment
+		// still leaves the chat as "summaryOnly" rather than fully failed.
+		const delivery = await deliverEditionDocument([chatId], filename, file);
+		const link = delivery.links[chatId];
+		const failure = delivery.failed[0];
+		result.chats[chatId] = link
+			? { status: "full", link }
+			: { status: "summaryOnly", error: `document: ${failure?.error}` };
 	}
 	return result;
 }
