@@ -15,13 +15,12 @@
 		"format": "biome format --write .",
 		"preview": "vite preview",
 		"test": "vitest",
+		"test:e2e": "playwright test",
 		"coverage": "vitest run --coverage",
-		"dev:api": "pnpm --filter @fast-news/api dev",
+		"dev:api": "pnpm --dir backend dev",
 		"dev:mcp": "pnpm --filter @fast-news/mcp dev"
 	},
 	"dependencies": {
-		"@google/generative-ai": "^0.24.1",
-		"@qdrant/js-client-rest": "^1.18.0",
 		"@vitejs/plugin-react": "^6.0.3",
 		"autoprefixer": "^10.5.2",
 		"dotenv": "^17.4.2",
@@ -36,6 +35,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.2",
+		"@playwright/test": "^1.63.0",
 		"@tailwindcss/postcss": "^4.3.2",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.2",

@@ -3,16 +3,38 @@ import type { EditionKind, EditionWindow } from "./types.js";
 // Brazil has had no DST since 2019, so Sao Paulo is a fixed UTC-3.
 const OFFSET_MS = 3 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
-const CLOSE_HOUR: Record<EditionKind, number> = { manha: 7, noite: 19 };
+const CLOSE_HOUR: Record<EditionKind, number> = {
+	manha: 6,
+	meiodia: 11,
+	tarde: 15,
+	noite: 20,
+};
+// Cycle order within a day; each edition's window covers the gap since the
+// previous one in this order (wrapping noite -> manha across midnight).
+const EDITION_ORDER: EditionKind[] = ["manha", "meiodia", "tarde", "noite"];
 
 export function isEditionKind(value: unknown): value is EditionKind {
-	return value === "manha" || value === "noite";
+	return (
+		value === "manha" ||
+		value === "meiodia" ||
+		value === "tarde" ||
+		value === "noite"
+	);
+}
+
+function windowHours(kind: EditionKind): number {
+	const idx = EDITION_ORDER.indexOf(kind);
+	const previous =
+		EDITION_ORDER[(idx - 1 + EDITION_ORDER.length) % EDITION_ORDER.length]!;
+	return (CLOSE_HOUR[kind] - CLOSE_HOUR[previous] + 24) % 24 || 24;
 }
 
 /**
- * The edition closes at 07h (manhã) or 19h (noite) local time and covers the
- * 12 hours before it. Uses the most recent close <= now, so a late or retried
- * job still produces the same window.
+ * Each edition closes at a fixed local hour (06h manhã, 11h meio-dia, 15h
+ * tarde, 20h noite) and covers the gap since the previous edition in that
+ * cycle (10h/5h/4h/5h respectively), so the four windows are contiguous and
+ * non-overlapping across the day. Uses the most recent close <= now, so a
+ * late or retried job still produces the same window.
  */
 export function editionWindow(kind: EditionKind, now: Date): EditionWindow {
 	const local = new Date(now.getTime() - OFFSET_MS);
@@ -26,7 +48,7 @@ export function editionWindow(kind: EditionKind, now: Date): EditionWindow {
 	const end = new Date(localEnd + OFFSET_MS);
 	return {
 		kind,
-		start: new Date(end.getTime() - 12 * HOUR_MS),
+		start: new Date(end.getTime() - windowHours(kind) * HOUR_MS),
 		end,
 		day: new Date(localEnd).toISOString().slice(0, 10),
 	};

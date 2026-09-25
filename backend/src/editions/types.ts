@@ -1,4 +1,4 @@
-export type EditionKind = "manha" | "noite";
+export type EditionKind = "manha" | "meiodia" | "tarde" | "noite";
 
 export interface EditionWindow {
 	kind: EditionKind;
@@ -16,6 +16,7 @@ export interface Headline {
 	url: string;
 	snippet: string;
 	createdAt: Date;
+	imageUrl: string | null;
 }
 
 export interface Story {
@@ -70,6 +71,12 @@ export interface EditionDraft {
 	quiz: QuizItem[];
 }
 
+export interface MarketSnapshot {
+	usdBrl: { value: number; changePct: number } | null;
+	ibovespa: { value: number; changePct: number } | null;
+	selicRate: number | null;
+}
+
 export interface Edition {
 	window: EditionWindow;
 	draft: EditionDraft;
@@ -78,4 +85,5 @@ export interface Edition {
 	hourly: number[];
 	totalArticles: number;
 	totalSources: number;
+	market: MarketSnapshot;
 }

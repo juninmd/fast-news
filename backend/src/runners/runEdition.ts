@@ -16,7 +16,7 @@ import { editionWindow, isEditionKind } from "../editions/window.js";
 async function main(): Promise<number> {
 	const kind = process.argv[2] ?? process.env["EDITION_KIND"];
 	if (!isEditionKind(kind)) {
-		console.error("[Edition] Usage: runEdition.js <manha|noite>");
+		console.error("[Edition] Usage: runEdition.js <manha|meiodia|tarde|noite>");
 		return 2;
 	}
 	const started = Date.now();
@@ -39,17 +39,27 @@ async function main(): Promise<number> {
 			renderTelegramSummary(edition),
 			html,
 		);
-		delivered = result.delivered.length;
-		for (const f of result.failed)
-			console.error(
-				`[Edition] Delivery failed for chat ${f.chatId}: ${f.error}`,
-			);
+		const chats = Object.entries(result.chats);
+		delivered = chats.filter(([, c]) => c.status !== "failed").length;
+		for (const [chatId, c] of chats)
+			if (c.status !== "full")
+				console.error(
+					`[Edition] Delivery failed for chat ${chatId}: ${c.error}`,
+				);
 		if (!delivered) throw new Error("[Edition] No chat received the edition");
-		await markEditionSent(window, edition.draft);
+		const links = Object.fromEntries(
+			chats
+				.filter(([, c]) => c.link)
+				.map(([chatId, c]) => [chatId, c.link as string]),
+		);
+		await markEditionSent(window, { draft: edition.draft, links });
 		console.log(
 			`[Edition] Sent ${editionKey(window)} to ${delivered} chat(s), ${Math.round(html.length / 1024)} KB, in ${Date.now() - started}ms`,
 		);
-		return result.failed.length ? 1 : 0;
+		for (const [chatId, link] of Object.entries(links)) {
+			console.log(`[Edition] ${chatId}: ${link}`);
+		}
+		return chats.some(([, c]) => c.status !== "full") ? 1 : 0;
 	} catch (err) {
 		if (!delivered) await releaseEdition(window);
 		throw err;
