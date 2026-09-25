@@ -2,7 +2,14 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
-	{ url: "https://www.pushsquare.com/feeds/latest", category: "Games" },
+	{
+		url: "https://catracalivre.com.br/viagem-livre/feed/",
+		category: "Turismo",
+	},
+	{
+		url: "https://catracalivre.com.br/viagem-livre/feed/",
+		category: "Turismo",
+	},
 	{ url: "https://dev.to/feed", category: "Tecnologia" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },
 	{ url: "https://www.technologyreview.com/feed/", category: "Tecnologia" },
