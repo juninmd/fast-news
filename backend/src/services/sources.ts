@@ -903,6 +903,13 @@ export const FEED_SOURCES = [
 		company: "Canaltech",
 	},
 
+	// ── REGIONAL: FRANCA-SP E REGIÃO ──────────────────────────────────────────
+	{
+		url: "https://g1.globo.com/rss/g1/sp/ribeirao-preto-franca/",
+		category: "Regional",
+		company: "G1 Ribeirão Preto e Franca",
+	},
+
 	// ── fact_check ─────────────────────────────────────────────────────────────
 	{
 		url: "https://lupa.uol.com.br/feed/",
