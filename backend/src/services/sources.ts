@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://davidwalsh.name/feed",
+		category: "Tecnologia",
+		company: "David Walsh Blog",
+	},
+	{
 		url: "https://www.pushsquare.com/feeds/latest",
 		company: "Push Square",
 	},
