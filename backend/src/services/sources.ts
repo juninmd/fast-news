@@ -3,8 +3,9 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
-		url: "https://www.pushsquare.com/feeds/latest",
-		company: "Push Square",
+		url: "https://lobste.rs/rss",
+		category: "Tecnologia",
+		company: "Lobsters",
 	},
 	{
 		url: "https://dev.to/feed",
