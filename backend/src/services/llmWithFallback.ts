@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateObject, type RepairTextFunction } from "ai";
 import type { z } from "zod";
 import { getCloudFallbackModel, getFastModel } from "./aiProvider.js";
 
@@ -12,15 +12,30 @@ export async function generateWithFallback<T>({
 	prompt,
 	abortSignal,
 	logTag,
+	mode,
+	maxTokens,
+	repairText,
 }: {
 	schema: z.ZodType<T>;
 	prompt: string;
 	abortSignal?: AbortSignal;
 	logTag: string;
+	/** "json" suits pools where some backends never call tools. */
+	mode?: "auto" | "json" | "tool";
+	maxTokens?: number;
+	repairText?: RepairTextFunction;
 }): Promise<T | null> {
 	const model = await getFastModel();
 	try {
-		const res = await generateObject({ model, schema, prompt, abortSignal });
+		const res = await generateObject({
+			model,
+			schema,
+			prompt,
+			abortSignal,
+			mode,
+			maxTokens,
+			experimental_repairText: repairText,
+		});
 		return res.object;
 	} catch (err) {
 		console.warn(
@@ -37,6 +52,9 @@ export async function generateWithFallback<T>({
 				schema,
 				prompt,
 				abortSignal,
+				mode,
+				maxTokens,
+				experimental_repairText: repairText,
 			});
 			console.log(`[${logTag}] Analysis succeeded using cloud fallback model`);
 			return res.object;

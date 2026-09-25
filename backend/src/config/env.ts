@@ -27,7 +27,7 @@ export const config = {
 
 	ollama: {
 		baseUrl: optional("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
-		model: optional("OLLAMA_MODEL", "gemma4"),
+		model: optional("OLLAMA_MODEL", "cloud/auto"),
 		embeddingModel: optional("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text"),
 		// Separate URL for embeddings — use native Ollama (no /v1) to avoid
 		// encoding_format:float rejection from LiteLLM OpenAI-compat proxies.
@@ -135,6 +135,19 @@ export const config = {
 		),
 		financialLimit: parseInt(optional("DIGEST_FINANCIAL_LIMIT", "5"), 10),
 		maxTokens: parseInt(optional("DIGEST_MAX_TOKENS", "1800"), 10),
+	},
+
+	editions: {
+		maxHeadlines: parseInt(optional("EDITION_MAX_HEADLINES", "350"), 10),
+		perSource: parseInt(optional("EDITION_PER_SOURCE", "12"), 10),
+		excludedCategories: optional(
+			"EDITION_EXCLUDED_CATEGORIES",
+			"Gaming,Games,Anime",
+		)
+			.split(",")
+			.map((c) => c.trim())
+			.filter(Boolean),
+		aiTimeoutMs: parseInt(optional("EDITION_AI_TIMEOUT_MS", "300000"), 10),
 	},
 
 	ai: {

@@ -10,6 +10,7 @@ export const FEED_SOURCES = [
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/Space.xml",
 		category: "Ciência",
 	},
+	{ url: "https://www.pushsquare.com/feeds/latest", category: "Games" },
 	{ url: "https://dev.to/feed", category: "Tecnologia" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },
 	{ url: "https://www.technologyreview.com/feed/", category: "Tecnologia" },

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface Feed {
 	id: string;
@@ -29,9 +29,9 @@ export function StatusPanel() {
 		category: "Tecnologia",
 		company: "",
 	});
-	const [loading, setLoading] = useState(true);
+	const [, setLoading] = useState(true);
 
-	const loadData = async () => {
+	const loadData = useCallback(async () => {
 		try {
 			const [hRes, fRes] = await Promise.all([
 				fetch("/health"),
@@ -47,11 +47,11 @@ export function StatusPanel() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		loadData();
-	}, []);
+	}, [loadData]);
 
 	const handleToggle = async (id: string, active: boolean) => {
 		await fetch("/api/news/feeds/toggle", {
