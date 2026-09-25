@@ -3,7 +3,13 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feed.infoq.com/",
+		category: "Tecnologia",
+		company: "InfoQ",
+	},
+	{
 		url: "https://www.pushsquare.com/feeds/latest",
+		category: "Gaming",
 		company: "Push Square",
 	},
 	{
