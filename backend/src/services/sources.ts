@@ -5,6 +5,10 @@ export const FEED_SOURCES = [
 	{ url: "https://catracalivre.com.br/viagem-livre/feed/", company: "Catraca Livre" },
 
 	{
+		url: "https://www.pushsquare.com/feeds/latest",
+		company: "Push Square",
+	},
+	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",
