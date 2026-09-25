@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.folha.uol.com.br/ciencia/rss091.xml",
+		category: "Ciência",
+		company: "Folha de S.Paulo",
+	},
+	{
 		url: "https://www.pushsquare.com/feeds/latest",
 		company: "Push Square",
 	},
