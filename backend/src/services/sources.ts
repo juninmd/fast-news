@@ -2,12 +2,12 @@ import { query } from "../database/client.js";
 
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
-	{ url: "https://catracalivre.com.br/viagem-livre/feed/", company: "Catraca Livre" },
-
 	{
-		url: "https://www.pushsquare.com/feeds/latest",
-		company: "Push Square",
+		url: "https://catracalivre.com.br/viagem-livre/feed/",
+		category: "Turismo",
+		company: "Catraca Livre",
 	},
+
 	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
