@@ -9,6 +9,20 @@ interface Props {
 	height?: number;
 }
 
+// Aligned with the app's glass palette (ember/spark/mist) instead of a
+// generic rainbow set, so the graph reads as part of the same product.
+const CATEGORY_COLORS: Record<string, string> = {
+	"AI Frontier": "#ff6a39",
+	"Big Techs": "#7fb8ff",
+	"Dev Tools": "#ffc15c",
+	Gaming: "#ff8f66",
+	Tecnologia: "#7fb8ff",
+	Mundo: "#c9a7ff",
+	Negocios: "#ffc15c",
+	Brasil: "#7ee787",
+	Ciencia: "#c9a7ff",
+};
+
 // Simple canvas-based force graph (no deps)
 export function CorrelationGraph({
 	nodes,
@@ -23,18 +37,6 @@ export function CorrelationGraph({
 		Map<string, { x: number; y: number; vx: number; vy: number }>
 	>(new Map());
 	const [hoveredId, setHoveredId] = useState<string | null>(null);
-
-	const CATEGORY_COLORS: Record<string, string> = {
-		"AI Frontier": "#a78bfa",
-		"Big Techs": "#60a5fa",
-		"Dev Tools": "#34d399",
-		Gaming: "#f97316",
-		Tecnologia: "#38bdf8",
-		Mundo: "#f472b6",
-		Negocios: "#fbbf24",
-		Brasil: "#4ade80",
-		Ciencia: "#e879f9",
-	};
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -125,7 +127,8 @@ export function CorrelationGraph({
 			if (!ctx) return;
 			ctx.clearRect(0, 0, w, h);
 
-			// Edges
+			// Edges — a visibility floor keeps weak-but-real correlations from
+			// vanishing entirely; strength still reads through width/opacity.
 			for (const e of edges) {
 				const a = posRef.current.get(e.source);
 				const b = posRef.current.get(e.target);
@@ -133,8 +136,8 @@ export function CorrelationGraph({
 				ctx.beginPath();
 				ctx.moveTo(a.x, a.y);
 				ctx.lineTo(b.x, b.y);
-				ctx.strokeStyle = `rgba(99,102,241,${e.similarity * 0.6})`;
-				ctx.lineWidth = e.similarity * 2;
+				ctx.strokeStyle = `rgba(255,138,92,${0.18 + e.similarity * 0.5})`;
+				ctx.lineWidth = 1 + e.similarity * 2;
 				ctx.stroke();
 			}
 
@@ -196,33 +199,48 @@ export function CorrelationGraph({
 	}
 
 	return (
-		<div className="relative rounded-xl border border-border bg-surface overflow-hidden">
+		<div className="glass relative overflow-hidden">
+			{nodes.length === 0 && (
+				<div
+					className="flex items-center justify-center text-sm text-text-secondary"
+					style={{ height }}
+				>
+					Sem artigos recentes o suficiente para desenhar o grafo.
+				</div>
+			)}
+			{nodes.length > 0 && edges.length === 0 && (
+				<p className="px-4 pt-3 text-xs text-text-secondary">
+					{nodes.length} artigos nas últimas 48h, mas nenhuma correlação forte o
+					bastante entre eles ainda.
+				</p>
+			)}
 			<canvas
 				ref={canvasRef}
-				style={{ width: "100%", height }}
+				style={{ width: "100%", height: nodes.length ? height : 0 }}
 				onMouseMove={handleMouseMove}
 				onClick={handleClick}
 				className="cursor-pointer"
 			/>
-			{/* Legend */}
-			<div className="absolute top-2 right-2 flex flex-col gap-1 bg-surface/80 backdrop-blur rounded-lg p-2 text-xs">
-				{Object.entries({
-					"AI Frontier": "#a78bfa",
-					"Big Techs": "#60a5fa",
-					Tecnologia: "#38bdf8",
-					Mundo: "#f472b6",
-					Negocios: "#fbbf24",
-					Brasil: "#4ade80",
-				}).map(([cat, color]) => (
-					<div key={cat} className="flex items-center gap-1.5">
-						<div
-							className="w-2 h-2 rounded-full"
-							style={{ background: color }}
-						/>
-						<span className="text-text-secondary">{cat}</span>
-					</div>
-				))}
-			</div>
+			{nodes.length > 0 && (
+				<div className="glass absolute top-2 right-2 flex flex-col gap-1 p-2 text-xs">
+					{Object.entries({
+						"AI Frontier": CATEGORY_COLORS["AI Frontier"],
+						"Big Techs": CATEGORY_COLORS["Big Techs"],
+						Tecnologia: CATEGORY_COLORS.Tecnologia,
+						Mundo: CATEGORY_COLORS.Mundo,
+						Negocios: CATEGORY_COLORS.Negocios,
+						Brasil: CATEGORY_COLORS.Brasil,
+					}).map(([cat, color]) => (
+						<div key={cat} className="flex items-center gap-1.5">
+							<div
+								className="w-2 h-2 rounded-full"
+								style={{ background: color }}
+							/>
+							<span className="text-text-secondary">{cat}</span>
+						</div>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }

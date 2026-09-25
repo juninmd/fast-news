@@ -3,59 +3,96 @@
 
 @layer base {
 	:root {
-		--canvas: #f7f4ed;
-		--panel: rgba(255, 255, 255, 0.72);
-		--strong: #15130f;
-		--muted: #625d52;
-		--faint: #8c8578;
-		--ink: rgba(21, 19, 15, 0.12);
+		/* Unbleached paper — not pure white, reduces glare, reads as newsprint. */
+		--canvas: #eef0ea;
+		--panel: #e4e7de;
+		--strong: #191b16;
+		--muted: #5b5f52;
+		--faint: #8b8f7e;
+		--ink: rgba(25, 27, 22, 0.14);
 		--bg-primary: var(--canvas);
 		--bg-secondary: var(--panel);
-		--bg-tertiary: #eee7da;
+		--bg-tertiary: #daddd2;
 		--text-primary: var(--strong);
 		--text-secondary: var(--muted);
 		--border-subtle: var(--ink);
+		/* Signal blue: reserved for live/breaking/interactive state only. */
+		--accent-primary: #1f4fd6;
+		/* Wire-verified green: credibility, confirmed facts. */
+		--accent-secondary: #15794d;
+		/* Alert red: corrections, urgent flags. */
+		--accent-tertiary: #b3311f;
+		--accent-glow: rgba(31, 79, 214, 0.18);
+		--glass-fill: var(--panel);
+		--glass-edge: var(--ink);
+		--bg-gradient: var(--canvas);
 	}
 
 	.dark {
-		--canvas: #09090b;
-		--panel: rgba(255, 255, 255, 0.045);
-		--strong: #fafafa;
-		--muted: #a1a1aa;
-		--faint: #71717a;
-		--ink: rgba(255, 255, 255, 0.1);
+		/* Deep ink navy — not true black, keeps color temperature. */
+		--canvas: #12140f;
+		--panel: #1a1d16;
+		--strong: #edeee6;
+		--muted: #9a9d8d;
+		--faint: #676a5c;
+		--ink: rgba(237, 238, 230, 0.12);
 		--bg-primary: var(--canvas);
 		--bg-secondary: var(--panel);
-		--bg-tertiary: #18181b;
+		--bg-tertiary: #23261d;
 		--text-primary: var(--strong);
 		--text-secondary: var(--muted);
 		--border-subtle: var(--ink);
+		--accent-primary: #5b86ff;
+		--accent-secondary: #3ecb8a;
+		--accent-tertiary: #ff6b57;
+		--accent-glow: rgba(91, 134, 255, 0.22);
+		--glass-fill: var(--panel);
+		--glass-edge: var(--ink);
+		--bg-gradient: var(--canvas);
 	}
 
 	body {
-		background:
-			linear-gradient(90deg, rgba(20, 184, 166, 0.05) 1px, transparent 1px),
-			linear-gradient(0deg, rgba(20, 184, 166, 0.04) 1px, transparent 1px),
-			var(--canvas);
-		background-size: 48px 48px;
+		background: var(--bg-gradient);
+		min-height: 100vh;
+	}
+
+	/* WCAG 2.4.11 Focus Appearance: visible 2px accent outline on every interactive element */
+	:focus-visible {
+		outline: 2px solid var(--accent-primary);
+		outline-offset: 2px;
 	}
 }
 
 @layer utilities {
+	/* Flat wire-service surface: a hairline rule, no blur, no glow.
+	   Kept the .glass class name so existing consumers don't break,
+	   but the visual language is now print-flat, not frosted. */
+	.glass {
+		@apply relative border border-border-subtle bg-bg-secondary;
+	}
+
+	.wire-rule {
+		@apply border-t border-border-subtle;
+	}
+
+	.dispatch-index {
+		@apply font-mono text-[11px] tabular-nums text-text-secondary;
+	}
+
 	.neo-icon {
-		@apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-ink bg-panel text-muted transition-colors hover:border-cyan-300/50 hover:text-cyan-500 dark:hover:text-cyan-200;
+		@apply inline-flex h-10 w-10 items-center justify-center border border-ink bg-panel text-muted transition-colors hover:border-accent-primary/50 hover:text-accent-primary;
 	}
 
 	.neo-action {
-		@apply inline-flex items-center gap-2 rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-bold text-cyan-700 transition-colors hover:border-cyan-300/60 hover:bg-cyan-300/20 dark:text-cyan-100;
+		@apply inline-flex items-center gap-2 border border-accent-primary/40 bg-accent-primary/10 px-3 py-2 text-sm font-semibold text-accent-primary transition-colors hover:border-accent-primary hover:bg-accent-primary/15;
 	}
 
 	.neo-chip {
-		@apply shrink-0 rounded-lg border border-ink bg-panel px-3 py-2 text-sm font-bold text-muted transition-colors hover:border-cyan-300/50 hover:text-strong;
+		@apply shrink-0 border border-ink bg-panel px-3 py-2 text-sm font-semibold text-muted transition-colors hover:border-accent-primary/50 hover:text-strong;
 	}
 
 	.neo-tile {
-		@apply overflow-hidden rounded-lg border bg-panel transition-transform duration-200 hover:-translate-y-1 hover:border-cyan-300/50;
+		@apply overflow-hidden border bg-panel transition-colors duration-150 hover:border-accent-primary/50;
 	}
 
 	.scrollbar-hide {

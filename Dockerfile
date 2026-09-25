@@ -12,8 +12,9 @@ FROM node:26-alpine AS backend-builder
 RUN apk add --no-cache python3 make g++
 RUN npm install -g pnpm@10
 WORKDIR /app
-COPY backend/pnpm-lock.yaml backend/package.json ./
-RUN pnpm install --frozen-lockfile
+COPY backend/pnpm-lock.yaml backend/package.json backend/.npmrc ./
+# GitHub Packages token for @juninmd/*: a BuildKit secret, never a layer.
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc pnpm install --frozen-lockfile
 COPY backend/ ./
 RUN pnpm run build
 
