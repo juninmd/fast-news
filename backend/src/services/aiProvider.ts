@@ -108,7 +108,9 @@ export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
 
 export async function getCloudFallbackModel(): Promise<LanguageModel | null> {
 	if (config.aiProvider === "ollama") {
-		const fallbackModel = config.ai.fastModel || "z-ai/glm-4-32b";
+		// LiteLLM virtual keys are scoped per app (see AGENTS.md); "z-ai/glm-4-32b"
+		// is a raw upstream model id the fast-news key isn't allowed to call.
+		const fallbackModel = config.ai.fastModel || "cloud/auto";
 		return registry.languageModel(`ollama:${fallbackModel}`);
 	}
 	if (config.geminiApiKey) {

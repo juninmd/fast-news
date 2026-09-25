@@ -8,6 +8,11 @@ export const FEED_SOURCES = [
 		company: "Google",
 	},
 	{
+		url: "https://www.pushsquare.com/feeds/latest",
+		category: "Gaming",
+		company: "Push Square",
+	},
+	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",
@@ -901,6 +906,13 @@ export const FEED_SOURCES = [
 		url: "https://canaltech.com.br/rss/ciencia",
 		category: "Ciência",
 		company: "Canaltech",
+	},
+
+	// ── REGIONAL: FRANCA-SP E REGIÃO ──────────────────────────────────────────
+	{
+		url: "https://g1.globo.com/rss/g1/sp/ribeirao-preto-franca/",
+		category: "Regional",
+		company: "G1 Ribeirão Preto e Franca",
 	},
 
 	// ── fact_check ─────────────────────────────────────────────────────────────
