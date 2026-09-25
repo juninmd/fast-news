@@ -12,7 +12,10 @@ export const FEED_SOURCES = [
 		category: "Tecnologia",
 		company: "The Hacker News",
 	},
-
+	{
+		url: "https://www.pushsquare.com/feeds/latest",
+		company: "Push Square",
+	},
 	{
 		url: "https://dev.to/feed",
 		category: "Tecnologia",

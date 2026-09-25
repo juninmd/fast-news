@@ -7,7 +7,7 @@ export const FEED_SOURCES = [
 		url: "https://feeds.feedburner.com/TheHackersNews",
 		category: "Tecnologia",
 	},
-
+	{ url: "https://www.pushsquare.com/feeds/latest", category: "Games" },
 	{ url: "https://dev.to/feed", category: "Tecnologia" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },
 	{ url: "https://www.technologyreview.com/feed/", category: "Tecnologia" },
@@ -245,20 +245,9 @@ export const FEED_SOURCES = [
 	{ url: "https://www.gazetadopovo.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.metropoles.com/feed", category: "Brasil" },
 	{
-		url: "https://noticias.uol.com.br/ultimas-noticias/rss.xml",
-		category: "Geral",
+		url: "https://congressoemfoco.uol.com.br/feed/",
+		category: "Brasil",
 	},
-	{
-		url: "https://www.em.com.br/rss/noticia/gerais/rss.xml",
-		category: "Geral",
-	},
-	{
-		url: "https://www.correiobraziliense.com.br/rss/noticia/brasil/rss.xml",
-		category: "Geral",
-	},
-	{ url: "https://www.jb.com.br/rss.xml", category: "Geral" },
-	{ url: "https://www.gazetadopovo.com.br/rss/", category: "Geral" },
-	{ url: "https://congressoemfoco.uol.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.brasil247.com/feed", category: "Brasil" },
 	{ url: "https://www.diariodocentrodomundo.com.br/feed/", category: "Brasil" },
 	{ url: "https://revistaforum.com.br/feed", category: "Brasil" },
