@@ -2,6 +2,7 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://blog.google/rss/", category: "Tecnologia" },
 	{ url: "https://www.pushsquare.com/feeds/latest", category: "Games" },
 	{ url: "https://dev.to/feed", category: "Tecnologia" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },
@@ -402,7 +403,7 @@ export const FEED_SOURCES = [
 	{ url: "https://super.abril.com.br/feed/", category: "Ciência" },
 	{ url: "https://www.nature.com/nature.rss", category: "Ciência" },
 	{
-		url: "https://www.nationalgeographicbrasil.com/rss.xml",
+		url: "https://www.nationalgeographicbrasil.com.br/rss.xml",
 		category: "Ciência",
 	},
 	{ url: "https://www.newscientist.com/feed/home/", category: "Ciência" },
