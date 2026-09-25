@@ -1,6 +1,7 @@
 import Bull from "bull";
 import { config } from "../config/env.js";
-import { postArticleToTelegram, type TelegramArticle } from "./telegram.js";
+import type { TelegramArticle } from "./telegram.js";
+import { postArticleToTelegram } from "./telegramBroadcast.js";
 
 interface TelegramQueueJob {
 	article: TelegramArticle;

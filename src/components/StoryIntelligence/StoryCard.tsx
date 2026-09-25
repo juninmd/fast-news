@@ -1,17 +1,16 @@
-import React from "react";
 import type { StoryNode } from "../../hooks/useStories";
 
 const IMPACT_COLORS: Record<string, string> = {
-	critical: "bg-red-500/20 text-red-400 border-red-500/30",
-	high: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-	medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-	low: "bg-green-500/20 text-green-400 border-green-500/30",
+	critical: "border-accent-tertiary/40 text-accent-tertiary",
+	high: "border-accent-tertiary/30 text-accent-tertiary/90",
+	medium: "border-border-subtle text-text-secondary",
+	low: "border-accent-secondary/30 text-accent-secondary",
 };
 
 const SIGNAL_COLORS: Record<string, string> = {
-	bullish: "text-green-400",
-	bearish: "text-red-400",
-	neutral: "text-gray-400",
+	bullish: "text-accent-secondary",
+	bearish: "text-accent-tertiary",
+	neutral: "text-text-secondary",
 };
 
 const SIGNAL_ICONS: Record<string, string> = {
@@ -33,41 +32,41 @@ export function StoryCard({ story, onClick, selected }: Props) {
 	return (
 		<div
 			onClick={onClick}
-			className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 ${
+			className={`cursor-pointer border p-4 transition-colors ${
 				selected
-					? "border-accent bg-accent/10"
-					: "border-border bg-surface hover:border-accent/50 hover:bg-surface/80"
+					? "border-accent-primary bg-accent-primary/5"
+					: "border-border-subtle hover:border-accent-primary/40"
 			}`}
 		>
-			<div className="flex items-start justify-between gap-2 mb-2">
+			<div className="mb-2 flex items-start justify-between gap-2">
 				<span
-					className={`text-xs font-medium px-2 py-0.5 rounded-full border ${impactClass}`}
+					className={`border px-1.5 py-0.5 font-mono text-[11px] uppercase ${impactClass}`}
 				>
-					{story.impactLevel.toUpperCase()}
+					{story.impactLevel}
 				</span>
-				<div className="flex items-center gap-1">
-					<span className={`text-sm font-bold ${SIGNAL_COLORS[signal]}`}>
-						{SIGNAL_ICONS[signal]} {signal}
-					</span>
-				</div>
+				<span
+					className={`font-mono text-xs font-semibold ${SIGNAL_COLORS[signal]}`}
+				>
+					{SIGNAL_ICONS[signal]} {signal}
+				</span>
 			</div>
 
-			<h3 className="text-sm font-semibold text-text-primary line-clamp-2 mb-1">
+			<h3 className="mb-1 line-clamp-2 font-sans text-sm font-semibold text-text-primary">
 				{story.title}
 			</h3>
 
 			{story.summary && (
-				<p className="text-xs text-text-secondary line-clamp-2 mb-2">
+				<p className="mb-2 line-clamp-2 text-xs text-text-secondary">
 					{story.summary}
 				</p>
 			)}
 
 			{story.affectedAssets?.length > 0 && (
-				<div className="flex flex-wrap gap-1 mb-2">
+				<div className="mb-2 flex flex-wrap gap-1.5">
 					{story.affectedAssets.slice(0, 4).map((asset) => (
 						<span
 							key={asset}
-							className="text-xs px-1.5 py-0.5 rounded bg-accent/10 text-accent font-mono"
+							className="border border-accent-primary/30 px-1.5 py-0.5 font-mono text-[11px] text-accent-primary"
 						>
 							{asset}
 						</span>
@@ -75,8 +74,8 @@ export function StoryCard({ story, onClick, selected }: Props) {
 				</div>
 			)}
 
-			<div className="flex items-center justify-between text-xs text-text-secondary">
-				<span className="px-1.5 py-0.5 rounded bg-surface-elevated">
+			<div className="flex items-center justify-between font-mono text-[11px] text-text-secondary">
+				<span className="border border-border-subtle px-1.5 py-0.5">
 					{story.category}
 				</span>
 				<span>{story.articleCount} artigos</span>

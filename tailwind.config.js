@@ -21,20 +21,24 @@ export default {
 					secondary: "var(--text-secondary)",
 				},
 				accent: {
-					primary: "#6366F1",
-					secondary: "#22D3EE",
-					tertiary: "#F472B6",
+					primary: "var(--accent-primary)",
+					secondary: "var(--accent-secondary)",
+					tertiary: "var(--accent-tertiary)",
 				},
-				glow: "rgba(99, 102, 241, 0.15)",
+				glow: "var(--accent-glow)",
 				border: {
 					subtle: "var(--border-subtle)",
 				},
+				glass: {
+					fill: "var(--glass-fill)",
+					edge: "var(--glass-edge)",
+				},
 			},
 			fontFamily: {
-				display: ["Playfair Display", "Georgia", "serif"],
-				sans: ["Inter", "system-ui", "sans-serif"],
-				mono: ["JetBrains Mono", "monospace"],
-				numbers: ["Space Grotesk", "sans-serif"],
+				display: ["Fraunces", "Georgia", "serif"],
+				sans: ["IBM Plex Sans", "system-ui", "sans-serif"],
+				mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+				numbers: ["IBM Plex Mono", "ui-monospace", "monospace"],
 			},
 			animation: {
 				"glow-pulse": "glow-pulse 2s ease-in-out infinite",
@@ -61,8 +65,10 @@ export default {
 				},
 			},
 			boxShadow: {
-				glow: "0 0 30px rgba(99, 102, 241, 0.2)",
-				"glow-lg": "0 0 60px rgba(99, 102, 241, 0.3)",
+				glow: "0 0 30px var(--accent-glow)",
+				"glow-lg": "0 0 60px var(--accent-glow)",
+				glass:
+					"inset 0 1px 0 0 var(--glass-edge), 0 8px 30px rgba(4, 6, 16, 0.35)",
 			},
 		},
 	},

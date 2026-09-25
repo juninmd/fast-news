@@ -25,7 +25,23 @@ CREATE TABLE IF NOT EXISTS news_articles (
   credibility_reasoning TEXT DEFAULT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_articles_published_at ON news_articles(published_at DESC);
+-- NULLS LAST must match the app's ORDER BY exactly, or Postgres falls back to a
+-- full seq scan + sort instead of using this index (measured: 6.6s vs 3ms on prod).
+-- Guarded: an unconditional DROP+CREATE re-rebuilds this index (5.7s over 234k
+-- rows) on every single boot, which pushed migrate()'s 15s query_timeout past
+-- its limit under load and crash-looped the app (prod incident). Only rebuild
+-- when the live definition doesn't already match.
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE indexname = 'idx_articles_published_at'
+          AND indexdef ILIKE '%NULLS LAST%'
+    ) THEN
+        DROP INDEX IF EXISTS idx_articles_published_at;
+        CREATE INDEX idx_articles_published_at ON news_articles(published_at DESC NULLS LAST);
+    END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_articles_category ON news_articles(category);
 CREATE INDEX IF NOT EXISTS idx_articles_company ON news_articles(company);
 CREATE INDEX IF NOT EXISTS idx_articles_embedding ON news_articles
@@ -158,6 +174,14 @@ ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS telegram_skipped_at TIMESTAMP
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS relevance_reasoning TEXT DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS is_spam_or_promo BOOLEAN DEFAULT FALSE;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS should_post_telegram BOOLEAN DEFAULT TRUE;
+-- Per-article editorial theme (LLM-classified), separate from `category`
+-- which is the static source/feed classification and also carries the
+-- 'fact_check' sentinel (see editions/select.ts isFactCheck) and the
+-- excludedCategories exact-match list (EDITION_EXCLUDED_CATEGORIES) — both
+-- would break if `category` were repurposed. NULL means not yet classified
+-- (falls back to `category` at read time).
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS theme_category TEXT DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_theme_category ON news_articles(theme_category);
 
 DROP INDEX IF EXISTS idx_articles_telegram_unsent;
 CREATE INDEX IF NOT EXISTS idx_articles_telegram_unsent ON news_articles(created_at DESC) WHERE telegram_sent_at IS NULL AND telegram_skipped_at IS NULL;
@@ -190,3 +214,65 @@ INSERT INTO tracked_topics (name, description, keywords) VALUES
   ('Segurança', 'Cibersegurança, vulnerabilidades e privacidade', ARRAY['segurança', 'vulnerability', 'cve', 'hack', 'privacy', 'exploit', 'breach', 'zero-day']),
   ('Startups & VC', 'Ecossistema de startups e venture capital', ARRAY['startup', 'funding', 'series a', 'ipo', 'venture capital', 'unicorn', 'vc'])
 ON CONFLICT DO NOTHING;
+
+-- Daily newspaper editions (O Fio): one row per edition, guards against double posting.
+-- Rollback: DROP TABLE IF EXISTS news_editions; DROP INDEX IF EXISTS idx_articles_created_at;
+CREATE TABLE IF NOT EXISTS news_editions (
+    id           SERIAL PRIMARY KEY,
+    edition_key  TEXT NOT NULL UNIQUE,
+    kind         TEXT NOT NULL CHECK (kind IN ('manha', 'tarde', 'noite')),
+    window_start TIMESTAMPTZ NOT NULL,
+    window_end   TIMESTAMPTZ NOT NULL,
+    claimed_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    sent_at      TIMESTAMPTZ,
+    payload      JSONB
+);
+CREATE INDEX IF NOT EXISTS idx_articles_created_at ON news_articles(created_at);
+
+-- The 'tarde' edition kind was added after this table shipped; older
+-- databases still carry the two-value CHECK and reject every tarde insert.
+-- Guarded by a check for kind_check4: without it, every restart after the
+-- 'meiodia' migration below succeeds re-tries this 3-value constraint,
+-- and ADD CONSTRAINT re-validates ALL rows — rejecting it once a 'meiodia'
+-- row exists, crash-looping the app on every boot (prod incident: bootstrap
+-- failing with "news_editions_kind_check3 ... violated by some row").
+-- Rollback: ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
+--           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check CHECK (kind IN ('manha', 'noite'));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'news_editions_kind_check4'
+    ) THEN
+        ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check;
+        ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check3
+            CHECK (kind IN ('manha', 'tarde', 'noite'));
+    END IF;
+EXCEPTION WHEN duplicate_object THEN
+    NULL;
+END $$;
+
+-- 'meiodia' added to move O Fio from 3x/day (7h/13h/19h) to 4x/day
+-- (6h/11h/15h/20h); older databases still carry the three-value CHECK.
+-- Rollback: ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check4;
+--           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check3 CHECK (kind IN ('manha', 'tarde', 'noite'));
+DO $$
+BEGIN
+    ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
+    ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check4
+        CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite'));
+EXCEPTION WHEN duplicate_object THEN
+    NULL;
+END $$;
+
+-- 'meiodia' added to move O Fio from 3x/day (7h/13h/19h) to 4x/day
+-- (6h/11h/15h/20h); older databases still carry the three-value CHECK.
+-- Rollback: ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check4;
+--           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check3 CHECK (kind IN ('manha', 'tarde', 'noite'));
+DO $$
+BEGIN
+    ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
+    ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check4
+        CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite'));
+EXCEPTION WHEN duplicate_object THEN
+    NULL;
+END $$;

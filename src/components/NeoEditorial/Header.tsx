@@ -9,6 +9,15 @@ interface HeaderProps {
 	onThemeToggle: () => void;
 }
 
+function useClock() {
+	const [now, setNow] = useState(() => new Date());
+	useEffect(() => {
+		const t = setInterval(() => setNow(new Date()), 1000);
+		return () => clearInterval(t);
+	}, []);
+	return now;
+}
+
 export function Header({
 	onSearchOpen,
 	onMenuToggle,
@@ -16,78 +25,85 @@ export function Header({
 	theme,
 	onThemeToggle,
 }: HeaderProps) {
-	const [isScrolled, setIsScrolled] = useState(false);
-
-	useEffect(() => {
-		const handleScroll = () => setIsScrolled(window.scrollY > 10);
-		window.addEventListener("scroll", handleScroll);
-		return () => window.removeEventListener("scroll", handleScroll);
-	}, []);
+	const now = useClock();
 
 	return (
-		<header
-			className={`
-        sticky top-0 z-40 transition-all duration-200
-        ${isScrolled ? "bg-bg-primary/80 backdrop-blur-xl border-b border-border-subtle" : "bg-transparent"}
-      `}
-		>
-			<div className="max-w-7xl mx-auto px-4 sm:px-6">
-				<div className="flex items-center justify-between h-16">
+		<header className="sticky top-0 z-40 border-b border-border-subtle bg-bg-primary">
+			{/* Data strip: reads like a wire-service timestamp, not decoration. */}
+			<div className="hidden border-b border-border-subtle sm:block">
+				<div className="mx-auto flex max-w-[1680px] items-center gap-4 px-4 py-1.5 font-mono text-[11px] text-text-secondary sm:px-6 lg:px-10">
+					<span className="tabular-nums">
+						{now.toLocaleDateString("pt-BR", {
+							weekday: "short",
+							day: "2-digit",
+							month: "short",
+						})}
+					</span>
+					<span className="tabular-nums">
+						{now.toLocaleTimeString("pt-BR", { hour12: false })}
+					</span>
+					<span className="ml-auto flex items-center gap-1.5 text-accent-secondary">
+						<span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-secondary" />
+						AO VIVO
+					</span>
+				</div>
+			</div>
+
+			<div className="mx-auto max-w-[1680px] px-4 sm:px-6 lg:px-10">
+				<div className="flex h-16 items-center justify-between gap-4">
 					<div className="flex items-center gap-3">
 						<button
 							onClick={onMenuToggle}
-							className="lg:hidden p-2 rounded-lg hover:bg-bg-tertiary text-text-secondary"
+							className="p-2 text-text-secondary hover:text-text-primary lg:hidden"
 						>
 							{isMenuOpen ? (
-								<X className="w-5 h-5" />
+								<X className="h-5 w-5" />
 							) : (
-								<Menu className="w-5 h-5" />
+								<Menu className="h-5 w-5" />
 							)}
 						</button>
-						<a href="/" className="flex items-center gap-2">
-							<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center">
-								<span className="text-white font-display font-bold text-lg">
-									F
-								</span>
-							</div>
-							<span className="hidden sm:block font-display font-bold text-xl text-text-primary">
-								Fast<span className="text-accent-primary">News</span>
+						<a href="/" className="flex items-baseline gap-2">
+							<span className="font-display text-[26px] font-semibold leading-none tracking-tight text-text-primary">
+								Fast News
+							</span>
+							<span className="hidden font-mono text-[11px] text-text-secondary sm:inline">
+								ed. digital
 							</span>
 						</a>
 					</div>
 
-					<div className="hidden md:flex flex-1 max-w-xl mx-8">
+					<div className="mx-4 hidden max-w-xl flex-1 md:flex">
 						<button
 							onClick={onSearchOpen}
-							className="w-full flex items-center gap-3 px-4 py-2 rounded-xl bg-bg-secondary border border-border-subtle hover:border-accent-primary/30 transition-colors group"
+							className="group flex w-full items-center gap-3 border border-border-subtle bg-bg-secondary px-4 py-2 transition-colors hover:border-accent-primary/50"
 						>
-							<Search className="w-4 h-4 text-text-secondary" />
-							<span className="text-text-secondary text-sm">
-								Search news...
+							<Search className="h-4 w-4 text-text-secondary" />
+							<span className="text-sm text-text-secondary">
+								Buscar notícias...
 							</span>
-							<kbd className="ml-auto hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-lg bg-bg-tertiary text-text-secondary text-xs font-mono">
+							<kbd className="ml-auto hidden items-center gap-1 border border-border-subtle px-1.5 py-0.5 font-mono text-[10px] text-text-secondary sm:flex">
 								Ctrl+K
 							</kbd>
 						</button>
 					</div>
 
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-1">
 						<button
 							onClick={onSearchOpen}
-							className="md:hidden p-2 rounded-lg hover:bg-bg-tertiary text-text-secondary"
+							className="p-2 text-text-secondary hover:text-text-primary md:hidden"
 						>
-							<Search className="w-5 h-5" />
+							<Search className="h-5 w-5" />
 						</button>
 
 						<button
 							onClick={onThemeToggle}
-							className="p-2 rounded-lg hover:bg-bg-tertiary text-text-secondary hover:text-accent-primary transition-colors"
-							title="Toggle theme"
+							className="p-2 text-text-secondary transition-colors hover:text-accent-primary"
+							title="Alternar tema"
 						>
 							{theme === "dark" ? (
-								<Sun className="w-5 h-5" />
+								<Sun className="h-5 w-5" />
 							) : (
-								<Moon className="w-5 h-5" />
+								<Moon className="h-5 w-5" />
 							)}
 						</button>
 					</div>
