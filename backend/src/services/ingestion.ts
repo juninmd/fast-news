@@ -5,9 +5,11 @@ import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
-import { buildArticleRelations } from "./correlation.js";
+import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedDocument, vectorToSQL } from "./embeddings.js";
+import { scoreRelevance } from "./relevance.js";
 import { getActiveFeeds } from "./sources.js";
+import { classifyTheme } from "./themeClassification.js";
 
 const parser = new Parser({
 	customFields: { item: [["media:content", "mediaContent"], "enclosure"] },
@@ -253,6 +255,18 @@ async function upsertArticle(
 		article.title,
 		article.content || "",
 	);
+
+	// Per-article editorial theme, separate from the static feed `category`.
+	// fact_check articles keep no theme — they are a sentinel, not editorial
+	// content (see editions/select.ts isFactCheck).
+	const themeCategory =
+		article.category === "fact_check"
+			? null
+			: await classifyTheme(
+					article.title,
+					article.content || "",
+					article.category,
+				);
 	// Embedding is best-effort — if Ollama is unavailable, store without vector
 	let embedding: number[] | null = null;
 	if (ollamaUp) {
@@ -269,26 +283,35 @@ async function upsertArticle(
 		}
 	}
 
-	// Skip if similar article already stored (embedding-based dedup)
+	// Skip if similar article already stored (embedding-based dedup).
+	// ORDER BY ... LIMIT 1 lets Postgres use the ivfflat index for an ANN
+	// lookup; a WHERE threshold on the same expression forces a full seq
+	// scan instead, which timed out once news_articles passed ~200k rows.
 	if (embedding) {
-		const similar = await query<{ id: string; title: string }>(
-			`SELECT id, title FROM news_articles
+		const nearest = await query<{
+			id: string;
+			title: string;
+			similarity: number;
+		}>(
+			`SELECT id, title, 1 - (embedding <=> $1::vector) AS similarity
+			 FROM news_articles
 			 WHERE embedding IS NOT NULL
-			   AND 1 - (embedding <=> $1::vector) >= $2
+			 ORDER BY embedding <=> $1::vector
 			 LIMIT 1`,
-			[vectorToSQL(embedding), config.telegram.similarThreshold],
+			[vectorToSQL(embedding)],
 		);
-		if (similar.rows.length > 0) {
+		const match = nearest.rows[0];
+		if (match && match.similarity >= config.telegram.similarThreshold) {
 			console.log(
-				`[ingestion] Skipping "${article.title}" — similar to "${similar.rows[0].title}" (threshold: ${config.telegram.similarThreshold})`,
+				`[ingestion] Skipping "${article.title}" — similar to "${match.title}" (threshold: ${config.telegram.similarThreshold})`,
 			);
 			return null;
 		}
 	}
 
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -302,6 +325,7 @@ async function upsertArticle(
 			article.publishedAt,
 			embedding ? vectorToSQL(embedding) : null,
 			article.imageUrl ?? null,
+			themeCategory,
 		],
 	);
 
@@ -345,12 +369,9 @@ export interface IngestionResult {
 async function isOllamaAvailable(): Promise<boolean> {
 	const base = config.ollama.baseUrl;
 	const embeddingBase = config.ollama.embeddingBaseUrl;
-	if (
-		embeddingBase.includes("/v1") ||
-		(base.includes("/v1") && !embeddingBase)
-	) {
+	if (base.includes("/v1") && !embeddingBase) {
 		console.warn(
-			"[ingestion] Native OLLAMA_EMBEDDING_BASE_URL is not configured; embeddings will be skipped",
+			"[ingestion] OLLAMA_EMBEDDING_BASE_URL is not configured; embeddings will be skipped",
 		);
 		return false;
 	}
@@ -411,6 +432,17 @@ export async function runIngestion(): Promise<IngestionResult> {
 						newArticles.push(newArticle);
 						runBackground("buildArticleRelations", () =>
 							buildArticleRelations(id),
+						);
+						runBackground("assignArticleToStory", () =>
+							assignArticleToStory(id),
+						);
+						runBackground("scoreRelevance", () =>
+							scoreRelevance(
+								id,
+								article.title,
+								article.content ?? "",
+								article.category,
+							),
 						);
 					}
 				} catch (err) {

@@ -108,7 +108,9 @@ function App() {
 				setSearchGraph(d.graph ?? null);
 				setActiveView("feed");
 			})
-			.catch(() => {});
+			.catch(() => {
+				// best-effort deep-link routing; ignore navigation failures
+			});
 	}, []);
 
 	const handleBookmark = useCallback(() => {
@@ -166,25 +168,11 @@ function App() {
 				onThemeToggle={toggleTheme}
 			/>
 
-			<main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+			<main className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8">
 				<TopNewsSection onArticleClick={openArticle} />
 
-				{articles.length > 0 && activeView === "feed" && !searchResults && (
-					<section className="mb-8">
-						<NewsCard
-							{...articles[0]}
-							variant="featured"
-							onBookmark={handleBookmark}
-							onShare={handleShare}
-							onSummarize={() =>
-								handleSummarize(articles[0].id, articles[0].title)
-							}
-						/>
-					</section>
-				)}
-
-				<section className="mb-6">
-					<div className="flex items-center gap-4 mb-4">
+				<section className="mb-8 border-b border-border-subtle">
+					<div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
 						{(
 							[
 								"feed",
@@ -197,22 +185,22 @@ function App() {
 							] as const
 						).map((v) => {
 							const labels: Record<string, string> = {
-								feed: "📰 Feed",
-								stories: "🔗 Histórias",
-								graph: "🕸 Grafo",
-								intelligence: "💡 Inteligência",
-								bookmarks: `🔖 Salvos${bookmarks.length > 0 ? ` (${bookmarks.length})` : ""}`,
-								history: `📖 Lidos${readHistory.length > 0 ? ` (${readHistory.length})` : ""}`,
-								status: "⚡ Status",
+								feed: "Feed",
+								stories: "Histórias",
+								graph: "Grafo",
+								intelligence: "Inteligência",
+								bookmarks: `Salvos${bookmarks.length > 0 ? ` (${bookmarks.length})` : ""}`,
+								history: `Lidos${readHistory.length > 0 ? ` (${readHistory.length})` : ""}`,
+								status: "Status",
 							};
 							return (
 								<button
 									key={v}
 									onClick={() => setActiveView(v)}
-									className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+									className={`whitespace-nowrap border-b-2 py-2.5 font-mono text-xs font-semibold uppercase tracking-wide transition-colors ${
 										activeView === v
-											? "bg-accent-primary text-white"
-											: "text-text-secondary hover:text-text-primary hover:bg-bg-tertiary"
+											? "border-accent-primary text-text-primary"
+											: "border-transparent text-text-secondary hover:text-text-primary"
 									}`}
 								>
 									{labels[v]}
@@ -222,7 +210,7 @@ function App() {
 					</div>
 				</section>
 
-				<div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)_280px]">
+				<div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_300px] xl:grid-cols-[240px_minmax(0,1fr)_320px]">
 					<aside className="lg:sticky lg:top-24 lg:self-start">
 						<CategoryTabs
 							activeCategory={activeCategory}
@@ -244,7 +232,7 @@ function App() {
 										salvar.
 									</p>
 								) : (
-									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+									<div className="divide-y divide-border-subtle border-t border-border-subtle">
 										{articles
 											.filter((a) => isBookmarked(a.id))
 											.map((article) => (
@@ -459,7 +447,7 @@ function App() {
 										)}
 									</div>
 								)}
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-reveal">
+								<div className="divide-y divide-border-subtle border-t border-border-subtle stagger-reveal">
 									{loading && articles.length === 0
 										? Array.from({ length: 6 }).map((_, i) => (
 												<SkeletonCard key={i} />
@@ -469,7 +457,7 @@ function App() {
 														id: string;
 														[k: string]: unknown;
 													}>)
-												: articles.slice(1)
+												: articles
 											).map((article) => (
 												<NewsCard
 													key={article.id as string}
@@ -489,7 +477,7 @@ function App() {
 						)}
 
 						{activeView === "feed" && loading && articles.length > 0 && (
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+							<div className="divide-y divide-border-subtle">
 								{Array.from({ length: 3 }).map((_, i) => (
 									<SkeletonCard key={`loading-${i}`} />
 								))}

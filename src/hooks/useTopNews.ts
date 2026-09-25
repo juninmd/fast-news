@@ -14,6 +14,7 @@ export interface TopNewsArticle {
 	fake_news_score: number | null;
 	political_bias: string | null;
 	is_militant: boolean;
+	sourceCount: number;
 }
 
 export function useTopNews() {
@@ -24,7 +25,9 @@ export function useTopNews() {
 		fetch("/api/news/top")
 			.then((r) => r.json())
 			.then((d) => setArticles(d.data ?? []))
-			.catch(() => {})
+			.catch(() => {
+				// top-news widget is optional; ignore fetch failures
+			})
 			.finally(() => setLoading(false));
 	}, []);
 
