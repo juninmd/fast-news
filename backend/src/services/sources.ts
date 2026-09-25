@@ -3,8 +3,14 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://news.mit.edu/rss/feed",
+		category: "Tecnologia",
+		company: "MIT News",
+	},
+	{
 		url: "https://www.pushsquare.com/feeds/latest",
 		company: "Push Square",
+		category: "Gaming",
 	},
 	{
 		url: "https://dev.to/feed",
