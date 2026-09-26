@@ -1,7 +1,16 @@
 import { query } from "../database/client.js";
 
-export const FEED_SOURCES = [
+export const FEED_SOURCES: Array<{
+	url: string;
+	category?: string;
+	company?: string;
+}> = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{
+		url: "https://www.mobiletime.com.br/feed/",
+		category: "Tecnologia",
+		company: "Mobile Time",
+	},
 	{
 		url: "https://www.pushsquare.com/feeds/latest",
 		company: "Push Square",
@@ -979,7 +988,7 @@ export async function syncDefaultFeeds(): Promise<void> {
 }
 
 export async function getActiveFeeds(): Promise<
-	Array<{ url: string; category: string; company?: string | undefined }>
+	Array<{ url: string; category?: string; company?: string }>
 > {
 	try {
 		const res = await query<{ url: string; category: string; company: string }>(
