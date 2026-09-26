@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.mobiletime.com.br/feed/",
+		category: "Tecnologia",
+		company: "Mobile Time",
+	},
+	{
 		url: "https://www.pushsquare.com/feeds/latest",
 		company: "Push Square",
 	},
