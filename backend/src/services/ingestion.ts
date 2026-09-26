@@ -146,7 +146,7 @@ export interface RawArticle {
 	content: string;
 	url: string;
 	source: string;
-	category: string;
+	category?: string;
 	company?: string;
 	publishedAt: Date | null;
 	imageUrl?: string;
@@ -154,7 +154,7 @@ export interface RawArticle {
 
 async function fetchFeed(source: {
 	url: string;
-	category: string;
+	category?: string;
 	company?: string;
 }): Promise<RawArticle[]> {
 	try {
@@ -186,7 +186,7 @@ async function fetchFeed(source: {
 					content: item.contentSnippet ?? item.summary ?? item.content ?? "",
 					url: item.link ?? "",
 					source: feed.title?.trim() || source.company || source.url,
-					category: source.category,
+					category: source.category || "",
 					company: source.company,
 					publishedAt:
 						publishedAt && !isNaN(publishedAt.getTime()) ? publishedAt : null,
@@ -265,7 +265,7 @@ async function upsertArticle(
 			: await classifyTheme(
 					article.title,
 					article.content || "",
-					article.category,
+					article.category || "",
 				);
 	// Embedding is best-effort — if Ollama is unavailable, store without vector
 	let embedding: number[] | null = null;
@@ -320,7 +320,7 @@ async function upsertArticle(
 			article.content,
 			article.url,
 			article.source,
-			article.category,
+			article.category || "",
 			article.company ?? null,
 			article.publishedAt,
 			embedding ? vectorToSQL(embedding) : null,
@@ -338,7 +338,7 @@ async function upsertArticle(
 				content: article.content,
 				url: article.url,
 				source: article.source,
-				category: article.category,
+				category: article.category || "",
 				publishedAt: article.publishedAt,
 				imageUrl: article.imageUrl,
 			});
@@ -358,7 +358,7 @@ export interface IngestionResult {
 		title: string;
 		url: string;
 		source: string;
-		category: string;
+		category?: string;
 		company?: string;
 		content: string;
 		imageUrl?: string;
@@ -423,7 +423,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 							title: article.title,
 							url: article.url,
 							source: article.source,
-							category: article.category,
+							category: article.category || "",
 							company: article.company,
 							content: article.content,
 							imageUrl: article.imageUrl,
@@ -441,7 +441,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 								id,
 								article.title,
 								article.content ?? "",
-								article.category,
+								article.category || "",
 							),
 						);
 					}

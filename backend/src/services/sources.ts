@@ -1,6 +1,10 @@
 import { query } from "../database/client.js";
 
-export const FEED_SOURCES: Array<{ url: string; category?: string; company?: string }> = [
+export const FEED_SOURCES: Array<{
+	url: string;
+	category?: string;
+	company?: string;
+}> = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
 		url: "https://www.mobiletime.com.br/feed/",
