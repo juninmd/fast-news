@@ -105,4 +105,34 @@ describe("publishEdition", () => {
 		expect(fetchMock).toHaveBeenCalledTimes(3);
 		expect(r.chats["-1001234567890"]?.error).toContain("chat not found");
 	});
+
+	it("sends a verified Pages link button without attaching the HTML", async () => {
+		const url = "https://juninmd.github.io/fast-news/edicoes/2026-09-18/manha/";
+		const result = await publishEdition(w, "O Fio", "<html>", url);
+		expect(sendMessage).toHaveBeenCalledWith(
+			"-1001234567890",
+			"O Fio",
+			expect.objectContaining({
+				reply_markup: {
+					inline_keyboard: [[{ text: "Ler o jornal completo", url }]],
+				},
+			}),
+		);
+		expect(fetchMock).not.toHaveBeenCalled();
+		expect(result.chats["-1001234567890"]).toEqual({
+			status: "full",
+			link: url,
+		});
+	});
+
+	it("rejects non-HTTPS Pages links before sending a Telegram message", async () => {
+		const result = await publishEdition(
+			w,
+			"O Fio",
+			"<html>",
+			"javascript:alert(1)",
+		);
+		expect(sendMessage).not.toHaveBeenCalled();
+		expect(result.chats["-1001234567890"]?.status).toBe("failed");
+	});
 });
