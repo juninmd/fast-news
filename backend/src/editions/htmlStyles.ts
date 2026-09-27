@@ -1,6 +1,3 @@
-export const FONTS_HREF =
-	"https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,750;1,6..72,400;1,6..72,600&family=Archivo+Narrow:wght@500;600;700&display=swap";
-
 export const EDITION_CSS = `
 body{--ground:#f3f5f2;--raised:#e7ebe6;--ink:#12181e;--muted:#56606b;--rule:#c5ccc7;--accent:#2146c7;--mark:#ffe36b;--bar-off:#c9d0cb;
 --serif:"Newsreader",Georgia,"Times New Roman",serif;--label:"Archivo Narrow","Arial Narrow",Arial,sans-serif;--black:"UnifrakturMaguntia","Old English Text MT",Georgia,serif;
@@ -19,6 +16,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 .name i{font-style:normal;color:var(--accent)}
 .folio{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;border-bottom:1px solid var(--ink);padding-block:7px;font:600 13px/1.3 var(--label);text-transform:uppercase;letter-spacing:.08em}
 .folio .ed{color:var(--accent)}
+.coverage{margin:12px 0;padding:10px 12px;border-left:4px solid #a63b22;background:var(--raised);font:500 14px/1.45 var(--label)}
+.site-skip{position:absolute;left:-10000px;top:8px;background:var(--ground);padding:8px;z-index:5}.site-skip:focus{left:8px}.site-nav{display:flex;gap:16px;padding:10px 0;border-bottom:1px solid var(--rule);font:600 13px/1.4 var(--label)}.edition-search{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:10px 0;font:500 13px/1.4 var(--label)}.edition-search input{min-width:min(100%,280px);min-height:40px;padding:6px 10px;border:1px solid var(--rule);background:var(--ground);color:var(--ink);font:inherit}.edition-search output{color:var(--muted)}article[hidden]{display:none!important}
 .ticker{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-bottom:1px solid var(--rule)}
 .tick{padding:10px 12px;border-right:1px solid var(--rule)}
 .tick:last-child{border-right:0}
