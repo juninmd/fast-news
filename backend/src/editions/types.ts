@@ -10,6 +10,8 @@ export interface EditionWindow {
 
 export interface Headline {
 	id: number;
+	/** Persistent news_articles UUID. `id` remains the prompt-local reference. */
+	sourceId?: string;
 	title: string;
 	source: string;
 	category: string;
@@ -82,6 +84,13 @@ export interface Edition {
 	draft: EditionDraft;
 	headlines: Map<number, Headline>;
 	checagens: Headline[];
+	coverage: {
+		collected: number;
+		eligible: number;
+		selectedForAi: number;
+		omittedBeforeAi: number;
+		modelFallback: boolean;
+	};
 	hourly: number[];
 	totalArticles: number;
 	totalSources: number;

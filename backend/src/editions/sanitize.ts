@@ -149,8 +149,7 @@ export function sanitizeDraft(
 				.filter(Boolean)
 				.slice(0, 4),
 		}))
-		.filter((sec) => sec.nome && (sec.materias.length || sec.notas.length))
-		.slice(0, 6);
+		.filter((sec) => sec.nome && (sec.materias.length || sec.notas.length));
 	const corpus = [...known.values()]
 		.map((h) => `${h.title} ${h.snippet}`)
 		.join("\n");
