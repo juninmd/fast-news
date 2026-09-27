@@ -30,7 +30,12 @@ function marketLine(e: Edition): string {
 	return bits.join(" · ");
 }
 
-function build(e: Edition, stories: number, threads: number): string {
+function build(
+	e: Edition,
+	stories: number,
+	threads: number,
+	editionUrl?: string,
+): string {
 	const { draft, window: w } = e;
 	const parts = [
 		`🗞 <b>O Fio · ${LABEL[w.kind]}</b>`,
@@ -65,17 +70,22 @@ function build(e: Edition, stories: number, threads: number): string {
 			parts.push(`${h ? formatLocalTime(h.createdAt) : ""} ${esc(ev.texto)}`);
 		}
 	}
-	parts.push("", "📎 O jornal completo está no arquivo abaixo.");
+	parts.push(
+		"",
+		editionUrl
+			? `🔗 Jornal completo: ${esc(editionUrl)}`
+			: "📎 O jornal completo está no arquivo abaixo.",
+	);
 	return parts.join("\n");
 }
 
 /** Shrinks the message item by item until it fits Telegram's limit. */
-export function renderTelegramSummary(e: Edition): string {
+export function renderTelegramSummary(e: Edition, editionUrl?: string): string {
 	for (let threads = 2; threads >= 0; threads--)
 		for (let stories = 8; stories >= 3; stories--) {
-			const text = build(e, stories, threads);
+			const text = build(e, stories, threads, editionUrl);
 			if (text.length <= TELEGRAM_LIMIT) return text;
 		}
 	// Every field is length-clipped by sanitizeDraft, so this always fits.
-	return build(e, 0, 0);
+	return build(e, 0, 0, editionUrl);
 }
