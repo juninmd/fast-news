@@ -90,7 +90,7 @@ $env:EDITION_PAGES_BASE_URL = 'https://juninmd.github.io/fast-news'
 node backend/dist/runners/runEdition.js noite
 ```
 
-Para ativar a publicação e o botão no Telegram, configure `EDITION_DELIVERY_MODE=pages`, `EDITION_PAGES_BASE_URL`, `EDITION_PAGES_REPOSITORY=juninmd/fast-news` e `EDITION_PAGES_TOKEN` no backend. O token deve ter somente `Contents: write` e `Actions: write` neste repositório. Configure GitHub Pages para publicar por GitHub Actions e mantenha `.github/workflows/publish-pages.yml` na branch padrão. `EDITION_PAGES_WORKFLOW_REF` (padrão `main`) permite ajustar a branch do código. Os artefatos são gravados na branch `gh-pages`. Em modo `pages`, uma falha de push, workflow ou verificação HTTP deixa o Telegram sem mensagem e mantém o snapshot para retentativa; não envia o arquivo como alternativa.
+Para ativar a publicação e o botão no Telegram, configure `EDITION_DELIVERY_MODE=pages`, `EDITION_PAGES_BASE_URL`, `EDITION_PAGES_REPOSITORY=juninmd/fast-news` e `EDITION_PAGES_TOKEN` no backend. O token precisa apenas de `Contents: write` neste repositório. Os artefatos são commitados na branch `gh-pages` e o GitHub Pages publica direto dessa branch (Settings → Pages → Deploy from a branch → `gh-pages` `/`), como no evo-agent. Em modo `pages`, uma falha de push ou verificação HTTP deixa o Telegram sem mensagem e mantém o snapshot para retentativa; não envia o arquivo como alternativa.
 
 `EDITION_DELIVERY_MODE=legacy_document` mantém o fluxo anterior. Variáveis opcionais: `EDITION_MAX_HEADLINES` (350), `EDITION_PER_SOURCE` (12), `EDITION_EXCLUDED_CATEGORIES` (`Gaming,Games,Anime`), `EDITION_AI_TIMEOUT_MS` (300000). Os CronJobs ficam em `app-charts/fast-news/cronjobs.yaml`, fora deste repositório.
 
