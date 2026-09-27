@@ -979,7 +979,7 @@ export async function syncDefaultFeeds(): Promise<void> {
 }
 
 export async function getActiveFeeds(): Promise<
-	Array<{ url: string; category?: string; company?: string }>
+	Array<{ url: string; category: string; company?: string }>
 > {
 	try {
 		const res = await query<{ url: string; category: string; company: string }>(
@@ -998,5 +998,8 @@ export async function getActiveFeeds(): Promise<
 			err,
 		);
 	}
-	return FEED_SOURCES;
+	return FEED_SOURCES.map((source) => ({
+		...source,
+		category: source.category ?? "Geral",
+	}));
 }
