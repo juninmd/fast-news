@@ -1,0 +1,10 @@
+const { readFileSync } = require("fs");
+const code = readFileSync("backend/src/services/sources.ts", "utf8");
+const lines = code.split("\n");
+console.log(lines[10]);
+console.log(lines[11]);
+console.log(lines[12]);
+console.log(lines[13]);
+console.log(lines[14]);
+console.log(lines[15]);
+console.log(lines[16]);

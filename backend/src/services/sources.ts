@@ -9,6 +9,7 @@ export const FEED_SOURCES = [
 	},
 	{
 		url: "https://www.pushsquare.com/feeds/latest",
+		category: "Games",
 		company: "Push Square",
 	},
 	{
