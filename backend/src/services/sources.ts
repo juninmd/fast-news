@@ -979,7 +979,7 @@ export async function syncDefaultFeeds(): Promise<void> {
 }
 
 export async function getActiveFeeds(): Promise<
-	Array<{ url: string; category: string; company?: string | undefined }>
+	Array<{ url: string; category: string; company?: string }>
 > {
 	try {
 		const res = await query<{ url: string; category: string; company: string }>(
@@ -989,7 +989,7 @@ export async function getActiveFeeds(): Promise<
 			return res.rows.map((r) => ({
 				url: r.url,
 				category: r.category,
-				company: r.company || undefined,
+				...(r.company ? { company: r.company } : {}),
 			}));
 		}
 	} catch (err) {
@@ -998,5 +998,8 @@ export async function getActiveFeeds(): Promise<
 			err,
 		);
 	}
-	return FEED_SOURCES;
+	return FEED_SOURCES.map((source) => ({
+		...source,
+		category: source.category ?? "Geral",
+	}));
 }
