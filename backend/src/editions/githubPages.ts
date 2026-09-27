@@ -4,7 +4,6 @@ import type { PublicManifest } from "./staticSite.js";
 import { mergeStaticSiteArtifacts } from "./staticSite.js";
 
 const API = "https://api.github.com";
-const WORKFLOW_FILE = "publish-pages.yml";
 const REQUEST_TIMEOUT_MS = 20_000;
 const PAGE_VERIFY_TIMEOUT_MS = 5 * 60_000;
 
@@ -13,7 +12,6 @@ interface RepositoryConfig {
 	owner: string;
 	repo: string;
 	contentBranch: string;
-	workflowRef: string;
 	baseUrl: string;
 }
 
@@ -27,13 +25,6 @@ interface GitHubTree {
 }
 interface GitHubRef {
 	object: { sha: string };
-}
-interface WorkflowRun {
-	id: number;
-	display_title: string;
-	created_at: string;
-	status: string;
-	conclusion: string | null;
 }
 function repositoryConfig(): RepositoryConfig {
 	const token = process.env["EDITION_PAGES_TOKEN"];
@@ -54,15 +45,8 @@ function repositoryConfig(): RepositoryConfig {
 		owner: match[1]!,
 		repo: match[2]!,
 		contentBranch: "gh-pages",
-		workflowRef: process.env["EDITION_PAGES_WORKFLOW_REF"] || "main",
 		baseUrl: url.toString().replace(/\/$/, ""),
 	};
-}
-
-function safeBranch(value: string): string {
-	if (!/^[A-Za-z0-9._/-]{1,128}$/.test(value) || value.includes(".."))
-		throw new Error("Invalid GitHub branch configuration");
-	return value;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -82,7 +66,6 @@ export class GitHubPagesPublisher {
 		private readonly fetchImpl: typeof fetch = fetch,
 		private readonly now: () => number = Date.now,
 	) {
-		this.config.workflowRef = safeBranch(this.config.workflowRef);
 		this.apiBase = `${API}/repos/${this.config.owner}/${this.config.repo}`;
 	}
 
@@ -150,7 +133,7 @@ export class GitHubPagesPublisher {
 		if (tree.truncated)
 			throw new Error("Pages branch tree is too large to verify safely");
 		const allowed =
-			/^(manifest\.json|ultima\/index\.html|arquivo\/(index\.html|[2-9][0-9]*\/index\.html)|edicoes\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/(manha|meiodia|tarde|noite)\/index\.html)$/;
+			/^(\.nojekyll|manifest\.json|ultima\/index\.html|arquivo\/(index\.html|[2-9][0-9]*\/index\.html)|edicoes\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/(manha|meiodia|tarde|noite)\/index\.html)$/;
 		const allowedDirectories =
 			/^(arquivo|arquivo\/[2-9][0-9]*|ultima|edicoes|edicoes\/[0-9]{4}-[0-9]{2}-[0-9]{2}(\/(manha|meiodia|tarde|noite))?)$/;
 		const blobs = new Map<string, string>();
@@ -271,46 +254,6 @@ export class GitHubPagesPublisher {
 		);
 	}
 
-	private async dispatch(
-		snapshot: SnapshotEnvelope,
-		commit: string,
-	): Promise<void> {
-		const runsUrl = `/actions/workflows/${WORKFLOW_FILE}/runs?event=workflow_dispatch&branch=${encodeURIComponent(this.config.workflowRef)}&per_page=20`;
-		const existingRuns = await this.api<{ workflow_runs: WorkflowRun[] }>(
-			runsUrl,
-		);
-		const existingRunIds = new Set(
-			existingRuns.workflow_runs.map((run) => run.id),
-		);
-		await this.api(`/actions/workflows/${WORKFLOW_FILE}/dispatches`, {
-			method: "POST",
-			body: JSON.stringify({
-				ref: this.config.workflowRef,
-				inputs: {
-					edition_id: snapshot.snapshot.editionId,
-					source_commit: commit,
-				},
-			}),
-		});
-		const expectedTitle = `Pages ${snapshot.snapshot.editionId} @ ${commit}`;
-		const deadline = this.now() + PAGE_VERIFY_TIMEOUT_MS;
-		while (this.now() < deadline) {
-			const runs = await this.api<{ workflow_runs: WorkflowRun[] }>(runsUrl);
-			const run = runs.workflow_runs.find(
-				(candidate) =>
-					candidate.display_title === expectedTitle &&
-					!existingRunIds.has(candidate.id),
-			);
-			if (run?.status === "completed") {
-				if (run.conclusion !== "success")
-					throw new Error(`Pages workflow completed with ${run.conclusion}`);
-				return;
-			}
-			await sleep(5_000);
-		}
-		throw new Error("Pages workflow did not finish within five minutes");
-	}
-
 	private async verifyPage(snapshot: SnapshotEnvelope): Promise<string> {
 		const url = `${this.config.baseUrl}/edicoes/${snapshot.snapshot.window.day}/${snapshot.snapshot.window.kind}/`;
 		const deadline = this.now() + PAGE_VERIFY_TIMEOUT_MS;
@@ -351,8 +294,8 @@ export class GitHubPagesPublisher {
 		snapshot: SnapshotEnvelope,
 		files: Map<string, string>,
 	): Promise<PagesPublication> {
+		// GitHub Pages builds straight from the gh-pages branch, so the commit is the deploy.
 		const commit = await this.commitSite(files, snapshot.snapshot.editionId);
-		await this.dispatch(snapshot, commit);
 		return { commit, url: await this.verifyPage(snapshot) };
 	}
 

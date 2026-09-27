@@ -3,6 +3,66 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.mobiletime.com.br/feed/",
+		category: "Tecnologia",
+		company: "Mobile Time",
+	},
+	{
+		url: "https://www.freecodecamp.org/news/rss/",
+		category: "Tecnologia",
+		company: "freeCodeCamp",
+	},
+	{
+		url: "https://9to5google.com/feed/",
+		category: "Tecnologia",
+		company: "9to5Google",
+	},
+	{
+		url: "https://news.mit.edu/rss/feed",
+		category: "Tecnologia",
+		company: "MIT News",
+	},
+	{
+		url: "https://lobste.rs/rss",
+		category: "Tecnologia",
+		company: "Lobsters",
+	},
+	{
+		url: "https://davidwalsh.name/feed",
+		category: "Tecnologia",
+		company: "David Walsh Blog",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/ciencia/rss091.xml",
+		category: "Ciência",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feed.infoq.com/",
+		category: "Tecnologia",
+		company: "InfoQ",
+	},
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
+		category: "Ciência",
+		company: "NYT",
+	},
+	{
+		url: "https://blog.google/rss/",
+		category: "Tecnologia",
+		company: "Google",
+	},
+	{
+		url: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+		category: "Ciência",
+		company: "BBC",
+	},
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Space.xml",
+		category: "Ciência",
+		company: "NYT",
+	},
+	{
 		url: "https://www.pushsquare.com/feeds/latest",
 		company: "Push Square",
 	},
