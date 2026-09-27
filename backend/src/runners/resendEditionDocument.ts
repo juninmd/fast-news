@@ -10,6 +10,8 @@ import {
 } from "../editions/publish.js";
 import { renderEditionHtml } from "../editions/renderHtml.js";
 import { hourlyCounts } from "../editions/select.js";
+import { hydrateSnapshot } from "../editions/snapshot.js";
+import { getSnapshot } from "../editions/snapshotStore.js";
 import type {
 	Edition,
 	EditionDraft,
@@ -30,6 +32,12 @@ import { fetchMarketSnapshot } from "../services/marketData.js";
  * the original run the way it once did.
  */
 async function main(): Promise<number> {
+	if (process.env["EDITION_DELIVERY_MODE"] === "pages") {
+		console.error(
+			"[ResendEdition] HTML attachment recovery is disabled in Pages delivery mode",
+		);
+		return 2;
+	}
 	const editionKey = process.argv[2];
 	if (!editionKey) {
 		console.error(
@@ -77,22 +85,37 @@ async function main(): Promise<number> {
 		return 1;
 	}
 
-	const { all, checagens } = await deriveWindowHeadlines(window);
-
-	const edition: Edition = {
-		window,
-		draft,
-		headlines: new Map(all.map((h) => [h.id, h])),
-		checagens,
-		hourly: hourlyCounts(
-			all.map((h) => h.createdAt),
-			window.start,
-			Math.round((window.end.getTime() - window.start.getTime()) / 3_600_000),
-		),
-		totalArticles: all.length,
-		totalSources: new Set(all.map((h) => h.source)).size,
-		market: await fetchMarketSnapshot(),
-	};
+	const stored = await getSnapshot(editionKey);
+	let edition: Edition;
+	if (stored) {
+		edition = hydrateSnapshot({
+			snapshot: stored.snapshot,
+			checksum: stored.checksum,
+		});
+	} else {
+		const { all, checagens } = await deriveWindowHeadlines(window);
+		edition = {
+			window,
+			draft,
+			headlines: new Map(all.map((h) => [h.id, h])),
+			checagens,
+			coverage: {
+				collected: all.length,
+				eligible: all.length,
+				selectedForAi: 0,
+				omittedBeforeAi: 0,
+				modelFallback: false,
+			},
+			hourly: hourlyCounts(
+				all.map((h) => h.createdAt),
+				window.start,
+				Math.round((window.end.getTime() - window.start.getTime()) / 3_600_000),
+			),
+			totalArticles: all.length,
+			totalSources: new Set(all.map((h) => h.source)).size,
+			market: await fetchMarketSnapshot(),
+		};
+	}
 	const html = renderEditionHtml(edition);
 	const file = Buffer.from(html, "utf-8");
 	const filename = editionFilename(window);
