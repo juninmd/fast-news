@@ -56,6 +56,13 @@ export function edition(
 		draft: d,
 		headlines: known,
 		checagens: [],
+		coverage: {
+			collected: known.size,
+			eligible: known.size,
+			selectedForAi: known.size,
+			omittedBeforeAi: 0,
+			modelFallback: false,
+		},
 		hourly: new Array(12).fill(3),
 		totalArticles: 36,
 		totalSources: 5,

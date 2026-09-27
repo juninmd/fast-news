@@ -35,6 +35,8 @@ describe("renderEditionHtml", () => {
 		expect(html).not.toContain("javascript:");
 		expect(html).toContain("&lt;script&gt;");
 		expect(html).toContain("&lt;b&gt;fonte&lt;/b&gt;");
+		expect(html).not.toContain("fonts.googleapis.com");
+		expect(html).toContain('<html lang="pt-BR">');
 	});
 
 	it("links straight to the article, bypassing the Folha RSS redirector", () => {
@@ -94,6 +96,19 @@ describe("renderEditionHtml", () => {
 		const html = renderEditionHtml(edition(draft(), known));
 		expect(html).not.toContain(">Dólar<");
 		expect(html).not.toContain(">Ibovespa<");
+	});
+
+	it("uses singular labels for one article and one source", () => {
+		const source = headline();
+		const html = renderEditionHtml(
+			edition(draft(), knownOf([source]), {
+				totalArticles: 1,
+				totalSources: 1,
+			}),
+		);
+		expect(html).toContain(
+			'<div class="ear"><b>1 notícia</b>de 1 fonte nesta edição</div>',
+		);
 	});
 });
 
@@ -169,5 +184,12 @@ describe("renderTelegramSummary", () => {
 			),
 		);
 		expect(text).not.toContain("javascript:");
+	});
+
+	it("includes the permanent Pages edition URL in the short Telegram cover", () => {
+		const url = "https://juninmd.github.io/fast-news/edicoes/2026-09-18/noite/";
+		const text = renderTelegramSummary(edition(draft(), known), url);
+		expect(text).toContain(`Jornal completo: ${url}`);
+		expect(text).not.toContain("arquivo abaixo");
 	});
 });
