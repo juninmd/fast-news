@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://thehackernews.com/feeds/posts/default",
+		category: "Tecnologia",
+		company: "The Hacker News",
+	},
+	{
 		url: "https://www.pushsquare.com/feeds/latest",
 		company: "Push Square",
 	},
