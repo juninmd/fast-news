@@ -6,7 +6,7 @@ export type ChatDeliveryStatus = "full" | "summaryOnly" | "failed";
 
 export interface ChatDeliveryOutcome {
 	status: ChatDeliveryStatus;
-	/** t.me link to the posted file. Present only when status is "full". */
+	/** Permanent edition URL or t.me link to the posted file. */
 	link?: string;
 	/** Set when status is "summaryOnly" (file failed) or "failed" (message failed). */
 	error?: string;
@@ -147,6 +147,7 @@ export async function publishEdition(
 	w: EditionWindow,
 	summary: string,
 	html: string,
+	editionUrl?: string,
 ): Promise<PublishResult> {
 	if (!config.telegramEnabled || !config.telegramBotToken)
 		throw new Error("[Edition] Telegram is disabled or has no bot token");
@@ -159,12 +160,27 @@ export async function publishEdition(
 	const result: PublishResult = { chats: {} };
 	for (const chatId of config.telegramChatIds) {
 		try {
-			await telegram.sendMessage(chatId, summary, {
+			const options: Parameters<typeof telegram.sendMessage>[2] = {
 				parse_mode: "HTML",
 				link_preview_options: { is_disabled: true },
-			});
+			};
+			if (editionUrl) {
+				const url = new URL(editionUrl);
+				if (url.protocol !== "https:")
+					throw new Error("Edition link must use HTTPS");
+				options.reply_markup = {
+					inline_keyboard: [
+						[{ text: "Ler o jornal completo", url: url.toString() }],
+					],
+				};
+			}
+			await telegram.sendMessage(chatId, summary, options);
 		} catch (err) {
 			result.chats[chatId] = { status: "failed", error: safeMessage(err) };
+			continue;
+		}
+		if (editionUrl) {
+			result.chats[chatId] = { status: "full", link: editionUrl };
 			continue;
 		}
 		// Once the summary is out a retry never repeats it; a failed attachment
