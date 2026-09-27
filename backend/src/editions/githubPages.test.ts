@@ -18,7 +18,7 @@ function json(body: unknown, status = 200): Response {
 }
 
 describe("GitHub Pages publisher", () => {
-	it("commits the site, dispatches the exact commit, and verifies page plus checksum", async () => {
+	it("commits the site to gh-pages and verifies page plus checksum", async () => {
 		vi.stubEnv("EDITION_PAGES_TOKEN", "test-token");
 		vi.stubEnv("EDITION_PAGES_REPOSITORY", "juninmd/fast-news");
 		vi.stubEnv("EDITION_PAGES_BASE_URL", baseUrl);
@@ -49,7 +49,6 @@ describe("GitHub Pages publisher", () => {
 			...new Map(treeEntries.map((entry) => [entry.path, entry])).values(),
 		];
 		const calls: Array<{ url: string; body?: string }> = [];
-		let workflowRunReads = 0;
 		const fetchMock = vi.fn(
 			async (input: string | URL | Request, init?: RequestInit) => {
 				const url = input.toString();
@@ -75,27 +74,6 @@ describe("GitHub Pages publisher", () => {
 				if (url.endsWith("/git/commits")) return json({ sha: commit });
 				if (url.endsWith("/git/refs")) return json({});
 				if (url.endsWith("/git/refs/heads/gh-pages")) return json({});
-				if (url.endsWith("/actions/workflows/publish-pages.yml/dispatches"))
-					return new Response(null, { status: 204 });
-				if (url.includes("/actions/workflows/publish-pages.yml/runs?")) {
-					workflowRunReads++;
-					return json({
-						workflow_runs:
-							workflowRunReads === 1
-								? []
-								: [
-										{
-											id: 12,
-											display_title: `Pages ${envelope.snapshot.editionId} @ ${commit}`,
-											created_at: new Date(
-												Math.floor(now / 1000) * 1000,
-											).toISOString(),
-											status: "completed",
-											conclusion: "success",
-										},
-									],
-					});
-				}
 				if (url === `${baseUrl}/manifest.json`)
 					return json(JSON.parse(files.get("manifest.json")!));
 				if (url === `${baseUrl}/edicoes/2026-09-18/noite/`)
@@ -113,12 +91,14 @@ describe("GitHub Pages publisher", () => {
 			commit,
 			url: `${baseUrl}/edicoes/2026-09-18/noite/`,
 		});
-		const dispatch = calls.find((call) => call.url.endsWith("/dispatches"));
-		expect(JSON.parse(dispatch?.body ?? "{}").inputs).toEqual({
-			edition_id: envelope.snapshot.editionId,
-			source_commit: commit,
+		expect(calls.some((call) => call.url.includes("/actions/"))).toBe(false);
+		const ref = calls.find((call) =>
+			call.url.endsWith("/git/refs/heads/gh-pages"),
+		);
+		expect(JSON.parse(ref?.body ?? "{}")).toEqual({
+			sha: commit,
+			force: false,
 		});
-		expect(workflowRunReads).toBe(2);
 		const tree = calls.find((call) => call.url.endsWith("/git/trees"));
 		expect(tree?.body).toContain("edicoes/2026-09-18/noite/index.html");
 	});
