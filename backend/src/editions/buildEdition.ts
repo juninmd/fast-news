@@ -20,7 +20,6 @@ import type {
 	Headline,
 } from "./types.js";
 
-const MIN_HEADLINES = 20;
 // Some pool backends loop in JSON mode; a cap turns that into a parse
 // failure instead of a call that never returns.
 const MAX_OUTPUT_TOKENS = 3000;
@@ -85,9 +84,9 @@ export async function deriveWindowHeadlines(window: EditionWindow): Promise<{
 
 export async function buildEdition(window: EditionWindow): Promise<Edition> {
 	const { all, checagens, news } = await deriveWindowHeadlines(window);
-	if (news.length < MIN_HEADLINES)
+	if (news.length === 0)
 		throw new Error(
-			`[Edition] Only ${news.length} usable headlines in ${window.start.toISOString()}..${window.end.toISOString()}; ingestion may be down`,
+			`[Edition] No usable news in ${window.start.toISOString()}..${window.end.toISOString()}; keeping the last valid edition unchanged`,
 		);
 
 	const picked = pickForPrompt(
@@ -100,14 +99,34 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		`[Edition] ${window.kind} ${window.day}: ${all.length} articles, ${news.length + checagens.length} clean, ${picked.length} sent to the model`,
 	);
 
-	const front = await generatePart(
+	let front = await generatePart(
 		frontSchema,
 		(r) => [r.manchete, ...r.destaques].some((s) => s.fontes.length > 0),
 		"front",
 		window,
 		picked,
 	);
-	if (!front) throw new Error("[Edition] Model returned no front page");
+	const frontFallback = front === null;
+	if (!front) {
+		const lead = picked[0];
+		if (!lead)
+			throw new Error(
+				"[Edition] No eligible headline can support a factual cover",
+			);
+		front = {
+			manchete: {
+				titulo: lead.title,
+				linhaFina: "",
+				texto: lead.snippet,
+				paragrafos: lead.snippet ? [lead.snippet] : [],
+				fontes: [lead.id],
+			},
+			destaques: [],
+		};
+		console.warn(
+			"[Edition] AI cover failed; using a sourced headline as the cover",
+		);
+	}
 	const onFront = [front.manchete, ...front.destaques].map((s) => s.titulo);
 	// Sections, extras and the market snapshot are optional: a failed call
 	// drops them, not the edition.
@@ -131,12 +150,51 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		),
 		fetchMarketSnapshot(),
 	]);
+	const generatedSections = sections?.secoes ?? [];
 	const raw = {
 		...front,
-		secoes: sections?.secoes ?? [],
+		secoes: generatedSections,
 		...(extras ?? { fio: [], numeros: [], leve: [], quiz: [] }),
 	};
-	const draft = sanitizeDraft(raw as EditionDraft, known);
+	const editorial = sanitizeDraft(raw as EditionDraft, known);
+	const used = new Set<number>([
+		...editorial.manchete.fontes,
+		...editorial.destaques.flatMap((story) => story.fontes),
+		...editorial.secoes.flatMap((section) =>
+			section.materias.flatMap((story) => story.fontes),
+		),
+	]);
+	const unrepresented = picked.filter((headline) => !used.has(headline.id));
+	const factualSections = new Map<
+		string,
+		EditionDraft["secoes"][number]["materias"]
+	>();
+	for (const headline of unrepresented) {
+		const category = headline.category.trim() || "Outras notícias";
+		const stories = factualSections.get(category) ?? [];
+		stories.push({
+			titulo: headline.title,
+			texto: headline.snippet,
+			fontes: [headline.id],
+		});
+		factualSections.set(category, stories);
+	}
+	const draft = factualSections.size
+		? sanitizeDraft(
+				{
+					...editorial,
+					secoes: [
+						...editorial.secoes,
+						...[...factualSections].map(([nome, materias]) => ({
+							nome,
+							materias,
+							notas: [],
+						})),
+					],
+				},
+				known,
+			)
+		: editorial;
 	for (const h of checagens) known.set(h.id, h);
 
 	return {
@@ -144,6 +202,13 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		draft,
 		headlines: known,
 		checagens,
+		coverage: {
+			collected: all.length,
+			eligible: news.length + checagens.length,
+			selectedForAi: picked.length,
+			omittedBeforeAi: Math.max(0, news.length - picked.length),
+			modelFallback: frontFallback || sections === null,
+		},
 		hourly: hourlyCounts(
 			all.map((h) => h.createdAt),
 			window.start,

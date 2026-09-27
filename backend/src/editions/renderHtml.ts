@@ -8,7 +8,7 @@ import {
 	story,
 	threads,
 } from "./htmlBlocks.js";
-import { EDITION_CSS, FONTS_HREF, QUIZ_SCRIPT } from "./htmlStyles.js";
+import { EDITION_CSS, QUIZ_SCRIPT } from "./htmlStyles.js";
 import type { Edition } from "./types.js";
 import { formatLocalDate, formatLocalTime } from "./window.js";
 
@@ -87,8 +87,22 @@ function ticker(e: Edition): string {
 		.join("")}</div>`;
 }
 
+function coverageNotice(e: Edition): string {
+	const { coverage } = e;
+	if (!coverage.omittedBeforeAi && !coverage.modelFallback) return "";
+	const omissions = coverage.omittedBeforeAi
+		? ` ${nf.format(coverage.omittedBeforeAi)} notícias elegíveis não entraram na seleção enviada à IA.`
+		: "";
+	const fallback = coverage.modelFallback
+		? " Parte da edição foi montada com títulos, trechos e fontes porque a IA não respondeu."
+		: "";
+	return `<p class="coverage" role="status">Cobertura parcial: ${nf.format(coverage.collected)} notícias coletadas; ${nf.format(coverage.eligible)} elegíveis; ${nf.format(coverage.selectedForAi)} enviadas à IA.${esc(omissions + fallback)}</p>`;
+}
+
 export function renderEditionHtml(e: Edition): string {
 	const { window: w, draft } = e;
+	const articleCount = `${nf.format(e.totalArticles)} ${e.totalArticles === 1 ? "notícia" : "notícias"}`;
+	const sourceCount = `${nf.format(e.totalSources)} ${e.totalSources === 1 ? "fonte" : "fontes"}`;
 	const closing =
 		w.kind === "manha"
 			? "Para ler com o café"
@@ -101,12 +115,13 @@ export function renderEditionHtml(e: Edition): string {
 	return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>O Fio, ${esc(LABEL[w.kind])}, ${esc(w.day)}</title>
-<link rel="stylesheet" href="${FONTS_HREF}"><style>${EDITION_CSS}</style></head>
+<style>${EDITION_CSS}</style></head>
 <body class="${w.kind}"><main class="wrap"><header><div class="mast">
-<div class="ear"><b>${nf.format(e.totalArticles)} notícias</b>de ${nf.format(e.totalSources)} fontes nesta edição</div>
+<div class="ear"><b>${articleCount}</b>de ${sourceCount} nesta edição</div>
 <h1 class="name">O <i>F</i>io</h1>
 <div class="ear r"><b>${esc(range)}</b>período coberto, horário de Brasília</div></div>
 <div class="folio"><span class="ed">${LABEL[w.kind]}</span><span>${esc(formatLocalDate(w.day))}</span><span>fast-news</span></div></header>
+${coverageNotice(e)}
 ${market(e)}${ticker(e)}${front(e)}${threads(draft.fio, e.headlines)}${sections(e)}
 ${draft.leve.length || draft.quiz.length ? `<section class="sec"><div class="grid2"><div>${draft.leve.length ? sectionHead(closing) + brief(draft.leve.map(esc)) : ""}</div>${quiz(draft.quiz)}</div></section>` : ""}
 ${pulse(e.hourly, w.start)}
