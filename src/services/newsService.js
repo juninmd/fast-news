@@ -2,6 +2,10 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://www.themarysue.com/feed/",
+		category: "Entretenimento",
+	},
 	{ url: "https://www.mobiletime.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://www.freecodecamp.org/news/rss/", category: "Tecnologia" },
 	{ url: "https://9to5google.com/feed/", category: "Tecnologia" },
