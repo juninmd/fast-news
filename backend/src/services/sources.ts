@@ -3,10 +3,16 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.themarysue.com/feed/",
+		category: "Entretenimento",
+		company: "The Mary Sue",
+	},
+	{
 		url: "https://techcrunch.com/feed/",
 		category: "Tecnologia",
 		company: "TechCrunch",
 	},
+
 	{
 		url: "https://www.mobiletime.com.br/feed/",
 		category: "Tecnologia",

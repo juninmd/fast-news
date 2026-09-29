@@ -6,6 +6,7 @@ export const FEED_SOURCES = [
 		url: "https://www.themarysue.com/feed/",
 		category: "Entretenimento",
 	},
+	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.mobiletime.com.br/feed/", category: "Tecnologia" },
 	{ url: "https://www.freecodecamp.org/news/rss/", category: "Tecnologia" },
 	{ url: "https://9to5google.com/feed/", category: "Tecnologia" },
@@ -326,8 +327,7 @@ export const FEED_SOURCES = [
 	{ url: "https://rss.cnn.com/rss/edition.rss", category: "Mundo" },
 	{ url: "https://feeds.npr.org/1001/rss.xml", category: "Mundo" },
 	{ url: "https://www.france24.com/en/rss", category: "Mundo" },
-	{ url: "https://rss.dw.com/rdf/rss-br-all", category: "Mundo",
-	},
+	{ url: "https://rss.dw.com/rdf/rss-br-all", category: "Mundo" },
 	{
 		url: "https://news.un.org/feed/subscribe/pt/news/all/rss.xml",
 		category: "Mundo",
@@ -342,9 +342,8 @@ export const FEED_SOURCES = [
 		category: "Mundo",
 	},
 	{ url: "https://www.cbsnews.com/latest/rss/world", category: "Mundo" },
-	{ url: "https://g1.globo.com/rss/g1/mundo/", category: "Mundo",
-	},
-	{ url: "https://www.vox.com/rss/index.xml", etc: "Mundo" },
+	{ url: "https://g1.globo.com/rss/g1/mundo/", category: "Mundo" },
+	{ url: "https://www.vox.com/rss/index.xml", category: "Mundo" },
 	{ url: "https://www.axios.com/feeds/feed.rss", category: "Mundo" },
 	{ url: "https://time.com/feed/", category: "Mundo" },
 	{ url: "https://www.politico.com/rss/politicopicks.xml", category: "Mundo" },
@@ -421,21 +420,292 @@ export const FEED_SOURCES = [
 		url: "https://www.nasa.gov/rss/dyn/breaking_news.rss",
 		category: "Ciência",
 	},
-	{ id: "https://www.sciencedaily.com/rss/all.xml", category: "Ciência" },
+	{ url: "https://www.sciencedaily.com/rss/all.xml", category: "Ciência" },
 	{
 		url: "https://revistagalileu.globo.com/rss/ultimas/feed.xml",
 		category: "Ciência",
 	},
-	{ id: "https://hypescience.com/feed/", category: "Ciência" },
+	{ url: "https://hypescience.com/feed/", category: "Ciência" },
 	{ url: "https://g1.globo.com/rss/g1/ciencia-e-saude/", category: "Ciência" },
-	{ id: "https://www.space.com/feeds/all", category: "Ciência" },
-	{ id: "https://super.abril.com.br/feed/", category: "Ciência" },
-	{ id: "https://www.nature.com/nature.rss", category: "Ciência" },
+	{ url: "https://www.space.com/feeds/all", category: "Ciência" },
+	{ url: "https://super.abril.com.br/feed/", category: "Ciência" },
+	{ url: "https://www.nature.com/nature.rss", category: "Ciência" },
 	{
 		url: "https://www.nationalgeographicbrasil.com/rss.xml",
 		category: "Ciência",
 	},
-	{ id: "https://www.newscientist.com/feed/home", category: "Ciência" },
-	{ id: "https://phys.org/rss-feed", category: "Ciência" },
-	{ id: "https://socientifica.com.br/feed", category: "Ciência" },
-	{ id: "https://engenhariae.com.br/feed", ...}]]
+	{ url: "https://www.newscientist.com/feed/home/", category: "Ciência" },
+	{ url: "https://phys.org/rss-feed/", category: "Ciência" },
+	{ url: "https://socientifica.com.br/feed/", category: "Ciência" },
+	{ url: "https://engenhariae.com.br/feed", category: "Ciência" },
+	{
+		url: "https://umsoplaneta.globo.com/rss/umsoplaneta/",
+		category: "Ciência",
+	},
+	{
+		url: "https://www.inovacaotecnologica.com.br/boletim/rss.xml",
+		category: "Ciência",
+	},
+	{ url: "https://canaltech.com.br/rss/ciencia", category: "Ciência" },
+	{
+		url: "https://olhardigital.com.br/ciencia-e-espaco/rss",
+		category: "Ciência",
+	},
+	{ url: "https://www.eurekalert.org/rss.xml", category: "Ciência" },
+	{ url: "https://www.livescience.com/feeds/all", category: "Ciência" },
+	{ url: "https://www.scientificamerican.com/feed/xml/", category: "Ciência" },
+	{ url: "https://www.popsci.com/feed/", category: "Ciência" },
+	{
+		url: "https://www.smithsonianmag.com/rss/science-nature/",
+		category: "Ciência",
+	},
+	{ url: "https://www.discovermagazine.com/feed", category: "Ciência" },
+
+	// --- GAMES ---
+	{ url: "https://blog.playstation.com/feed/", category: "Games" },
+	{ url: "https://news.xbox.com/pt-br/feed/", category: "Games" },
+	{ url: "https://br.ign.com/feed.xml", category: "Games" },
+	{ url: "https://www.nintendolife.com/feeds/latest", category: "Games" },
+	{ url: "https://www.theenemy.com.br/rss", category: "Games" },
+	{ url: "https://www.eurogamer.net/?format=rss", category: "Games" },
+	{ url: "https://kotaku.com/rss", category: "Games" },
+	{ url: "https://www.arkade.com.br/feed/", category: "Games" },
+	{ url: "https://voxel.com.br/rss", category: "Games" },
+	{ url: "https://www.gamevicio.com/rss/", category: "Games" },
+	{ url: "https://www.gamespot.com/feeds/mashup/", category: "Games" },
+	{ url: "https://www.polygon.com/rss/index.xml", category: "Games" },
+	{ url: "https://nerdizmo.uai.com.br/feed/", category: "Games" },
+	{ url: "https://jovemnerd.com.br/feed/nerdbunker", category: "Games" },
+	{ url: "https://www.pcgamer.com/rss", category: "Games" },
+	{ url: "https://jovemnerd.com.br/feed/games", category: "Games" },
+	{ url: "https://adrenaline.com.br/rss", category: "Games" },
+	{ url: "https://www.rockpapershotgun.com/feed", category: "Games" },
+	{
+		url: "https://www.comboinfinito.com.br/principal/feed/",
+		category: "Games",
+	},
+	{ url: "https://switch-brasil.com/feed/", category: "Games" },
+
+	// --- ESPORTES ---
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml",
+		category: "Esportes",
+	},
+	{
+		url: "https://www.uol.com.br/esporte/ultimas-noticias/rss.xml",
+		category: "Esportes",
+	},
+	{ url: "https://trivela.com.br/feed/", category: "Esportes" },
+	{ url: "https://www.espn.com.br/rss/news", category: "Esportes" },
+	{ url: "https://ge.globo.com/rss/ge/", category: "Esportes" },
+	{ url: "https://www.lance.com.br/rss", category: "Esportes" },
+	{ url: "https://www.gazetaesportiva.com/feed/", category: "Esportes" },
+	{ url: "https://www.meutimao.com.br/rss/", category: "Esportes" },
+	{ url: "https://colunadofla.com/feed/", category: "Esportes" },
+	{ url: "https://rss.uol.com.br/feed/esporte.xml", category: "Esportes" },
+	{
+		url: "https://agenciabrasil.ebc.com.br/rss/esportes/feed.xml",
+		category: "Esportes",
+	},
+	{ url: "https://motorsport.uol.com.br/rss/f1/news/", category: "Esportes" },
+	{ url: "https://www.grandepremio.com.br/feed/", category: "Esportes" },
+	{ url: "https://maquinadoesporte.com.br/feed/", category: "Esportes" },
+	{ url: "https://www.olimpiadatododia.com.br/feed/", category: "Esportes" },
+	{ url: "https://www.skysports.com/rss/12040", category: "Esportes" },
+	{ url: "https://www.goal.com/feeds/br/news", category: "Esportes" },
+
+	// --- AUTOMÓVEIS ---
+	{ url: "https://quatrorodas.abril.com.br/feed/", category: "Automóveis" },
+	{
+		url: "https://autoesporte.globo.com/rss/autoesporte/",
+		category: "Automóveis",
+	},
+	{ url: "https://motor1.uol.com.br/rss/news/all/", category: "Automóveis" },
+	{ url: "https://jornaldocarro.estadao.com.br/feed/", category: "Automóveis" },
+	{ url: "https://www.autoblog.com/rss.xml", category: "Automóveis" },
+	{
+		url: "https://www.noticiasautomotivas.com.br/feed/",
+		category: "Automóveis",
+	},
+	{ url: "https://garagem360.com.br/feed/", category: "Automóveis" },
+	{ url: "https://www.topgear.com/car-news/rss.xml", category: "Automóveis" },
+	{ url: "https://wm1.com.br/rss", category: "Automóveis" },
+
+	// --- ENTRETENIMENTO ---
+	{
+		url: "https://f5.folha.uol.com.br/feed/rss091.xml",
+		category: "Entretenimento",
+	},
+	{ url: "https://www.papelpop.com.br/feed/", category: "Entretenimento" },
+	{ url: "https://hugogloss.uol.com.br/feed/", category: "Entretenimento" },
+	{
+		url: "https://www.omelete.com.br/rss/rss.aspx",
+		category: "Entretenimento",
+	},
+	{ url: "https://rollingstone.uol.com.br/feed/", category: "Entretenimento" },
+	{ url: "https://jovemnerd.com.br/feed/", category: "Entretenimento" },
+	{ url: "https://anmtv.com.br/feed/", category: "Entretenimento" },
+	{ url: "https://rss.uol.com.br/feed/cinema.xml", category: "Entretenimento" },
+	{
+		url: "https://rss.uol.com.br/feed/filmes-e-series.xml",
+		category: "Entretenimento",
+	},
+	{
+		url: "https://observatoriodocinema.uol.com.br/feed",
+		category: "Entretenimento",
+	},
+	{ url: "https://variety.com/feed/", category: "Entretenimento" },
+	{
+		url: "https://www.hollywoodreporter.com/feed/",
+		category: "Entretenimento",
+	},
+	{
+		url: "https://agenciabrasil.ebc.com.br/rss/cultura/feed.xml",
+		category: "Entretenimento",
+	},
+	{ url: "https://cinepop.com.br/feed/", category: "Entretenimento" },
+	{ url: "https://pipocamoderna.com.br/feed/", category: "Entretenimento" },
+	{ url: "https://catracalivre.com.br/feed/", category: "Entretenimento" },
+	{ url: "https://www.hypeness.com.br/feed/", category: "Entretenimento" },
+	{
+		url: "https://www.adorocinema.com/rss/noticias.xml",
+		category: "Entretenimento",
+	},
+	{
+		url: "https://casavogue.globo.com/rss/ultimas/feed.xml",
+		category: "Entretenimento",
+	},
+
+	// --- SAÚDE & BEM-ESTAR ---
+	{ url: "https://www.metropoles.com/saude/feed", category: "Saúde" },
+	{ url: "https://drauziovarella.uol.com.br/feed/", category: "Saúde" },
+	{ url: "https://vidadebebe.globo.com/rss/vidadebebe/", category: "Saúde" },
+	{ url: "https://www.minhavida.com.br/rss", category: "Saúde" },
+	{ url: "https://www.webmd.com/rss/rss.aspx?rssType=news", category: "Saúde" },
+	{ url: "https://veja.abril.com.br/saude/feed/", category: "Saúde" },
+	{ url: "https://cuidadospelavida.com.br/feed", category: "Saúde" },
+	{ url: "https://www.medicalnewstoday.com/feed", category: "Saúde" },
+
+	// --- MARKETING ---
+	{ url: "https://www.meioemensagem.com.br/feed", category: "Marketing" },
+	{ url: "https://propmark.com.br/feed/", category: "Marketing" },
+	{ url: "https://adage.com/rss-feed", category: "Marketing" },
+	{ url: "https://exame.com/marketing/feed/", category: "Marketing" },
+	{ url: "https://www.b9.com.br/feed/", category: "Marketing" },
+	{ url: "https://www.promoview.com.br/feed/", category: "Marketing" },
+	{ url: "https://adnews.com.br/feed/", category: "Marketing" },
+
+	// --- MODA ---
+	{ url: "https://vogue.globo.com/rss/ultimas/feed.xml", category: "Moda" },
+	{ url: "https://gq.globo.com/rss/ultimas/feed.xml", category: "Moda" },
+	{ url: "https://elle.com.br/feed", category: "Moda" },
+	{
+		url: "https://marieclaire.globo.com/rss/ultimas/feed.xml",
+		category: "Moda",
+	},
+	{ url: "https://ffw.uol.com.br/feed/", category: "Moda" },
+
+	// --- MÚSICA ---
+	{ url: "https://pitchfork.com/rss/reviews/best/albums/", category: "Música" },
+	{ url: "https://rollingstone.uol.com.br/rss", category: "Música" },
+
+	// --- TURISMO ---
+	{ url: "https://g1.globo.com/rss/g1/turismo-e-viagem/", category: "Turismo" },
+];
+
+const fetchWithConcurrency = async (sources, apiKey) => {
+	// If API key is present, we can be more aggressive, but let's stick to safe limits.
+	// Without API key, rate limit is 1 req/sec (approx).
+	// With API key, it's higher.
+	const BATCH_LIMIT = apiKey ? 5 : 2;
+	const DELAY = 500; // ms delay between batches
+
+	let results = [];
+	for (let i = 0; i < sources.length; i += BATCH_LIMIT) {
+		const chunk = sources.slice(i, i + BATCH_LIMIT);
+		const promises = chunk.map((source) => {
+			let url = `${RSS2JSON_API}${encodeURIComponent(source.url)}`;
+			if (apiKey) url += `&api_key=${apiKey}`;
+
+			return fetch(url)
+				.then((res) => res.json())
+				.then((data) => ({ ...data, category: source.category }))
+				.catch((err) => {
+					console.error(`Error fetching ${source.url}:`, err);
+					return null;
+				});
+		});
+
+		const chunkResults = await Promise.all(promises);
+		results = [...results, ...chunkResults];
+
+		// Add delay if there are more items to process
+		if (i + BATCH_LIMIT < sources.length) {
+			await new Promise((resolve) => setTimeout(resolve, DELAY));
+		}
+	}
+	return results;
+};
+
+export const fetchNews = async (sources = FEED_SOURCES, apiKey = null) => {
+	const results = await fetchWithConcurrency(sources, apiKey);
+
+	const dedupeMap = new Map();
+	results.forEach((result) => {
+		if (result && result.status === "ok") {
+			const sourceTitle = result.feed.title;
+			const category = result.category;
+			result.items.forEach((item) => {
+				const hydratedItem = {
+					...item,
+					source: sourceTitle,
+					category: category,
+					id: item.guid || item.link,
+				};
+				if (!dedupeMap.has(hydratedItem.id)) {
+					dedupeMap.set(hydratedItem.id, hydratedItem);
+				}
+			});
+		}
+	});
+
+	let allNews = Array.from(dedupeMap.values());
+
+	// Sort by date (newest first)
+	allNews.sort((a, b) => {
+		const dateA = new Date(a.pubDate);
+		const dateB = new Date(b.pubDate);
+		if (isNaN(dateA)) return 1;
+		if (isNaN(dateB)) return -1;
+		return dateB - dateA;
+	});
+
+	return allNews;
+};
+
+export const fetchTrendingTopics = async (apiKey = null) => {
+	// Using Google News Top Stories as a proxy for "Trending" since Google Trends RSS is often blocked or rate-limited via rss2json
+	const TRENDS_URL =
+		"https://news.google.com/rss?hl=pt-BR&gl=BR&ceid=BR:pt-419";
+	try {
+		let url = `${RSS2JSON_API}${encodeURIComponent(TRENDS_URL)}`;
+		if (apiKey) url += `&api_key=${apiKey}`;
+
+		const res = await fetch(url);
+		const data = await res.json();
+		if (data.status === "ok") {
+			return data.items
+				.map((item) => ({
+					title: item.title, // In Google News, title often includes source "Title - Source"
+					link: item.link,
+					pubDate: item.pubDate,
+					description: item.description,
+				}))
+				.slice(0, 10); // Take top 10
+		}
+		return [];
+	} catch (err) {
+		console.error("Error fetching trending topics:", err);
+		return [];
+	}
+};
