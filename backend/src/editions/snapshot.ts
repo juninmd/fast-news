@@ -64,7 +64,8 @@ export function createEditionSnapshot(
 		schemaVersion: EDITION_SNAPSHOT_SCHEMA,
 		templateVersion: EDITION_TEMPLATE_VERSION,
 		generationStatus:
-			edition.coverage.omittedBeforeAi > 0 || edition.coverage.modelFallback
+			(edition.coverage.omittedFromEdition ??
+				edition.coverage.omittedBeforeAi) > 0 || edition.coverage.modelFallback
 				? "degraded"
 				: "ready",
 		editionId: `${edition.window.day}:${edition.window.kind}`,
@@ -119,6 +120,18 @@ export function parseSnapshotEnvelope(value: unknown): SnapshotEnvelope {
 		snapshot.coverage.omittedBeforeAi > snapshot.coverage.eligible
 	)
 		throw new Error("Invalid edition snapshot coverage report");
+	for (const count of [
+		snapshot.coverage.publishedArticles,
+		snapshot.coverage.omittedFromEdition,
+	]) {
+		if (
+			count !== undefined &&
+			(!Number.isSafeInteger(count) ||
+				count < 0 ||
+				count > snapshot.coverage.eligible)
+		)
+			throw new Error("Invalid edition snapshot publication coverage");
+	}
 	if (!Number.isFinite(new Date(snapshot.generatedAt).getTime()))
 		throw new Error("Invalid edition snapshot generation timestamp");
 	if (
