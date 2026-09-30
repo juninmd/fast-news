@@ -11,9 +11,48 @@ import { esc } from "./escape.js";
 import { renderEditionHtml } from "./renderHtml.js";
 import type { SnapshotEnvelope } from "./snapshot.js";
 import { hydrateSnapshot, parseSnapshotEnvelope } from "./snapshot.js";
+import type { Edition, Section } from "./types.js";
 
 const KIND_ORDER = ["manha", "meiodia", "tarde", "noite"] as const;
 const PAGE_SIZE = 30;
+const EDITION_PAGE_SIZE = 100;
+export const MAX_EDITION_PAGES = 100;
+
+/** Bound each newspaper page without dropping stories or their source links. */
+function editionPages(edition: Edition): Section[][] {
+	const pages: Section[][] = [[]];
+	let count = 0;
+	for (const section of edition.draft.secoes) {
+		let offset = 0;
+		do {
+			if (count === EDITION_PAGE_SIZE) {
+				pages.push([]);
+				count = 0;
+			}
+			const materias = section.materias.slice(
+				offset,
+				offset + EDITION_PAGE_SIZE - count,
+			);
+			pages[pages.length - 1]!.push({
+				...section,
+				materias,
+				notas: offset === 0 ? section.notas : [],
+			});
+			offset += materias.length;
+			count += Math.max(1, materias.length);
+		} while (offset < section.materias.length);
+	}
+	return pages;
+}
+
+function pagination(url: string, index: number, count: number): string {
+	if (count === 1) return "";
+	const links = Array.from({ length: count }, (_, i) => {
+		const href = i === 0 ? url : `${url}${i + 1}/`;
+		return `<a href="${esc(href)}"${i === index ? ' aria-current="page"' : ""}>${i + 1}</a>`;
+	}).join(" · ");
+	return `<nav class="edition-search" aria-label="Páginas desta edição"><span>Página ${index + 1} de ${count}</span>${links}</nav>`;
+}
 
 function basePath(baseUrl: string): string {
 	const url = new URL(baseUrl);
@@ -81,6 +120,7 @@ export interface PublicManifest {
 		url: string;
 		checksum: string;
 		windowEnd: string;
+		pageCount?: number;
 	}>;
 }
 
@@ -160,6 +200,13 @@ export function mergeStaticSiteArtifacts(
 			!Number.isFinite(new Date(item.windowEnd).getTime())
 		)
 			throw new Error("Invalid public manifest entry");
+		if (
+			item.pageCount !== undefined &&
+			(!Number.isSafeInteger(item.pageCount) ||
+				item.pageCount < 1 ||
+				item.pageCount > MAX_EDITION_PAGES)
+		)
+			throw new Error("Invalid public manifest page count");
 		const expectedUrl = `${baseUrl.replace(/\/+$/, "")}/edicoes/${item.editionId.replace(":", "/")}/`;
 		if (item.url !== expectedUrl)
 			throw new Error("Public manifest contains an unexpected edition URL");
@@ -204,18 +251,47 @@ export function buildStaticEditionSite(
 	const latest = envelopes[0];
 	if (!latest) throw new Error("Cannot publish an empty edition archive");
 	const output = new Map<string, string>();
+	const pageCounts = new Map<string, number>();
 
 	for (const envelope of envelopes) {
-		const html = renderEditionHtml(hydrateSnapshot(envelope));
-		if (Buffer.byteLength(html, "utf8") > 500 * 1024)
-			throw new Error(
-				`Edition ${envelope.snapshot.editionId} exceeds the 500 KB page budget; split the edition before publishing`,
-			);
+		const edition = hydrateSnapshot(envelope);
+		const pages = editionPages(edition);
+		if (pages.length > MAX_EDITION_PAGES)
+			throw new Error("Edition exceeds the maximum number of pages");
+		pageCounts.set(envelope.snapshot.editionId, pages.length);
 		const url = `${baseUrl.replace(/\/+$/, "")}/${editionPath(envelope.snapshot).replace(/index\.html$/, "")}`;
-		output.set(
-			editionPath(envelope.snapshot),
-			decorateEdition(html, prefix, url),
-		);
+		for (const [index, secoes] of pages.entries()) {
+			const pageUrl = index === 0 ? url : `${url}${index + 1}/`;
+			const nav = pagination(url, index, pages.length);
+			const html = decorateEdition(
+				renderEditionHtml(
+					{ ...edition, draft: { ...edition.draft, secoes } },
+					index > 0,
+				),
+				prefix,
+				pageUrl,
+			)
+				.replace("</header>", `</header>${nav}`)
+				.replace("<footer", `${nav}<footer`)
+				.replace(
+					"Buscar título ou tema nesta edição",
+					pages.length > 1
+						? "Buscar título ou tema nesta página"
+						: "Buscar título ou tema nesta edição",
+				);
+			if (Buffer.byteLength(html, "utf8") > 500 * 1024)
+				throw new Error(
+					`Edition ${envelope.snapshot.editionId} page ${index + 1} exceeds the 500 KB page budget`,
+				);
+			const path =
+				index === 0
+					? editionPath(envelope.snapshot)
+					: editionPath(envelope.snapshot).replace(
+							"index.html",
+							`${index + 1}/index.html`,
+						);
+			output.set(path, html);
+		}
 	}
 
 	const latestUrl = editionUrl(prefix, latest.snapshot);
@@ -266,6 +342,7 @@ export function buildStaticEditionSite(
 			url: `${baseUrl.replace(/\/+$/, "")}/${editionPath(snapshot).replace(/index\.html$/, "")}`,
 			checksum,
 			windowEnd: snapshot.window.end,
+			pageCount: pageCounts.get(snapshot.editionId)!,
 		})),
 	};
 	output.set("manifest.json", `${JSON.stringify(manifest, null, 2)}\n`);

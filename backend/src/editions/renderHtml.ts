@@ -89,6 +89,16 @@ function ticker(e: Edition): string {
 
 function coverageNotice(e: Edition): string {
 	const { coverage } = e;
+	if (coverage.publishedArticles !== undefined) {
+		const omitted = coverage.omittedFromEdition ?? 0;
+		const missing = omitted
+			? ` ${nf.format(omitted)} notícias elegíveis não puderam ser publicadas.`
+			: "";
+		const fallback = coverage.modelFallback
+			? " Parte da edição usa títulos e trechos originais porque a IA não respondeu."
+			: "";
+		return `<p class="coverage" role="status">${omitted ? "Cobertura parcial: " : "Cobertura: "}${nf.format(coverage.publishedArticles)} notícias representadas; ${nf.format(coverage.selectedForAi)} enviadas à IA. As demais notícias elegíveis aparecem como matérias complementares.${esc(missing + fallback)}</p>`;
+	}
 	if (!coverage.omittedBeforeAi && !coverage.modelFallback) return "";
 	const omissions = coverage.omittedBeforeAi
 		? ` ${nf.format(coverage.omittedBeforeAi)} notícias elegíveis não entraram na seleção enviada à IA.`
@@ -99,9 +109,9 @@ function coverageNotice(e: Edition): string {
 	return `<p class="coverage" role="status">Cobertura parcial: ${nf.format(coverage.collected)} notícias coletadas; ${nf.format(coverage.eligible)} elegíveis; ${nf.format(coverage.selectedForAi)} enviadas à IA.${esc(omissions + fallback)}</p>`;
 }
 
-export function renderEditionHtml(e: Edition): string {
+export function renderEditionHtml(e: Edition, continuation = false): string {
 	const { window: w, draft } = e;
-	const articleCount = `${nf.format(e.totalArticles)} ${e.totalArticles === 1 ? "notícia" : "notícias"}`;
+	const articleCount = `${nf.format(e.totalArticles)} ${e.totalArticles === 1 ? "notícia coletada" : "notícias coletadas"}`;
 	const sourceCount = `${nf.format(e.totalSources)} ${e.totalSources === 1 ? "fonte" : "fontes"}`;
 	const closing =
 		w.kind === "manha"
@@ -122,9 +132,9 @@ export function renderEditionHtml(e: Edition): string {
 <div class="ear r"><b>${esc(range)}</b>período coberto, horário de Brasília</div></div>
 <div class="folio"><span class="ed">${LABEL[w.kind]}</span><span>${esc(formatLocalDate(w.day))}</span><span>fast-news</span></div></header>
 ${coverageNotice(e)}
-${market(e)}${ticker(e)}${front(e)}${threads(draft.fio, e.headlines)}${sections(e)}
-${draft.leve.length || draft.quiz.length ? `<section class="sec"><div class="grid2"><div>${draft.leve.length ? sectionHead(closing) + brief(draft.leve.map(esc)) : ""}</div>${quiz(draft.quiz)}</div></section>` : ""}
-${pulse(e.hourly, w.start)}
+${continuation ? "" : market(e) + ticker(e) + front(e) + threads(draft.fio, e.headlines)}${sections(e)}
+${!continuation && (draft.leve.length || draft.quiz.length) ? `<section class="sec"><div class="grid2"><div>${draft.leve.length ? sectionHead(closing) + brief(draft.leve.map(esc)) : ""}</div>${quiz(draft.quiz)}</div></section>` : ""}
+${continuation ? "" : pulse(e.hourly, w.start)}
 <footer class="colophon">O Fio é montado automaticamente a partir das notícias captadas pelo fast-news. Os links levam à matéria original.</footer>
 </main><script>${QUIZ_SCRIPT}</script></body></html>`;
 }

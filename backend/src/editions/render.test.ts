@@ -107,7 +107,7 @@ describe("renderEditionHtml", () => {
 			}),
 		);
 		expect(html).toContain(
-			'<div class="ear"><b>1 notícia</b>de 1 fonte nesta edição</div>',
+			'<div class="ear"><b>1 notícia coletada</b>de 1 fonte nesta edição</div>',
 		);
 	});
 });

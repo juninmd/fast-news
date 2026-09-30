@@ -94,7 +94,7 @@ Para ativar a publicação e o botão no Telegram, configure `EDITION_DELIVERY_M
 
 `EDITION_DELIVERY_MODE=legacy_document` mantém o fluxo anterior. Variáveis opcionais: `EDITION_MAX_HEADLINES` (350), `EDITION_PER_SOURCE` (12), `EDITION_EXCLUDED_CATEGORIES` (`Gaming,Games,Anime`), `EDITION_AI_TIMEOUT_MS` (300000). Os CronJobs ficam em `app-charts/fast-news/cronjobs.yaml`, fora deste repositório.
 
-Validação focada do backend: `pnpm --dir backend build` e `pnpm --dir backend test`. A seleção ainda usa os limites `EDITION_MAX_HEADLINES` e `EDITION_PER_SOURCE`; a página sinaliza quantas notícias ficaram fora da curadoria, mas o agrupamento semântico, a priorização editorial auditada e a recuperação de toda notícia atrasada continuam sendo trabalho da etapa de cobertura em alto volume.
+Validação focada do backend: `pnpm --dir backend build` e `pnpm --dir backend test`. Os limites `EDITION_MAX_HEADLINES` e `EDITION_PER_SOURCE` controlam somente o material enviado à IA. As demais notícias elegíveis da janela entram nas editorias como matérias complementares com título, trecho e link original, sem novas chamadas de IA. A montagem preserva essas matérias além do limite editorial de três por seção e informa quantas notícias foram representadas ou descartadas pela sanitização. No Pages, as editorias são divididas em páginas de até 100 matérias, mantendo a capa na primeira página, navegação entre páginas e busca na página atual. O publicador verifica todas as páginas antes de liberar o link para o Telegram. Snapshots históricos permanecem inalterados. O agrupamento semântico, a priorização editorial auditada e a recuperação de toda notícia atrasada continuam pendentes.
 
 ## 📜 Licença
 
