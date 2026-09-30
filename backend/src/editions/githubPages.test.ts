@@ -18,6 +18,50 @@ function json(body: unknown, status = 200): Response {
 }
 
 describe("GitHub Pages publisher", () => {
+	it("does not verify an edition when a continuation page is missing", async () => {
+		vi.stubEnv("EDITION_PAGES_TOKEN", "test-token");
+		vi.stubEnv("EDITION_PAGES_REPOSITORY", "juninmd/fast-news");
+		vi.stubEnv("EDITION_PAGES_BASE_URL", baseUrl);
+		const source = headline({
+			sourceId: "6ec0f1d6-90d5-4b62-a74b-30da7d18f4bc",
+		});
+		const envelope = createEditionSnapshot(edition(draft(), knownOf([source])));
+		const fetchMock = vi.fn(async (input: string | URL | Request) => {
+			const url = input.toString();
+			if (url.endsWith("manifest.json"))
+				return json({
+					editions: [
+						{
+							editionId: envelope.snapshot.editionId,
+							checksum: envelope.checksum,
+							pageCount: 2,
+						},
+					],
+				});
+			if (url.endsWith("/2/"))
+				return new Response("Not found", { status: 404 });
+			return new Response(envelope.snapshot.window.day);
+		});
+		let ticks = 0;
+		const publisher = new GitHubPagesPublisher(
+			fetchMock,
+			() => now + ticks++ * 120_000,
+		);
+		vi.useFakeTimers();
+		try {
+			const failure = expect(
+				publisher.verifyPublished(envelope),
+			).rejects.toThrow("was not verified before the deadline");
+			await vi.advanceTimersByTimeAsync(5000);
+			await failure;
+			expect(
+				fetchMock.mock.calls.some(([url]) => url.toString().endsWith("/2/")),
+			).toBe(true);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it("commits the site to gh-pages and verifies page plus checksum", async () => {
 		vi.stubEnv("EDITION_PAGES_TOKEN", "test-token");
 		vi.stubEnv("EDITION_PAGES_REPOSITORY", "juninmd/fast-news");
@@ -25,8 +69,28 @@ describe("GitHub Pages publisher", () => {
 		const source = headline({
 			sourceId: "6ec0f1d6-90d5-4b62-a74b-30da7d18f4bc",
 		});
+		const extra = Array.from({ length: 1200 }, (_, i) =>
+			headline({
+				sourceId: `00000000-0000-4000-8000-${String(i + 1).padStart(12, "0")}`,
+			}),
+		);
 		const envelope = createEditionSnapshot(
-			edition(draft(), knownOf([source])),
+			edition(
+				draft({
+					secoes: [
+						{
+							nome: "Tecnologia",
+							materias: extra.map((h) => ({
+								titulo: h.title,
+								texto: h.snippet,
+								fontes: [h.id],
+							})),
+							notas: [],
+						},
+					],
+				}),
+				knownOf([source, ...extra]),
+			),
 			new Date(now),
 		);
 		const files = buildStaticEditionSite([envelope], baseUrl, new Date(now));
@@ -76,9 +140,9 @@ describe("GitHub Pages publisher", () => {
 				if (url.endsWith("/git/refs/heads/gh-pages")) return json({});
 				if (url === `${baseUrl}/manifest.json`)
 					return json(JSON.parse(files.get("manifest.json")!));
-				if (url === `${baseUrl}/edicoes/2026-09-18/noite/`)
+				if (url.startsWith(`${baseUrl}/edicoes/2026-09-18/noite/`))
 					return new Response(
-						files.get("edicoes/2026-09-18/noite/index.html"),
+						files.get(`${url.slice(baseUrl.length + 1)}index.html`),
 						{ status: 200 },
 					);
 				throw new Error(`Unexpected request: ${url}`);
@@ -101,5 +165,11 @@ describe("GitHub Pages publisher", () => {
 		});
 		const tree = calls.find((call) => call.url.endsWith("/git/trees"));
 		expect(tree?.body).toContain("edicoes/2026-09-18/noite/index.html");
+		expect(tree?.body).toContain("edicoes/2026-09-18/noite/12/index.html");
+		expect(
+			calls.some(
+				(call) => call.url === `${baseUrl}/edicoes/2026-09-18/noite/12/`,
+			),
+		).toBe(true);
 	});
 });

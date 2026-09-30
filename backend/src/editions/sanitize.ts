@@ -126,6 +126,7 @@ function quiz(list: QuizItem[]): QuizItem[] {
 export function sanitizeDraft(
 	draft: EditionDraft,
 	known: Map<number, Headline>,
+	sectionStoryLimit = 3,
 ): EditionDraft {
 	const destaques = draft.destaques
 		.map((s) => story(s, known))
@@ -142,7 +143,7 @@ export function sanitizeDraft(
 			materias: sec.materias
 				.map((s) => story(s, known))
 				.filter((s): s is Story => s !== null)
-				.slice(0, 3),
+				.slice(0, sectionStoryLimit),
 			notas: sec.notas
 				.filter((n) => !isPollutedProse(n))
 				.map((n) => clip(n, 220))

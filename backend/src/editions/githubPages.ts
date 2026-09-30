@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { SnapshotEnvelope } from "./snapshot.js";
 import type { PublicManifest } from "./staticSite.js";
-import { mergeStaticSiteArtifacts } from "./staticSite.js";
+import { MAX_EDITION_PAGES, mergeStaticSiteArtifacts } from "./staticSite.js";
 
 const API = "https://api.github.com";
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -133,9 +133,9 @@ export class GitHubPagesPublisher {
 		if (tree.truncated)
 			throw new Error("Pages branch tree is too large to verify safely");
 		const allowed =
-			/^(\.nojekyll|manifest\.json|ultima\/index\.html|arquivo\/(index\.html|[2-9][0-9]*\/index\.html)|edicoes\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/(manha|meiodia|tarde|noite)\/index\.html)$/;
+			/^(\.nojekyll|manifest\.json|ultima\/index\.html|arquivo\/(index\.html|(?:[2-9]|[1-9][0-9]+)\/index\.html)|edicoes\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/(manha|meiodia|tarde|noite)\/(?:(?:[2-9]|[1-9][0-9]+)\/)?index\.html)$/;
 		const allowedDirectories =
-			/^(arquivo|arquivo\/[2-9][0-9]*|ultima|edicoes|edicoes\/[0-9]{4}-[0-9]{2}-[0-9]{2}(\/(manha|meiodia|tarde|noite))?)$/;
+			/^(arquivo|arquivo\/(?:[2-9]|[1-9][0-9]+)|ultima|edicoes|edicoes\/[0-9]{4}-[0-9]{2}-[0-9]{2}(\/(manha|meiodia|tarde|noite)(\/(?:[2-9]|[1-9][0-9]+))?)?)$/;
 		const blobs = new Map<string, string>();
 		for (const entry of tree.tree) {
 			if (entry.type === "tree") {
@@ -280,7 +280,36 @@ export class GitHubPagesPublisher {
 					const entry = manifest.editions?.find(
 						(item) => item.editionId === snapshot.snapshot.editionId,
 					);
-					if (entry?.checksum === snapshot.checksum) return url;
+					if (entry?.checksum === snapshot.checksum) {
+						const pageCount = entry.pageCount ?? 1;
+						if (
+							!Number.isSafeInteger(pageCount) ||
+							pageCount < 1 ||
+							pageCount > MAX_EDITION_PAGES
+						)
+							throw new Error("Published edition has an invalid page count");
+						let complete = true;
+						for (let pageNumber = 2; pageNumber <= pageCount; pageNumber++) {
+							if (this.now() >= deadline) {
+								complete = false;
+								break;
+							}
+							const continuation = await this.fetchImpl(
+								`${url}${pageNumber}/`,
+								{ signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) },
+							);
+							if (
+								!continuation.ok ||
+								!(await continuation.text()).includes(
+									snapshot.snapshot.window.day,
+								)
+							) {
+								complete = false;
+								break;
+							}
+						}
+						if (complete) return url;
+					}
 				}
 			}
 			await sleep(5_000);
