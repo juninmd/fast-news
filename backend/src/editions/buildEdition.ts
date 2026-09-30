@@ -157,6 +157,9 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		...(extras ?? { fio: [], numeros: [], leve: [], quiz: [] }),
 	};
 	const editorial = sanitizeDraft(raw as EditionDraft, known);
+	// The AI budget controls editorial generation, not publication coverage.
+	// Expand only after sanitizing model output against the IDs it actually saw.
+	for (const headline of news) known.set(headline.id, headline);
 	const used = new Set<number>([
 		...editorial.manchete.fontes,
 		...editorial.destaques.flatMap((story) => story.fontes),
@@ -164,7 +167,7 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 			section.materias.flatMap((story) => story.fontes),
 		),
 	]);
-	const unrepresented = picked.filter((headline) => !used.has(headline.id));
+	const unrepresented = news.filter((headline) => !used.has(headline.id));
 	const factualSections = new Map<
 		string,
 		EditionDraft["secoes"][number]["materias"]
@@ -193,8 +196,16 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 					],
 				},
 				known,
+				news.length,
 			)
 		: editorial;
+	const represented = new Set([
+		...draft.manchete.fontes,
+		...draft.destaques.flatMap((story) => story.fontes),
+		...draft.secoes.flatMap((section) =>
+			section.materias.flatMap((story) => story.fontes),
+		),
+	]);
 	for (const h of checagens) known.set(h.id, h);
 
 	return {
@@ -207,6 +218,9 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 			eligible: news.length + checagens.length,
 			selectedForAi: picked.length,
 			omittedBeforeAi: Math.max(0, news.length - picked.length),
+			publishedArticles:
+				news.filter((h) => represented.has(h.id)).length + checagens.length,
+			omittedFromEdition: news.filter((h) => !represented.has(h.id)).length,
 			modelFallback: frontFallback || sections === null,
 		},
 		hourly: hourlyCounts(
