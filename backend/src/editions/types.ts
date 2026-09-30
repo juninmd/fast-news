@@ -89,6 +89,9 @@ export interface Edition {
 		eligible: number;
 		selectedForAi: number;
 		omittedBeforeAi: number;
+		/** Optional for compatibility with existing immutable snapshots. */
+		publishedArticles?: number;
+		omittedFromEdition?: number;
 		modelFallback: boolean;
 	};
 	hourly: number[];
