@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://alistapart.com/main/feed/",
+		category: "Tecnologia",
+		company: "A List Apart",
+	},
+	{
 		url: "https://www.themarysue.com/feed/",
 		category: "Entretenimento",
 		company: "The Mary Sue",
