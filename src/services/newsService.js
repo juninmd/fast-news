@@ -2,6 +2,11 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
+		category: "Tecnologia",
+	},
+
 	{ url: "https://alistapart.com/main/feed/", category: "Tecnologia" },
 	{
 		url: "https://www.themarysue.com/feed/",
