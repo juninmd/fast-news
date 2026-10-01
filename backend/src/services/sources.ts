@@ -3,6 +3,12 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
+		category: "Tecnologia",
+		company: "Ars Technica",
+	},
+
+	{
 		url: "https://alistapart.com/main/feed/",
 		category: "Tecnologia",
 		company: "A List Apart",
