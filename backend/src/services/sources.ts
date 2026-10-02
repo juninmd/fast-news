@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.bloomberg.com/feeds/technology/news.rss",
+		category: "Tecnologia",
+		company: "Bloomberg",
+	},
+	{
 		url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
 		category: "Tecnologia",
 		company: "Ars Technica",

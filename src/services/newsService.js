@@ -3,6 +3,10 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{
+		url: "https://www.bloomberg.com/feeds/technology/news.rss",
+		category: "Tecnologia",
+	},
+	{
 		url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
 		category: "Tecnologia",
 	},
