@@ -6,6 +6,7 @@ import { buildEdition } from "../editions/buildEdition.js";
 import { GitHubPagesPublisher } from "../editions/githubPages.js";
 import { publishEdition } from "../editions/publish.js";
 import { renderEditionHtml } from "../editions/renderHtml.js";
+import { renderEditionMarkdown } from "../editions/renderMarkdown.js";
 import { renderTelegramSummary } from "../editions/renderTelegram.js";
 import {
 	createEditionSnapshot,
@@ -97,22 +98,15 @@ async function main(): Promise<number> {
 
 		let editionUrl: string | undefined;
 		if (mode === "pages") {
-			const archived = await listSnapshots();
-			const site = buildStaticEditionSite(
-				[
-					...archived.filter(
-						(item) => item.snapshot.editionId !== snapshot.snapshot.editionId,
-					),
-					snapshot,
-				],
-				process.env["EDITION_PAGES_BASE_URL"] ?? "",
-			);
 			const publisher = new GitHubPagesPublisher();
 			if (stored?.publicationStatus === "published" && stored.publicationUrl) {
 				editionUrl = await publisher.verifyPublished(snapshot);
 			} else {
 				try {
-					const publication = await publisher.publish(snapshot, site);
+					const publication = await publisher.publish(
+						snapshot,
+						renderEditionMarkdown(edition).markdown,
+					);
 					editionUrl = publication.url;
 					await markSnapshotPublished(key, publication.url, publication.commit);
 				} catch (error) {
