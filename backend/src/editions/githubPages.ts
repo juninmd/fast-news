@@ -95,7 +95,7 @@ export class GitHubPagesPublisher {
 	}
 
 	/** Commits the article. A published edition is immutable: an existing file is left untouched. */
-	private async commitArticle(
+	async commitArticle(
 		snapshot: SnapshotEnvelope,
 		markdown: string,
 	): Promise<string> {
