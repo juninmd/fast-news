@@ -18,7 +18,10 @@
 		"test:e2e": "playwright test",
 		"coverage": "vitest run --coverage",
 		"dev:api": "pnpm --dir backend dev",
-		"dev:mcp": "pnpm --filter @fast-news/mcp dev"
+		"dev:mcp": "pnpm --filter @fast-news/mcp dev",
+		"docs:dev": "vitepress dev site",
+		"docs:build": "vitepress build site",
+		"docs:preview": "vitepress preview site"
 	},
 	"dependencies": {
 		"@vitejs/plugin-react": "^6.0.3",
@@ -46,6 +49,8 @@
 		"globals": "^17.7.0",
 		"jsdom": "^29.1.1",
 		"msw": "^2.14.6",
-		"vitest": "^4.0.17"
+		"vitepress": "^1.6.4",
+		"vitest": "^4.0.17",
+		"vue": "^3.5.43"
 	}
 }

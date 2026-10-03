@@ -2,174 +2,101 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { draft, edition, headline, knownOf } from "./fixtures.js";
 import { GitHubPagesPublisher } from "./githubPages.js";
 import { createEditionSnapshot } from "./snapshot.js";
-import { buildStaticEditionSite } from "./staticSite.js";
 
 const baseUrl = "https://juninmd.github.io/fast-news";
-const commit = "a".repeat(40);
-const now = Date.parse("2026-09-18T22:02:00.900Z");
 
 afterEach(() => vi.unstubAllEnvs());
 
-function json(body: unknown, status = 200): Response {
-	return new Response(JSON.stringify(body), {
-		status,
-		headers: { "content-type": "application/json" },
-	});
+function setup() {
+	vi.stubEnv("EDITION_PAGES_TOKEN", "test-token");
+	vi.stubEnv("EDITION_PAGES_REPOSITORY", "juninmd/fast-news");
+	vi.stubEnv("EDITION_PAGES_BASE_URL", baseUrl);
+	return createEditionSnapshot(
+		edition(
+			draft(),
+			knownOf([headline({ sourceId: "6ec0f1d6-90d5-4b62-a74b-30da7d18f4bc" })]),
+		),
+	);
 }
 
+const json = (body: unknown, status = 200) =>
+	new Response(JSON.stringify(body), { status });
+
 describe("GitHub Pages publisher", () => {
-	it("does not verify an edition when a continuation page is missing", async () => {
-		vi.stubEnv("EDITION_PAGES_TOKEN", "test-token");
-		vi.stubEnv("EDITION_PAGES_REPOSITORY", "juninmd/fast-news");
-		vi.stubEnv("EDITION_PAGES_BASE_URL", baseUrl);
-		const source = headline({
-			sourceId: "6ec0f1d6-90d5-4b62-a74b-30da7d18f4bc",
+	it("commits the markdown article to main and verifies the page", async () => {
+		const envelope = setup();
+		const calls: Array<[string, RequestInit | undefined]> = [];
+		const fetchMock = vi.fn(
+			async (input: string | URL | Request, init?: RequestInit) => {
+				const url = input.toString();
+				calls.push([url, init]);
+				if (url.includes("/contents/") && !init?.method)
+					return json({ message: "Not Found" }, 404);
+				if (init?.method === "PUT") return json({ commit: { sha: "abc123" } });
+				return new Response("<h1>2026-09-18</h1>");
+			},
+		);
+		const publisher = new GitHubPagesPublisher(fetchMock);
+		const result = await publisher.publish(envelope, "# artigo\n");
+
+		expect(result).toEqual({
+			commit: "abc123",
+			url: `${baseUrl}/edicoes/2026-09-18-noite`,
 		});
-		const envelope = createEditionSnapshot(edition(draft(), knownOf([source])));
-		const fetchMock = vi.fn(async (input: string | URL | Request) => {
-			const url = input.toString();
-			if (url.endsWith("manifest.json"))
-				return json({
-					editions: [
-						{
-							editionId: envelope.snapshot.editionId,
-							checksum: envelope.checksum,
-							pageCount: 2,
-						},
-					],
-				});
-			if (url.endsWith("/2/"))
-				return new Response("Not found", { status: 404 });
-			return new Response(envelope.snapshot.window.day);
-		});
+		const put = calls.find(([, init]) => init?.method === "PUT")!;
+		expect(put[0]).toContain("/contents/site/edicoes/2026-09-18-noite.md");
+		const body = JSON.parse(put[1]!.body as string);
+		expect(body.branch).toBe("main");
+		expect(Buffer.from(body.content, "base64").toString()).toBe("# artigo\n");
+	});
+
+	it("keeps an already published edition immutable", async () => {
+		const envelope = setup();
+		const fetchMock = vi.fn(
+			async (input: string | URL | Request, init?: RequestInit) => {
+				const url = input.toString();
+				if (url.includes("/contents/") && !init?.method)
+					return json({ sha: "existing" });
+				return new Response("2026-09-18");
+			},
+		);
+		const result = await new GitHubPagesPublisher(fetchMock).publish(
+			envelope,
+			"changed",
+		);
+		expect(result.commit).toBe("existing");
+		expect(
+			fetchMock.mock.calls.some(([, init]) => init?.method === "PUT"),
+		).toBe(false);
+	});
+
+	it("fails verification when the deploy never lands", async () => {
+		const envelope = setup();
+		const fetchMock = vi.fn(async () => new Response("nope", { status: 404 }));
 		let ticks = 0;
 		const publisher = new GitHubPagesPublisher(
 			fetchMock,
-			() => now + ticks++ * 120_000,
+			() => ticks++ * 400_000,
 		);
 		vi.useFakeTimers();
 		try {
 			const failure = expect(
 				publisher.verifyPublished(envelope),
 			).rejects.toThrow("was not verified before the deadline");
-			await vi.advanceTimersByTimeAsync(5000);
+			await vi.advanceTimersByTimeAsync(20_000);
 			await failure;
-			expect(
-				fetchMock.mock.calls.some(([url]) => url.toString().endsWith("/2/")),
-			).toBe(true);
 		} finally {
 			vi.useRealTimers();
 		}
 	});
 
-	it("commits the site to gh-pages and verifies page plus checksum", async () => {
-		vi.stubEnv("EDITION_PAGES_TOKEN", "test-token");
-		vi.stubEnv("EDITION_PAGES_REPOSITORY", "juninmd/fast-news");
-		vi.stubEnv("EDITION_PAGES_BASE_URL", baseUrl);
-		const source = headline({
-			sourceId: "6ec0f1d6-90d5-4b62-a74b-30da7d18f4bc",
-		});
-		const extra = Array.from({ length: 1200 }, (_, i) =>
-			headline({
-				sourceId: `00000000-0000-4000-8000-${String(i + 1).padStart(12, "0")}`,
-			}),
+	it("rejects an edition page that lacks its identity", async () => {
+		const envelope = setup();
+		const publisher = new GitHubPagesPublisher(
+			vi.fn(async () => new Response("outra página")),
 		);
-		const envelope = createEditionSnapshot(
-			edition(
-				draft({
-					secoes: [
-						{
-							nome: "Tecnologia",
-							materias: extra.map((h) => ({
-								titulo: h.title,
-								texto: h.snippet,
-								fontes: [h.id],
-							})),
-							notas: [],
-						},
-					],
-				}),
-				knownOf([source, ...extra]),
-			),
-			new Date(now),
+		await expect(publisher.verifyPublished(envelope)).rejects.toThrow(
+			"expected identity",
 		);
-		const files = buildStaticEditionSite([envelope], baseUrl, new Date(now));
-		const treeEntries = Array.from(files.keys()).flatMap((path) => {
-			const parts = path.split("/");
-			const directories = parts
-				.slice(0, -1)
-				.map((_, index) => parts.slice(0, index + 1).join("/"));
-			return [
-				...directories.map((directory) => ({
-					path: directory,
-					sha: `tree-${directory}`,
-					type: "tree",
-					mode: "040000",
-				})),
-				{ path, sha: `blob-${path}`, type: "blob", mode: "100644" },
-			];
-		});
-		const uniqueTreeEntries = [
-			...new Map(treeEntries.map((entry) => [entry.path, entry])).values(),
-		];
-		const calls: Array<{ url: string; body?: string }> = [];
-		const fetchMock = vi.fn(
-			async (input: string | URL | Request, init?: RequestInit) => {
-				const url = input.toString();
-				calls.push({
-					url,
-					body: typeof init?.body === "string" ? init.body : undefined,
-				});
-				if (url.includes("/git/ref/heads/gh-pages"))
-					return json({ object: { sha: "parent-commit" } });
-				if (url.endsWith("/git/commits/parent-commit"))
-					return json({ tree: { sha: "parent-tree" } });
-				if (url.includes("/contents/manifest.json?ref=parent-commit"))
-					return json({
-						encoding: "base64",
-						content: Buffer.from(files.get("manifest.json")!).toString(
-							"base64",
-						),
-					});
-				if (url.includes("/git/trees/parent-tree?recursive=1"))
-					return json({ truncated: false, tree: uniqueTreeEntries });
-				if (url.endsWith("/git/blobs")) return json({ sha: "blob-sha" });
-				if (url.endsWith("/git/trees")) return json({ sha: "tree-sha" });
-				if (url.endsWith("/git/commits")) return json({ sha: commit });
-				if (url.endsWith("/git/refs")) return json({});
-				if (url.endsWith("/git/refs/heads/gh-pages")) return json({});
-				if (url === `${baseUrl}/manifest.json`)
-					return json(JSON.parse(files.get("manifest.json")!));
-				if (url.startsWith(`${baseUrl}/edicoes/2026-09-18/noite/`))
-					return new Response(
-						files.get(`${url.slice(baseUrl.length + 1)}index.html`),
-						{ status: 200 },
-					);
-				throw new Error(`Unexpected request: ${url}`);
-			},
-		);
-		const publisher = new GitHubPagesPublisher(fetchMock, () => now);
-		const result = await publisher.publish(envelope, files);
-
-		expect(result).toEqual({
-			commit,
-			url: `${baseUrl}/edicoes/2026-09-18/noite/`,
-		});
-		expect(calls.some((call) => call.url.includes("/actions/"))).toBe(false);
-		const ref = calls.find((call) =>
-			call.url.endsWith("/git/refs/heads/gh-pages"),
-		);
-		expect(JSON.parse(ref?.body ?? "{}")).toEqual({
-			sha: commit,
-			force: false,
-		});
-		const tree = calls.find((call) => call.url.endsWith("/git/trees"));
-		expect(tree?.body).toContain("edicoes/2026-09-18/noite/index.html");
-		expect(tree?.body).toContain("edicoes/2026-09-18/noite/12/index.html");
-		expect(
-			calls.some(
-				(call) => call.url === `${baseUrl}/edicoes/2026-09-18/noite/12/`,
-			),
-		).toBe(true);
 	});
 });
