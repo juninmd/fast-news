@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://android-developers.googleblog.com/feeds/posts/default",
+		category: "Tecnologia",
+		company: "Google",
+	},
+	{
 		url: "https://www.pcworld.com/feed",
 		category: "Tecnologia",
 		company: "PCWorld",
