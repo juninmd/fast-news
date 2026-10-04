@@ -2,6 +2,10 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://android-developers.googleblog.com/feeds/posts/default",
+		category: "Tecnologia",
+	},
 	{ url: "https://www.pcworld.com/feed", category: "Tecnologia" },
 	{
 		url: "https://www.bloomberg.com/feeds/technology/news.rss",
