@@ -3,6 +3,12 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.feedburner.com/Mashable",
+		category: "Tecnologia",
+		company: "Mashable",
+	},
+
+	{
 		url: "https://android-developers.googleblog.com/feeds/posts/default",
 		category: "Tecnologia",
 		company: "Google",
