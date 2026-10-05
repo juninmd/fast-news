@@ -2,6 +2,8 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://feeds.feedburner.com/Mashable", category: "Tecnologia" },
+
 	{
 		url: "https://android-developers.googleblog.com/feeds/posts/default",
 		category: "Tecnologia",
