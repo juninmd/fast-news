@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.feedburner.com/hackaday/LgoM",
+		category: "Tecnologia",
+		company: "Hackaday",
+	},
+	{
 		url: "https://feeds.feedburner.com/Mashable",
 		category: "Tecnologia",
 		company: "Mashable",
