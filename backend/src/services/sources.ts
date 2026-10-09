@@ -316,6 +316,16 @@ export const FEED_SOURCES = [
 	},
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://api.quantamagazine.org/feed/",
+		category: "Ciência",
+		company: "Quanta Magazine",
+	},
+	{
+		url: "https://www.popularmechanics.com/rss/all.xml/",
+		category: "Tecnologia",
+		company: "Popular Mechanics",
+	},
+	{
 		url: "https://feeds.npr.org/1004/rss.xml",
 		category: "Mundo",
 		company: "NPR",
