@@ -2,6 +2,7 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://futurism.com/feed", category: "Tecnologia" },
 	{ url: "https://feeds.feedburner.com/hackaday/LgoM", category: "Tecnologia" },
 	{ url: "https://feeds.feedburner.com/Mashable", category: "Tecnologia" },
 
