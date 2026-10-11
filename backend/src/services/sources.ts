@@ -3,6 +3,10 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.science.org/rss/news_current.xml",
+		category: "Ciência",
+	},
+	{
 		url: "https://futurism.com/feed",
 		category: "Tecnologia",
 		company: "Futurism",
