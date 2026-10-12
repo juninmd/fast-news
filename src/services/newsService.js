@@ -2,6 +2,11 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+		category: "Tecnologia",
+	},
+
 	{ url: "https://www.science.org/rss/news_current.xml", category: "Ciência" },
 	{ url: "https://futurism.com/feed", category: "Tecnologia" },
 	{ url: "https://feeds.feedburner.com/hackaday/LgoM", category: "Tecnologia" },
