@@ -3,6 +3,12 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+		category: "Tecnologia",
+		company: "NYT",
+	},
+
+	{
 		url: "https://www.science.org/rss/news_current.xml",
 		category: "Ciência",
 	},
