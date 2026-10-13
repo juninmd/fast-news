@@ -3,6 +3,10 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://hackaday.com/blog/feed/",
+		category: "Tecnologia",
+	},
+	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
 		category: "Tecnologia",
 		company: "NYT",
