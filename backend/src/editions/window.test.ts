@@ -56,4 +56,11 @@ describe("editionWindow", () => {
 		const w = editionWindow("noite", at("2026-09-19T02:30:00Z"));
 		expect(w.day).toBe("2026-09-18");
 	});
+
+	it("especial covers the full 24h day in local time", () => {
+		const w = editionWindow("especial", at("2026-10-14T17:00:00Z"));
+		expect(w.day).toBe("2026-10-14");
+		expect(formatLocalTime(w.start)).toBe("00h00");
+		expect(formatLocalTime(w.end)).toBe("23h59");
+	});
 });
