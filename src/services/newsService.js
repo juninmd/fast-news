@@ -58,8 +58,7 @@ export const FEED_SOURCES = [
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/Space.xml",
 		category: "Ciência",
 	},
-	{ url: "https://www.pushsquare.com/feeds/latest", category: "Games" },
-	{ url: "https://dev.to/feed", category: "Tecnologia" },
+	{ url: "https://www.pushsquare.com/feeds/latest", category: "Gaming" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },
 	{ url: "https://www.technologyreview.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.androidpolice.com/feed/", category: "Tecnologia" },
@@ -164,17 +163,12 @@ export const FEED_SOURCES = [
 	{ url: "https://www.poder360.com.br/feed/", category: "Brasil" },
 	// --- TECNOLOGIA (MUNDO) ---
 	{ url: "https://meiobit.com/feed/", category: "Tecnologia" },
-	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.theverge.com/rss/index.xml", category: "Tecnologia" },
 	{ url: "https://arstechnica.com/feed/", category: "Tecnologia" },
 	{ url: "https://www.engadget.com/rss.xml", category: "Tecnologia" },
 	{ url: "https://www.cnet.com/rss/news/", category: "Tecnologia" },
 	{ url: "https://www.zdnet.com/news/rss.xml", category: "Tecnologia" },
 	{ url: "https://www.techradar.com/rss", category: "Tecnologia" },
-	{
-		url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
-		category: "Tecnologia",
-	},
 	{
 		url: "https://feeds.bbci.co.uk/news/technology/rss.xml",
 		category: "Tecnologia",
@@ -209,7 +203,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.sitepoint.com/feed", category: "Tecnologia" },
 	{ url: "https://www.sciencealert.com/feed", category: "Tecnologia" },
 	{ url: "https://www.theregister.com/headlines.atom", category: "Tecnologia" },
-	{ url: "https://www.bleepingcomputer.com/feed/", category: "Tecnologia" },
 	{ url: "https://krebsonsecurity.com/feed/", category: "Tecnologia" },
 	{ url: "https://threatpost.com/feed/", category: "Tecnologia" },
 
@@ -282,7 +275,6 @@ export const FEED_SOURCES = [
 	{ url: "https://www.poder360.com.br/feed", category: "Brasil" },
 	{ url: "https://www.cartacapital.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.bbc.com/portuguese/index.xml", category: "Brasil" },
-	{ url: "https://veja.abril.com.br/feed/", category: "Brasil" },
 	{ url: "https://www.terra.com.br/rss/noticias", category: "Brasil" },
 	{
 		url: "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml",
@@ -349,7 +341,6 @@ export const FEED_SOURCES = [
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
 		category: "Mundo",
 	},
-	{ url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: "Mundo" },
 	{ url: "https://feeds.bbci.co.uk/news/rss.xml", category: "Mundo" },
 	{ url: "http://feeds.foxnews.com/foxnews/world", category: "Mundo" },
 	{ url: "https://www.aljazeera.com/xml/rss/all.xml", category: "Mundo" },
@@ -442,10 +433,6 @@ export const FEED_SOURCES = [
 	{ url: "https://blog.coinbase.com/feed", category: "Cripto" },
 
 	// --- CIÊNCIA & ESPAÇO ---
-	{
-		url: "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
-		category: "Ciência",
-	},
 	{ url: "https://revistapesquisa.fapesp.br/feed/", category: "Ciência" },
 	{ url: "https://www.jornaldaciencia.org.br/feed/", category: "Ciência" },
 	{

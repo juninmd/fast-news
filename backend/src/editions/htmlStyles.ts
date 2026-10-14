@@ -3,6 +3,11 @@ body{--ground:#f3f5f2;--raised:#e7ebe6;--ink:#12181e;--muted:#56606b;--rule:#c5c
 --serif:"Newsreader",Georgia,"Times New Roman",serif;--label:"Archivo Narrow","Arial Narrow",Arial,sans-serif;--black:"UnifrakturMaguntia","Old English Text MT",Georgia,serif;
 margin:0;background:var(--ground);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.5;padding-inline:16px;padding-block:12px 48px}
 body.noite{--ground:#0d1320;--raised:#151d2e;--ink:#ebe7dc;--muted:#9ba4b3;--rule:#2b3549;--accent:#f2a93b;--mark:#f2a93b;--bar-off:#263047;color-scheme:dark}
+body.especial{--ground:#f7f6f0;--raised:#ede9dc;--ink:#141a22;--muted:#4d5662;--rule:#cdc6b6;--accent:#8b1e0f;--mark:#f59e0b;--bar-off:#d6cfbe}
+body.especial .name i{color:#8b1e0f}
+body.especial .folio .ed{color:#8b1e0f;font-weight:700}
+@media print{body{background:#fff!important;color:#000!important;padding:0}.site-skip,.site-nav,.edition-search,.quiz,.colophon{display:none}a{text-decoration:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 *{box-sizing:border-box}
 a{color:inherit;text-decoration-color:var(--accent);text-underline-offset:3px}
 a:hover{color:var(--accent)}
