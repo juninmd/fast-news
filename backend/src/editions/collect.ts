@@ -1,8 +1,9 @@
 import { query } from "../database/client.js";
 import type { EditionWindow, Headline } from "./types.js";
 
-// Hard cap keeps a runaway feed from blowing the job's memory; a normal
-// 12h window holds ~1-2k rows.
+// A hard cap keeps a runaway feed from blowing the job's memory. Fetch one
+// extra row so hitting it becomes an explicit failed edition, never a quiet
+// partial success.
 const MAX_ROWS = 5000;
 
 interface Row {
@@ -27,10 +28,15 @@ export async function collectHeadlines(
 		    AND coalesce(title, '') <> ''
 		  ORDER BY created_at, id
 		  LIMIT $3`,
-		[window.start, window.end, MAX_ROWS],
+		[window.start, window.end, MAX_ROWS + 1],
 	);
+	if (res.rows.length > MAX_ROWS)
+		throw new Error(
+			`[Edition] Collection exceeded ${MAX_ROWS} rows; coverage is incomplete and this edition was not generated`,
+		);
 	return res.rows.map((r, i) => ({
 		id: i + 1,
+		sourceId: r.id,
 		title: r.title.replace(/\s+/g, " ").trim(),
 		source: (r.source ?? "Fonte desconhecida").trim(),
 		category: r.category ?? "",

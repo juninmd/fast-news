@@ -17,6 +17,9 @@ importers:
       '@ai-sdk/openai':
         specifier: ^1.1.0
         version: 1.3.24(zod@3.25.76)
+      '@juninmd/digest-kit':
+        specifier: ^0.2.1
+        version: 0.2.1
       '@qdrant/js-client-rest':
         specifier: ^1.18.0
         version: 1.18.0(typescript@5.9.3)
@@ -289,6 +292,10 @@ packages:
 
   '@ioredis/commands@1.5.1':
     resolution: {integrity: sha512-JH8ZL/ywcJyR9MmJ5BNqZllXNZQqQbnVZOqpPQqE1vHiFgAw4NHbvE0FOduNU8IX9babitBT46571OnPTT0Zcw==}
+
+  '@juninmd/digest-kit@0.2.1':
+    resolution: {integrity: sha512-Au/jdWR5DzdshaszV0zcIuDcK6F99mxu+UvSGDRqF6ytw8uURcZMh1r8jwsyh+7Fl1UbkqGq9rqzkHYbG0bt7w==, tarball: https://npm.pkg.github.com/download/@juninmd/digest-kit/0.2.1/d41293c5fb036375a7fe7632da7bb9c33aa2448e}
+    engines: {bun: '>=1.1.0', node: '>=20'}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
@@ -797,6 +804,10 @@ packages:
     resolution: {integrity: sha512-dOal67//nohNgYWb+nWmg5dkFdIwDm8EpeGYMekPMrngV3637lqnX0lbUcCtgibHTz6SEz7DAIjKvKDFYCnO1A==}
     engines: {node: '>=6.0.0'}
 
+  node-cron@4.6.0:
+    resolution: {integrity: sha512-Si/bzYiKRHOB8/a99T2+SDGN582ONDMSTlJr5oCkT6GtnqPjZ2s10eoQRYkW9ZHwjVxONL+W8Fb+qR0AHMQsdg==}
+    engines: {node: '>=20'}
+
   node-fetch@2.7.0:
     resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
     engines: {node: 4.x || >=6.0.0}
@@ -1264,6 +1275,11 @@ snapshots:
     optional: true
 
   '@ioredis/commands@1.5.1': {}
+
+  '@juninmd/digest-kit@0.2.1':
+    dependencies:
+      node-cron: 4.6.0
+      rss-parser: 3.13.0
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true
@@ -1793,6 +1809,8 @@ snapshots:
   node-cron@3.0.3:
     dependencies:
       uuid: 8.3.2
+
+  node-cron@4.6.0: {}
 
   node-fetch@2.7.0:
     dependencies:

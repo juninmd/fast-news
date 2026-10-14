@@ -4,6 +4,142 @@ export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
 		url: "https://dev.to/feed",
+		category: "Engenharia",
+		company: "DEV Community",
+	},
+	{
+		url: "https://hackaday.com/blog/feed/",
+		category: "Tecnologia",
+	},
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+		category: "Tecnologia",
+		company: "NYT",
+	},
+
+	{
+		url: "https://www.science.org/rss/news_current.xml",
+		category: "Ciência",
+	},
+	{
+		url: "https://futurism.com/feed",
+		category: "Tecnologia",
+		company: "Futurism",
+	},
+	{
+		url: "https://feeds.feedburner.com/hackaday/LgoM",
+		category: "Tecnologia",
+		company: "Hackaday",
+	},
+	{
+		url: "https://feeds.feedburner.com/Mashable",
+		category: "Tecnologia",
+		company: "Mashable",
+	},
+
+	{
+		url: "https://android-developers.googleblog.com/feeds/posts/default",
+		category: "Tecnologia",
+		company: "Google",
+	},
+	{
+		url: "https://www.pcworld.com/feed",
+		category: "Tecnologia",
+		company: "PCWorld",
+	},
+	{
+		url: "https://www.bloomberg.com/feeds/technology/news.rss",
+		category: "Tecnologia",
+		company: "Bloomberg",
+	},
+	{
+		url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
+		category: "Tecnologia",
+		company: "Ars Technica",
+	},
+
+	{
+		url: "https://alistapart.com/main/feed/",
+		category: "Tecnologia",
+		company: "A List Apart",
+	},
+	{
+		url: "https://www.themarysue.com/feed/",
+		category: "Entretenimento",
+		company: "The Mary Sue",
+	},
+	{
+		url: "https://techcrunch.com/feed/",
+		category: "Tecnologia",
+		company: "TechCrunch",
+	},
+
+	{
+		url: "https://www.mobiletime.com.br/feed/",
+		category: "Tecnologia",
+		company: "Mobile Time",
+	},
+	{
+		url: "https://www.freecodecamp.org/news/rss/",
+		category: "Tecnologia",
+		company: "freeCodeCamp",
+	},
+	{
+		url: "https://9to5google.com/feed/",
+		category: "Tecnologia",
+		company: "9to5Google",
+	},
+	{
+		url: "https://news.mit.edu/rss/feed",
+		category: "Tecnologia",
+		company: "MIT News",
+	},
+	{
+		url: "https://lobste.rs/rss",
+		category: "Tecnologia",
+		company: "Lobsters",
+	},
+	{
+		url: "https://davidwalsh.name/feed",
+		category: "Tecnologia",
+		company: "David Walsh Blog",
+	},
+	{
+		url: "https://feeds.folha.uol.com.br/ciencia/rss091.xml",
+		category: "Ciência",
+		company: "Folha de S.Paulo",
+	},
+	{
+		url: "https://feed.infoq.com/",
+		category: "Tecnologia",
+		company: "InfoQ",
+	},
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
+		category: "Ciência",
+		company: "NYT",
+	},
+	{
+		url: "https://blog.google/rss/",
+		category: "Tecnologia",
+		company: "Google",
+	},
+	{
+		url: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+		category: "Ciência",
+		company: "BBC",
+	},
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Space.xml",
+		category: "Ciência",
+		company: "NYT",
+	},
+	{
+		url: "https://www.pushsquare.com/feeds/latest",
+		company: "Push Square",
+	},
+	{
+		url: "https://dev.to/feed",
 		category: "Tecnologia",
 		company: "Dev.to",
 	},
@@ -203,6 +339,16 @@ export const FEED_SOURCES = [
 		company: "UOL",
 	},
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{
+		url: "https://api.quantamagazine.org/feed/",
+		category: "Ciência",
+		company: "Quanta Magazine",
+	},
+	{
+		url: "https://www.popularmechanics.com/rss/all.xml/",
+		category: "Tecnologia",
+		company: "Popular Mechanics",
+	},
 	{
 		url: "https://feeds.npr.org/1004/rss.xml",
 		category: "Mundo",
@@ -975,7 +1121,7 @@ export async function syncDefaultFeeds(): Promise<void> {
 }
 
 export async function getActiveFeeds(): Promise<
-	Array<{ url: string; category: string; company?: string | undefined }>
+	Array<{ url: string; category: string; company?: string }>
 > {
 	try {
 		const res = await query<{ url: string; category: string; company: string }>(
@@ -985,7 +1131,7 @@ export async function getActiveFeeds(): Promise<
 			return res.rows.map((r) => ({
 				url: r.url,
 				category: r.category,
-				company: r.company || undefined,
+				...(r.company ? { company: r.company } : {}),
 			}));
 		}
 	} catch (err) {
@@ -994,5 +1140,8 @@ export async function getActiveFeeds(): Promise<
 			err,
 		);
 	}
-	return FEED_SOURCES;
+	return FEED_SOURCES.map((source) => ({
+		...source,
+		category: source.category ?? "Geral",
+	}));
 }
