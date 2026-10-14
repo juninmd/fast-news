@@ -3,11 +3,12 @@ import type { Edition, Story } from "./types.js";
 import { formatLocalDate, formatLocalTime } from "./window.js";
 
 export const TELEGRAM_LIMIT = 4096;
-const LABEL = {
+const LABEL: Record<string, string> = {
 	manha: "Edição da Manhã",
 	meiodia: "Edição do Meio-dia",
 	tarde: "Edição da Tarde",
 	noite: "Edição da Noite",
+	especial: "Edição Especial Consolidada",
 };
 
 function link(e: Edition, s: Story): string {
