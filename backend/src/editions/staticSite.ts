@@ -13,7 +13,14 @@ import type { SnapshotEnvelope } from "./snapshot.js";
 import { hydrateSnapshot, parseSnapshotEnvelope } from "./snapshot.js";
 import type { Edition, Section } from "./types.js";
 
-const KIND_ORDER = ["manha", "meiodia", "tarde", "noite"] as const;
+const KIND_ORDER = ["manha", "meiodia", "tarde", "noite", "especial"] as const;
+const KIND_DISPLAY: Record<string, string> = {
+	manha: "Manhã",
+	meiodia: "Meio-dia",
+	tarde: "Tarde",
+	noite: "Noite",
+	especial: "Especial",
+};
 const PAGE_SIZE = 30;
 const EDITION_PAGE_SIZE = 100;
 export const MAX_EDITION_PAGES = 100;
@@ -106,7 +113,7 @@ function decorateEdition(html: string, base: string, url: string): string {
 }
 
 function page(title: string, base: string, body: string): string {
-	return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="${esc(title)} — O Fio"><title>${esc(title)} · O Fio</title><style>
+	return `<!doctype html><html lang="pt-BR" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="${esc(title)} — O Fio"><meta name="theme-color" content="#f3f5f2" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0d1320" media="(prefers-color-scheme: dark)"><title>${esc(title)} · O Fio</title><style>
 :root{color-scheme:light dark;font-family:Georgia,"Times New Roman",serif;background:#f3f5f2;color:#12181e}body{max-width:900px;margin:0 auto;padding:24px 18px 56px;line-height:1.55}a{color:#2146c7;text-underline-offset:3px}a:focus-visible{outline:3px solid #2146c7;outline-offset:3px}.site-skip{position:absolute;left:-10000px;top:8px;background:#f3f5f2;padding:8px;z-index:5}.site-skip:focus{left:8px}.brand{font-size:clamp(3rem,12vw,6rem);font-weight:400;line-height:1;margin:0;border-bottom:3px double;padding-bottom:12px}.brand i{color:#2146c7}.nav{display:flex;gap:1rem;padding:12px 0;border-bottom:1px solid}.edition{padding:14px 0;border-bottom:1px solid #c5ccc7}.edition h2{margin:0;font-size:1.25rem}.muted{color:#56606b}@media(prefers-color-scheme:dark){:root{background:#0d1320;color:#ebe7dc}a{color:#f2a93b}.muted{color:#9ba4b3}}
 </style></head><body><a class="site-skip" href="#main-content">Pular para o conteúdo</a><header><p class="brand">O <i>F</i>io</p><nav class="nav" aria-label="Navegação principal"><a href="${esc(base)}/ultima/">Última edição</a><a href="${esc(base)}/arquivo/">Arquivo</a></nav></header><main id="main-content"><h1>${esc(title)}</h1>${body}</main></body></html>`;
 }
@@ -133,12 +140,14 @@ function manifestPages(
 		(entry) => entry.editionId === manifest.latestEditionId,
 	);
 	if (!latest) throw new Error("Public manifest has no latest edition entry");
+	const [latestDay, latestKind] = latest.editionId.split(":");
+	const latestKindLabel = KIND_DISPLAY[latestKind ?? ""] ?? latestKind;
 	files.set(
 		"ultima/index.html",
 		page(
 			"Última edição",
 			prefix,
-			`<p class="muted">${esc(latest.editionId.replace(":", " · edição "))}</p><p>O jornal completo desta edição está disponível sem download.</p><p><a href="${esc(latest.url)}">Ler O Fio completo</a></p>`,
+			`<p class="muted">${esc(latestDay)} · edição ${esc(latestKindLabel)}</p><p>O jornal completo desta edição está disponível sem download.</p><p><a href="${esc(latest.url)}">Ler O Fio completo</a></p>`,
 		),
 	);
 	const archivePages = Math.ceil(manifest.editions.length / PAGE_SIZE);
@@ -150,7 +159,8 @@ function manifestPages(
 		const items = slice
 			.map((entry) => {
 				const [day, kind] = entry.editionId.split(":");
-				return `<article class="edition"><h2><a href="${esc(entry.url)}">${esc(day)} · ${esc(kind)}</a></h2><p class="muted">Período final ${esc(entry.windowEnd)}</p></article>`;
+				const kindLabel = KIND_DISPLAY[kind ?? ""] ?? kind;
+				return `<article class="edition"><h2><a href="${esc(entry.url)}">${esc(day)} · ${esc(kindLabel)}</a></h2><p class="muted">Período final ${esc(entry.windowEnd)}</p></article>`;
 			})
 			.join("");
 		const links = Array.from({ length: archivePages }, (_, index) => {
@@ -193,7 +203,7 @@ export function mergeStaticSiteArtifacts(
 	const merged = new Map<string, PublicManifest["editions"][number]>();
 	for (const item of [...(previous?.editions ?? []), ...current.editions]) {
 		if (
-			!/^[0-9]{4}-[0-9]{2}-[0-9]{2}:(manha|meiodia|tarde|noite)$/.test(
+			!/^[0-9]{4}-[0-9]{2}-[0-9]{2}:(manha|meiodia|tarde|noite|especial)$/.test(
 				item.editionId,
 			) ||
 			!/^[0-9a-f]{64}$/.test(item.checksum) ||

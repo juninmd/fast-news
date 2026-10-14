@@ -10,6 +10,7 @@ export const FEED_SOURCES = [
 	{
 		url: "https://hackaday.com/blog/feed/",
 		category: "Tecnologia",
+		company: "Hackaday",
 	},
 	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
@@ -20,6 +21,7 @@ export const FEED_SOURCES = [
 	{
 		url: "https://www.science.org/rss/news_current.xml",
 		category: "Ciência",
+		company: "Science",
 	},
 	{
 		url: "https://futurism.com/feed",
@@ -136,12 +138,8 @@ export const FEED_SOURCES = [
 	},
 	{
 		url: "https://www.pushsquare.com/feeds/latest",
+		category: "Gaming",
 		company: "Push Square",
-	},
-	{
-		url: "https://dev.to/feed",
-		category: "Tecnologia",
-		company: "Dev.to",
 	},
 	{
 		url: "https://hnrss.org/frontpage",
@@ -787,7 +785,7 @@ export const FEED_SOURCES = [
 	},
 	{
 		url: "https://news.xbox.com/pt-br/feed/",
-		category: "Games",
+		category: "Gaming",
 		company: "Xbox",
 	},
 	{
@@ -895,7 +893,7 @@ export const FEED_SOURCES = [
 	{
 		url: "https://news.itsfoss.com/feed/",
 		category: "Open Source",
-		company: "It",
+		company: "It's FOSS",
 	},
 	{
 		url: "https://lwn.net/headlines/rss",
