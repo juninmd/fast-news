@@ -12,11 +12,12 @@ import { EDITION_CSS, QUIZ_SCRIPT } from "./htmlStyles.js";
 import type { Edition } from "./types.js";
 import { formatLocalDate, formatLocalTime } from "./window.js";
 
-const LABEL = {
+const LABEL: Record<string, string> = {
 	manha: "Edição da Manhã",
 	meiodia: "Edição do Meio-dia",
 	tarde: "Edição da Tarde",
 	noite: "Edição da Noite",
+	especial: "Edição Especial Consolidada",
 };
 const nf = new Intl.NumberFormat("pt-BR");
 
@@ -120,21 +121,27 @@ export function renderEditionHtml(e: Edition, continuation = false): string {
 				? "Para a pausa do almoço"
 				: w.kind === "tarde"
 					? "Para a pausa da tarde"
-					: "Para o fim do dia";
+					: w.kind === "especial"
+						? "Para leitura e reflexão do dia"
+						: "Para o fim do dia";
 	const range = `${formatLocalTime(w.start)} → ${formatLocalTime(w.end)}`;
+	const edLabel = LABEL[w.kind] ?? "Edição Especial";
 	return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>O Fio, ${esc(LABEL[w.kind])}, ${esc(w.day)}</title>
+<meta name="description" content="O Fio, ${esc(edLabel)}, ${esc(w.day)} — curadoria e checagem de notícias pelo fast-news.">
+<meta name="theme-color" content="#f3f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1320" media="(prefers-color-scheme: dark)">
+<title>O Fio, ${esc(edLabel)}, ${esc(w.day)}</title>
 <style>${EDITION_CSS}</style></head>
 <body class="${w.kind}"><main class="wrap"><header><div class="mast">
 <div class="ear"><b>${articleCount}</b>de ${sourceCount} nesta edição</div>
 <h1 class="name">O <i>F</i>io</h1>
 <div class="ear r"><b>${esc(range)}</b>período coberto, horário de Brasília</div></div>
-<div class="folio"><span class="ed">${LABEL[w.kind]}</span><span>${esc(formatLocalDate(w.day))}</span><span>fast-news</span></div></header>
+<div class="folio"><span class="ed">${edLabel}</span><span>${esc(formatLocalDate(w.day))}</span><span>fast-news</span></div></header>
 ${coverageNotice(e)}
 ${continuation ? "" : market(e) + ticker(e) + front(e) + threads(draft.fio, e.headlines)}${sections(e)}
 ${!continuation && (draft.leve.length || draft.quiz.length) ? `<section class="sec"><div class="grid2"><div>${draft.leve.length ? sectionHead(closing) + brief(draft.leve.map(esc)) : ""}</div>${quiz(draft.quiz)}</div></section>` : ""}
 ${continuation ? "" : pulse(e.hourly, w.start)}
-<footer class="colophon">O Fio é montado automaticamente a partir das notícias captadas pelo fast-news. Os links levam à matéria original.</footer>
+<footer class="colophon" role="contentinfo">O Fio é montado automaticamente a partir das notícias captadas pelo fast-news. Os links levam à matéria original.</footer>
 </main><script>${QUIZ_SCRIPT}</script></body></html>`;
 }

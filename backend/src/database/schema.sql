@@ -278,22 +278,29 @@ END $$;
 --           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check3 CHECK (kind IN ('manha', 'tarde', 'noite'));
 DO $$
 BEGIN
-    ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
-    ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check4
-        CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite'));
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'news_editions_kind_check5'
+    ) THEN
+        ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
+        ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check4
+            CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite'));
+    END IF;
 EXCEPTION WHEN duplicate_object THEN
     NULL;
 END $$;
 
--- 'meiodia' added to move O Fio from 3x/day (7h/13h/19h) to 4x/day
--- (6h/11h/15h/20h); older databases still carry the three-value CHECK.
--- Rollback: ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check4;
---           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check3 CHECK (kind IN ('manha', 'tarde', 'noite'));
+-- 'especial' added for consolidated special editions.
+-- Rollback: ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check5;
+--           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check4 CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite'));
 DO $$
 BEGIN
-    ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
-    ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check4
-        CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite'));
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'news_editions_kind_check5'
+    ) THEN
+        ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check4;
+        ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check5
+            CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite', 'especial'));
+    END IF;
 EXCEPTION WHEN duplicate_object THEN
     NULL;
 END $$;
