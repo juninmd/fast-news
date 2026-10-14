@@ -14,7 +14,9 @@ export function esc(value: string): string {
 export function safeUrl(value: string): string | null {
 	try {
 		const url = new URL(value);
-		return url.protocol === "https:" || url.protocol === "http:"
+		return (url.protocol === "https:" || url.protocol === "http:") &&
+			!url.username &&
+			!url.password
 			? url.toString()
 			: null;
 	} catch {

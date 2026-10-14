@@ -17,12 +17,13 @@
 		"test": "vitest",
 		"test:e2e": "playwright test",
 		"coverage": "vitest run --coverage",
-		"dev:api": "pnpm --filter @fast-news/api dev",
-		"dev:mcp": "pnpm --filter @fast-news/mcp dev"
+		"dev:api": "pnpm --dir backend dev",
+		"dev:mcp": "pnpm --filter @fast-news/mcp dev",
+		"docs:dev": "vitepress dev site",
+		"docs:build": "vitepress build site",
+		"docs:preview": "vitepress preview site"
 	},
 	"dependencies": {
-		"@google/generative-ai": "^0.24.1",
-		"@qdrant/js-client-rest": "^1.18.0",
 		"@vitejs/plugin-react": "^6.0.3",
 		"autoprefixer": "^10.5.2",
 		"dotenv": "^17.4.2",
@@ -48,6 +49,8 @@
 		"globals": "^17.7.0",
 		"jsdom": "^29.1.1",
 		"msw": "^2.14.6",
-		"vitest": "^4.0.17"
+		"vitepress": "^1.6.4",
+		"vitest": "^4.0.17",
+		"vue": "^3.5.43"
 	}
 }

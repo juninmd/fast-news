@@ -2,6 +2,63 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://dev.to/feed", category: "Engenharia" },
+	{ url: "https://hackaday.com/blog/feed/", category: "Tecnologia" },
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+		category: "Tecnologia",
+	},
+
+	{ url: "https://www.science.org/rss/news_current.xml", category: "Ciência" },
+	{ url: "https://futurism.com/feed", category: "Tecnologia" },
+	{ url: "https://feeds.feedburner.com/hackaday/LgoM", category: "Tecnologia" },
+	{ url: "https://feeds.feedburner.com/Mashable", category: "Tecnologia" },
+
+	{
+		url: "https://android-developers.googleblog.com/feeds/posts/default",
+		category: "Tecnologia",
+	},
+	{ url: "https://www.pcworld.com/feed", category: "Tecnologia" },
+	{
+		url: "https://www.bloomberg.com/feeds/technology/news.rss",
+		category: "Tecnologia",
+	},
+	{
+		url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
+		category: "Tecnologia",
+	},
+
+	{ url: "https://alistapart.com/main/feed/", category: "Tecnologia" },
+	{
+		url: "https://www.themarysue.com/feed/",
+		category: "Entretenimento",
+	},
+	{ url: "https://techcrunch.com/feed/", category: "Tecnologia" },
+	{ url: "https://www.mobiletime.com.br/feed/", category: "Tecnologia" },
+	{ url: "https://www.freecodecamp.org/news/rss/", category: "Tecnologia" },
+	{ url: "https://9to5google.com/feed/", category: "Tecnologia" },
+	{ url: "https://news.mit.edu/rss/feed", category: "Tecnologia" },
+	{ url: "https://lobste.rs/rss", category: "Tecnologia" },
+	{ url: "https://davidwalsh.name/feed", category: "Tecnologia" },
+	{
+		url: "https://feeds.folha.uol.com.br/ciencia/rss091.xml",
+		category: "Ciência",
+	},
+	{ url: "https://feed.infoq.com/", category: "Tecnologia" },
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
+		category: "Ciência",
+	},
+	{ url: "https://blog.google/rss/", category: "Tecnologia" },
+	{
+		url: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+		category: "Ciência",
+	},
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Space.xml",
+		category: "Ciência",
+	},
+	{ url: "https://www.pushsquare.com/feeds/latest", category: "Games" },
 	{ url: "https://dev.to/feed", category: "Tecnologia" },
 	{ url: "https://hnrss.org/frontpage", category: "Tecnologia" },
 	{ url: "https://www.technologyreview.com/feed/", category: "Tecnologia" },
@@ -92,6 +149,11 @@ export const FEED_SOURCES = [
 	{ url: "https://rss.uol.com.br/feed/jogos.xml", category: "Tecnologia" },
 	{ url: "https://rss.uol.com.br/feed/educacao.xml", category: "Educação" },
 	// --- EXPANSÃO CONTÍNUA ---
+	{ url: "https://api.quantamagazine.org/feed/", category: "Ciência" },
+	{
+		url: "https://www.popularmechanics.com/rss/all.xml/",
+		category: "Tecnologia",
+	},
 	{ url: "https://feeds.npr.org/1004/rss.xml", category: "Mundo" },
 	{ url: "https://g1.globo.com/rss/g1/natureza/", category: "Ciência" },
 	{ url: "https://g1.globo.com/rss/g1/pop-arte/", category: "Entretenimento" },

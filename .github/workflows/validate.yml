@@ -15,6 +15,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v7
 
@@ -41,6 +42,10 @@ jobs:
 
       - name: Lint frontend workspace
         run: pnpm exec biome check .
+
+      # @juninmd/* lives on GitHub Packages, which needs auth even when public.
+      - name: Authenticate GitHub Packages
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
       # Root vitest also runs backend/src tests, which import backend-only deps.
       - name: Install backend dependencies

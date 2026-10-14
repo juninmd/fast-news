@@ -229,6 +229,27 @@ CREATE TABLE IF NOT EXISTS news_editions (
 );
 CREATE INDEX IF NOT EXISTS idx_articles_created_at ON news_articles(created_at);
 
+-- Immutable editorial snapshots are separate from legacy Telegram delivery
+-- rows so publication retries can reuse a generated edition without rerunning AI.
+CREATE TABLE IF NOT EXISTS edition_snapshots (
+    edition_key TEXT PRIMARY KEY,
+    schema_version SMALLINT NOT NULL,
+    template_version SMALLINT NOT NULL,
+    checksum CHAR(64) NOT NULL,
+    snapshot JSONB NOT NULL,
+    generation_status TEXT NOT NULL DEFAULT 'ready'
+        CHECK (generation_status IN ('ready', 'degraded')),
+    publication_status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (publication_status IN ('pending', 'published', 'failed')),
+    publication_url TEXT,
+    published_commit TEXT,
+    published_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_edition_snapshots_publication
+    ON edition_snapshots(publication_status, updated_at);
+
 -- The 'tarde' edition kind was added after this table shipped; older
 -- databases still carry the two-value CHECK and reject every tarde insert.
 -- Guarded by a check for kind_check4: without it, every restart after the

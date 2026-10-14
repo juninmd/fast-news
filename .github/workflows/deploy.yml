@@ -1,6 +1,7 @@
 name: Deploy
 
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -26,3 +27,7 @@ jobs:
         with:
           image-name: ${{ github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # PRs build without publishing, so the Dockerfile is proven before merge.
+          push: ${{ github.event_name == 'push' }}
+          secrets: |
+            npmrc=//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}
