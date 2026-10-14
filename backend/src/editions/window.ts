@@ -8,6 +8,7 @@ const CLOSE_HOUR: Record<EditionKind, number> = {
 	meiodia: 11,
 	tarde: 15,
 	noite: 20,
+	especial: 23,
 };
 // Cycle order within a day; each edition's window covers the gap since the
 // previous one in this order (wrapping noite -> manha across midnight).
@@ -18,7 +19,8 @@ export function isEditionKind(value: unknown): value is EditionKind {
 		value === "manha" ||
 		value === "meiodia" ||
 		value === "tarde" ||
-		value === "noite"
+		value === "noite" ||
+		value === "especial"
 	);
 }
 
@@ -35,9 +37,34 @@ function windowHours(kind: EditionKind): number {
  * cycle (10h/5h/4h/5h respectively), so the four windows are contiguous and
  * non-overlapping across the day. Uses the most recent close <= now, so a
  * late or retried job still produces the same window.
+ *
+ * An "especial" edition covers the full 24h day (00:00 → 23:59:59).
  */
 export function editionWindow(kind: EditionKind, now: Date): EditionWindow {
 	const local = new Date(now.getTime() - OFFSET_MS);
+	if (kind === "especial") {
+		const startUtc = Date.UTC(
+			local.getUTCFullYear(),
+			local.getUTCMonth(),
+			local.getUTCDate(),
+			0,
+		);
+		const endUtc = Date.UTC(
+			local.getUTCFullYear(),
+			local.getUTCMonth(),
+			local.getUTCDate(),
+			23,
+			59,
+			59,
+			999,
+		);
+		return {
+			kind: "especial",
+			start: new Date(startUtc + OFFSET_MS),
+			end: new Date(endUtc + OFFSET_MS),
+			day: new Date(startUtc).toISOString().slice(0, 10),
+		};
+	}
 	const close = Date.UTC(
 		local.getUTCFullYear(),
 		local.getUTCMonth(),

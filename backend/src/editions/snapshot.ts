@@ -91,7 +91,13 @@ export function createEditionSnapshot(
 const UUID =
 	/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
-const KINDS = new Set<EditionKind>(["manha", "meiodia", "tarde", "noite"]);
+const KINDS = new Set<EditionKind>([
+	"manha",
+	"meiodia",
+	"tarde",
+	"noite",
+	"especial",
+]);
 
 export function parseSnapshotEnvelope(value: unknown): SnapshotEnvelope {
 	if (!value || typeof value !== "object")

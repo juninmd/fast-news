@@ -4,21 +4,41 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitepress";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const SLUG = /^(\d{4}-\d{2})-\d{2}-(manha|meiodia|tarde|noite)\.md$/;
+const SLUG = /^(\d{4}-\d{2})-\d{2}-(manha|meiodia|tarde|noite|especial)\.md$/;
 const KIND_LABEL: Record<string, string> = {
 	manha: "Manhã",
 	meiodia: "Meio-dia",
 	tarde: "Tarde",
 	noite: "Noite",
+	especial: "Especial",
 };
+
+const KIND_ORDER: Record<string, number> = {
+	manha: 1,
+	meiodia: 2,
+	tarde: 3,
+	noite: 4,
+	especial: 5,
+};
+
+function compareFilesDesc(a: string, b: string): number {
+	const matchA = a.match(
+		/^(\d{4}-\d{2}-\d{2})-(manha|meiodia|tarde|noite|especial)/,
+	);
+	const matchB = b.match(
+		/^(\d{4}-\d{2}-\d{2})-(manha|meiodia|tarde|noite|especial)/,
+	);
+	if (!matchA || !matchB) return b.localeCompare(a);
+	if (matchB[1] !== matchA[1]) return matchB[1]!.localeCompare(matchA[1]!);
+	return (KIND_ORDER[matchB[2]!] ?? 0) - (KIND_ORDER[matchA[2]!] ?? 0);
+}
 
 /** Sidebar of every published edition, newest first, grouped by month. */
 function sidebar() {
 	const months = new Map<string, { text: string; link: string }[]>();
 	const files = readdirSync(resolve(here, "../edicoes"))
 		.filter((f) => SLUG.test(f))
-		.sort()
-		.reverse();
+		.sort(compareFilesDesc);
 	for (const file of files) {
 		const [, month, kind] = file.match(SLUG)!;
 		const slug = file.replace(/\.md$/, "");
@@ -42,6 +62,7 @@ export default defineConfig({
 	description:
 		"Arquivo do jornal O Fio: cada edição do fast-news vira um artigo para reler depois.",
 	base: process.env["VITEPRESS_BASE"] ?? "/fast-news/",
+	ignoreDeadLinks: true,
 	cleanUrls: true,
 	lastUpdated: true,
 	srcExclude: ["**/README.md"],

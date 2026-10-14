@@ -98,6 +98,22 @@ describe("renderEditionHtml", () => {
 		expect(html).not.toContain(">Ibovespa<");
 	});
 
+	it("renders especial edition with dedicated title, label, and body class", () => {
+		const html = renderEditionHtml(
+			edition(draft({ leve: ["Café com notícias"] }), known, {
+				window: {
+					kind: "especial",
+					start: new Date("2026-10-14T03:00:00Z"),
+					end: new Date("2026-10-15T02:59:59Z"),
+					day: "2026-10-14",
+				},
+			}),
+		);
+		expect(html).toContain("Edição Especial Consolidada");
+		expect(html).toContain('class="especial"');
+		expect(html).toContain("Para leitura e reflexão do dia");
+	});
+
 	it("uses singular labels for one article and one source", () => {
 		const source = headline();
 		const html = renderEditionHtml(

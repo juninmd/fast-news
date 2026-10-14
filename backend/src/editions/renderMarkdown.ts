@@ -2,11 +2,12 @@ import { directUrl } from "./escape.js";
 import type { Edition, Headline, Story, Thread } from "./types.js";
 import { formatLocalDate, formatLocalTime } from "./window.js";
 
-const LABEL = {
+const LABEL: Record<string, string> = {
 	manha: "Edição da Manhã",
 	meiodia: "Edição do Meio-dia",
 	tarde: "Edição da Tarde",
 	noite: "Edição da Noite",
+	especial: "Edição Especial Consolidada",
 };
 const nf = new Intl.NumberFormat("pt-BR");
 
