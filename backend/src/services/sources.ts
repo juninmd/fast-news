@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://dev.to/feed",
+		category: "Engenharia",
+		company: "DEV Community",
+	},
+	{
 		url: "https://hackaday.com/blog/feed/",
 		category: "Tecnologia",
 	},
