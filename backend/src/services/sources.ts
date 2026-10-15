@@ -3,6 +3,10 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://hacks.mozilla.org/feed/",
+		category: "Tecnologia",
+	},
+	{
 		url: "https://dev.to/feed",
 		category: "Engenharia",
 		company: "DEV Community",
