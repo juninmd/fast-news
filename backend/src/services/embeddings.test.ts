@@ -1,14 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const embed = vi.fn();
-vi.mock("ai", () => ({ embed, embedMany: vi.fn() }));
+const embedMany = vi.fn();
+vi.mock("ai", () => ({ embed, embedMany }));
 const getEmbeddingModel = vi.fn();
 vi.mock("./aiProvider.js", () => ({ getEmbeddingModel }));
 vi.mock("../config/env.js", () => ({
 	config: { ai: { embeddingTimeoutMs: 45_000 } },
 }));
 
-const { embedDocument } = await import("./embeddings.js");
+const { embedBatch, embedDocument } = await import("./embeddings.js");
+
+beforeEach(() => {
+	vi.clearAllMocks();
+});
 
 describe("embedDocument", () => {
 	it("disables retries so a rate-limited/cooldown deployment fails fast", async () => {
@@ -43,5 +48,19 @@ describe("embedDocument", () => {
 		expect(embed).toHaveBeenCalledWith(
 			expect.objectContaining({ abortSignal: controller.signal }),
 		);
+	});
+});
+
+describe("embedBatch", () => {
+	it("sends one request per chunk instead of one per text", async () => {
+		getEmbeddingModel.mockResolvedValueOnce("mock-model");
+		embedMany.mockImplementation(({ values }: { values: string[] }) =>
+			Promise.resolve({ embeddings: values.map(() => [0.1]) }),
+		);
+
+		const vectors = await embedBatch(["a", "b", "c", "d", "e"], 2);
+
+		expect(vectors).toHaveLength(5);
+		expect(embedMany).toHaveBeenCalledTimes(3);
 	});
 });

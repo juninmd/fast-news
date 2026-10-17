@@ -6,7 +6,7 @@ import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
-import { embedDocument, vectorToSQL } from "./embeddings.js";
+import { embedBatch, vectorToSQL } from "./embeddings.js";
 import { scoreRelevance } from "./relevance.js";
 import { getActiveFeeds } from "./sources.js";
 import { classifyTheme } from "./themeClassification.js";
@@ -96,10 +96,6 @@ async function fetchXml(url: string): Promise<string> {
 }
 
 const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif)(\?.*)?$/i;
-
-function timeoutSignal(ms: number): AbortSignal {
-	return AbortSignal.timeout(ms);
-}
 
 function runBackground(label: string, task: () => Promise<unknown>): void {
 	task().catch((err: Error) => {
@@ -239,10 +235,17 @@ Conteúdo: ${cleanContent.slice(0, 4000)}`;
 	}
 }
 
-async function upsertArticle(
+type PreparedArticle = {
+	article: RawArticle;
+	textToEmbed: string;
+	themeCategory: string | null;
+};
+
+/** Exact-duplicate check, vector summary and editorial theme — all done before any embed call. */
+async function prepareArticle(
 	article: RawArticle,
 	ollamaUp: boolean,
-): Promise<string | null> {
+): Promise<PreparedArticle | null> {
 	if (!article.guid || !article.title || !article.url) return null;
 
 	const existing = await query<{ id: string }>(
@@ -251,10 +254,9 @@ async function upsertArticle(
 	);
 	if (existing.rowCount && existing.rowCount > 0) return null;
 
-	const textToEmbed = await summarizeForEmbedding(
-		article.title,
-		article.content || "",
-	);
+	const textToEmbed = ollamaUp
+		? await summarizeForEmbedding(article.title, article.content || "")
+		: "";
 
 	// Per-article editorial theme, separate from the static feed `category`.
 	// fact_check articles keep no theme — they are a sentinel, not editorial
@@ -267,21 +269,40 @@ async function upsertArticle(
 					article.content || "",
 					article.category,
 				);
-	// Embedding is best-effort — if Ollama is unavailable, store without vector
-	let embedding: number[] | null = null;
-	if (ollamaUp) {
+
+	return { article, textToEmbed, themeCategory };
+}
+
+/**
+ * One embed call per chunk instead of one per article. The Gemini free tier
+ * allows 1000 embedding requests/day and ingestion stores ~1400 articles/day,
+ * so per-article calls exhausted the quota and put the only deployment in
+ * cooldown. A failed chunk loses its vectors, not the whole run.
+ */
+async function embedInBatches(texts: string[]): Promise<(number[] | null)[]> {
+	const out: (number[] | null)[] = [];
+	const size = Math.max(1, config.ingestion.embedBatchSize);
+	for (let i = 0; i < texts.length; i += size) {
+		const chunk = texts.slice(i, i + size);
 		try {
-			embedding = await embedDocument(
-				textToEmbed,
-				timeoutSignal(config.ai.embeddingTimeoutMs),
-			);
+			const vectors = await embedBatch(chunk, chunk.length);
+			for (const vector of vectors) out.push(vector ?? null);
 		} catch (e) {
 			console.warn(
-				"[ingestion] embed failed, storing without vector:",
+				"[ingestion] batch embed failed, storing without vectors:",
 				(e as Error).message.slice(0, 80),
 			);
+			for (let k = 0; k < chunk.length; k++) out.push(null);
 		}
 	}
+	return out;
+}
+
+async function storeArticle(
+	prepared: PreparedArticle,
+	embedding: number[] | null,
+): Promise<string | null> {
+	const { article, themeCategory } = prepared;
 
 	// Skip if similar article already stored (embedding-based dedup).
 	// ORDER BY ... LIMIT 1 lets Postgres use the ivfflat index for an ANN
@@ -411,45 +432,57 @@ export async function runIngestion(): Promise<IngestionResult> {
 		const batch = feeds.slice(i, i + config.ingestion.batchSize);
 		const results = await Promise.allSettled(batch.map(fetchFeed));
 
+		const candidates: RawArticle[] = [];
 		for (const result of results) {
 			if (result.status !== "fulfilled") continue;
 			fetched += result.value.length;
-			for (const article of result.value) {
-				try {
-					const id = await upsertArticle(article, ollamaUp);
-					if (id) {
-						const newArticle = {
-							id,
-							title: article.title,
-							url: article.url,
-							source: article.source,
-							category: article.category,
-							company: article.company,
-							content: article.content,
-							imageUrl: article.imageUrl,
-							publishedAt: article.publishedAt,
-						};
-						newArticles.push(newArticle);
-						runBackground("buildArticleRelations", () =>
-							buildArticleRelations(id),
-						);
-						runBackground("assignArticleToStory", () =>
-							assignArticleToStory(id),
-						);
-						runBackground("scoreRelevance", () =>
-							scoreRelevance(
-								id,
-								article.title,
-								article.content ?? "",
-								article.category,
-							),
-						);
-					}
-				} catch (err) {
-					console.error("[ingestion] article failed:", (err as Error).message, {
-						url: article.url,
-					});
-				}
+			candidates.push(...result.value);
+		}
+
+		// Prepare (exact-dedup, summary, theme) first, then embed the whole feed
+		// batch in a few requests: see embedInBatches for why per-article calls
+		// exhausted the embedding quota.
+		const prepared: PreparedArticle[] = [];
+		for (const article of candidates) {
+			const item = await prepareArticle(article, ollamaUp);
+			if (item) prepared.push(item);
+		}
+
+		const embeddings = ollamaUp
+			? await embedInBatches(prepared.map((item) => item.textToEmbed))
+			: prepared.map(() => null);
+
+		for (let j = 0; j < prepared.length; j++) {
+			const { article } = prepared[j];
+			try {
+				const id = await storeArticle(prepared[j], embeddings[j] ?? null);
+				if (!id) continue;
+				const newArticle = {
+					id,
+					title: article.title,
+					url: article.url,
+					source: article.source,
+					category: article.category,
+					company: article.company,
+					content: article.content,
+					imageUrl: article.imageUrl,
+					publishedAt: article.publishedAt,
+				};
+				newArticles.push(newArticle);
+				runBackground("buildArticleRelations", () => buildArticleRelations(id));
+				runBackground("assignArticleToStory", () => assignArticleToStory(id));
+				runBackground("scoreRelevance", () =>
+					scoreRelevance(
+						id,
+						article.title,
+						article.content ?? "",
+						article.category,
+					),
+				);
+			} catch (err) {
+				console.error("[ingestion] article failed:", (err as Error).message, {
+					url: article.url,
+				});
 			}
 		}
 	}
