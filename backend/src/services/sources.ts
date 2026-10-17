@@ -2,6 +2,9 @@ import { query } from "../database/client.js";
 
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{ url: "https://www.hardware.com.br/feed/", category: "Tecnologia" },
+	{ url: "https://www.mundoconectado.com.br/feed/", category: "Tecnologia" },
+	{ url: "https://www.b9.com.br/rss/", category: "Tecnologia" },
 	{
 		url: "https://hacks.mozilla.org/feed/",
 		category: "Tecnologia",
