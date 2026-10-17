@@ -1,5 +1,15 @@
 import { embed, embedMany } from "ai";
+import { config } from "../config/env.js";
 import { getEmbeddingModel } from "./aiProvider.js";
+
+/**
+ * Embeddings go through a LiteLLM deployment that can enter cooldown; without a
+ * deadline a cold model left the HTTP request hanging until the client gave up.
+ * Ingestion passes its own signal, everything else (search, analyses) gets this one.
+ */
+function deadline(abortSignal?: AbortSignal): AbortSignal {
+	return abortSignal ?? AbortSignal.timeout(config.ai.embeddingTimeoutMs);
+}
 
 export async function embedDocument(
 	text: string,
@@ -14,7 +24,7 @@ export async function embedDocument(
 	const { embedding } = await embed({
 		model,
 		value: text.slice(0, 2048),
-		abortSignal,
+		abortSignal: deadline(abortSignal),
 		maxRetries: 0,
 	});
 	return embedding;
@@ -34,7 +44,12 @@ export async function embedBatch(
 
 	for (let i = 0; i < texts.length; i += chunkSize) {
 		const chunk = texts.slice(i, i + chunkSize).map((t) => t.slice(0, 2048));
-		const { embeddings } = await embedMany({ model, values: chunk });
+		const { embeddings } = await embedMany({
+			model,
+			values: chunk,
+			abortSignal: deadline(),
+			maxRetries: 0,
+		});
 		results.push(...embeddings);
 	}
 
