@@ -1,9 +1,9 @@
 import { Request, Response, Router } from "express";
 import { query } from "../../database/client.js";
+import { searchArticles } from "../../services/articleSearch.js";
 import { cacheGet, cacheSet } from "../../services/cache.js";
 import { analyzeCredibility } from "../../services/credibility.js";
 import { fetchFullArticle } from "../../services/fullArticle.js";
-import { searchSimilarArticles } from "../../services/rag.js";
 
 export const newsRouter: Router = Router();
 
@@ -102,8 +102,12 @@ newsRouter.get("/search", async (req: Request, res: Response) => {
 	const cached = await cacheGet(cacheKey);
 	if (cached) return res.json(cached);
 
-	const results = await searchSimilarArticles(q, 30, 10);
-	const response = { data: results, query: q };
+	const results = await searchArticles(q, { limit: 10, daysBack: 30 });
+	const response = {
+		data: results.items,
+		query: q,
+		mode: results.mode,
+	};
 	await cacheSet(cacheKey, response, 300);
 	return res.json(response);
 });
@@ -231,8 +235,15 @@ newsRouter.get("/:id/related", async (req: Request, res: Response) => {
 		return res.status(404).json({ error: "Article not found" });
 
 	const { title, content } = article.rows[0];
-	const related = await searchSimilarArticles(`${title} ${content}`, 30, 8);
-	const response = { data: related.filter((a) => a.id !== id) };
+	// One extra row so dropping the article itself still fills the list.
+	const related = await searchArticles(`${title} ${content}`, {
+		limit: 9,
+		daysBack: 30,
+	});
+	const response = {
+		data: related.items.filter((a) => a.id !== id).slice(0, 8),
+		mode: related.mode,
+	};
 	await cacheSet(cacheKey, response, 900);
 	return res.json(response);
 });
