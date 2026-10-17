@@ -18,6 +18,16 @@ export function formatDate(value: string | null | undefined): string {
   return new Intl.DateTimeFormat(locale(), { dateStyle: "medium" }).format(date);
 }
 
+/** Dia e mês abreviados, para o bloco de data das edições. */
+export function dateParts(value: string | null | undefined): { day: string; month: string } {
+  const date = toDate(value);
+  if (!date) return { day: "", month: "" };
+  return {
+    day: new Intl.DateTimeFormat(locale(), { day: "2-digit" }).format(date),
+    month: new Intl.DateTimeFormat(locale(), { month: "short" }).format(date).replace(/\.$/, ""),
+  };
+}
+
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["year", 31_536_000_000],
   ["month", 2_592_000_000],
