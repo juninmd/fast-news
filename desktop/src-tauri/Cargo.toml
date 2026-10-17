@@ -1,0 +1,30 @@
+[package]
+name = "fast-news-desktop"
+version = "0.1.0"
+description = "Leitor desktop do Fast News, consumindo a API publicada no cluster"
+authors = ["Antonio Carlos"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.85"
+
+[lib]
+name = "fast_news_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+# Same TLS setup as tauri: rustls with ring, so one HTTP stack and no aws-lc build.
+reqwest = { version = "0.13", default-features = false, features = ["json", "blocking", "query", "rustls-no-provider"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true
