@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import AppHeader from "./components/AppHeader";
 import ArticleReader from "./components/ArticleReader";
-import TabBar from "./components/TabBar";
+import Sidebar from "./components/Sidebar";
 import { api } from "./lib/api";
 import { useAsync, useOnline } from "./lib/hooks";
 import { type TabId, panelId, tabId } from "./lib/tabs";
@@ -43,37 +43,40 @@ function Shell() {
   }
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-ink text-fg">
-      <AppHeader
-        online={online}
+    <div className="relative flex h-full overflow-hidden bg-ink text-fg">
+      <Sidebar
+        current={tab}
+        onChange={setTab}
         health={health.data}
         healthError={health.error}
         skin={skin}
         onToggleSkin={() => pickSkin(skin === "escuro" ? "claro" : "escuro")}
-        onRefresh={refresh}
-        refreshing={health.loading}
-        onOpenSettings={() => setTab("settings")}
       />
-      <TabBar current={tab} onChange={setTab} />
 
-      <main
-        id={panelId(tab)}
-        key={tab}
-        role="tabpanel"
-        aria-labelledby={tabId(tab)}
-        className="min-h-0 flex-1 overflow-hidden p-3 motion-safe:animate-aba"
-      >
-        {tab === "feed" && <FeedTab version={version} onOpenArticle={setReaderId} />}
-        {tab === "top" && <TopTab version={version} onOpenArticle={setReaderId} />}
-        {tab === "search" && <SearchTab onOpenArticle={setReaderId} />}
-        {tab === "editions" && <EditionsTab version={version} onError={onError} />}
-        {tab === "stories" && <StoriesTab version={version} onOpenArticle={setReaderId} />}
-        {tab === "topics" && <TopicsTab version={version} onError={onError} />}
-        {tab === "finance" && <FinanceTab version={version} />}
-        {tab === "settings" && (
-          <SettingsTab skin={skin} onSkin={pickSkin} health={health.data} onReconfigured={refresh} />
-        )}
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <AppHeader tab={tab} online={online} onRefresh={refresh} refreshing={health.loading} />
+
+        <main
+          id={panelId(tab)}
+          key={tab}
+          role="tabpanel"
+          aria-labelledby={tabId(tab)}
+          className="min-h-0 flex-1 overflow-hidden motion-safe:animate-aba"
+        >
+          <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-7 pt-4 pb-6">
+            {tab === "feed" && <FeedTab version={version} onOpenArticle={setReaderId} />}
+            {tab === "top" && <TopTab version={version} onOpenArticle={setReaderId} />}
+            {tab === "search" && <SearchTab onOpenArticle={setReaderId} />}
+            {tab === "editions" && <EditionsTab version={version} onError={onError} />}
+            {tab === "stories" && <StoriesTab version={version} onOpenArticle={setReaderId} />}
+            {tab === "topics" && <TopicsTab version={version} onError={onError} />}
+            {tab === "finance" && <FinanceTab version={version} />}
+            {tab === "settings" && (
+              <SettingsTab skin={skin} onSkin={pickSkin} health={health.data} onReconfigured={refresh} />
+            )}
+          </div>
+        </main>
+      </div>
 
       {readerId && (
         <ArticleReader id={readerId} onClose={() => setReaderId(null)} onOpenArticle={setReaderId} onError={onError} />

@@ -14,63 +14,85 @@ export default function StoryView({ id, onBack, onOpenArticle }: Props) {
   const state = useAsync(() => api.storyDetail(id), [id]);
 
   return (
-    <div className="flex h-full flex-col gap-3">
-      <BackButton label={t("stories.back")} onClick={onBack} />
+    <div className="flex h-full flex-col gap-4">
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex w-fit items-center gap-1 rounded-lg px-1.5 py-1 text-xs text-muted transition-colors hover:bg-hover hover:text-fg"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        {t("stories.back")}
+      </button>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {state.loading && !state.data && <Skeleton rows={4} />}
         {state.error && <ErrorBanner message={t("app.error", { error: state.error })} onRetry={state.reload} />}
 
         {state.data && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-8 pb-4">
+            <header className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-faint">
-                <span className="font-medium tracking-wide text-accent-text uppercase">{state.data.story.category}</span>
-                {state.data.story.lastUpdatedAt && <span>· {relativeTime(state.data.story.lastUpdatedAt)}</span>}
+                <span className="fn-kicker text-accent-text">{state.data.story.category}</span>
+                {state.data.story.lastUpdatedAt && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>{relativeTime(state.data.story.lastUpdatedAt)}</span>
+                  </>
+                )}
               </div>
-              <h2 className="text-base leading-snug font-semibold text-fg">{state.data.story.title}</h2>
-              <div className="flex flex-wrap gap-1.5">
+              <h1 className="font-reading text-[1.9rem] leading-[1.2] font-semibold tracking-tight text-fg">
+                {state.data.story.title}
+              </h1>
+              <div className="flex flex-wrap items-center gap-1.5">
                 <Badge tone="accent">{t("stories.articles", { n: state.data.story.articleCount })}</Badge>
-                {state.data.story.impactLevel && <Badge tone="warn">Impacto: {state.data.story.impactLevel}</Badge>}
-                {state.data.story.firstSeenAt && (
-                  <Badge>{t("stories.firstSeen", { date: formatDateTime(state.data.story.firstSeenAt) })}</Badge>
+                {state.data.story.impactLevel && (
+                  <Badge tone="warn">
+                    {t("stories.impact")}: {state.data.story.impactLevel}
+                  </Badge>
                 )}
                 {state.data.story.financialSignal && (
-                  <Badge>{t("stories.financialSignal")}: {state.data.story.financialSignal}</Badge>
+                  <Badge>
+                    {t("stories.financialSignal")}: {state.data.story.financialSignal}
+                  </Badge>
+                )}
+                {state.data.story.firstSeenAt && (
+                  <Badge>{t("stories.firstSeen", { date: formatDateTime(state.data.story.firstSeenAt) })}</Badge>
                 )}
                 {state.data.story.affectedAssets?.map((asset) => (
                   <Badge key={asset}>{asset}</Badge>
                 ))}
               </div>
-            </div>
+            </header>
 
-            {state.data.story.summary && <p className="text-sm leading-relaxed text-muted">{state.data.story.summary}</p>}
+            {state.data.story.summary && (
+              <p className="fn-reading text-[1.1rem] leading-[1.7] text-fg/85">{state.data.story.summary}</p>
+            )}
 
             {state.data.story.worldImpact && (
-              <section className="fn-card p-3">
-                <h3 className="text-xs font-semibold tracking-wide text-faint uppercase">{t("stories.worldImpact")}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted">{state.data.story.worldImpact}</p>
+              <section className="rounded-2xl border border-edge bg-panel p-5">
+                <h2 className="fn-kicker text-faint">{t("stories.worldImpact")}</h2>
+                <p className="mt-2 text-[14px] leading-relaxed text-muted">{state.data.story.worldImpact}</p>
               </section>
             )}
 
             {state.data.timeline.length > 0 && (
-              <section className="flex flex-col gap-2">
-                <h3 className="text-xs font-semibold tracking-wide text-faint uppercase">{t("stories.timeline")}</h3>
-                <ol className="flex flex-col gap-2 border-l border-edge pl-3">
+              <section className="flex flex-col gap-3">
+                <h2 className="fn-kicker text-faint">{t("stories.timeline")}</h2>
+                <ol className="flex flex-col gap-4 border-l border-edge pl-4">
                   {state.data.timeline.map((event) => (
                     <li key={event.id} className="relative">
-                      <span className="absolute top-1.5 -left-[17px] h-1.5 w-1.5 rounded-full bg-accent" />
-                      <p className="text-sm text-fg">{event.headline}</p>
-                      {event.whatChanged && <p className="text-xs text-muted">{event.whatChanged}</p>}
-                      {event.occurredAt && <p className="text-[11px] text-faint">{formatDateTime(event.occurredAt)}</p>}
+                      <span className="absolute top-1.5 -left-[1.28rem] h-2 w-2 rounded-full border-2 border-ink bg-accent" />
+                      <p className="text-[14px] leading-snug text-fg">{event.headline}</p>
+                      {event.whatChanged && <p className="mt-0.5 text-[12.5px] text-muted">{event.whatChanged}</p>}
+                      {event.occurredAt && <p className="mt-0.5 text-[11px] text-faint">{formatDateTime(event.occurredAt)}</p>}
                     </li>
                   ))}
                 </ol>
               </section>
             )}
 
-            <section className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold tracking-wide text-faint uppercase">{t("article.related")}</h3>
+            <section className="flex flex-col gap-3 border-t border-edge pt-6">
+              <h2 className="fn-kicker text-faint">{t("article.related")}</h2>
               {state.data.articles.map((article) => (
                 <NewsCard
                   key={article.id}
@@ -84,18 +106,5 @@ export default function StoryView({ id, onBack, onOpenArticle }: Props) {
         )}
       </div>
     </div>
-  );
-}
-
-function BackButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-fit items-center gap-1.5 rounded-lg border border-edge px-2.5 py-1 text-xs text-muted hover:bg-hover hover:text-fg"
-    >
-      <ChevronLeft className="h-3.5 w-3.5" />
-      {label}
-    </button>
   );
 }

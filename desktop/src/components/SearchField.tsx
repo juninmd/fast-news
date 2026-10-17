@@ -13,8 +13,8 @@ export default function SearchField({
 }) {
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-faint">
-        <Search />
+      <span className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-faint">
+        <Search className="h-4 w-4" />
       </span>
       <input
         type="search"
@@ -23,7 +23,7 @@ export default function SearchField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="fn-field w-full py-2 pr-3 pl-9 text-sm"
+        className="fn-field h-11 w-full pr-4 pl-10 text-sm"
       />
     </div>
   );
