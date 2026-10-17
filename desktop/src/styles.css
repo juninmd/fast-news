@@ -1,0 +1,198 @@
+@import "tailwindcss";
+
+/* Cada skin só redefine estes tokens. */
+:root,
+:root[data-skin="escuro"] {
+  --color-ink: #0b0f16;
+  --color-panel: #121926;
+  --color-edge: #212c3f;
+  --color-accent: #5b9dff;
+  --color-accent-text: #85b6ff;
+  --color-on-accent: #04101f;
+  --color-fg: #e6edf7;
+  --color-muted: #9aa8bd;
+  --color-faint: #7d8ba1;
+  --color-line: #566174;
+  --color-danger: #fb7185;
+  --color-ok: #4ade80;
+  --color-warn: #fbbf24;
+}
+
+:root[data-skin="claro"] {
+  color-scheme: light;
+  --color-ink: #eef2f7;
+  --color-panel: #ffffff;
+  --color-edge: #dbe3ee;
+  --color-accent: #1d5fd0;
+  --color-accent-text: #1b4fae;
+  --color-on-accent: #ffffff;
+  --color-fg: #0e1726;
+  --color-muted: #4a5768;
+  --color-faint: #5c6a7d;
+  --color-line: #8b97a8;
+  --color-danger: #be123c;
+  --color-ok: #15803d;
+  --color-warn: #b45309;
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-panel: var(--color-panel);
+  --color-edge: var(--color-edge);
+  --color-accent: var(--color-accent);
+  --color-accent-text: var(--color-accent-text);
+  --color-on-accent: var(--color-on-accent);
+  --color-fg: var(--color-fg);
+  --color-muted: var(--color-muted);
+  --color-faint: var(--color-faint);
+  --color-line: var(--color-line);
+  --color-danger: var(--color-danger);
+  --color-ok: var(--color-ok);
+  --color-warn: var(--color-warn);
+  /* Superfícies derivadas da skin: nenhuma skin precisa redefinir. */
+  --color-raised: color-mix(in oklab, var(--color-panel) 93%, var(--color-fg));
+  --color-hover: color-mix(in oklab, var(--color-fg) 7%, transparent);
+  --color-active: color-mix(in oklab, var(--color-fg) 13%, transparent);
+}
+
+/* Durações da NN/g: feedback ~100ms, entrada 200ms, saída 50ms mais curta, só transform/opacity. */
+@theme {
+  --ease-entrar: cubic-bezier(0.2, 0, 0, 1);
+  --ease-sair: cubic-bezier(0.4, 0, 1, 1);
+  --animate-entrar: fn-entrar 200ms var(--ease-entrar) backwards;
+  --animate-surgir: fn-surgir 250ms var(--ease-entrar) backwards;
+  --animate-aba: fn-entrar-curto 150ms var(--ease-entrar) backwards;
+  --animate-fade: fn-fade 100ms linear backwards;
+
+  @keyframes fn-entrar {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes fn-entrar-curto {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  @keyframes fn-surgir {
+    from {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+  }
+  @keyframes fn-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fn-pulse {
+    50% {
+      opacity: 0.4;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition: transform 100ms var(--ease-entrar);
+  }
+  button:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--color-ink);
+  color: var(--color-fg);
+  font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+}
+
+/* Fora de @layer de proposito: vence o `outline-none` dos utilitarios (WCAG 2.4.7). */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline-offset: -1px;
+}
+
+@layer base {
+  button,
+  select,
+  summary,
+  [role="tab"] {
+    min-width: 24px;
+    min-height: 24px;
+  }
+}
+
+@layer components {
+  .fn-field {
+    border: 1px solid var(--color-edge);
+    border-radius: 0.75rem;
+    background: var(--color-ink);
+    color: var(--color-fg);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.25);
+    outline: none;
+  }
+  .fn-field::placeholder {
+    color: var(--color-faint);
+  }
+  .fn-field:hover {
+    border-color: var(--color-line);
+  }
+  .fn-field:focus {
+    border-color: var(--color-accent);
+  }
+
+  .fn-card {
+    border: 1px solid var(--color-edge);
+    border-radius: 0.875rem;
+    background: var(--color-panel);
+  }
+
+  .fn-pulse {
+    animation: fn-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-edge);
+  border-radius: 9999px;
+}
+
+@media (prefers-contrast: more) {
+  :root,
+  :root[data-skin] {
+    --color-faint: var(--color-muted);
+    --color-line: var(--color-muted);
+  }
+}
