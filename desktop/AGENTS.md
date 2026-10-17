@@ -32,7 +32,7 @@ src/
   lib/api.ts            único lugar que chama invoke(); tipos em lib/types.ts
   lib/                  lógica pura testável (format, tabs, theme, hooks, toast)
   sections/             uma aba por arquivo; StoryView/TopicView são os detalhes
-  components/           NewsCard, TabBar, ArticleReader, Badge, ...
+  components/           Sidebar, AppHeader, NewsCard, ArticleReader, Badge, ...
   i18n/                 pt-BR.ts é a fonte das chaves; en.ts precisa cobrir todas
 src-tauri/src/
   api.rs                get/get_list/pairs — toda chamada HTTP passa por aqui
