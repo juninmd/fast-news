@@ -2,6 +2,7 @@ import type { MessageKey } from "./pt-BR";
 
 export const en: Record<MessageKey, string> = {
   "app.name": "Fast News",
+  "app.tagline": "news reader",
   "app.offline": "Offline",
   "app.online": "Online",
   "app.loading": "Loading…",
@@ -24,6 +25,15 @@ export const en: Record<MessageKey, string> = {
   "tabs.finance": "Finance",
   "tabs.settings": "Settings",
 
+  "section.feed.subtitle": "The latest from every source, newest first",
+  "section.top.subtitle": "What several outlets are covering at once",
+  "section.search.subtitle": "Search by subject, ranked semantically or by text",
+  "section.editions.subtitle": "Published editions of the O Fio journal",
+  "section.stories.subtitle": "Correlated coverage across outlets",
+  "section.topics.subtitle": "Tracked subjects with AI-written analysis",
+  "section.finance.subtitle": "Signals and opportunities pulled from the news",
+  "section.settings.subtitle": "API, appearance and pipeline status",
+
   "feed.all": "All",
   "feed.loadMore": "Load more",
   "feed.empty": "No news in this category.",
@@ -38,6 +48,7 @@ export const en: Record<MessageKey, string> = {
   "article.related": "Related",
   "article.noContent": "The API did not return the full text for this article.",
   "article.loading": "Opening article…",
+  "article.back": "Back",
 
   "top.empty": "No trending story right now.",
   "top.sources": "{n} sources",
@@ -84,6 +95,7 @@ export const en: Record<MessageKey, string> = {
   "finance.medium": "Medium term",
   "finance.long": "Long term",
   "finance.summary": "Summary by direction",
+  "finance.opportunities": "Opportunities",
   "finance.summaryEmpty": "No summary in the last 48h.",
   "finance.col.direction": "Direction",
   "finance.col.assetType": "Type",

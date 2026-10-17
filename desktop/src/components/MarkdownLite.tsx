@@ -25,16 +25,16 @@ function Block({ block }: { block: string }) {
 
   if (heading) {
     return (
-      <div className="flex flex-col gap-1">
-        <h3 className="text-sm font-semibold text-accent-text">{inline(heading[2])}</h3>
-        {rest !== "" && <p className="text-sm leading-relaxed whitespace-pre-line text-muted">{inline(rest)}</p>}
+      <div className="flex flex-col gap-1.5">
+        <h3 className="text-[15px] font-semibold text-accent-text">{inline(heading[2])}</h3>
+        {rest !== "" && <p className="text-[13.5px] leading-relaxed whitespace-pre-line text-muted">{inline(rest)}</p>}
       </div>
     );
   }
 
   if (lines.length > 1 && lines.every((line) => BULLET.test(line))) {
     return (
-      <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed text-muted">
+      <ul className="list-disc space-y-1.5 pl-5 text-[13.5px] leading-relaxed text-muted">
         {lines.map((line, index) => (
           <li key={index}>{inline(line.replace(BULLET, ""))}</li>
         ))}
@@ -42,13 +42,13 @@ function Block({ block }: { block: string }) {
     );
   }
 
-  return <p className="text-sm leading-relaxed whitespace-pre-line text-muted">{inline(block)}</p>;
+  return <p className="text-[13.5px] leading-relaxed whitespace-pre-line text-muted">{inline(block)}</p>;
 }
 
 export default function MarkdownLite({ text }: { text: string }) {
   const blocks = text.split(/\n{2,}/).filter((block) => block.trim() !== "");
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {blocks.map((block, index) => (
         <Block key={index} block={block} />
       ))}
