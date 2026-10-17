@@ -220,7 +220,7 @@ ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS news_editions (
     id           SERIAL PRIMARY KEY,
     edition_key  TEXT NOT NULL UNIQUE,
-    kind         TEXT NOT NULL CHECK (kind IN ('manha', 'tarde', 'noite')),
+    kind         TEXT NOT NULL CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite', 'especial')),
     window_start TIMESTAMPTZ NOT NULL,
     window_end   TIMESTAMPTZ NOT NULL,
     claimed_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -250,57 +250,30 @@ CREATE TABLE IF NOT EXISTS edition_snapshots (
 CREATE INDEX IF NOT EXISTS idx_edition_snapshots_publication
     ON edition_snapshots(publication_status, updated_at);
 
--- The 'tarde' edition kind was added after this table shipped; older
--- databases still carry the two-value CHECK and reject every tarde insert.
--- Guarded by a check for kind_check4: without it, every restart after the
--- 'meiodia' migration below succeeds re-tries this 3-value constraint,
--- and ADD CONSTRAINT re-validates ALL rows — rejecting it once a 'meiodia'
--- row exists, crash-looping the app on every boot (prod incident: bootstrap
--- failing with "news_editions_kind_check3 ... violated by some row").
--- Rollback: ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
---           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check CHECK (kind IN ('manha', 'noite'));
+-- The allowed kinds grew over time ('manha' → +tarde → +meiodia → +especial).
+-- The old ladder guarded each step by the *next* constraint's name, so a
+-- database already at check5 but missing check4 re-ran the 3-value step and
+-- failed to validate 'meiodia' rows — crash-looping bootstrap on every boot
+-- (prod incident: "news_editions_kind_check3 ... violated by some row").
+-- One block converges any prior state to check5 and drops the intermediate
+-- names, which exist only on databases that followed the old ladder.
+-- Rollback: DROP CONSTRAINT news_editions_kind_check5 and recreate the
+--           four-value check for 'manha', 'meiodia', 'tarde', 'noite'.
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'news_editions_kind_check4'
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'news_editions'::regclass
+          AND conname = 'news_editions_kind_check5'
     ) THEN
-        ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check;
-        ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check3
-            CHECK (kind IN ('manha', 'tarde', 'noite'));
+        BEGIN
+            ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check5
+                CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite', 'especial'));
+        EXCEPTION WHEN duplicate_object THEN
+            NULL;
+        END;
     END IF;
-EXCEPTION WHEN duplicate_object THEN
-    NULL;
-END $$;
-
--- 'meiodia' added to move O Fio from 3x/day (7h/13h/19h) to 4x/day
--- (6h/11h/15h/20h); older databases still carry the three-value CHECK.
--- Rollback: ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check4;
---           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check3 CHECK (kind IN ('manha', 'tarde', 'noite'));
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'news_editions_kind_check5'
-    ) THEN
-        ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
-        ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check4
-            CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite'));
-    END IF;
-EXCEPTION WHEN duplicate_object THEN
-    NULL;
-END $$;
-
--- 'especial' added for consolidated special editions.
--- Rollback: ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check5;
---           ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check4 CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite'));
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'news_editions_kind_check5'
-    ) THEN
-        ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check4;
-        ALTER TABLE news_editions ADD CONSTRAINT news_editions_kind_check5
-            CHECK (kind IN ('manha', 'meiodia', 'tarde', 'noite', 'especial'));
-    END IF;
-EXCEPTION WHEN duplicate_object THEN
-    NULL;
+    ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check;
+    ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
+    ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check4;
 END $$;

@@ -95,6 +95,9 @@ export const config = {
 			optional("INGESTION_EMBED_TRUNCATE_CHARS", "2000"),
 			10,
 		),
+		// Gemini's free embedding tier allows 1000 requests/day and each chunk is
+		// one request. 50 turns ~1400 articles/day into ~30 requests instead of 1400.
+		embedBatchSize: parseInt(optional("INGESTION_EMBED_BATCH_SIZE", "50"), 10),
 		ollamaProbeTimeoutMs: parseInt(
 			optional("INGESTION_OLLAMA_PROBE_TIMEOUT_MS", "5000"),
 			10,
