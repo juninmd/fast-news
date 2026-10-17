@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { isTabId, panelId, TAB_IDS, tabId } from "./tabs";
+import { isTabId, panelId, TAB_IDS, titleId } from "./tabs";
 
 describe("tabs", () => {
   test("recognises only known sections", () => {
@@ -8,9 +8,10 @@ describe("tabs", () => {
     expect(isTabId("nope")).toBe(false);
   });
 
-  test("panel and tab ids are unambiguous and unique", () => {
+  test("panel and title ids are unambiguous and unique", () => {
     expect(panelId("feed")).toBe("panel-feed");
-    expect(tabId("feed")).toBe("aba-feed");
+    expect(titleId("feed")).toBe("titulo-feed");
     expect(new Set(TAB_IDS.map(panelId)).size).toBe(TAB_IDS.length);
+    expect(new Set(TAB_IDS.map(titleId)).size).toBe(TAB_IDS.length);
   });
 });

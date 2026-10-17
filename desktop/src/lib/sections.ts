@@ -1,5 +1,5 @@
 import type { MessageKey } from "../i18n/pt-BR";
-import type { TabId } from "./tabs";
+import { type TabId, TAB_IDS } from "./tabs";
 
 /** Título e linha de apoio de cada seção, compartilhados pela barra lateral e pelo topo. */
 export const SECTION_LABEL: Record<TabId, MessageKey> = {
@@ -23,3 +23,10 @@ export const SECTION_SUBTITLE: Record<TabId, MessageKey> = {
   finance: "section.finance.subtitle",
   settings: "section.settings.subtitle",
 };
+
+/** Alt+1..8 troca de seção, na mesma ordem da barra lateral. */
+export function sectionFromShortcut(key: string, altKey: boolean, ids: TabId[] = TAB_IDS): TabId | null {
+  if (!altKey) return null;
+  const index = Number(key) - 1;
+  return Number.isInteger(index) && index >= 0 && index < ids.length ? ids[index] : null;
+}

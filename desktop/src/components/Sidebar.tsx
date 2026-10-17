@@ -55,7 +55,7 @@ export default function Sidebar({ current, onChange, health, healthError, skin, 
       </div>
 
       <nav aria-label={t("tabs.label")} className="flex flex-col gap-0.5 px-2">
-        {TAB_IDS.map((id) => {
+        {TAB_IDS.map((id, index) => {
           const Icon = ICONS[id];
           const active = current === id;
           return (
@@ -64,6 +64,8 @@ export default function Sidebar({ current, onChange, health, healthError, skin, 
               type="button"
               aria-current={active ? "page" : undefined}
               onClick={() => onChange(id)}
+              title={`Alt+${index + 1}`}
+              aria-keyshortcuts={`Alt+${index + 1}`}
               className={`fn-nav text-left ${
                 active
                   ? "bg-accent/12 font-medium text-fg"

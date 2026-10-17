@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { LANGUAGES, type Language, language, setLanguage, t } from "../i18n";
+import type { MessageKey } from "../i18n/pt-BR";
 import { api, errText } from "../lib/api";
 import { formatUptime } from "../lib/format";
 import { useAlwaysOnTop } from "../lib/hooks";
@@ -10,6 +11,16 @@ import Badge, { type Tone } from "../components/Badge";
 import { Settings as SettingsIcon } from "../components/Icons";
 
 const HEALTH_TONE: Record<string, Tone> = { up: "ok", healthy: "ok", degraded: "warn", down: "danger", unhealthy: "danger" };
+
+const STATUS_KEY: Record<string, MessageKey> = {
+  healthy: "health.healthy",
+  degraded: "health.degraded",
+  unhealthy: "health.unhealthy",
+  up: "settings.dep.up",
+  down: "settings.dep.down",
+};
+
+const statusLabel = (status: string) => (STATUS_KEY[status] ? t(STATUS_KEY[status]) : status);
 
 type Props = { skin: Skin; onSkin: (skin: Skin) => void; health: Health | null; onReconfigured: () => void };
 
@@ -143,14 +154,14 @@ export default function SettingsTab({ skin, onSkin, health, onReconfigured }: Pr
         {health ? (
           <div className="flex flex-col gap-2 text-xs">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={HEALTH_TONE[health.status] ?? "neutral"}>{health.status}</Badge>
+              <Badge tone={HEALTH_TONE[health.status] ?? "neutral"}>{statusLabel(health.status)}</Badge>
               <span className="text-faint">{t("app.version", { version: health.version })}</span>
               <span className="text-faint">{t("settings.status.uptime", { value: formatUptime(health.uptime) })}</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {Object.entries(health.dependencies).map(([name, dep]) => (
                 <Badge key={name} tone={HEALTH_TONE[dep.status] ?? "neutral"}>
-                  {name}: {dep.status}
+                  {name}: {statusLabel(dep.status)}
                   {dep.latencyMs !== null && dep.latencyMs !== undefined ? ` ${dep.latencyMs}ms` : ""}
                 </Badge>
               ))}

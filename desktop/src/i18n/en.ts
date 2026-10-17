@@ -15,6 +15,9 @@ export const en: Record<MessageKey, string> = {
   "app.error": "Could not load: {error}",
   "app.version": "Version {version}",
 
+  "error.section.title": "This section failed to load",
+  "error.section.hint": "The other sections keep working.",
+
   "tabs.label": "Sections",
   "tabs.feed": "Feed",
   "tabs.top": "Trending",
@@ -120,6 +123,8 @@ export const en: Record<MessageKey, string> = {
   "settings.window.alwaysOnTop": "Always on top",
 
   "settings.status.title": "Pipeline status",
+  "settings.dep.up": "up",
+  "settings.dep.down": "down",
   "settings.status.uptime": "Up for {value}",
   "settings.status.ingested": "{n} ingested (24h)",
   "settings.status.pending": "{n} in the Telegram queue",

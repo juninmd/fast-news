@@ -33,6 +33,13 @@ export default function ArticleReader({ id, onClose, onOpenArticle, onError }: P
     setProgress(0);
   }, [id]);
 
+  // O foco entra no leitor ao abrir e volta para o card de origem ao fechar.
+  useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    scroller.current?.focus();
+    return () => previous?.focus();
+  }, []);
+
   const openExternal = (url: string) => void api.openLink(url).catch((cause) => onError(errText(cause)));
   const article = detail.data;
   const paragraphs =
@@ -48,7 +55,15 @@ export default function ArticleReader({ id, onClose, onOpenArticle, onError }: P
   }
 
   return (
-    <div ref={scroller} onScroll={onScroll} className="absolute inset-0 z-50 overflow-y-auto bg-ink">
+    <div
+      ref={scroller}
+      onScroll={onScroll}
+      role="dialog"
+      aria-modal="true"
+      aria-label={article?.title ?? t("article.loading")}
+      tabIndex={-1}
+      className="absolute inset-0 z-50 overflow-y-auto bg-ink"
+    >
       <div className="sticky top-0 z-10 border-b border-edge bg-ink/85 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-[48rem] items-center gap-3 px-6 py-2.5">
           <button
