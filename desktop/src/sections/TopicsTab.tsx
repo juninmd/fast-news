@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { t } from "../i18n";
 import { api } from "../lib/api";
-import { truncate } from "../lib/format";
 import { useAsync } from "../lib/hooks";
 import type { Topic } from "../lib/types";
 import EmptyState from "../components/EmptyState";
@@ -21,26 +20,26 @@ export default function TopicsTab({ version, onError }: Props) {
   if (state.loading && !state.data) return <Skeleton rows={3} />;
   if (state.error) return <ErrorBanner message={t("app.error", { error: state.error })} onRetry={state.reload} />;
   if (!state.data || state.data.length === 0) {
-    return <EmptyState message={t("topics.empty")} icon={<Tag className="h-7 w-7" />} />;
+    return <EmptyState message={t("topics.empty")} icon={<Tag className="h-5 w-5" />} />;
   }
 
   return (
-    <div className="flex flex-col gap-2 overflow-y-auto pr-1">
+    <div className="flex flex-col gap-3 overflow-y-auto">
       {state.data.map((topic) => (
         <button
           key={topic.id}
           type="button"
           onClick={() => setOpen(topic)}
-          className="fn-card flex items-center gap-3 p-3 text-left transition-colors hover:border-line"
+          className="group flex shrink-0 items-center gap-4 rounded-2xl border border-edge bg-panel p-5 text-left transition-colors hover:border-line"
         >
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-fg">{topic.name}</p>
-            {topic.description && <p className="mt-0.5 text-xs text-muted">{truncate(topic.description, 160)}</p>}
+            <p className="text-[15px] font-medium text-fg transition-colors group-hover:text-accent-text">{topic.name}</p>
+            {topic.description && <p className="mt-1 text-[13px] leading-relaxed text-muted">{topic.description}</p>}
             {topic.keywords && topic.keywords.length > 0 && (
-              <p className="mt-1 truncate text-[11px] text-faint">{topic.keywords.slice(0, 8).join(" · ")}</p>
+              <p className="mt-2 truncate text-[11px] text-faint">{topic.keywords.slice(0, 8).join(" · ")}</p>
             )}
           </div>
-          <span className="shrink-0 text-faint">
+          <span className="shrink-0 text-faint transition-colors group-hover:text-fg">
             <ChevronRight />
           </span>
         </button>
