@@ -8,4 +8,5 @@ export function isTabId(value: string): value is TabId {
 }
 
 export const panelId = (tab: TabId) => `panel-${tab}`;
-export const tabId = (tab: TabId) => `aba-${tab}`;
+/** Id do título da seção; o painel aponta para ele por `aria-labelledby`. */
+export const titleId = (tab: TabId) => `titulo-${tab}`;
