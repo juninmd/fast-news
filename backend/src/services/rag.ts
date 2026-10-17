@@ -14,7 +14,8 @@ export interface ArticleResult {
 	category: string;
 	published_at: string;
 	image_url: string | null;
-	similarity: number;
+	/** Cosine similarity; null on the keyword fallback, where there is no vector to compare. */
+	similarity: number | null;
 }
 
 export interface InsightResult {

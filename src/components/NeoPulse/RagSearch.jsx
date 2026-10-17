@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ragSearch } from "../../services/ragService";
 
 function ScoreBadge({ score }) {
+	// The keyword fallback has no vector to compare, so it reports no score.
+	if (typeof score !== "number" || Number.isNaN(score)) return null;
 	const pct = Math.round(score * 100);
 	const color =
 		pct >= 80
