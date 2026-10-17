@@ -1,14 +1,9 @@
 import { createHash } from "crypto";
 import { Request, Response, Router } from "express";
 import { query } from "../../database/client.js";
-import {
-	exportForRAG,
-	getSqliteStats,
-	searchSimilarInSqlite,
-} from "../../database/sqliteStore.js";
+import { exportForRAG, getSqliteStats } from "../../database/sqliteStore.js";
+import { searchArticles } from "../../services/articleSearch.js";
 import { cacheGet, cacheSet } from "../../services/cache.js";
-import { embedQuery } from "../../services/embeddings.js";
-import { searchSimilarArticles } from "../../services/rag.js";
 
 export const ragRouter: Router = Router();
 
@@ -23,36 +18,20 @@ ragRouter.get("/search", async (req: Request, res: Response) => {
 		return res.status(400).json({ error: "Query muito curta (min 3 chars)" });
 
 	try {
-		const results = await searchSimilarArticles(q, 90, limit);
-		const graph = await buildSearchGraph(results.map((item) => item.id));
-		return res.json({ query: q, total: results.length, results, graph });
+		// Semantic when the embedding model answers, keyword when it is in cooldown;
+		// `mode` is what tells the client which ranking it is looking at.
+		const { mode, items } = await searchArticles(q, { limit, daysBack: 90 });
+		const graph = await buildSearchGraph(items.map((item) => item.id));
+		return res.json({
+			query: q,
+			total: items.length,
+			results: items,
+			graph,
+			mode,
+		});
 	} catch (err) {
-		try {
-			const fallbackCacheKey = `rag:search:sqlite:${createHash("sha256").update(q).digest("hex").slice(0, 32)}:${limit}`;
-			const cachedFallback = await cacheGet<{
-				query: string;
-				total: number;
-				results: any[];
-				graph: any;
-			}>(fallbackCacheKey);
-			if (cachedFallback) return res.json(cachedFallback);
-
-			const queryEmbedding = await embedQuery(q);
-			const results = searchSimilarInSqlite(queryEmbedding, limit);
-
-			const responseData = {
-				query: q,
-				total: results.length,
-				results,
-				graph: { nodes: [], edges: [] },
-			};
-			await cacheSet(fallbackCacheKey, responseData, 600); // 10 minutes cache
-
-			return res.json(responseData);
-		} catch {
-			const msg = err instanceof Error ? err.message : "Erro ao buscar";
-			return res.status(500).json({ error: msg });
-		}
+		const msg = err instanceof Error ? err.message : "Erro ao buscar";
+		return res.status(500).json({ error: msg });
 	}
 });
 
