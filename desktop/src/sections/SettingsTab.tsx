@@ -71,17 +71,17 @@ export default function SettingsTab({ skin, onSkin, health, onReconfigured }: Pr
   const dirty = settings !== null && baseUrl.trim() !== settings.api_base_url;
 
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto pr-1">
+    <div className="flex flex-col gap-4 overflow-y-auto pb-4">
       <Section title={t("settings.api.title")} icon={<SettingsIcon />}>
         <p className="text-xs text-faint">{t("settings.api.description")}</p>
-        <label className="flex flex-col gap-1 text-xs text-muted">
+        <label className="flex flex-col gap-1 text-[12.5px] text-muted">
           {t("settings.api.label")}
           <input
             type="url"
             value={baseUrl}
             spellCheck={false}
             onChange={(event) => setBaseUrl(event.target.value)}
-            className="fn-field px-3 py-2 text-sm"
+            className="fn-field h-10 px-3 text-sm"
           />
         </label>
         <div className="flex flex-wrap items-center gap-2">
@@ -133,7 +133,7 @@ export default function SettingsTab({ skin, onSkin, health, onReconfigured }: Pr
             type="checkbox"
             checked={alwaysOnTop}
             onChange={(event) => setAlwaysOnTop(event.target.checked)}
-            className="h-4 w-4 accent-[var(--color-accent)]"
+            className="fn-check"
           />
           {t("settings.window.alwaysOnTop")}
         </label>
@@ -175,8 +175,8 @@ export default function SettingsTab({ skin, onSkin, health, onReconfigured }: Pr
 
 function Section({ title, icon, children }: { title: string; icon?: ReactNode; children: ReactNode }) {
   return (
-    <section className="fn-card flex flex-col gap-2 p-4">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-fg">
+    <section className="flex shrink-0 flex-col gap-3 rounded-2xl border border-edge bg-panel p-5">
+      <h2 className="flex items-center gap-2 text-[13.5px] font-semibold text-fg">
         {icon && <span className="text-accent-text">{icon}</span>}
         {title}
       </h2>
@@ -191,8 +191,8 @@ function Choice({ label, active, onClick }: { label: string; active: boolean; on
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
-        active ? "border-accent bg-accent/15 text-accent-text" : "border-edge text-muted hover:bg-hover hover:text-fg"
+      className={`rounded-lg border px-3.5 py-2 text-xs transition-colors ${
+        active ? "border-accent/50 bg-accent/12 font-medium text-accent-text" : "border-edge text-muted hover:bg-hover hover:text-fg"
       }`}
     >
       {label}

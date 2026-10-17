@@ -37,19 +37,19 @@ export default function SearchTab({ onOpenArticle }: { onOpenArticle: (id: strin
   const degraded = state.data?.mode === "keyword";
 
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="flex h-full flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
           <SearchField value={query} onChange={setQuery} placeholder={t("search.placeholder")} autoFocus />
         </div>
-        <div className="flex shrink-0 rounded-lg border border-edge p-0.5 text-xs">
+        <div className="flex shrink-0 rounded-xl border border-edge bg-panel p-1 text-xs">
           <ModeButton label={t("search.semantic")} active={mode === "semantic"} onClick={() => setMode("semantic")} />
           <ModeButton label={t("search.text")} active={mode === "text"} onClick={() => setMode("text")} />
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-        {!ready && <p className="py-10 text-center text-sm text-faint">{t("search.hint")}</p>}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {!ready && <p className="py-14 text-center text-sm text-faint">{t("search.hint")}</p>}
         {ready && state.loading && results.length === 0 && <Skeleton rows={3} />}
         {ready && state.error && <ErrorBanner message={t("app.error", { error: state.error })} onRetry={state.reload} />}
         {ready && !state.loading && !state.error && results.length === 0 && (
@@ -58,11 +58,11 @@ export default function SearchTab({ onOpenArticle }: { onOpenArticle: (id: strin
 
         {ready && results.length > 0 && (
           <>
-            <div className="flex flex-wrap items-center gap-2 pb-2 text-xs text-faint">
+            <div className="flex flex-wrap items-center gap-2 pb-3 text-[12px] text-faint">
               <span>{t("search.results", { n: results.length })}</span>
               {degraded && <Badge tone="warn">{t("search.keywordMode")}</Badge>}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {results.map((hit) => (
                 <NewsCard
                   key={hit.id}
@@ -85,8 +85,8 @@ function ModeButton({ label, active, onClick }: { label: string; active: boolean
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-md px-2.5 py-1 transition-colors ${
-        active ? "bg-accent/15 text-accent-text" : "text-muted hover:bg-hover hover:text-fg"
+      className={`rounded-lg px-3 py-1.5 transition-colors ${
+        active ? "bg-accent/15 font-medium text-accent-text" : "text-muted hover:bg-hover hover:text-fg"
       }`}
     >
       {label}

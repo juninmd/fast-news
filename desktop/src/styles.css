@@ -1,38 +1,38 @@
 @import "tailwindcss";
 
-/* Cada skin só redefine estes tokens. */
+/* Paleta editorial: papel quente no claro, tinta morna no escuro. O acento é um verde-água calmo. */
 :root,
 :root[data-skin="escuro"] {
-  --color-ink: #0b0f16;
-  --color-panel: #121926;
-  --color-edge: #212c3f;
-  --color-accent: #5b9dff;
-  --color-accent-text: #85b6ff;
-  --color-on-accent: #04101f;
-  --color-fg: #e6edf7;
-  --color-muted: #9aa8bd;
-  --color-faint: #7d8ba1;
-  --color-line: #566174;
-  --color-danger: #fb7185;
-  --color-ok: #4ade80;
-  --color-warn: #fbbf24;
+  --color-ink: #0d0f12;
+  --color-panel: #15181d;
+  --color-edge: #262a31;
+  --color-accent: #6cc4b0;
+  --color-accent-text: #8ad8c6;
+  --color-on-accent: #06130f;
+  --color-fg: #ecebe6;
+  --color-muted: #a6a49d;
+  --color-faint: #807e77;
+  --color-line: #55534d;
+  --color-danger: #f07a72;
+  --color-ok: #82c48c;
+  --color-warn: #e3b25c;
 }
 
 :root[data-skin="claro"] {
   color-scheme: light;
-  --color-ink: #eef2f7;
-  --color-panel: #ffffff;
-  --color-edge: #dbe3ee;
-  --color-accent: #1d5fd0;
-  --color-accent-text: #1b4fae;
+  --color-ink: #f5f2ea;
+  --color-panel: #fffefa;
+  --color-edge: #e5dfd2;
+  --color-accent: #1f7265;
+  --color-accent-text: #175c52;
   --color-on-accent: #ffffff;
-  --color-fg: #0e1726;
-  --color-muted: #4a5768;
-  --color-faint: #5c6a7d;
-  --color-line: #8b97a8;
-  --color-danger: #be123c;
-  --color-ok: #15803d;
-  --color-warn: #b45309;
+  --color-fg: #1b1a17;
+  --color-muted: #55514a;
+  --color-faint: #6d6860;
+  --color-line: #9c968a;
+  --color-danger: #b3261e;
+  --color-ok: #2f6b3a;
+  --color-warn: #8a5a00;
 }
 
 @theme inline {
@@ -49,20 +49,22 @@
   --color-danger: var(--color-danger);
   --color-ok: var(--color-ok);
   --color-warn: var(--color-warn);
-  /* Superfícies derivadas da skin: nenhuma skin precisa redefinir. */
-  --color-raised: color-mix(in oklab, var(--color-panel) 93%, var(--color-fg));
-  --color-hover: color-mix(in oklab, var(--color-fg) 7%, transparent);
-  --color-active: color-mix(in oklab, var(--color-fg) 13%, transparent);
+  --color-raised: color-mix(in oklab, var(--color-panel) 92%, var(--color-fg));
+  --color-hover: color-mix(in oklab, var(--color-fg) 6%, transparent);
+  --color-active: color-mix(in oklab, var(--color-fg) 11%, transparent);
 }
 
-/* Durações da NN/g: feedback ~100ms, entrada 200ms, saída 50ms mais curta, só transform/opacity. */
 @theme {
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", "Inter", sans-serif;
+  /* Serifa de sistema para o texto do artigo: leitura longa sem baixar fonte. */
+  --font-reading: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+
   --ease-entrar: cubic-bezier(0.2, 0, 0, 1);
   --ease-sair: cubic-bezier(0.4, 0, 1, 1);
   --animate-entrar: fn-entrar 200ms var(--ease-entrar) backwards;
-  --animate-surgir: fn-surgir 250ms var(--ease-entrar) backwards;
-  --animate-aba: fn-entrar-curto 150ms var(--ease-entrar) backwards;
-  --animate-fade: fn-fade 100ms linear backwards;
+  --animate-aba: fn-entrar-curto 180ms var(--ease-entrar) backwards;
+  --animate-fade: fn-fade 120ms linear backwards;
+  --animate-ler: fn-ler 260ms var(--ease-entrar) backwards;
 
   @keyframes fn-entrar {
     from {
@@ -73,13 +75,7 @@
   @keyframes fn-entrar-curto {
     from {
       opacity: 0;
-      transform: translateY(4px);
-    }
-  }
-  @keyframes fn-surgir {
-    from {
-      opacity: 0;
-      transform: scale(0.98);
+      transform: translateY(5px);
     }
   }
   @keyframes fn-fade {
@@ -87,19 +83,25 @@
       opacity: 0;
     }
   }
+  @keyframes fn-ler {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
   @keyframes fn-pulse {
     50% {
-      opacity: 0.4;
+      opacity: 0.45;
     }
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   button {
-    transition: transform 100ms var(--ease-entrar);
+    transition: transform 120ms var(--ease-entrar);
   }
   button:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale(0.985);
   }
 }
 
@@ -111,7 +113,13 @@ body,
   overflow: hidden;
   background: var(--color-ink);
   color: var(--color-fg);
-  font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 28%, transparent);
 }
 
 /* Fora de @layer de proposito: vence o `outline-none` dos utilitarios (WCAG 2.4.7). */
@@ -136,13 +144,34 @@ select:focus-visible {
 }
 
 @layer components {
+  /* Capa/kicker: sobrescrita pequena em caixa alta que abre um bloco editorial. */
+  .fn-kicker {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  /* Texto corrido do artigo: serifa, entrelinha larga e medida curta. */
+  .fn-reading {
+    font-family: var(--font-reading);
+    font-size: 1.1875rem;
+    line-height: 1.8;
+    letter-spacing: 0.002em;
+  }
+  .fn-reading p + p {
+    margin-top: 1.15em;
+  }
+
   .fn-field {
     border: 1px solid var(--color-edge);
     border-radius: 0.75rem;
-    background: var(--color-ink);
+    background: var(--color-panel);
     color: var(--color-fg);
-    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.25);
     outline: none;
+    transition:
+      border-color 140ms var(--ease-entrar),
+      background-color 140ms var(--ease-entrar);
   }
   .fn-field::placeholder {
     color: var(--color-faint);
@@ -152,16 +181,63 @@ select:focus-visible {
   }
   .fn-field:focus {
     border-color: var(--color-accent);
+    background: var(--color-ink);
   }
 
   .fn-card {
     border: 1px solid var(--color-edge);
-    border-radius: 0.875rem;
+    border-radius: 1rem;
     background: var(--color-panel);
   }
 
+  .fn-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    border-radius: 0.625rem;
+    padding: 0.5rem 0.625rem;
+    font-size: 0.8125rem;
+    transition:
+      background-color 140ms var(--ease-entrar),
+      color 140ms var(--ease-entrar);
+  }
+
+  /* Caixa de marcar desenhada: o controle nativo do Windows destoa do resto no tema escuro. */
+  .fn-check {
+    appearance: none;
+    display: grid;
+    place-content: center;
+    flex-shrink: 0;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin: 0;
+    cursor: pointer;
+    border: 1.5px solid var(--color-line);
+    border-radius: 0.3rem;
+    background: transparent;
+    transition:
+      background-color 120ms var(--ease-entrar),
+      border-color 120ms var(--ease-entrar);
+  }
+  .fn-check:hover {
+    border-color: var(--color-accent);
+  }
+  .fn-check:checked {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+  }
+  .fn-check:checked::after {
+    content: "";
+    width: 0.28rem;
+    height: 0.5rem;
+    margin-top: -0.08rem;
+    border: solid var(--color-on-accent);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
   .fn-pulse {
-    animation: fn-pulse 1.4s ease-in-out infinite;
+    animation: fn-pulse 1.5s ease-in-out infinite;
   }
 }
 
@@ -182,11 +258,18 @@ textarea {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-edge);
+  border: 3px solid transparent;
+  background-clip: content-box;
   border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-line);
+  background-clip: content-box;
 }
 
 @media (prefers-contrast: more) {

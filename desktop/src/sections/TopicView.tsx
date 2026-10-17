@@ -34,21 +34,21 @@ export default function TopicView({ topic, onBack, onError }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="flex h-full flex-col gap-4">
       <button
         type="button"
         onClick={onBack}
-        className="flex w-fit items-center gap-1.5 rounded-lg border border-edge px-2.5 py-1 text-xs text-muted hover:bg-hover hover:text-fg"
+        className="flex w-fit items-center gap-1 rounded-lg px-1.5 py-1 text-xs text-muted transition-colors hover:bg-hover hover:text-fg"
       >
-        <ChevronLeft className="h-3.5 w-3.5" />
+        <ChevronLeft className="h-4 w-4" />
         {t("topics.back")}
       </button>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-base font-semibold text-fg">{topic.name}</h2>
-            {topic.description && <p className="text-sm text-muted">{topic.description}</p>}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-6 pb-4">
+          <header className="flex flex-col gap-2">
+            <h1 className="font-reading text-[1.8rem] leading-[1.2] font-semibold tracking-tight text-fg">{topic.name}</h1>
+            {topic.description && <p className="text-[14px] leading-relaxed text-muted">{topic.description}</p>}
             {topic.keywords && topic.keywords.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {topic.keywords.map((keyword) => (
@@ -56,14 +56,14 @@ export default function TopicView({ topic, onBack, onError }: Props) {
                 ))}
               </div>
             )}
-          </div>
+          </header>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={() => void analyze()}
               disabled={busy}
-              className="rounded-lg border border-accent/50 px-3 py-1.5 text-xs text-accent-text hover:bg-accent/10 disabled:opacity-50"
+              className="rounded-lg border border-accent/30 bg-accent/10 px-3.5 py-2 text-xs font-medium text-accent-text transition-colors hover:bg-accent/15 disabled:opacity-50"
             >
               {busy ? t("topics.analyzing") : stored ? t("topics.refresh") : t("topics.analyze")}
             </button>
@@ -72,7 +72,7 @@ export default function TopicView({ topic, onBack, onError }: Props) {
             )}
           </div>
 
-          <section className="fn-card p-4">
+          <section className="rounded-2xl border border-edge bg-panel p-6">
             {busy && !current && <Skeleton rows={4} />}
             {!busy && !current && <p className="text-sm text-faint">{t("app.empty")}</p>}
             {current && <MarkdownLite text={current} />}
@@ -80,11 +80,11 @@ export default function TopicView({ topic, onBack, onError }: Props) {
 
           {history.data && history.data.length > 1 && (
             <section className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold tracking-wide text-faint uppercase">{t("topics.history")}</h3>
+              <h2 className="fn-kicker text-faint">{t("topics.history")}</h2>
               {history.data.slice(1).map((item) => (
-                <details key={item.id} className="fn-card p-3">
+                <details key={item.id} className="rounded-xl border border-edge bg-panel p-4">
                   <summary className="cursor-pointer text-xs text-muted">{formatDateTime(item.created_at)}</summary>
-                  <div className="mt-2">
+                  <div className="mt-3">
                     <MarkdownLite text={item.content} />
                   </div>
                 </details>

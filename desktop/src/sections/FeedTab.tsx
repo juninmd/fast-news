@@ -51,19 +51,20 @@ export default function FeedTab({ version, onOpenArticle }: Props) {
   }, [load, version]);
 
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="flex h-full flex-col gap-4">
       <CategoryChips categories={categories} active={category} onPick={setCategory} />
 
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {error && <ErrorBanner message={t("app.error", { error })} onRetry={() => void load(1, true)} />}
         {items.length === 0 && loading && <Skeleton />}
         {items.length === 0 && !loading && !error && <EmptyState message={t("feed.empty")} />}
 
-        <div className="flex flex-col gap-2">
-          {items.map((article) => (
+        <div className="flex flex-col gap-3">
+          {items.map((article, index) => (
             <NewsCard
               key={article.id}
               article={article}
+              featured={index === 0}
               onOpen={onOpenArticle}
               badges={
                 article.importance_score !== null && article.importance_score > 0 ? (
@@ -77,13 +78,13 @@ export default function FeedTab({ version, onOpenArticle }: Props) {
         </div>
 
         {items.length > 0 && (
-          <div className="flex items-center justify-center gap-3 py-4 text-xs text-faint">
+          <div className="flex items-center justify-center gap-3 py-6 text-xs text-faint">
             {hasMore ? (
               <button
                 type="button"
                 onClick={() => void load(page + 1, false)}
                 disabled={loading}
-                className="rounded-lg border border-edge px-3 py-1.5 text-muted hover:bg-hover hover:text-fg disabled:opacity-50"
+                className="rounded-lg border border-edge px-3.5 py-2 text-muted transition-colors hover:bg-hover hover:text-fg disabled:opacity-50"
               >
                 {t("feed.loadMore")}
               </button>

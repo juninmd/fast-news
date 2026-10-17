@@ -1,6 +1,7 @@
 /** Fonte da verdade das chaves: o catálogo inglês precisa cobrir exatamente estas. */
 export const ptBR = {
   "app.name": "Fast News",
+  "app.tagline": "leitor de notícias",
   "app.offline": "Sem conexão",
   "app.online": "Conectado",
   "app.loading": "Carregando…",
@@ -23,6 +24,15 @@ export const ptBR = {
   "tabs.finance": "Finanças",
   "tabs.settings": "Ajustes",
 
+  "section.feed.subtitle": "As últimas de todas as fontes, em ordem de chegada",
+  "section.top.subtitle": "O que vários veículos estão cobrindo ao mesmo tempo",
+  "section.search.subtitle": "Busque por assunto, com ranking semântico ou textual",
+  "section.editions.subtitle": "As edições publicadas do jornal O Fio",
+  "section.stories.subtitle": "Coberturas correlacionadas entre veículos",
+  "section.topics.subtitle": "Assuntos monitorados, com análise gerada por IA",
+  "section.finance.subtitle": "Sinais e oportunidades extraídos das notícias",
+  "section.settings.subtitle": "API, aparência e estado do pipeline",
+
   "feed.all": "Todas",
   "feed.loadMore": "Carregar mais",
   "feed.empty": "Nenhuma notícia nesta categoria.",
@@ -37,6 +47,7 @@ export const ptBR = {
   "article.related": "Relacionadas",
   "article.noContent": "A API não devolveu o texto completo desta matéria.",
   "article.loading": "Abrindo matéria…",
+  "article.back": "Voltar",
 
   "top.empty": "Nenhuma história em alta agora.",
   "top.sources": "{n} fontes",
@@ -83,6 +94,7 @@ export const ptBR = {
   "finance.medium": "Médio prazo",
   "finance.long": "Longo prazo",
   "finance.summary": "Resumo por direção",
+  "finance.opportunities": "Oportunidades",
   "finance.summaryEmpty": "Sem resumo nas últimas 48h.",
   "finance.col.direction": "Direção",
   "finance.col.assetType": "Tipo",

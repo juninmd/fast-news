@@ -1,7 +1,7 @@
 import { t } from "../i18n";
 import type { MessageKey } from "../i18n/pt-BR";
 import { api, errText } from "../lib/api";
-import { formatDateTime, formatDate } from "../lib/format";
+import { dateParts, formatDate, formatDateTime } from "../lib/format";
 import { useAsync } from "../lib/hooks";
 import EmptyState from "../components/EmptyState";
 import ErrorBanner from "../components/ErrorBanner";
@@ -23,7 +23,7 @@ export default function EditionsTab({ version, onError }: Props) {
   if (state.loading && !state.data) return <Skeleton rows={3} />;
   if (state.error) return <ErrorBanner message={t("app.error", { error: state.error })} onRetry={state.reload} />;
   if (!state.data || state.data.length === 0) {
-    return <EmptyState message={t("editions.empty")} icon={<BookOpen className="h-7 w-7" />} />;
+    return <EmptyState message={t("editions.empty")} icon={<BookOpen className="h-5 w-5" />} />;
   }
 
   function open(url: string) {
@@ -31,28 +31,33 @@ export default function EditionsTab({ version, onError }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-2 overflow-y-auto pr-1">
+    <div className="flex flex-col gap-3 overflow-y-auto">
       {state.data.map((edition) => {
         const link = edition.links[0];
+        const kindLabel = KIND[edition.kind] ? t(KIND[edition.kind]) : edition.kind;
+        const { day, month } = dateParts(edition.windowStart ?? edition.sentAt);
         return (
-          <article key={`${edition.editionKey}-${edition.sentAt ?? ""}`} className="fn-card flex items-center gap-3 p-3">
+          <article
+            key={`${edition.editionKey}-${edition.sentAt ?? ""}`}
+            className="group flex shrink-0 items-center gap-4 rounded-2xl border border-edge bg-panel p-5 transition-colors hover:border-line"
+          >
+            <div className="flex w-12 shrink-0 flex-col items-center rounded-xl border border-edge bg-raised py-2">
+              <span className="font-reading text-[1.2rem] leading-none font-semibold text-fg">{day}</span>
+              <span className="mt-1 text-[10px] tracking-wide text-faint uppercase">{month}</span>
+            </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 text-[11px] text-faint">
-                <span className="font-medium tracking-wide text-accent-text uppercase">
-                  {KIND[edition.kind] ? t(KIND[edition.kind]) : edition.kind}
-                </span>
-                {edition.windowStart && <span>· {formatDateTime(edition.windowStart)}</span>}
-              </div>
-              <p className="mt-1 text-sm font-medium text-fg">{formatDate(edition.sentAt ?? edition.windowStart)}</p>
-              {edition.sentAt && (
-                <p className="mt-0.5 text-xs text-faint">{t("editions.sentAt", { date: formatDateTime(edition.sentAt) })}</p>
-              )}
+              <span className="fn-kicker text-accent-text">{kindLabel}</span>
+              <p className="mt-1 text-[12.5px] text-muted">
+                {edition.sentAt
+                  ? t("editions.sentAt", { date: formatDateTime(edition.sentAt) })
+                  : formatDate(edition.windowStart)}
+              </p>
             </div>
             {link && (
               <button
                 type="button"
                 onClick={() => open(link)}
-                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-accent/50 px-3 py-1.5 text-xs text-accent-text hover:bg-accent/10"
+                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent-text transition-colors hover:bg-accent/15"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 {t("editions.open")}

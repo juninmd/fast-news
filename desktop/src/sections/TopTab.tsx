@@ -19,13 +19,14 @@ export default function TopTab({ version, onOpenArticle }: Props) {
   if (!state.data || state.data.length === 0) return <EmptyState message={t("top.empty")} icon={<Flame className="h-7 w-7" />} />;
 
   return (
-    <div className="flex flex-col gap-2 overflow-y-auto pr-1">
-      {state.data.map((article) => {
+    <div className="flex flex-col gap-3 overflow-y-auto">
+      {state.data.map((article, index) => {
         const credibility = credibilityScore(article.fake_news_score);
         return (
           <NewsCard
             key={article.id}
             article={article}
+            featured={index === 0}
             onOpen={onOpenArticle}
             badges={
               <>

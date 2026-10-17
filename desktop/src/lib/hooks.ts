@@ -77,9 +77,13 @@ const ALWAYS_ON_TOP_KEY = "fastnews.alwaysOnTop";
 export function useAlwaysOnTop(): [boolean, (value: boolean) => void] {
   const [value, setValue] = useState(() => readFlag(ALWAYS_ON_TOP_KEY, false));
   useEffect(() => {
-    void getCurrentWindow()
-      .setAlwaysOnTop(value)
-      .catch(() => {});
+    try {
+      void getCurrentWindow()
+        .setAlwaysOnTop(value)
+        .catch(() => {});
+    } catch {
+      // Fora do Tauri (ou janela indisponível) o ajuste não se aplica; não pode derrubar a tela.
+    }
   }, [value]);
   const set = useCallback((next: boolean) => {
     setValue(next);

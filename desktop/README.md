@@ -17,7 +17,7 @@ rede e configuração em Rust, pacote gerenciado por **bun**.
 | **Finanças** | Oportunidades (`/api/financial`) e resumo por direção (`/api/financial/summary`) |
 | **Ajustes** | URL da API, tema, idioma, sempre visível e estado do pipeline (`/health`) |
 
-Clicar em qualquer matéria abre um **leitor inline** (`/api/news/:id` + relacionadas) ou o original no navegador.
+Clicar em qualquer matéria abre o **leitor em tela cheia** (`/api/news/:id` + relacionadas) ou o original no navegador.
 
 ## Requisitos
 
@@ -54,11 +54,11 @@ o valor é validado no Rust (`config::normalize_base`) antes de ser salvo.
 
 ```text
 src/                      UI React
-  App.tsx                 cabeçalho, abas, leitor e estado de atualização
+  App.tsx                 barra lateral, cabeçalho da seção, leitor e estado de atualização
   lib/api.ts              o único lugar que chama invoke(); os tipos vivem em lib/types.ts
-  lib/                    lógica pura (format, theme, tabs, hooks, toast) + testes
-  sections/               um arquivo por aba (FeedTab, SearchTab, StoryView, ...)
-  components/             peças reutilizáveis (NewsCard, TabBar, ArticleReader, ...)
+  lib/                    lógica pura (format, theme, tabs, sections, hooks, toast) + testes
+  sections/               um arquivo por seção (FeedTab, SearchTab, StoryView, ...)
+  components/             peças reutilizáveis (Sidebar, NewsCard, ArticleReader, ...)
   i18n/                   pt-BR (fonte das chaves) + en, com teste de paridade
 src-tauri/src/
   lib.rs                  plugins, tray, setup e a lista de comandos
