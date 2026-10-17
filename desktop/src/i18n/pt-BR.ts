@@ -14,6 +14,9 @@ export const ptBR = {
   "app.error": "Não foi possível carregar: {error}",
   "app.version": "Versão {version}",
 
+  "error.section.title": "Esta seção não carregou",
+  "error.section.hint": "As outras seções continuam funcionando.",
+
   "tabs.label": "Seções",
   "tabs.feed": "Feed",
   "tabs.top": "Em alta",
@@ -119,6 +122,8 @@ export const ptBR = {
   "settings.window.alwaysOnTop": "Sempre visível",
 
   "settings.status.title": "Estado do pipeline",
+  "settings.dep.up": "no ar",
+  "settings.dep.down": "fora",
   "settings.status.uptime": "No ar há {value}",
   "settings.status.ingested": "{n} ingeridas (24h)",
   "settings.status.pending": "{n} na fila do Telegram",

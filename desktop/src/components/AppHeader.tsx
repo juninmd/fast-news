@@ -1,6 +1,6 @@
 import { t } from "../i18n";
 import { SECTION_LABEL, SECTION_SUBTITLE } from "../lib/sections";
-import { type TabId, tabId } from "../lib/tabs";
+import { type TabId, titleId } from "../lib/tabs";
 import { Refresh, Wifi, WifiOff } from "./Icons";
 
 type Props = {
@@ -14,7 +14,7 @@ export default function AppHeader({ tab, online, onRefresh, refreshing }: Props)
   return (
     <header className="flex shrink-0 items-start gap-4 border-b border-edge px-7 pt-6 pb-4">
       <div className="min-w-0">
-        <h1 id={tabId(tab)} className="text-[1.35rem] leading-tight font-semibold tracking-tight text-fg">
+        <h1 id={titleId(tab)} className="text-[1.35rem] leading-tight font-semibold tracking-tight text-fg">
           {t(SECTION_LABEL[tab])}
         </h1>
         <p className="mt-0.5 truncate text-[12.5px] text-faint">{t(SECTION_SUBTITLE[tab])}</p>
