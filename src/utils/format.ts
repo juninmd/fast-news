@@ -36,3 +36,16 @@ export function formatDateRelative(date: Date | string): {
 	if (hours < 24) return { value: hours, unit: "hora" };
 	return { value: days, unit: "dia" };
 }
+
+/** Compact age for dense lists: 5min, 3h, 2d, then the date. */
+export function timeAgoShort(date: Date | string): string {
+	const d = new Date(date);
+	const diff = Date.now() - d.getTime();
+	if (diff < 0) return d.toLocaleDateString("pt-BR");
+	const hours = Math.floor(diff / 3_600_000);
+	if (hours < 1) return `${Math.max(1, Math.floor(diff / 60_000))}min`;
+	if (hours < 24) return `${hours}h`;
+	const days = Math.floor(hours / 24);
+	if (days < 7) return `${days}d`;
+	return d.toLocaleDateString("pt-BR");
+}

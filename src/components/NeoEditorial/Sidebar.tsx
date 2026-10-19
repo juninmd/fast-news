@@ -34,9 +34,9 @@ const CATEGORIES = [
 	"IA",
 	"Brasil",
 	"Mundo",
-	"Negocios",
+	"Negócios",
 	"Cripto",
-	"Ciencia",
+	"Ciência",
 ];
 
 interface SidebarProps {
@@ -167,7 +167,7 @@ export function Sidebar({ onFilterChange, sourcesStats = [] }: SidebarProps) {
 		<aside className="w-72 flex-shrink-0 space-y-3">
 			<SidebarSection
 				icon={<TrendingUp className="h-3.5 w-3.5 text-accent-primary" />}
-				title="Trending"
+				title="Tópicos monitorados"
 				expanded={expandedSections.trending}
 				onToggle={() => toggleSection("trending")}
 			>
