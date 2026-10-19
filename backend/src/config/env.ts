@@ -83,7 +83,9 @@ export const config = {
 
 	ingestion: {
 		batchSize: parseInt(optional("INGESTION_BATCH_SIZE", "10"), 10),
-		maxArticlesPerFeed: parseInt(optional("MAX_ARTICLES_PER_FEED", "20"), 10),
+		// Exact duplicates are dropped before any AI call, so a deep window only
+		// costs a cheap lookup and keeps fast feeds from losing items between runs.
+		maxArticlesPerFeed: parseInt(optional("MAX_ARTICLES_PER_FEED", "50"), 10),
 
 		// Minimum relevance score (1-10) required to post an article to Telegram.
 		relevanceThreshold: parseInt(optional("RELEVANCE_THRESHOLD", "6"), 10),
@@ -102,6 +104,14 @@ export const config = {
 			optional("INGESTION_OLLAMA_PROBE_TIMEOUT_MS", "5000"),
 			10,
 		),
+		// Embedding cosine at which two articles are the same story. Near
+		// duplicates are kept and grouped, never dropped.
+		storyMatchThreshold: parseFloat(optional("STORY_MATCH_THRESHOLD", "0.82")),
+		storyWindowHours: parseInt(optional("STORY_WINDOW_HOURS", "72"), 10),
+		// Articles whose feed carries no image get one og:image lookup, capped per run.
+		ogImageMaxPerRun: parseInt(optional("INGESTION_OG_IMAGE_MAX", "150"), 10),
+		// Articles stored without vector/image are retried at the start of each run.
+		backfillBatch: parseInt(optional("INGESTION_BACKFILL_BATCH", "120"), 10),
 		jobTimeoutMs: parseInt(
 			optional("INGESTION_JOB_TIMEOUT_MS", String(25 * 60 * 1_000)),
 			10,

@@ -10,12 +10,25 @@ interface NewsArticle {
 	company?: string;
 	publishedAt: Date;
 	imageUrl?: string;
+	/** Distinct outlets reporting the same story (1 = only this one). */
+	sourceCount: number;
+	/** Other outlets on the same story, newest first. */
+	alsoIn: CoverageLink[];
+}
+
+export interface CoverageLink {
+	id: string;
+	source: string;
+	title: string;
+	url: string;
+	publishedAt: string;
 }
 
 type ApiArticle = {
 	id: string;
 	title: string;
 	summary?: string;
+	excerpt?: string;
 	content?: string;
 	url: string;
 	source: string;
@@ -25,6 +38,8 @@ type ApiArticle = {
 	publishedAt?: string;
 	image_url?: string | null;
 	imageUrl?: string | null;
+	source_count?: number;
+	also_in?: CoverageLink[];
 };
 
 interface UseNewsOptions {
@@ -34,6 +49,8 @@ interface UseNewsOptions {
 	minCredibility?: number;
 	politicalBias?: string;
 	excludeMilitant?: boolean;
+	/** Fold the same story from several outlets into one entry. Default true. */
+	group?: boolean;
 }
 
 interface UseNewsReturn {
@@ -77,6 +94,9 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 				if (options.excludeMilitant) {
 					params.set("excludeMilitant", "true");
 				}
+				if (options.group ?? true) {
+					params.set("group", "true");
+				}
 
 				const response = await fetch(`/api/news?${params}`);
 				if (!response.ok) throw new Error("Failed to fetch articles");
@@ -103,6 +123,7 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 			options.minCredibility,
 			options.politicalBias,
 			options.excludeMilitant,
+			options.group,
 		],
 	);
 
@@ -130,7 +151,8 @@ function toNewsArticle(article: ApiArticle): NewsArticle {
 	return {
 		id: article.id,
 		title: article.title,
-		excerpt: article.summary ?? article.content?.slice(0, 220),
+		excerpt:
+			article.excerpt ?? article.summary ?? article.content?.slice(0, 220),
 		url: article.url,
 		source: article.source,
 		category: article.category,
@@ -139,5 +161,7 @@ function toNewsArticle(article: ApiArticle): NewsArticle {
 			article.published_at ?? article.publishedAt ?? Date.now(),
 		),
 		imageUrl: article.image_url ?? article.imageUrl ?? undefined,
+		sourceCount: article.source_count ?? 1,
+		alsoIn: article.also_in ?? [],
 	};
 }

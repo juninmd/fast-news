@@ -9,6 +9,7 @@ import {
 	SkeletonCard,
 	StatusPanel,
 	TopNewsSection,
+	TrendingPanel,
 } from "./components/NeoEditorial";
 import {
 	CorrelationGraph,
@@ -18,6 +19,7 @@ import {
 } from "./components/StoryIntelligence";
 import { useNews, useTheme } from "./hooks";
 import { useBookmarks } from "./hooks/useBookmarks";
+import type { CoverageLink } from "./hooks/useNews";
 import { useReadingHistory } from "./hooks/useReadingHistory";
 import type { ArticleNode, GraphEdge } from "./hooks/useStories";
 import { useGlobalGraph, useStories, useStoryDetail } from "./hooks/useStories";
@@ -47,6 +49,7 @@ function App() {
 	const [minCredibility, setMinCredibility] = useState<number>(0);
 	const [politicalBias, setPoliticalBias] = useState<string>("all");
 	const [excludeMilitant, setExcludeMilitant] = useState<boolean>(false);
+	const [groupSources, setGroupSources] = useState<boolean>(true);
 
 	const { stories, loading: storiesLoading } = useStories(activeCategory);
 	const { detail: storyDetail, loading: detailLoading } =
@@ -66,6 +69,7 @@ function App() {
 		minCredibility: minCredibility > 0 ? minCredibility : undefined,
 		politicalBias: politicalBias !== "all" ? politicalBias : undefined,
 		excludeMilitant: excludeMilitant ? true : undefined,
+		group: groupSources,
 		...filters,
 	});
 
@@ -169,7 +173,10 @@ function App() {
 			/>
 
 			<main className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8">
-				<TopNewsSection onArticleClick={openArticle} />
+				<div className="mb-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+					<TopNewsSection onArticleClick={openArticle} />
+					<TrendingPanel onSelectTerm={handleSearch} />
+				</div>
 
 				<section className="mb-8 border-b border-border-subtle">
 					<div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
@@ -395,6 +402,22 @@ function App() {
 									<div className="flex items-center gap-2 mt-4 sm:mt-0">
 										<input
 											type="checkbox"
+											id="group-sources"
+											checked={groupSources}
+											onChange={(e) => setGroupSources(e.target.checked)}
+											className="rounded border-border-subtle bg-bg-tertiary text-accent-primary focus:ring-accent-primary w-4 h-4 cursor-pointer"
+										/>
+										<label
+											htmlFor="group-sources"
+											className="text-sm font-medium text-text-primary cursor-pointer select-none"
+										>
+											Agrupar mesma notícia de várias fontes
+										</label>
+									</div>
+
+									<div className="flex items-center gap-2 mt-4 sm:mt-0">
+										<input
+											type="checkbox"
 											id="exclude-militant"
 											checked={excludeMilitant}
 											onChange={(e) => setExcludeMilitant(e.target.checked)}
@@ -544,6 +567,8 @@ function toCardArticle(article: {
 	publishedAt?: string;
 	image_url?: string;
 	imageUrl?: string;
+	source_count?: number;
+	also_in?: CoverageLink[];
 }) {
 	return {
 		id: article.id,
@@ -556,5 +581,7 @@ function toCardArticle(article: {
 		publishedAt:
 			article.published_at ?? article.publishedAt ?? new Date().toISOString(),
 		imageUrl: article.image_url ?? article.imageUrl,
+		sourceCount: article.source_count,
+		alsoIn: article.also_in,
 	};
 }

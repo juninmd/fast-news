@@ -8,9 +8,9 @@ const CATEGORIES = [
 	"IA",
 	"Brasil",
 	"Mundo",
-	"Negocios",
+	"Negócios",
 	"Cripto",
-	"Ciencia",
+	"Ciência",
 ];
 
 interface CategoryTabsProps {
