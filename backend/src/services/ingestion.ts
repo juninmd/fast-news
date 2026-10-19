@@ -5,14 +5,23 @@ import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
+import { extractImageUrl, fetchOgImage } from "./articleImages.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedBatch, vectorToSQL } from "./embeddings.js";
 import { scoreRelevance } from "./relevance.js";
 import { getActiveFeeds } from "./sources.js";
+import { canonicalUrl } from "./textSimilarity.js";
 import { classifyTheme } from "./themeClassification.js";
 
 const parser = new Parser({
-	customFields: { item: [["media:content", "mediaContent"], "enclosure"] },
+	customFields: {
+		item: [
+			["media:content", "mediaContent", { keepArray: true }],
+			["media:thumbnail", "mediaThumbnail", { keepArray: true }],
+			["media:group", "mediaGroup"],
+			"enclosure",
+		],
+	},
 });
 
 /** Bounds concurrent work per key (host, or a fixed budget for LLM calls) to avoid rate limits. */
@@ -95,27 +104,10 @@ async function fetchXml(url: string): Promise<string> {
 	}
 }
 
-const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif)(\?.*)?$/i;
-
 function runBackground(label: string, task: () => Promise<unknown>): void {
 	task().catch((err: Error) => {
 		console.error(`[ingestion] ${label} failed:`, err.message);
 	});
-}
-
-function extractImageUrl(item: Record<string, unknown>): string | undefined {
-	const candidates = [
-		(item["mediaContent"] as Record<string, unknown> | undefined)?.["$"] &&
-			(item["mediaContent"] as Record<string, Record<string, string>>)["$"][
-				"url"
-			],
-		(item["mediaContent"] as Record<string, string> | undefined)?.["url"],
-		(item["enclosure"] as Record<string, string> | undefined)?.["url"],
-	];
-	for (const url of candidates) {
-		if (typeof url === "string" && IMAGE_EXT_RE.test(url)) return url;
-	}
-	return undefined;
 }
 
 async function withRetry<T>(
@@ -164,7 +156,16 @@ async function fetchFeed(source: {
 			.map((item) => {
 				// Robust date parsing
 				const dateStr = item.isoDate ?? item.pubDate;
-				const publishedAt = dateStr ? new Date(dateStr) : null;
+				const parsed = dateStr ? new Date(dateStr) : null;
+				// A missing or bogus date must not bury the article (the feed sorts by
+				// published_at) nor float it above "now" (feeds in the wrong timezone).
+				const now = new Date();
+				const publishedAt =
+					parsed && !Number.isNaN(parsed.getTime()) && parsed <= now
+						? parsed
+						: now;
+				const link =
+					item.link ?? (/^https?:\/\//.test(item.guid ?? "") ? item.guid : "");
 
 				const stableGuid =
 					item.guid ??
@@ -180,13 +181,15 @@ async function fetchFeed(source: {
 						stableGuid ?? createHash("sha1").update(source.url).digest("hex"),
 					title: item.title ?? "Sem título",
 					content: item.contentSnippet ?? item.summary ?? item.content ?? "",
-					url: item.link ?? "",
+					url: link ?? "",
 					source: feed.title?.trim() || source.company || source.url,
 					category: source.category,
 					company: source.company,
-					publishedAt:
-						publishedAt && !isNaN(publishedAt.getTime()) ? publishedAt : null,
-					imageUrl: extractImageUrl(item as unknown as Record<string, unknown>),
+					publishedAt,
+					imageUrl: extractImageUrl(
+						item as unknown as Record<string, unknown>,
+						link || source.url,
+					),
 				};
 			});
 	} catch (err) {
@@ -249,8 +252,8 @@ async function prepareArticle(
 	if (!article.guid || !article.title || !article.url) return null;
 
 	const existing = await query<{ id: string }>(
-		"SELECT id FROM news_articles WHERE guid = $1 OR url = $2",
-		[article.guid, article.url],
+		"SELECT id FROM news_articles WHERE guid = $1 OR url = $2 OR canonical_url = $3",
+		[article.guid, article.url, canonicalUrl(article.url)],
 	);
 	if (existing.rowCount && existing.rowCount > 0) return null;
 
@@ -304,35 +307,12 @@ async function storeArticle(
 ): Promise<string | null> {
 	const { article, themeCategory } = prepared;
 
-	// Skip if similar article already stored (embedding-based dedup).
-	// ORDER BY ... LIMIT 1 lets Postgres use the ivfflat index for an ANN
-	// lookup; a WHERE threshold on the same expression forces a full seq
-	// scan instead, which timed out once news_articles passed ~200k rows.
-	if (embedding) {
-		const nearest = await query<{
-			id: string;
-			title: string;
-			similarity: number;
-		}>(
-			`SELECT id, title, 1 - (embedding <=> $1::vector) AS similarity
-			 FROM news_articles
-			 WHERE embedding IS NOT NULL
-			 ORDER BY embedding <=> $1::vector
-			 LIMIT 1`,
-			[vectorToSQL(embedding)],
-		);
-		const match = nearest.rows[0];
-		if (match && match.similarity >= config.telegram.similarThreshold) {
-			console.log(
-				`[ingestion] Skipping "${article.title}" — similar to "${match.title}" (threshold: ${config.telegram.similarThreshold})`,
-			);
-			return null;
-		}
-	}
-
+	// Near-duplicates from other outlets are stored, not skipped: the same story
+	// reported by several portals is a signal (assignArticleToStory groups them),
+	// and dropping by similarity used to lose articles whose angle differed.
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -347,6 +327,7 @@ async function storeArticle(
 			embedding ? vectorToSQL(embedding) : null,
 			article.imageUrl ?? null,
 			themeCategory,
+			canonicalUrl(article.url),
 		],
 	);
 
@@ -419,6 +400,106 @@ async function isOllamaAvailable(): Promise<boolean> {
 	}
 }
 
+/** One og:image lookup per image-less article, bounded per run and per host. */
+async function fillMissingImages(
+	articles: RawArticle[],
+	budget: { left: number },
+): Promise<void> {
+	const missing = articles.filter((a) => !a.imageUrl && a.url);
+	await Promise.all(
+		missing.map(async (article) => {
+			if (budget.left <= 0) return;
+			budget.left--;
+			try {
+				const host = new URL(article.url).hostname;
+				article.imageUrl = await hostGate.run(host, () =>
+					fetchOgImage(article.url),
+				);
+			} catch {
+				// invalid url: the article is kept without an image
+			}
+		}),
+	);
+}
+
+/**
+ * Articles stored while the embedding service was down (or whose feed had no
+ * image) get a second chance, so a provider outage delays grouping instead of
+ * losing it.
+ */
+async function backfillMissing(ollamaUp: boolean): Promise<void> {
+	const limit = config.ingestion.backfillBatch;
+
+	if (ollamaUp) {
+		const rows = await query<{
+			id: string;
+			title: string;
+			content: string | null;
+		}>(
+			`SELECT id, title, content FROM news_articles
+       WHERE embedding IS NULL AND created_at > NOW() - INTERVAL '3 days'
+       ORDER BY created_at DESC LIMIT $1`,
+			[limit],
+		);
+		if (rows.rows.length > 0) {
+			const texts = rows.rows.map((r) =>
+				`${r.title}. ${(r.content ?? "").replace(/<\/?[^>]+(>|$)/g, " ")}`
+					.replace(/\s+/g, " ")
+					.slice(0, 1000),
+			);
+			const vectors = await embedInBatches(texts);
+			let done = 0;
+			for (let i = 0; i < rows.rows.length; i++) {
+				const vector = vectors[i];
+				const row = rows.rows[i];
+				if (!vector || !row) continue;
+				await query("UPDATE news_articles SET embedding = $1 WHERE id = $2", [
+					vectorToSQL(vector),
+					row.id,
+				]);
+				// Re-link only articles still outside a story, so no story is built twice.
+				await assignArticleToStory(row.id).catch(() => undefined);
+				runBackground("buildArticleRelations", () =>
+					buildArticleRelations(row.id),
+				);
+				done++;
+			}
+			console.log(
+				`[ingestion] backfilled ${done}/${rows.rows.length} embeddings`,
+			);
+		}
+	}
+
+	const noImage = await query<{ id: string; url: string }>(
+		`SELECT id, url FROM news_articles
+     WHERE image_url IS NULL AND created_at > NOW() - INTERVAL '2 days'
+     ORDER BY created_at DESC LIMIT $1`,
+		[Math.min(limit, 60)],
+	);
+	let found = 0;
+	await Promise.all(
+		noImage.rows.map(async (row) => {
+			let host: string;
+			try {
+				host = new URL(row.url).hostname;
+			} catch {
+				return;
+			}
+			const image = await hostGate.run(host, () => fetchOgImage(row.url));
+			if (!image) return;
+			found++;
+			await query("UPDATE news_articles SET image_url = $1 WHERE id = $2", [
+				image,
+				row.id,
+			]);
+		}),
+	);
+	if (noImage.rows.length > 0)
+		console.log(
+			`[ingestion] backfilled ${found}/${noImage.rows.length} images`,
+		);
+}
+
 export async function runIngestion(): Promise<IngestionResult> {
 	console.log("[ingestion] Starting news ingestion...");
 	const feeds = await getActiveFeeds();
@@ -427,6 +508,12 @@ export async function runIngestion(): Promise<IngestionResult> {
 		console.warn("[ingestion] Ollama unavailable — embeddings will be skipped");
 	let fetched = 0;
 	const newArticles: IngestionResult["newArticles"] = [];
+	const seenThisRun = new Set<string>();
+	const ogBudget = { left: config.ingestion.ogImageMaxPerRun };
+
+	await backfillMissing(ollamaUp).catch((err: Error) =>
+		console.error("[ingestion] backfill failed:", err.message),
+	);
 
 	for (let i = 0; i < feeds.length; i += config.ingestion.batchSize) {
 		const batch = feeds.slice(i, i + config.ingestion.batchSize);
@@ -444,9 +531,24 @@ export async function runIngestion(): Promise<IngestionResult> {
 		// exhausted the embedding quota.
 		const prepared: PreparedArticle[] = [];
 		for (const article of candidates) {
-			const item = await prepareArticle(article, ollamaUp);
-			if (item) prepared.push(item);
+			// The same link can come from two feeds in one run, before either is stored.
+			const key = canonicalUrl(article.url);
+			if (seenThisRun.has(key)) continue;
+			seenThisRun.add(key);
+			try {
+				const item = await prepareArticle(article, ollamaUp);
+				if (item) prepared.push(item);
+			} catch (err) {
+				// One failed lookup must not discard the rest of the batch.
+				console.error("[ingestion] prepare failed:", (err as Error).message, {
+					url: article.url,
+				});
+			}
 		}
+		await fillMissingImages(
+			prepared.map((item) => item.article),
+			ogBudget,
+		);
 
 		const embeddings = ollamaUp
 			? await embedInBatches(prepared.map((item) => item.textToEmbed))
@@ -469,8 +571,15 @@ export async function runIngestion(): Promise<IngestionResult> {
 					publishedAt: article.publishedAt,
 				};
 				newArticles.push(newArticle);
+				// Grouping is awaited (and ordered) so two outlets' copies of one story
+				// from the same run see each other instead of opening two stories.
+				await assignArticleToStory(id).catch((err: Error) =>
+					console.error(
+						"[ingestion] assignArticleToStory failed:",
+						err.message,
+					),
+				);
 				runBackground("buildArticleRelations", () => buildArticleRelations(id));
-				runBackground("assignArticleToStory", () => assignArticleToStory(id));
 				runBackground("scoreRelevance", () =>
 					scoreRelevance(
 						id,
