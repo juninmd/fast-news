@@ -10,8 +10,11 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useBookmarks } from "../../hooks/useBookmarks";
+import type { CoverageLink } from "../../hooks/useNews";
 import { useReadingHistory } from "../../hooks/useReadingHistory";
 import { sendArticleToTelegram } from "../../services/telegramService";
+import { CoverImage } from "./CoverImage";
+import { SourceStack } from "./SourceStack";
 
 interface NewsCardProps {
 	id: string;
@@ -23,6 +26,8 @@ interface NewsCardProps {
 	company?: string;
 	publishedAt: Date | string;
 	imageUrl?: string;
+	sourceCount?: number;
+	alsoIn?: CoverageLink[];
 	variant?: "compact" | "standard" | "featured";
 	onBookmark?: (id: string) => void;
 	onShare?: (id: string) => void;
@@ -69,6 +74,8 @@ export function NewsCard({
 	category,
 	publishedAt,
 	imageUrl,
+	sourceCount = 1,
+	alsoIn = [],
 	variant = "standard",
 	onShare,
 	onSummarize,
@@ -86,7 +93,6 @@ export function NewsCard({
 		"success" | "error" | null
 	>(null);
 	const [copied, setCopied] = useState(false);
-	const [imageError, setImageError] = useState(false);
 
 	useEffect(() => {
 		if (telegramStatus) {
@@ -127,13 +133,20 @@ export function NewsCard({
 		setTimeout(() => setCopied(false), 2000);
 	}
 
-	const showImage = imageUrl && !imageError && !videoEmbedUrl;
 	const featured = variant === "featured";
 
 	return (
 		<article
 			className={`group border-b border-border-subtle py-5 first:pt-0 last:border-b-0 ${read ? "opacity-60" : ""}`}
 		>
+			{!videoEmbedUrl && (
+				<CoverImage
+					src={imageUrl}
+					source={source}
+					category={category}
+					className="mb-3 aspect-[2/1] w-full sm:hidden"
+				/>
+			)}
 			<div className="flex items-start gap-5">
 				<div className="min-w-0 flex-1">
 					<div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
@@ -160,6 +173,12 @@ export function NewsCard({
 							{excerpt}
 						</p>
 					)}
+
+					<SourceStack
+						source={source}
+						sourceCount={sourceCount}
+						others={alsoIn}
+					/>
 
 					<div className="mt-3 flex items-center gap-1">
 						<button
@@ -254,7 +273,7 @@ export function NewsCard({
 				{videoEmbedUrl ? (
 					<div
 						className={`hidden shrink-0 overflow-hidden border border-border-subtle bg-black sm:block ${
-							featured ? "h-32 w-56" : "h-20 w-32"
+							featured ? "h-36 w-64" : "h-24 w-40"
 						}`}
 					>
 						<iframe
@@ -267,22 +286,14 @@ export function NewsCard({
 						/>
 					</div>
 				) : (
-					showImage && (
-						<div
-							className={`hidden shrink-0 overflow-hidden border border-border-subtle bg-bg-tertiary sm:block ${
-								featured ? "h-32 w-56" : "h-20 w-32"
-							}`}
-						>
-							<img
-								src={imageUrl}
-								alt=""
-								loading="lazy"
-								decoding="async"
-								onError={() => setImageError(true)}
-								className="h-full w-full object-cover"
-							/>
-						</div>
-					)
+					<CoverImage
+						src={imageUrl}
+						source={source}
+						category={category}
+						className={`hidden shrink-0 sm:block ${
+							featured ? "h-36 w-64" : "h-24 w-40"
+						}`}
+					/>
 				)}
 			</div>
 		</article>

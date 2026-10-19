@@ -1,18 +1,17 @@
 import { generateObject } from "ai";
 import { z } from "zod";
+import { config } from "../config/env.js";
 import { query } from "../database/client.js";
-import {
-	getStorySimilarities,
-	searchVectors,
-} from "../database/vectorStore.js";
+import { searchVectors } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
+import { pickStoryMatch, type StoryCandidate } from "./storyMatch.js";
 
 // 0.75 was stricter than the app's own default (0.55 in vectorStore.ts) and
 // left the graph almost edgeless for normal daily news diversity — only
 // near-duplicate coverage of the same story crossed it. STORY_MERGE_THRESHOLD
-// stays high since it drives story clustering, not just a "related" edge.
+// is configurable (STORY_MATCH_THRESHOLD) since it drives story clustering,
+// not just a "related" edge.
 export const SIMILARITY_THRESHOLD = 0.62;
-const STORY_MERGE_THRESHOLD = 0.8;
 
 const StorySchema = z.object({
 	title: z.string().describe("Título conciso da história (max 80 chars)"),
@@ -70,6 +69,94 @@ export async function buildArticleRelations(articleId: string): Promise<void> {
 	}
 }
 
+type CandidateRow = {
+	id: string;
+	title: string;
+	published_at: string | null;
+	similarity: string | number | null;
+	story_id: string | null;
+};
+
+const STORY_OF = `(SELECT sa.story_id FROM story_articles sa WHERE sa.article_id = na.id LIMIT 1)`;
+
+/** Nearest stored articles by vector. LIMIT with no WHERE keeps the ivfflat index usable. */
+async function nearestByEmbedding(
+	articleId: string,
+	embedding: string,
+): Promise<CandidateRow[]> {
+	const res = await query<CandidateRow>(
+		`SELECT na.id, na.title, na.published_at,
+            1 - (na.embedding <=> $1::vector) AS similarity,
+            ${STORY_OF} AS story_id
+     FROM news_articles na
+     WHERE na.embedding IS NOT NULL AND na.id <> $2
+     ORDER BY na.embedding <=> $1::vector
+     LIMIT 8`,
+		[embedding, articleId],
+	);
+	return res.rows;
+}
+
+/** Recent headlines for the lexical fallback, used when the article has no vector. */
+async function recentArticles(
+	articleId: string,
+	windowHours: number,
+): Promise<CandidateRow[]> {
+	const res = await query<CandidateRow>(
+		`SELECT na.id, na.title, na.published_at, NULL AS similarity,
+            ${STORY_OF} AS story_id
+     FROM news_articles na
+     WHERE na.created_at > NOW() - make_interval(hours => $2) AND na.id <> $1
+     ORDER BY na.created_at DESC
+     LIMIT 800`,
+		[articleId, windowHours],
+	);
+	return res.rows;
+}
+
+function toCandidate(r: CandidateRow): StoryCandidate {
+	return {
+		id: r.id,
+		title: r.title,
+		storyId: r.story_id,
+		similarity: r.similarity === null ? null : Number(r.similarity),
+		publishedAt: r.published_at ? new Date(r.published_at) : null,
+	};
+}
+
+/** Recomputes the counters and cover image a story card reads. */
+export async function refreshStoryStats(storyId: string): Promise<void> {
+	await query(
+		`WITH s AS (
+       SELECT COUNT(*)::int AS n,
+              COUNT(DISTINCT na.source)::int AS src,
+              (ARRAY_AGG(na.image_url ORDER BY na.published_at DESC NULLS LAST)
+                 FILTER (WHERE na.image_url IS NOT NULL))[1] AS img
+       FROM story_articles sa
+       JOIN news_articles na ON na.id = sa.article_id
+       WHERE sa.story_id = $1
+     )
+     UPDATE news_stories
+     SET article_count = s.n, source_count = s.src, image_url = s.img, last_updated_at = NOW()
+     FROM s WHERE news_stories.id = $1`,
+		[storyId],
+	);
+}
+
+async function createStory(title: string, category: string): Promise<string> {
+	const created = await query<{ id: string }>(
+		`INSERT INTO news_stories (title, category, article_count) VALUES ($1, $2, 0) RETURNING id`,
+		[title.slice(0, 80), category],
+	);
+	return created.rows[0].id;
+}
+
+/**
+ * Groups the article with the same news from other outlets. Never drops it:
+ * an article with no match opens its own story, and one without a vector is
+ * matched by headline. The (slow, optional) LLM enrichment runs afterwards in
+ * the background so a model outage cannot leave an article ungrouped.
+ */
 export async function assignArticleToStory(
 	articleId: string,
 ): Promise<string | null> {
@@ -78,46 +165,78 @@ export async function assignArticleToStory(
 		title: string;
 		content: string;
 		category: string;
-		embedding: string;
+		embedding: string | null;
+		published_at: string | null;
 	}>(
-		`SELECT id, title, content, category, embedding FROM news_articles WHERE id = $1`,
+		`SELECT id, title, content, category, embedding, published_at
+     FROM news_articles WHERE id = $1`,
 		[articleId],
 	);
 	const article = artRes.rows[0];
-	if (!article || !article.embedding) return null;
+	if (!article) return null;
 
-	let embedding: number[];
-	try {
-		embedding = JSON.parse(article.embedding);
-	} catch (err) {
-		console.error(
-			`[correlation] Malformed embedding for article ${articleId}, skipping story assignment:`,
-			(err as Error).message,
+	const existing = await query<{ story_id: string }>(
+		`SELECT story_id FROM story_articles WHERE article_id = $1 LIMIT 1`,
+		[articleId],
+	);
+	if (existing.rows[0]) return existing.rows[0].story_id;
+
+	const cfg = config.ingestion;
+	const rows = article.embedding
+		? await nearestByEmbedding(articleId, article.embedding)
+		: await recentArticles(articleId, cfg.storyWindowHours);
+	const publishedAt = article.published_at
+		? new Date(article.published_at)
+		: new Date();
+	const matchOpts = {
+		threshold: cfg.storyMatchThreshold,
+		windowHours: cfg.storyWindowHours,
+	};
+	const target = { title: article.title, publishedAt };
+	const candidates = rows.map(toCandidate);
+	// Articles already in a story win: ones not grouped yet are still waiting for
+	// their own turn, and joining them first would split one story in two.
+	const match =
+		pickStoryMatch(
+			target,
+			candidates.filter((c) => c.storyId),
+			matchOpts,
+		) ??
+		pickStoryMatch(
+			target,
+			candidates.filter((c) => !c.storyId),
+			matchOpts,
 		);
-		return null;
-	}
-	const storyRes = await getStorySimilarities(embedding, STORY_MERGE_THRESHOLD);
 
-	let targetStoryId: string | null = null;
-	if (storyRes.length > 0) {
-		targetStoryId = storyRes[0].story_id;
+	let storyId: string;
+	let role: "origin" | "update" = "origin";
+	if (match) {
+		role = "update";
+		if (match.storyId) {
+			storyId = match.storyId;
+		} else {
+			// The matching article was never grouped (earlier failure): open the
+			// story from it so both end up together.
+			storyId = await createStory(match.title, article.category);
+			await query(
+				`INSERT INTO story_articles (story_id, article_id, role)
+         VALUES ($1, $2, 'origin') ON CONFLICT DO NOTHING`,
+				[storyId, match.id],
+			);
+		}
 	} else {
-		const newStory = await query<{ id: string }>(
-			`INSERT INTO news_stories (title, category, article_count)
-       VALUES ($1, $2, 0) RETURNING id`,
-			[article.title.slice(0, 80), article.category],
-		);
-		targetStoryId = newStory.rows[0].id;
+		storyId = await createStory(article.title, article.category);
 	}
 
 	await query(
 		`INSERT INTO story_articles (story_id, article_id, role)
      VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-		[targetStoryId, articleId, storyRes.length > 0 ? "update" : "origin"],
+		[storyId, articleId, role],
 	);
+	await refreshStoryStats(storyId);
 
-	await enrichStory(targetStoryId, articleId, article);
-	return targetStoryId;
+	void enrichStory(storyId, articleId, article);
+	return storyId;
 }
 
 async function enrichStory(
@@ -149,8 +268,7 @@ Conteúdo: ${(article.content ?? "").slice(0, 1500)}`;
 		await query(
 			`UPDATE news_stories SET
          title = $1, summary = $2, impact_level = $3, world_impact = $4,
-         financial_signal = $5, affected_assets = $6, last_updated_at = NOW(),
-         article_count = (SELECT COUNT(*) FROM story_articles WHERE story_id = $7)
+         financial_signal = $5, affected_assets = $6, last_updated_at = NOW()
        WHERE id = $7`,
 			[
 				object.title,

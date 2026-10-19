@@ -277,3 +277,13 @@ BEGIN
     ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check3;
     ALTER TABLE news_editions DROP CONSTRAINT IF EXISTS news_editions_kind_check4;
 END $$;
+
+-- Same story, different outlets: near-duplicate articles are kept and grouped
+-- into news_stories instead of being dropped at ingestion.
+-- canonical_url lets exact-duplicate detection ignore tracking params.
+-- Rollback: ALTER TABLE news_articles DROP COLUMN canonical_url;
+--           ALTER TABLE news_stories DROP COLUMN source_count, DROP COLUMN image_url;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS canonical_url TEXT DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_canonical_url ON news_articles(canonical_url) WHERE canonical_url IS NOT NULL;
+ALTER TABLE news_stories ADD COLUMN IF NOT EXISTS source_count INT DEFAULT 0;
+ALTER TABLE news_stories ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT NULL;

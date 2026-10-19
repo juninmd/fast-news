@@ -15,6 +15,15 @@ export interface TopNewsArticle {
 	political_bias: string | null;
 	is_militant: boolean;
 	sourceCount: number;
+	articleCount?: number;
+	/** One entry per outlet covering the story, newest first. */
+	sources?: Array<{
+		id: string;
+		source: string;
+		title: string;
+		url: string;
+		publishedAt: string;
+	}>;
 }
 
 export function useTopNews() {

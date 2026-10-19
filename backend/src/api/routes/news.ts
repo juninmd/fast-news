@@ -4,11 +4,54 @@ import { searchArticles } from "../../services/articleSearch.js";
 import { cacheGet, cacheSet } from "../../services/cache.js";
 import { analyzeCredibility } from "../../services/credibility.js";
 import { fetchFullArticle } from "../../services/fullArticle.js";
+import {
+	composeTopStories,
+	type MemberRow,
+	type StoryRow,
+	toExcerpt,
+} from "../../services/topStories.js";
+import { getTrends } from "../../services/trendsStore.js";
 
 export const newsRouter: Router = Router();
 
+interface FeedMember {
+	id: string;
+	source: string;
+	title: string;
+	url: string;
+	published_at: string;
+}
+
+/** Other outlets covering the same story: one entry per outlet, newest first. */
+function alsoIn(
+	members: FeedMember[] | null,
+	self: { id: string; source: string },
+) {
+	const seen = new Set<string>([self.source]);
+	const out: Array<{
+		id: string;
+		source: string;
+		title: string;
+		url: string;
+		publishedAt: string;
+	}> = [];
+	for (const m of members ?? []) {
+		if (m.id === self.id || seen.has(m.source)) continue;
+		seen.add(m.source);
+		out.push({
+			id: m.id,
+			source: m.source,
+			title: m.title,
+			url: m.url,
+			publishedAt: m.published_at,
+		});
+		if (out.length >= 6) break;
+	}
+	return out;
+}
+
 newsRouter.get("/", async (req: Request, res: Response) => {
-	const page = parseInt((req.query["page"] as string) ?? "1", 10);
+	const page = Math.max(1, parseInt((req.query["page"] as string) ?? "1", 10));
 	const limit = Math.min(
 		parseInt((req.query["limit"] as string) ?? "20", 10),
 		50,
@@ -17,80 +60,130 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 	const minCredibility = req.query["minCredibility"] as string | undefined;
 	const politicalBias = req.query["politicalBias"] as string | undefined;
 	const excludeMilitant = req.query["excludeMilitant"] === "true";
+	// group=true folds the same story from several outlets into one entry (the
+	// newest article) that lists the others in `also_in`; nothing is dropped,
+	// every member stays reachable and the entry carries the outlet count.
+	const group = req.query["group"] === "true";
 	const offset = (page - 1) * limit;
 
-	const cacheKey = `news:list:${page}:${limit}:${category ?? "all"}:${minCredibility ?? "all"}:${politicalBias ?? "all"}:${excludeMilitant}`;
+	const cacheKey = `news:list:${page}:${limit}:${category ?? "all"}:${minCredibility ?? "all"}:${politicalBias ?? "all"}:${excludeMilitant}:${group}`;
 	const cached = await cacheGet(cacheKey);
 	if (cached) return res.json(cached);
 
-	const whereClauses: string[] = [];
-	const params: unknown[] = [limit, offset];
-
-	if (category) {
-		whereClauses.push(`category = $${params.length + 1}`);
-		params.push(category);
-	}
-	if (minCredibility) {
-		const val = parseInt(minCredibility, 10);
-		if (!isNaN(val)) {
-			whereClauses.push(
-				`(fake_news_score IS NULL OR fake_news_score <= $${params.length + 1})`,
-			);
-			params.push(11 - val);
-		}
-	}
-	if (politicalBias && politicalBias !== "all") {
-		whereClauses.push(`political_bias = $${params.length + 1}`);
-		params.push(politicalBias);
-	}
-	if (excludeMilitant) {
-		whereClauses.push(`is_militant = false`);
-	}
-
-	const where = whereClauses.length
-		? `WHERE ${whereClauses.join(" AND ")}`
-		: "";
 	// Fetch one extra row instead of COUNT(*) OVER() — a window aggregate with no
 	// PARTITION BY forces Postgres to materialize the whole matching set before
 	// applying LIMIT, turning every page load into a full-table scan (measured:
 	// 5.3s on prod's 234k-row table vs <10ms for a plain indexed LIMIT).
-	params[0] = limit + 1;
-	const result = await query<{
-		id: string;
-		title: string;
-		summary: string;
-		url: string;
-		source: string;
-		category: string;
-		published_at: string;
-		image_url: string | null;
-		sentiment: string;
-		importance_score: number;
-		fake_news_score: number | null;
-		political_bias: string | null;
-		is_militant: boolean;
-		has_incoherence: boolean;
-	}>(
-		`SELECT id, title, summary, url, source, category, published_at, image_url, sentiment, importance_score
-     FROM news_articles ${where}
-     ORDER BY published_at DESC NULLS LAST
-     LIMIT $1 OFFSET $2`,
-		params,
-	);
+	const params: unknown[] = [limit + 1, offset];
+	const filters: string[] = [];
+	if (category) {
+		params.push(category);
+		filters.push(
+			`(@.category = $${params.length} OR @.theme_category = $${params.length})`,
+		);
+	}
+	if (minCredibility) {
+		const val = parseInt(minCredibility, 10);
+		if (!isNaN(val)) {
+			params.push(11 - val);
+			filters.push(
+				`(@.fake_news_score IS NULL OR @.fake_news_score <= $${params.length})`,
+			);
+		}
+	}
+	if (politicalBias && politicalBias !== "all") {
+		params.push(politicalBias);
+		filters.push(`@.political_bias = $${params.length}`);
+	}
+	if (excludeMilitant) filters.push(`@.is_militant = false`);
+	const clauses = (alias: string) =>
+		filters.map((f) => f.replaceAll("@.", `${alias}.`));
 
-	const hasMore = result.rows.length > limit;
-	const articles = hasMore ? result.rows.slice(0, limit) : result.rows;
+	const pageWhere = clauses("na");
+	if (group) {
+		// Hide an article only when a newer member of its story is itself listed
+		// under the same filters, so no story disappears from a filtered tab.
+		const newer = ["nb.id IS NOT NULL", ...clauses("nb")].join(" AND ");
+		pageWhere.push(`NOT EXISTS (
+        SELECT 1 FROM story_articles sa1
+        JOIN story_articles sa2 ON sa2.story_id = sa1.story_id AND sa2.article_id <> sa1.article_id
+        JOIN news_articles nb ON nb.id = sa2.article_id
+        WHERE sa1.article_id = na.id AND ${newer}
+          AND (COALESCE(nb.published_at, nb.created_at), nb.id)
+            > (COALESCE(na.published_at, na.created_at), na.id))`);
+	}
+	const where = pageWhere.length ? `WHERE ${pageWhere.join(" AND ")}` : "";
 
-	const response = {
-		data: articles,
-		articles,
-		page,
-		limit,
-		hasMore,
-	};
+	try {
+		const result = await query<{
+			id: string;
+			title: string;
+			summary: string | null;
+			content: string | null;
+			url: string;
+			source: string;
+			category: string;
+			theme_category: string | null;
+			published_at: string;
+			image_url: string | null;
+			cover_image: string | null;
+			sentiment: string;
+			importance_score: number;
+			story_id: string | null;
+			source_count: number | null;
+			article_count: number | null;
+			members: FeedMember[] | null;
+		}>(
+			`WITH page AS (
+         SELECT na.id, na.title, na.summary, LEFT(na.content, 800) AS content, na.url,
+                na.source, na.category, na.theme_category, na.published_at, na.image_url,
+                na.sentiment, na.importance_score
+         FROM news_articles na ${where}
+         ORDER BY na.published_at DESC NULLS LAST
+         LIMIT $1 OFFSET $2
+       )
+       SELECT page.*, st.story_id, st.source_count, st.article_count, st.cover_image, st.members
+       FROM page
+       LEFT JOIN LATERAL (
+         SELECT sa.story_id,
+                COUNT(DISTINCT nb.source)::int AS source_count,
+                COUNT(*)::int AS article_count,
+                (ARRAY_AGG(nb.image_url ORDER BY nb.published_at DESC NULLS LAST)
+                   FILTER (WHERE nb.image_url IS NOT NULL))[1] AS cover_image,
+                JSON_AGG(JSON_BUILD_OBJECT('id', nb.id, 'source', nb.source, 'title', nb.title,
+                                           'url', nb.url, 'published_at', nb.published_at)
+                         ORDER BY nb.published_at DESC NULLS LAST) AS members
+         FROM story_articles sa0
+         JOIN story_articles sa ON sa.story_id = sa0.story_id
+         JOIN news_articles nb ON nb.id = sa.article_id
+         WHERE sa0.article_id = page.id
+         GROUP BY sa.story_id
+         ORDER BY COUNT(*) DESC
+         LIMIT 1
+       ) st ON TRUE
+       ORDER BY page.published_at DESC NULLS LAST`,
+			params,
+		);
 
-	await cacheSet(cacheKey, response, 300);
-	return res.json(response);
+		const hasMore = result.rows.length > limit;
+		const articles = (hasMore ? result.rows.slice(0, limit) : result.rows).map(
+			({ members, cover_image, content, summary, ...row }) => ({
+				...row,
+				excerpt: toExcerpt(summary ?? content),
+				image_url: row.image_url ?? cover_image,
+				source_count: row.source_count ?? 1,
+				article_count: row.article_count ?? 1,
+				also_in: alsoIn(members, row),
+			}),
+		);
+
+		const response = { data: articles, articles, page, limit, hasMore };
+		await cacheSet(cacheKey, response, 300);
+		return res.json(response);
+	} catch (err) {
+		console.error("[news] list failed:", (err as Error).message);
+		return res.status(500).json({ error: "Failed to fetch news" });
+	}
 });
 
 newsRouter.get("/search", async (req: Request, res: Response) => {
@@ -116,57 +209,65 @@ newsRouter.get("/top", async (_req: Request, res: Response) => {
 	const cached = await cacheGet("news:top");
 	if (cached) return res.json(cached);
 
-	// "Em alta" ranks by cross-portal coverage, not raw recency: pick one
-	// representative article per active story cluster (news_stories /
-	// story_articles, populated by the correlation job), then rank clusters by
-	// how many articles cover them so the same story from multiple outlets
-	// collapses into a single, higher-ranked entry instead of flooding the list.
-	const result = await query<{
-		id: string;
-		title: string;
-		summary: string;
-		url: string;
-		source: string;
-		category: string;
-		company: string | null;
-		published_at: string;
-		image_url: string | null;
-		importance_score: number;
-		fake_news_score: number | null;
-		political_bias: string | null;
-		is_militant: boolean;
-		source_count: number;
-	}>(
-		`SELECT id, title, summary, url, source, category, company, published_at,
-            image_url, importance_score, fake_news_score, political_bias,
-            is_militant, source_count
-     FROM (
-       SELECT DISTINCT ON (ns.id)
-              na.id, na.title, na.summary, na.url, na.source, na.category, na.company,
-              na.published_at, na.image_url,
-              COALESCE(na.relevance_score, na.importance_score) AS importance_score,
-              na.fake_news_score, na.political_bias, na.is_militant,
-              ns.article_count AS source_count
+	// "Em alta" ranks story clusters (news_stories / story_articles) by how many
+	// distinct outlets cover them, decayed by age, and shows each cluster through
+	// its best article, so one story from many portals is a single entry.
+	try {
+		const stories = await query<StoryRow>(
+			`SELECT ns.id AS story_id, ns.title AS story_title, ns.summary AS story_summary,
+              ns.last_updated_at, COUNT(*)::int AS article_count,
+              COUNT(DISTINCT na.source)::int AS source_count
        FROM news_stories ns
        JOIN story_articles sa ON sa.story_id = ns.id
        JOIN news_articles na ON na.id = sa.article_id
        WHERE ns.status = 'active'
          AND ns.last_updated_at > NOW() - INTERVAL '48 hours'
          AND COALESCE(na.is_spam_or_promo, FALSE) = FALSE
-       ORDER BY ns.id, COALESCE(na.relevance_score, na.importance_score) DESC NULLS LAST, na.published_at DESC
-     ) ranked
-     ORDER BY source_count DESC, importance_score DESC NULLS LAST
-     LIMIT 10`,
-	);
+       GROUP BY ns.id
+       ORDER BY COUNT(DISTINCT na.source) DESC, ns.last_updated_at DESC
+       LIMIT 40`,
+		);
+		const ids = stories.rows.map((r) => r.story_id);
+		const members = ids.length
+			? await query<MemberRow>(
+					`SELECT sa.story_id, na.id, na.title, na.summary, LEFT(na.content, 800) AS content,
+                  na.url, na.source, na.category, na.company, na.published_at, na.image_url,
+                  COALESCE(na.relevance_score, na.importance_score) AS importance_score,
+                  na.fake_news_score, na.political_bias, na.is_militant
+           FROM story_articles sa
+           JOIN news_articles na ON na.id = sa.article_id
+           WHERE sa.story_id = ANY($1::uuid[])
+             AND COALESCE(na.is_spam_or_promo, FALSE) = FALSE`,
+					[ids],
+				)
+			: { rows: [] as MemberRow[] };
 
-	const response = {
-		data: result.rows.map(({ source_count, ...article }) => ({
-			...article,
-			sourceCount: source_count,
-		})),
-	};
-	await cacheSet("news:top", response, 300);
-	return res.json(response);
+		const iso = (v: unknown) => new Date(v as string).toISOString();
+		const data = composeTopStories(
+			stories.rows.map((r) => ({
+				...r,
+				last_updated_at: iso(r.last_updated_at),
+			})),
+			members.rows.map((m) => ({ ...m, published_at: iso(m.published_at) })),
+		);
+		const response = { data };
+		await cacheSet("news:top", response, 300);
+		return res.json(response);
+	} catch (err) {
+		console.error("[news] top failed:", (err as Error).message);
+		return res.status(500).json({ error: "Failed to fetch top news" });
+	}
+});
+
+// Trending terms and themes: burst detection over two equal windows.
+newsRouter.get("/trends", async (req: Request, res: Response) => {
+	const hours = parseInt((req.query["hours"] as string) ?? "24", 10);
+	try {
+		return res.json(await getTrends(Number.isFinite(hours) ? hours : 24));
+	} catch (err) {
+		console.error("[news] trends failed:", (err as Error).message);
+		return res.status(500).json({ error: "Failed to compute trends" });
+	}
 });
 
 newsRouter.get("/categories", async (_req: Request, res: Response) => {

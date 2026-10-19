@@ -96,6 +96,18 @@ Para ativar a publicação e o botão no Telegram, configure `EDITION_DELIVERY_M
 
 Validação focada do backend: `pnpm --dir backend build` e `pnpm --dir backend test`. Os limites `EDITION_MAX_HEADLINES` e `EDITION_PER_SOURCE` controlam somente o material enviado à IA. As demais notícias elegíveis da janela entram nas editorias como matérias complementares com título, trecho e link original, sem novas chamadas de IA. A montagem preserva essas matérias além do limite editorial de três por seção e informa quantas notícias foram representadas ou descartadas pela sanitização. No Pages, as editorias são divididas em páginas de até 100 matérias, mantendo a capa na primeira página, navegação entre páginas e busca na página atual. O publicador verifica todas as páginas antes de liberar o link para o Telegram. Snapshots históricos permanecem inalterados. O agrupamento semântico, a priorização editorial auditada e a recuperação de toda notícia atrasada continuam pendentes.
 
+## 🧬 Ingestão, mesma notícia em várias fontes e temas em alta
+
+Nenhuma notícia é descartada por semelhança. A ingestão só pula duplicatas **exatas** (mesmo `guid`, mesma URL ou mesma URL canônica, sem `utm_*`/`fbclid`/fragmento). O que antes era cortado por similaridade de embedding agora é guardado e **agrupado numa história** (`news_stories`):
+
+- **Agrupamento**: o vizinho mais próximo por embedding (cosseno ≥ `STORY_MATCH_THRESHOLD`, padrão 0,82, janela `STORY_WINDOW_HOURS`=72) define a história. Perto do limiar, a sobreposição de manchete desempata. Sem embedding (provedor fora do ar), o agrupamento cai para comparação lexical de manchetes. Artigos sem vetor ganham vetor e grupo na próxima rodada (`INGESTION_BACKFILL_BATCH`).
+- **Imagens**: `media:content`/`media:thumbnail` (maior largura), `enclosure`, `<img>` do corpo e, por último, `og:image` da própria página (`INGESTION_OG_IMAGE_MAX` por rodada). Imagens ausentes são recuperadas depois; no front, uma história sem foto usa a de outra fonte.
+- **Datas**: item sem data ou com data futura entra com a hora da coleta, em vez de sumir do feed. `MAX_ARTICLES_PER_FEED` subiu para 50.
+- **API**: `GET /api/news?group=true` dobra a mesma história numa entrada (`source_count`, `also_in`) sem esconder nenhum membro; `GET /api/news/top` ranqueia histórias por nº de fontes com decaimento de 12 h; `GET /api/news/trends?hours=24` devolve termos em alta (surto entre duas janelas iguais, exigindo ≥ 2 fontes) e a participação por editoria.
+- **UI**: bloco "Em alta agora" com foto e fontes por história, painel "Temas em alta" (clicar busca o termo), card com selo "N fontes" que expande os links de cada portal, e imagem em todo card, com placeholder quando a foto não carrega.
+
+Capturas em [`docs/evidence/news-grouping/`](docs/evidence/news-grouping).
+
 ## 📜 Licença
 
 MIT
