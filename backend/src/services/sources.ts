@@ -2,6 +2,11 @@ import { query } from "../database/client.js";
 
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{
+		url: "https://news.mit.edu/rss/topic/artificial-intelligence2",
+		category: "IA",
+		company: "MIT News",
+	},
 	{ url: "https://news.ycombinator.com/rss", category: "Tecnologia" },
 
 	{ url: "https://www.hardware.com.br/feed/", category: "Tecnologia" },
