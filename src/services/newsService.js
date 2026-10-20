@@ -3,6 +3,10 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{
+		url: "https://9to5linux.com/feed",
+		category: "Tecnologia",
+	},
+	{
 		url: "https://news.mit.edu/rss/topic/artificial-intelligence2",
 		category: "IA",
 	},
