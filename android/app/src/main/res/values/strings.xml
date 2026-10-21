@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fast News</string>
+    <string name="title_activity_main">Fast News</string>
+    <string name="package_name">com.juninmd.fastnews</string>
+    <string name="custom_url_scheme">com.juninmd.fastnews</string>
+</resources>

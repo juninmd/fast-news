@@ -108,6 +108,21 @@ Nenhuma notícia é descartada por semelhança. A ingestão só pula duplicatas 
 
 Capturas em [`docs/evidence/news-grouping/`](docs/evidence/news-grouping).
 
+## 📱 App Android / iOS (Capacitor)
+
+O mesmo front React roda como app nativo via [Capacitor](https://capacitorjs.com) (`appId` `com.juninmd.fastnews`). Dentro do app, as chamadas `/api/*` e `/health` são reescritas por `src/apiBase.js` para a API publicada (`https://fast-news.antonio-code.duckdns.org`; sobrescreva com `VITE_API_URL` no build).
+
+```bash
+pnpm mobile:apk      # build web + sync + APK debug (precisa de JDK 21 e ANDROID_HOME)
+                     # -> android/app/build/outputs/apk/debug/app-debug.apk
+pnpm mobile:android  # abre no Android Studio
+pnpm mobile:ios      # abre no Xcode (somente macOS)
+```
+
+Em telas estreitas (até 767 px) e no app nativo o front usa o shell mobile em `src/mobile/`: barra inferior (Hoje, Em alta, Buscar, Salvos), leitor em tela cheia, filtros em folha inferior e botão voltar do Android tratado. Telas largas mantêm o layout desktop (`src/AppNeo.tsx`). Fontes embutidas (Bricolage Grotesque, Manrope, JetBrains Mono), então funcionam offline.
+
+O workflow `.github/workflows/mobile.yml` gera o APK como artefato e valida o build iOS no simulador. APK de exemplo e capturas de tela em [`docs/evidence/mobile/`](docs/evidence/mobile). O APK é *debug* (chave de debug); para a loja, configure um keystore de release e, no iOS, o time de assinatura no Xcode.
+
 ## 📜 Licença
 
 MIT
