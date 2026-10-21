@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { headline } from "./fixtures.js";
-import { cleanHeadlines, hourlyCounts, pickForPrompt } from "./select.js";
+import {
+	cleanHeadlines,
+	clusterHeadlines,
+	hourlyCounts,
+	pickForPrompt,
+} from "./select.js";
 
 describe("cleanHeadlines", () => {
 	it("removes lottery, horoscope and shopping noise so it never reaches the front page", () => {
@@ -68,5 +73,36 @@ describe("hourlyCounts", () => {
 		expect(counts[0]).toBe(2);
 		expect(counts[11]).toBe(1);
 		expect(counts.reduce((a, b) => a + b, 0)).toBe(3);
+	});
+});
+
+describe("cleanHeadlines links", () => {
+	it("drops the same article reached through two tracking links", () => {
+		const rows = [
+			headline({ title: "Título A", url: "https://g1.globo.com/x/materia" }),
+			headline({
+				title: "Título A reescrito pela fonte",
+				url: "https://www.g1.globo.com/x/materia/?utm_source=rss",
+			}),
+		];
+		expect(cleanHeadlines(rows, [])).toHaveLength(1);
+	});
+});
+
+describe("clusterHeadlines", () => {
+	it("groups one fact reported by several outlets and keeps others apart", () => {
+		const rows = [
+			headline({ title: "Copom reduz Selic para 13,75% ao ano", source: "G1" }),
+			headline({
+				title: "Banco Central reduz Selic para 13,75% ao ano",
+				source: "Folha",
+			}),
+			headline({
+				title: "Flamengo vai à semifinal da Copa do Brasil",
+				source: "G1",
+			}),
+		];
+		const groups = clusterHeadlines(rows);
+		expect(groups.map((g) => g.length)).toEqual([2, 1]);
 	});
 });
