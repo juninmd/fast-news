@@ -177,8 +177,8 @@ export function TopNewsSection({
 	const [lead, ...rest] = articles;
 
 	return (
-		<section className="h-full border border-border-subtle">
-			<div className="flex items-center justify-between border-b border-border-subtle bg-bg-secondary px-4 py-2">
+		<section className="h-full min-w-0 border border-border-subtle">
+			<div className="flex flex-wrap items-center justify-between gap-x-3 border-b border-border-subtle bg-bg-secondary px-4 py-2">
 				<h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-text-primary">
 					Em alta agora
 				</h2>
