@@ -61,9 +61,17 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 newsRouter.get("/", async (req: Request, res: Response) => {
 	const page = positiveInt(req.query["page"], 1, 1000);
 	const limit = positiveInt(req.query["limit"], 20, 50);
-	const category = req.query["category"] as string | undefined;
-	const minCredibility = req.query["minCredibility"] as string | undefined;
-	const politicalBias = req.query["politicalBias"] as string | undefined;
+	const category = req.query["category"] as string | string[] | undefined as
+		| string
+		| undefined;
+	const minCredibility = req.query["minCredibility"] as
+		| string
+		| string[]
+		| undefined as string | undefined;
+	const politicalBias = req.query["politicalBias"] as
+		| string
+		| string[]
+		| undefined as string | undefined;
 	const excludeMilitant = req.query["excludeMilitant"] === "true";
 	// group=true folds the same story from several outlets into one entry (the
 	// newest article) that lists the others in `also_in`; nothing is dropped,
@@ -192,7 +200,7 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 });
 
 newsRouter.get("/search", async (req: Request, res: Response) => {
-	const q = req.query["q"] as string;
+	const q = req.query["q"] as string | string[] | undefined as string;
 	if (!q || q.trim().length < 3)
 		return res.status(400).json({ error: "Query too short" });
 
@@ -266,7 +274,10 @@ newsRouter.get("/top", async (_req: Request, res: Response) => {
 
 // Trending terms and themes: burst detection over two equal windows.
 newsRouter.get("/trends", async (req: Request, res: Response) => {
-	const hours = parseInt((req.query["hours"] as string) ?? "24", 10);
+	const hours = parseInt(
+		(req.query["hours"] as string | string[] | undefined as string) ?? "24",
+		10,
+	);
 	try {
 		return res.json(await getTrends(Number.isFinite(hours) ? hours : 24));
 	} catch (err) {
