@@ -173,7 +173,7 @@ function App() {
 			/>
 
 			<main className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8">
-				<div className="mb-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+				<div className="mb-10 grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
 					<TopNewsSection onArticleClick={openArticle} />
 					<TrendingPanel onSelectTerm={handleSearch} />
 				</div>

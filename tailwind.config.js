@@ -35,10 +35,25 @@ export default {
 				},
 			},
 			fontFamily: {
-				display: ["Fraunces", "Georgia", "serif"],
-				sans: ["IBM Plex Sans", "system-ui", "sans-serif"],
-				mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
-				numbers: ["IBM Plex Mono", "ui-monospace", "monospace"],
+				display: [
+					"Bricolage Grotesque Variable",
+					"Bricolage Grotesque",
+					"system-ui",
+					"sans-serif",
+				],
+				sans: ["Manrope Variable", "Manrope", "system-ui", "sans-serif"],
+				mono: [
+					"JetBrains Mono Variable",
+					"JetBrains Mono",
+					"ui-monospace",
+					"monospace",
+				],
+				numbers: [
+					"JetBrains Mono Variable",
+					"JetBrains Mono",
+					"ui-monospace",
+					"monospace",
+				],
 			},
 			animation: {
 				"glow-pulse": "glow-pulse 2s ease-in-out infinite",
