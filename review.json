@@ -1,0 +1,1 @@
+{"verdict":"REQUEST_CHANGES","summary":"Found 1 bug in instrumented test package name assertion","findings":[{"file":"android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java","line":24,"severity":"error","issue":"Test asserts package name \"com.getcapacitor.app\" but applicationId is \"com.juninmd.fastnews\"; test will always fail"}]}
