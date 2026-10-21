@@ -1,6 +1,7 @@
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { getArticleEmbedding } from "../database/vectorStore.js";
+import { clipWords } from "../editions/text.js";
 import { getStoryGraph, listActiveStories } from "./correlation.js";
 import { FAST_NEWS_URL, getBot, type TelegramArticle } from "./telegram.js";
 import {
@@ -110,7 +111,7 @@ export async function postArticleToTelegram(
 
 	const related = await fetchRelatedArticles(article.id, article.category);
 	const relatedBlock = related.length
-		? `\n\n${SEPARATOR}\n🔗 <b>Você também pode se interessar por</b>\n${related.map((r) => `• <a href="${r.url}">${escapeHtml(r.title.slice(0, 72))}</a>`).join("\n")}`
+		? `\n\n${SEPARATOR}\n🔗 <b>Você também pode se interessar por</b>\n${related.map((r) => `• <a href="${r.url}">${escapeHtml(clipWords(r.title, 110))}</a>`).join("\n")}`
 		: "";
 
 	const wordCount = (article.fullContent || article.content || "").split(

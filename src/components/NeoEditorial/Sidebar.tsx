@@ -78,7 +78,7 @@ function TopStoryWidget() {
 			<p className="mb-2 font-mono text-[11px] uppercase text-text-secondary">
 				Top notícia agora
 			</p>
-			<p className="font-sans text-sm font-medium leading-snug text-text-primary line-clamp-3">
+			<p className="font-sans text-sm font-medium leading-snug text-text-primary">
 				{story.title}
 			</p>
 			<p className="mt-2 font-mono text-xs text-text-secondary">

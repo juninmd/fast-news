@@ -68,7 +68,10 @@ function build(
 		parts.push("", `<b>O fio: ${esc(t.tema)}</b>`);
 		for (const ev of t.eventos) {
 			const h = e.headlines.get(ev.fonte);
-			parts.push(`${h ? formatLocalTime(h.createdAt) : ""} ${esc(ev.texto)}`);
+			const url = h ? directUrl(h.url) : null;
+			parts.push(
+				`${h ? formatLocalTime(h.createdAt) : ""} ${esc(ev.texto)}${url ? ` <a href="${esc(url)}">↗</a>` : ""}`,
+			);
 		}
 	}
 	parts.push(

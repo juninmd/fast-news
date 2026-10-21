@@ -110,7 +110,11 @@ export function NewsCard({
 			reactions[id] = type;
 			setReaction(type);
 		}
-		localStorage.setItem(REACTIONS_KEY, JSON.stringify(reactions));
+		try {
+			localStorage.setItem(REACTIONS_KEY, JSON.stringify(reactions));
+		} catch {
+			// storage blocked or full: the reaction still shows for this session
+		}
 	}
 
 	const videoEmbedUrl = extractVideoUrl(excerpt);
@@ -128,9 +132,15 @@ export function NewsCard({
 	}
 
 	function handleCopyLink() {
-		navigator.clipboard.writeText(url);
-		setCopied(true);
-		setTimeout(() => setCopied(false), 2000);
+		navigator.clipboard
+			.writeText(url)
+			.then(() => {
+				setCopied(true);
+				setTimeout(() => setCopied(false), 2000);
+			})
+			.catch(() => {
+				// clipboard refused (insecure context or denied permission)
+			});
 	}
 
 	const featured = variant === "featured";

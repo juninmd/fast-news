@@ -9,6 +9,7 @@ import { extractJsonObject } from "./repairJson.js";
 import { sanitizeDraft } from "./sanitize.js";
 import {
 	cleanHeadlines,
+	clusterHeadlines,
 	hourlyCounts,
 	isFactCheck,
 	pickForPrompt,
@@ -172,15 +173,20 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		string,
 		EditionDraft["secoes"][number]["materias"]
 	>();
+	const byCategory = new Map<string, Headline[]>();
 	for (const headline of unrepresented) {
 		const category = headline.category.trim() || "Outras notícias";
-		const stories = factualSections.get(category) ?? [];
-		stories.push({
-			titulo: headline.title,
-			texto: headline.snippet,
-			fontes: [headline.id],
-		});
-		factualSections.set(category, stories);
+		byCategory.set(category, [...(byCategory.get(category) ?? []), headline]);
+	}
+	for (const [category, rows] of byCategory) {
+		factualSections.set(
+			category,
+			clusterHeadlines(rows).map((group) => ({
+				titulo: group[0]?.title ?? "",
+				texto: group[0]?.snippet ?? "",
+				fontes: group.map((h) => h.id),
+			})),
+		);
 	}
 	const draft = factualSections.size
 		? sanitizeDraft(
