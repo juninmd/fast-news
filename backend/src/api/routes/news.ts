@@ -287,7 +287,7 @@ newsRouter.get("/categories", async (_req: Request, res: Response) => {
 });
 
 newsRouter.get("/:id", async (req: Request, res: Response) => {
-	const { id }: { id: string } = req.params;
+	const id = req.params["id"] as string;
 	if (!id || !UUID.test(id))
 		return res.status(404).json({ error: "Article not found" });
 
@@ -329,7 +329,7 @@ newsRouter.get("/:id", async (req: Request, res: Response) => {
 });
 
 newsRouter.get("/:id/related", async (req: Request, res: Response) => {
-	const { id }: { id: string } = req.params;
+	const id = req.params["id"] as string;
 	if (!id || !UUID.test(id))
 		return res.status(404).json({ error: "Article not found" });
 
@@ -359,7 +359,7 @@ newsRouter.get("/:id/related", async (req: Request, res: Response) => {
 });
 
 newsRouter.post("/:id/credibility", async (req: Request, res: Response) => {
-	const { id }: { id: string } = req.params;
+	const id = req.params["id"] as string;
 	if (!id || !UUID.test(id))
 		return res.status(404).json({ error: "Article not found" });
 
