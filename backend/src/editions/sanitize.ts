@@ -13,13 +13,16 @@ import type {
 
 const clip = clipWords;
 
+/** Outlets listed under one story. */
+const MAX_SOURCES = 4;
+
 function validIds(ids: number[], known: Map<number, Headline>): number[] {
-	return [...new Set(ids)].filter((id) => known.has(id)).slice(0, 4);
+	return [...new Set(ids)].filter((id) => known.has(id)).slice(0, MAX_SOURCES);
 }
 
 function story(s: Story, known: Map<number, Headline>): Story | null {
 	const fontes = validIds(s.fontes, known);
-	const titulo = clip(s.titulo, 160);
+	const titulo = clip(s.titulo, 240);
 	if (!titulo || fontes.length === 0) return null;
 	if (isPollutedProse(s.titulo) || isPollutedProse(s.texto)) return null;
 	return {
@@ -40,30 +43,45 @@ const titleKey = (title: string): string =>
 
 /** Tracks what the edition already says so no story appears twice. */
 class Seen {
-	private readonly ids = new Set<number>();
-	private readonly titles = new Set<string>();
-	private readonly similar = new TitleIndex<true>();
+	private readonly byId = new Map<number, Story>();
+	private readonly byTitle = new Map<string, Story>();
+	private readonly similar = new TitleIndex<Story>();
 
-	/** Same headline cited, same title, or near-identical wording. */
-	has(s: Story): boolean {
+	/** The kept story this one repeats: same headline cited, same title, or near-identical wording. */
+	find(s: Story): Story | undefined {
+		for (const id of s.fontes) {
+			const hit = this.byId.get(id);
+			if (hit) return hit;
+		}
 		return (
-			s.fontes.some((id) => this.ids.has(id)) ||
-			this.titles.has(titleKey(s.titulo)) ||
-			this.similar.find(s.titulo, 0.6) !== undefined
+			this.byTitle.get(titleKey(s.titulo)) ?? this.similar.find(s.titulo, 0.6)
 		);
 	}
 
 	add(s: Story): void {
-		for (const id of s.fontes) this.ids.add(id);
-		this.titles.add(titleKey(s.titulo));
-		this.similar.add(s.titulo, true);
+		for (const id of s.fontes) this.byId.set(id, s);
+		this.byTitle.set(titleKey(s.titulo), s);
+		this.similar.add(s.titulo, s);
+	}
+
+	/** Gives the repeated story's outlets to the one already kept, so no link is lost. */
+	absorb(kept: Story, repeat: Story): void {
+		for (const id of repeat.fontes) {
+			if (kept.fontes.length >= MAX_SOURCES) break;
+			if (!kept.fontes.includes(id)) kept.fontes.push(id);
+		}
+		for (const id of kept.fontes) this.byId.set(id, kept);
 	}
 }
 
-/** Drops stories that repeat one already kept earlier in the edition. */
+/** Keeps the first telling of each story; repeats only lend their sources. */
 function fresh(list: Story[], seen: Seen): Story[] {
 	return list.filter((s) => {
-		if (seen.has(s)) return false;
+		const kept = seen.find(s);
+		if (kept) {
+			seen.absorb(kept, s);
+			return false;
+		}
 		seen.add(s);
 		return true;
 	});

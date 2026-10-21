@@ -4,7 +4,7 @@ import type { Headline } from "./types.js";
 import { localHour } from "./window.js";
 
 const JUNK =
-	/horóscopo|horoscopo|tarot|signos?\b|resultado d[oa] (concurso|sorteio)|lotof[aá]cil|quina hoje|mega-sena sorteia|dia de sorte|lotomania|\boferta\b|cupom|menor preço|day trade|mini-?índice|minidólar|como (ativar|acessar|baixar|apagar|ocultar|desconectar)|resumo de .+ próximo capítulo/i;
+	/horóscopo|horoscopo|tarot|signos?\b|resultado d[oa] (concurso|sorteio)|lotof[aá]cil|quina hoje|mega-sena sorteia|dia de sorte|lotomania|\bem oferta\b|\boferta[- ]relâmpago|\boferta (na|no|da|do) (amazon|shopee|mercado livre|magalu|americanas|casas bahia)|\bmelhor oferta|cupom|menor preço|day trade|mini-?índice|minidólar|como (ativar|acessar|baixar|apagar|ocultar|desconectar)|resumo de .+ próximo capítulo/i;
 
 const FACT_CHECK = /^fact_check$/i;
 
@@ -35,8 +35,11 @@ export function cleanHeadlines(
 		if (!key || JUNK.test(h.title) || excluded.has(h.category.toLowerCase()))
 			return false;
 		const url = canonicalUrl(h.url);
-		if (seen.has(key) || (url && seenUrls.has(url))) return false;
-		seen.add(key);
+		// The same title on another site is the same story from another outlet:
+		// kept so the edition can list both, not dropped with its link.
+		const titleOnSite = `${key}|${url.split("/")[0]}`;
+		if (seen.has(titleOnSite) || (url && seenUrls.has(url))) return false;
+		seen.add(titleOnSite);
 		if (url) seenUrls.add(url);
 		return true;
 	});
