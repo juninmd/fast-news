@@ -76,6 +76,41 @@ describe("hourlyCounts", () => {
 	});
 });
 
+describe("cleanHeadlines across outlets", () => {
+	it("keeps the same title from another site so both outlets get linked", () => {
+		const rows = [
+			headline({
+				title: "Co-CEO da Netflix diz que podemos fazer melhor",
+				url: "https://www.infomoney.com.br/a",
+			}),
+			headline({
+				title: "Co-CEO da Netflix diz que podemos fazer melhor",
+				url: "https://www.cnnbrasil.com.br/b",
+				source: "CNN Brasil",
+			}),
+			headline({
+				title: "Co-CEO da Netflix diz que podemos fazer melhor",
+				url: "https://www.infomoney.com.br/c",
+				source: "InfoMoney Feed 2",
+			}),
+		];
+		expect(cleanHeadlines(rows, [])).toHaveLength(2);
+	});
+
+	it("does not mistake a diplomatic offer for a shopping deal", () => {
+		const rows = [
+			headline({
+				title: "Irã diz que Arábia Saudita não respondeu oferta de mediação",
+			}),
+			headline({ title: "Smartwatch em oferta com frete grátis" }),
+			headline({ title: "Oferta-relâmpago: patinete elétrico por R$ 987" }),
+		];
+		expect(cleanHeadlines(rows, []).map((h) => h.title)).toEqual([
+			"Irã diz que Arábia Saudita não respondeu oferta de mediação",
+		]);
+	});
+});
+
 describe("cleanHeadlines links", () => {
 	it("drops the same article reached through two tracking links", () => {
 		const rows = [

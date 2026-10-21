@@ -241,4 +241,27 @@ describe("sanitizeDraft", () => {
 		);
 		expect(out.numeros[0]?.fonte).toBe(a);
 	});
+
+	it("hands the sources of a repeated story to the one that stays", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: {
+					...draft().manchete,
+					titulo: "Presidente do Vasco é internado com celulite facial",
+					fontes: [a],
+				},
+				destaques: [
+					{
+						titulo:
+							"Pedrinho, presidente do Vasco, é internado com celulite facial",
+						texto: "",
+						fontes: [b],
+					},
+				],
+			}),
+			known,
+		);
+		expect(out.destaques).toEqual([]);
+		expect(out.manchete.fontes).toEqual([a, b]);
+	});
 });
