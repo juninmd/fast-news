@@ -173,20 +173,18 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		string,
 		EditionDraft["secoes"][number]["materias"]
 	>();
-	const byCategory = new Map<string, Headline[]>();
-	for (const headline of unrepresented) {
-		const category = headline.category.trim() || "Outras notícias";
-		byCategory.set(category, [...(byCategory.get(category) ?? []), headline]);
-	}
-	for (const [category, rows] of byCategory) {
-		factualSections.set(
-			category,
-			clusterHeadlines(rows).map((group) => ({
-				titulo: group[0]?.title ?? "",
-				texto: group[0]?.snippet ?? "",
-				fontes: group.map((h) => h.id),
-			})),
-		);
+	// Cluster across categories: the same fact filed under two desks is still
+	// one story, so its outlets stay together instead of one being dropped.
+	for (const group of clusterHeadlines(unrepresented)) {
+		const lead = group[0] as Headline;
+		const category = lead.category.trim() || "Outras notícias";
+		const stories = factualSections.get(category) ?? [];
+		stories.push({
+			titulo: lead.title,
+			texto: lead.snippet,
+			fontes: group.map((h) => h.id),
+		});
+		factualSections.set(category, stories);
 	}
 	const draft = factualSections.size
 		? sanitizeDraft(
