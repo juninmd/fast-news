@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { canonicalUrl, titleSimilarity, tokenize } from "./textSimilarity.js";
+import {
+	canonicalUrl,
+	resolveHttpUrl,
+	titleSimilarity,
+	tokenize,
+} from "./textSimilarity.js";
 
 describe("tokenize", () => {
 	it("drops accents, stopwords and short numbers", () => {
@@ -43,5 +48,24 @@ describe("canonicalUrl", () => {
 
 	it("keeps unparseable input", () => {
 		expect(canonicalUrl("not a url")).toBe("not a url");
+	});
+});
+
+describe("resolveHttpUrl", () => {
+	const feed = "https://example.com/rss.xml";
+
+	it("trims padded links and resolves relative ones against the feed", () => {
+		expect(resolveHttpUrl("  https://example.com/a  ", feed)).toBe(
+			"https://example.com/a",
+		);
+		expect(resolveHttpUrl("/noticia/1", feed)).toBe(
+			"https://example.com/noticia/1",
+		);
+	});
+
+	it("rejects empty and non-web links", () => {
+		expect(resolveHttpUrl(undefined, feed)).toBe("");
+		expect(resolveHttpUrl("javascript:alert(1)", feed)).toBe("");
+		expect(resolveHttpUrl("mailto:a@b.c", feed)).toBe("");
 	});
 });

@@ -121,7 +121,9 @@ export function composeTopStories(
 				id: lead.id,
 				storyId: story.story_id,
 				title: lead.title,
-				summary: story.story_summary ?? toExcerpt(lead.summary ?? lead.content),
+				summary:
+					story.story_summary?.trim() ||
+					toExcerpt(lead.summary?.trim() || lead.content),
 				url: lead.url,
 				source: lead.source,
 				category: lead.category,

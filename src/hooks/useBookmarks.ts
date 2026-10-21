@@ -4,7 +4,8 @@ const KEY = "fn_bookmarks";
 
 function load(): string[] {
 	try {
-		return JSON.parse(localStorage.getItem(KEY) ?? "[]");
+		const saved = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+		return Array.isArray(saved) ? saved : [];
 	} catch {
 		return [];
 	}
@@ -24,7 +25,11 @@ function getSnapshot(): string[] {
 
 function setBookmarks(next: string[]) {
 	bookmarks = next;
-	localStorage.setItem(KEY, JSON.stringify(next));
+	try {
+		localStorage.setItem(KEY, JSON.stringify(next));
+	} catch {
+		// storage blocked or full: bookmarks last until the tab closes
+	}
 	for (const listener of listeners) listener();
 }
 
