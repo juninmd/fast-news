@@ -5,6 +5,8 @@ import {
 	getArticleEmbedding,
 	updateUserPreference,
 } from "../database/vectorStore.js";
+import { esc } from "../editions/escape.js";
+import { clipWords } from "../editions/text.js";
 import { getFastModel } from "./aiProvider.js";
 import { analyzeTopicWithRAG, getAllTrackedTopics } from "./analysis.js";
 import { listActiveStories } from "./correlation.js";
@@ -192,7 +194,7 @@ function setupCommands(bot: Telegraf): void {
 		const text = articles
 			.map(
 				(a, i) =>
-					`${i + 1}. <b>${a.title.slice(0, 80)}</b>\n   📰 ${a.source} — <a href="${a.url}">ler</a>`,
+					`${i + 1}. <b>${esc(clipWords(a.title, 110))}</b>\n   📰 ${a.source} — <a href="${a.url}">ler</a>`,
 			)
 			.join("\n\n");
 		await ctx.replyWithHTML(
@@ -234,7 +236,7 @@ function setupCommands(bot: Telegraf): void {
 		if (!question) return ctx.reply("❓ Use: /ask [pergunta]");
 		const articles = await searchSimilarArticles(question, 7, 5);
 		const text = articles
-			.map((a) => `• [${a.title.slice(0, 70)}](${a.url}) — _${a.source}_`)
+			.map((a) => `• [${clipWords(a.title, 110)}](${a.url}) — _${a.source}_`)
 			.join("\n");
 		await ctx.reply(
 			`🔍 *Resultados para:* _${question}_\n\n${text || "Nenhum resultado."}`,

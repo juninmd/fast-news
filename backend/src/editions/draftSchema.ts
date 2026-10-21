@@ -54,7 +54,12 @@ export const extrasSchema = z.object({
 		.default([]),
 	numeros: z
 		.array(
-			z.object({ rotulo: z.string(), valor: z.coerce.string(), nota: text }),
+			z.object({
+				rotulo: z.string(),
+				valor: z.coerce.string(),
+				nota: text,
+				fonte: id.optional(),
+			}),
 		)
 		.default([]),
 	leve: z.array(z.string()).default([]),

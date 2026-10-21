@@ -71,6 +71,15 @@ function Lead({
 							? `${article.articleCount} reportagens`
 							: null}
 					</span>
+					<a
+						href={article.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="ml-auto inline-flex items-center gap-1 font-mono text-[11px] text-text-secondary hover:text-accent-primary"
+					>
+						Ler reportagem
+						<ExternalLink className="h-3 w-3" />
+					</a>
 				</div>
 				{others.length > 0 && (
 					<ul className="mt-3 divide-y divide-border-subtle border border-border-subtle">
@@ -85,7 +94,7 @@ function Lead({
 									<span className="w-24 shrink-0 truncate font-mono text-[11px] uppercase tracking-wide text-text-secondary">
 										{o.source}
 									</span>
-									<span className="min-w-0 flex-1 truncate text-text-primary group-hover/link:text-accent-primary">
+									<span className="min-w-0 flex-1 text-text-primary group-hover/link:text-accent-primary">
 										{o.title}
 									</span>
 									<ExternalLink className="h-3 w-3 shrink-0 text-text-secondary opacity-0 group-hover/link:opacity-100" />
@@ -129,7 +138,7 @@ function Tile({
 						{timeAgoShort(article.published_at)}
 					</span>
 				</span>
-				<span className="line-clamp-2 block font-display text-[15px] font-medium leading-snug text-text-primary transition-colors group-hover:text-accent-primary">
+				<span className="block font-display text-[15px] font-medium leading-snug text-text-primary transition-colors group-hover:text-accent-primary">
 					{article.title}
 				</span>
 				{article.sourceCount > 1 && (

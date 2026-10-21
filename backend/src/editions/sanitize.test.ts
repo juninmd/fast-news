@@ -157,4 +157,88 @@ describe("sanitizeDraft", () => {
 		expect(out.secoes[0]?.notas).toEqual(["ok"]);
 		expect(out.leve).toEqual(["Gato resgatado"]);
 	});
+
+	it("keeps one story when the cover, a highlight and a section repeat it", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: {
+					...draft().manchete,
+					titulo: "SUS começa a oferecer nove medicamentos contra o câncer",
+					fontes: [a],
+				},
+				destaques: [
+					{
+						titulo: "SUS começa a oferecer nove medicamentos contra o câncer",
+						texto: "x",
+						fontes: [a],
+					},
+					{ titulo: "Flamengo vai à semifinal", texto: "x", fontes: [c] },
+				],
+				secoes: [
+					{
+						nome: "Esportes",
+						materias: [
+							{
+								titulo: "Flamengo avança à semifinal",
+								texto: "x",
+								fontes: [c],
+							},
+						],
+						notas: ["Nota"],
+					},
+				],
+			}),
+			known,
+		);
+		expect(out.destaques.map((s) => s.fontes)).toEqual([[c]]);
+		expect(out.secoes[0]?.materias).toEqual([]);
+	});
+
+	it("merges sections that share a name instead of repeating the heading", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: { ...draft().manchete, fontes: [a] },
+				secoes: [
+					{
+						nome: "Política",
+						materias: [{ titulo: "Um", texto: "", fontes: [b] }],
+						notas: [],
+					},
+					{
+						nome: "politica",
+						materias: [{ titulo: "Dois", texto: "", fontes: [d] }],
+						notas: [],
+					},
+				],
+			}),
+			known,
+		);
+		expect(out.secoes).toHaveLength(1);
+		expect(out.secoes[0]?.materias.map((m) => m.titulo)).toEqual([
+			"Um",
+			"Dois",
+		]);
+	});
+
+	it("does not cut long labels mid-word", () => {
+		const out = sanitizeDraft(
+			draft({
+				manchete: { ...draft().manchete, fontes: [a] },
+				numeros: [
+					{
+						rotulo:
+							"Agressores presos na Operação Mulher Segura em todo o país",
+						valor: "13,75%",
+						nota: "",
+						fonte: a,
+					},
+				],
+			}),
+			known,
+		);
+		expect(out.numeros[0]?.rotulo).toBe(
+			"Agressores presos na Operação Mulher Segura em todo o país",
+		);
+		expect(out.numeros[0]?.fonte).toBe(a);
+	});
 });

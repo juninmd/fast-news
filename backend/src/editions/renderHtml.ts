@@ -83,7 +83,7 @@ function ticker(e: Edition): string {
 	return `<div class="ticker">${e.draft.numeros
 		.map(
 			(n) =>
-				`<div class="tick"><span>${esc(n.rotulo)}</span><b>${esc(n.valor)}</b><small>${esc(n.nota)}</small></div>`,
+				`<div class="tick"><span>${esc(n.rotulo)}</span><b>${esc(n.valor)}</b><small>${esc(n.nota)}</small>${n.fonte ? sources([n.fonte], e.headlines) : ""}</div>`,
 		)
 		.join("")}</div>`;
 }
