@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface NewsArticle {
 	id: string;
@@ -68,9 +68,14 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 	const [error, setError] = useState<Error | null>(null);
 	const [page, setPage] = useState(1);
 	const [hasMore, setHasMore] = useState(true);
+	// Newest request wins: a slow answer for an old filter must not overwrite
+	// the list the reader is looking at.
+	const requestId = useRef(0);
+	const loadingMore = useRef(false);
 
 	const fetchArticles = useCallback(
 		async (pageNum: number, append = false) => {
+			const mine = ++requestId.current;
 			try {
 				setLoading(!append);
 				setError(null);
@@ -102,18 +107,24 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 				if (!response.ok) throw new Error("Failed to fetch articles");
 
 				const data = await response.json();
+				if (mine !== requestId.current) return;
 				const newArticles = (data.articles || data.data || []).map(
 					toNewsArticle,
 				);
 
-				setArticles((prev) =>
-					append ? [...prev, ...newArticles] : newArticles,
-				);
+				// New articles shift the offsets, so a later page can repeat
+				// entries already on screen.
+				setArticles((prev) => {
+					if (!append) return newArticles;
+					const have = new Set(prev.map((a) => a.id));
+					return [...prev, ...newArticles.filter((a) => !have.has(a.id))];
+				});
 				setHasMore(data.hasMore ?? newArticles.length > 0);
 			} catch (err) {
+				if (mine !== requestId.current) return;
 				setError(err instanceof Error ? err : new Error("Unknown error"));
 			} finally {
-				setLoading(false);
+				if (mine === requestId.current) setLoading(false);
 			}
 		},
 		[
@@ -138,10 +149,15 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 	}, [fetchArticles]);
 
 	const loadMore = useCallback(async () => {
-		if (!hasMore || loading) return;
-		const nextPage = page + 1;
-		setPage(nextPage);
-		await fetchArticles(nextPage, true);
+		if (!hasMore || loading || loadingMore.current) return;
+		loadingMore.current = true;
+		try {
+			const nextPage = page + 1;
+			setPage(nextPage);
+			await fetchArticles(nextPage, true);
+		} finally {
+			loadingMore.current = false;
+		}
 	}, [page, hasMore, loading, fetchArticles]);
 
 	return { articles, loading, error, refetch, loadMore, hasMore };

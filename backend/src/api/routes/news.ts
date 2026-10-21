@@ -50,12 +50,17 @@ function alsoIn(
 	return out;
 }
 
+/** Query-string integer clamped to 1..max; junk, zero and negatives fall back. */
+function positiveInt(raw: unknown, fallback: number, max: number): number {
+	const n = Number.parseInt(String(raw ?? ""), 10);
+	return Number.isFinite(n) && n >= 1 ? Math.min(n, max) : fallback;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 newsRouter.get("/", async (req: Request, res: Response) => {
-	const page = Math.max(1, parseInt((req.query["page"] as string) ?? "1", 10));
-	const limit = Math.min(
-		parseInt((req.query["limit"] as string) ?? "20", 10),
-		50,
-	);
+	const page = positiveInt(req.query["page"], 1, 1000);
+	const limit = positiveInt(req.query["limit"], 20, 50);
 	const category = req.query["category"] as string | undefined;
 	const minCredibility = req.query["minCredibility"] as string | undefined;
 	const politicalBias = req.query["politicalBias"] as string | undefined;
@@ -169,7 +174,7 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 		const articles = (hasMore ? result.rows.slice(0, limit) : result.rows).map(
 			({ members, cover_image, content, summary, ...row }) => ({
 				...row,
-				excerpt: toExcerpt(summary ?? content),
+				excerpt: toExcerpt(summary?.trim() || content),
 				image_url: row.image_url ?? cover_image,
 				source_count: row.source_count ?? 1,
 				article_count: row.article_count ?? 1,
@@ -283,6 +288,8 @@ newsRouter.get("/categories", async (_req: Request, res: Response) => {
 
 newsRouter.get("/:id", async (req: Request, res: Response) => {
 	const { id } = req.params;
+	if (!id || !UUID.test(id))
+		return res.status(404).json({ error: "Article not found" });
 
 	const cacheKey = `news:article:${id}`;
 	const cached = await cacheGet(cacheKey);
@@ -323,6 +330,8 @@ newsRouter.get("/:id", async (req: Request, res: Response) => {
 
 newsRouter.get("/:id/related", async (req: Request, res: Response) => {
 	const { id } = req.params;
+	if (!id || !UUID.test(id))
+		return res.status(404).json({ error: "Article not found" });
 
 	const cacheKey = `news:related:${id}`;
 	const cached = await cacheGet(cacheKey);
@@ -351,6 +360,8 @@ newsRouter.get("/:id/related", async (req: Request, res: Response) => {
 
 newsRouter.post("/:id/credibility", async (req: Request, res: Response) => {
 	const { id } = req.params;
+	if (!id || !UUID.test(id))
+		return res.status(404).json({ error: "Article not found" });
 
 	const article = await query<{
 		title: string;

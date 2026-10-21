@@ -70,6 +70,24 @@ export function titleSimilarity(a: string, b: string): number {
 	return tokenSetSimilarity(titleTokenSet(a), titleTokenSet(b));
 }
 
+/**
+ * Absolute http(s) URL for a feed link, or "" when it has none. Feeds ship
+ * padded, relative and non-web links; stored as-is they never open from the
+ * edition or the app, so they are fixed here once at ingestion.
+ */
+export function resolveHttpUrl(raw: string | undefined, base: string): string {
+	const value = (raw ?? "").trim();
+	if (!value) return "";
+	try {
+		const url = new URL(value, base);
+		return url.protocol === "https:" || url.protocol === "http:"
+			? url.toString()
+			: "";
+	} catch {
+		return "";
+	}
+}
+
 const TRACKING_PARAM =
 	/^(utm_|fbclid$|gclid$|mc_|ref$|ref_|cmpid$|ocid$|at_|src$)/i;
 
