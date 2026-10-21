@@ -59,4 +59,31 @@ describe("renderEditionMarkdown", () => {
 		);
 		expect(out.markdown).not.toContain("javascript:");
 	});
+
+	it("links every thread event and figure back to its source", () => {
+		const h = headline({ source: "G1", url: "https://example.com/fio" });
+		const out = renderEditionMarkdown(
+			edition(
+				draft({
+					manchete: { ...draft().manchete, titulo: "M", fontes: [h.id] },
+					fio: [
+						{
+							tema: "Tema",
+							eventos: [{ fonte: h.id, texto: "Aconteceu algo" }],
+						},
+					],
+					numeros: [
+						{ rotulo: "Selic", valor: "13,75%", nota: "", fonte: h.id },
+					],
+				}),
+				knownOf([h]),
+			),
+		);
+		expect(out.markdown).toContain(
+			"Aconteceu algo *Fontes: [G1](<https://example.com/fio>)*",
+		);
+		expect(out.markdown).toContain(
+			"**Selic:** 13,75% *Fontes: [G1](<https://example.com/fio>)*",
+		);
+	});
 });

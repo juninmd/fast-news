@@ -32,7 +32,10 @@ export function useTopNews() {
 
 	useEffect(() => {
 		fetch("/api/news/top")
-			.then((r) => r.json())
+			.then((r) => {
+				if (!r.ok) throw new Error(`HTTP ${r.status}`);
+				return r.json();
+			})
 			.then((d) => setArticles(d.data ?? []))
 			.catch(() => {
 				// top-news widget is optional; ignore fetch failures

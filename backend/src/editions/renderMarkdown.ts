@@ -1,4 +1,5 @@
 import { directUrl } from "./escape.js";
+import { clipWords } from "./text.js";
 import type { Edition, Headline, Story, Thread } from "./types.js";
 import { formatLocalDate, formatLocalTime } from "./window.js";
 
@@ -38,7 +39,7 @@ function sources(ids: number[], known: Known): string {
 		.filter((h): h is Headline => Boolean(h))
 		.map((h) => {
 			const url = directUrl(h.url);
-			const name = mdEscape(h.source.slice(0, 28));
+			const name = mdEscape(clipWords(h.source, 40));
 			return url ? `[${name}](<${url.replace(/>/g, "%3E")}>)` : name;
 		});
 	return links.length ? `*Fontes: ${links.join(" · ")}*` : "";
@@ -62,7 +63,8 @@ function threads(list: Thread[], known: Known): string {
 		const items = t.eventos.map((e) => {
 			const h = known.get(e.fonte);
 			const time = h ? `**${formatLocalTime(h.createdAt)}** · ` : "";
-			return `- ${time}${mdEscape(e.texto)}`;
+			const link = h ? ` ${sources([h.id], known)}` : "";
+			return `- ${time}${mdEscape(e.texto)}${link}`;
 		});
 		return `### ${mdEscape(t.tema)}\n\n${items.join("\n")}`;
 	});
@@ -86,10 +88,13 @@ function numbers(e: Edition): string {
 		);
 	if (selicRate !== null)
 		rows.push(`- **Selic:** ${selicRate.toFixed(2).replace(".", ",")}% a.a.`);
-	for (const n of e.draft.numeros)
+	for (const n of e.draft.numeros) {
+		const note = n.nota ? ` — ${mdEscape(n.nota)}` : "";
+		const link = n.fonte ? ` ${sources([n.fonte], e.headlines)}` : "";
 		rows.push(
-			`- **${mdEscape(n.rotulo)}:** ${mdEscape(n.valor)} — ${mdEscape(n.nota)}`,
+			`- **${mdEscape(n.rotulo)}:** ${mdEscape(n.valor)}${note}${link}`,
 		);
+	}
 	return rows.length ? `## Números\n\n${rows.join("\n")}` : "";
 }
 

@@ -1,5 +1,6 @@
 import { directUrl, esc, safeUrl } from "./escape.js";
 import { hourLabels } from "./select.js";
+import { clipWords } from "./text.js";
 import type { Headline, QuizItem, Story, Thread } from "./types.js";
 import { formatLocalTime } from "./window.js";
 
@@ -11,7 +12,7 @@ export function sources(ids: number[], known: Known): string {
 		.filter((h): h is Headline => Boolean(h))
 		.map((h) => {
 			const url = directUrl(h.url);
-			const name = esc(h.source.slice(0, 28));
+			const name = esc(clipWords(h.source, 40));
 			return url
 				? `<a href="${esc(url)}" target="_blank" rel="noopener">${name}</a>`
 				: name;
@@ -52,7 +53,8 @@ export function threads(list: Thread[], known: Known): string {
 				.map((e) => {
 					const h = known.get(e.fonte);
 					const time = h ? formatLocalTime(h.createdAt) : "";
-					return `<li><time>${time}</time>${esc(e.texto)}</li>`;
+					const link = h ? ` ${sources([h.id], known)}` : "";
+					return `<li><time>${time}</time>${esc(e.texto)}${link}</li>`;
 				})
 				.join("");
 			return `<div><h4>${esc(t.tema)}</h4><ol>${items}</ol></div>`;

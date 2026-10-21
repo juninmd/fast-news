@@ -1,3 +1,5 @@
+import { canonicalUrl } from "../services/textSimilarity.js";
+import { TitleIndex } from "./text.js";
 import type { Headline } from "./types.js";
 import { localHour } from "./window.js";
 
@@ -20,21 +22,53 @@ function normalizeTitle(title: string): string {
 		.trim();
 }
 
-/** Drops empty, junk, excluded-category and duplicate-title headlines. */
+/** Drops empty, junk, excluded-category and duplicate-title or duplicate-link headlines. */
 export function cleanHeadlines(
 	rows: Headline[],
 	excludedCategories: string[],
 ): Headline[] {
 	const excluded = new Set(excludedCategories.map((c) => c.toLowerCase()));
 	const seen = new Set<string>();
+	const seenUrls = new Set<string>();
 	return rows.filter((h) => {
 		const key = normalizeTitle(h.title);
 		if (!key || JUNK.test(h.title) || excluded.has(h.category.toLowerCase()))
 			return false;
-		if (seen.has(key)) return false;
+		const url = canonicalUrl(h.url);
+		if (seen.has(key) || (url && seenUrls.has(url))) return false;
 		seen.add(key);
+		if (url) seenUrls.add(url);
 		return true;
 	});
+}
+
+/**
+ * Groups headlines that report the same fact in other words, so the page shows
+ * the story once with every outlet linked. Greedy, in input order; a group
+ * stops growing at `maxSize` so the overflow starts a group of its own.
+ */
+export function clusterHeadlines(
+	rows: Headline[],
+	threshold = 0.5,
+	maxSize = 4,
+): Headline[][] {
+	const groups: Headline[][] = [];
+	const leaders = new TitleIndex<Headline[]>();
+	for (const h of rows) {
+		const home = leaders.find(
+			h.title,
+			threshold,
+			(g) => g.length < maxSize && !g.some((m) => m.source === h.source),
+		);
+		if (home) {
+			home.push(h);
+			continue;
+		}
+		const group = [h];
+		groups.push(group);
+		leaders.add(h.title, group);
+	}
+	return groups;
 }
 
 /**

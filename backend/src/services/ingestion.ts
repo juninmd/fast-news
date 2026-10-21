@@ -10,7 +10,7 @@ import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedBatch, vectorToSQL } from "./embeddings.js";
 import { scoreRelevance } from "./relevance.js";
 import { getActiveFeeds } from "./sources.js";
-import { canonicalUrl } from "./textSimilarity.js";
+import { canonicalUrl, resolveHttpUrl } from "./textSimilarity.js";
 import { classifyTheme } from "./themeClassification.js";
 
 const parser = new Parser({
@@ -165,7 +165,11 @@ async function fetchFeed(source: {
 						? parsed
 						: now;
 				const link =
-					item.link ?? (/^https?:\/\//.test(item.guid ?? "") ? item.guid : "");
+					resolveHttpUrl(item.link, source.url) ||
+					resolveHttpUrl(
+						/^https?:\/\//.test(item.guid ?? "") ? item.guid : "",
+						source.url,
+					);
 
 				const stableGuid =
 					item.guid ??
@@ -179,9 +183,9 @@ async function fetchFeed(source: {
 				return {
 					guid:
 						stableGuid ?? createHash("sha1").update(source.url).digest("hex"),
-					title: item.title ?? "Sem título",
-					content: item.contentSnippet ?? item.summary ?? item.content ?? "",
-					url: link ?? "",
+					title: item.title?.replace(/\s+/g, " ").trim() ?? "",
+					content: item.contentSnippet || item.summary || item.content || "",
+					url: link,
 					source: feed.title?.trim() || source.company || source.url,
 					category: source.category,
 					company: source.company,

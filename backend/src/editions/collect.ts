@@ -1,4 +1,5 @@
 import { query } from "../database/client.js";
+import { clipWords } from "./text.js";
 import type { EditionWindow, Headline } from "./types.js";
 
 // A hard cap keeps a runaway feed from blowing the job's memory. Fetch one
@@ -22,7 +23,7 @@ export async function collectHeadlines(
 ): Promise<Headline[]> {
 	const res = await query<Row>(
 		`SELECT id, title, source, coalesce(theme_category, category) AS category, url, created_at, image_url,
-		        left(regexp_replace(coalesce(nullif(summary, ''), content, ''), '\\s+', ' ', 'g'), 220) AS snippet
+		        left(regexp_replace(coalesce(nullif(summary, ''), content, ''), '\\s+', ' ', 'g'), 400) AS snippet
 		   FROM news_articles
 		  WHERE created_at >= $1 AND created_at < $2
 		    AND coalesce(title, '') <> ''
@@ -41,7 +42,7 @@ export async function collectHeadlines(
 		source: (r.source ?? "Fonte desconhecida").trim(),
 		category: r.category ?? "",
 		url: r.url.trim(),
-		snippet: (r.snippet ?? "").trim(),
+		snippet: clipWords(r.snippet ?? "", 220),
 		createdAt: new Date(r.created_at),
 		imageUrl: r.image_url?.trim() || null,
 	}));

@@ -54,6 +54,8 @@ export interface Figure {
 	rotulo: string;
 	valor: string;
 	nota: string;
+	/** Headline the number comes from, so the page can link to it. */
+	fonte?: number;
 }
 
 export interface QuizItem {
