@@ -3,6 +3,12 @@
 
 @layer base {
 	:root {
+		/* Notch/gesture-bar insets: the CSS env() value, or the variable Capacitor injects on older Android WebViews. */
+		--sat: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+		--sab: max(
+			env(safe-area-inset-bottom, 0px),
+			var(--safe-area-inset-bottom, 0px)
+		);
 		/* Unbleached paper — not pure white, reduces glare, reads as newsprint. */
 		--canvas: #eef0ea;
 		--panel: #e4e7de;
