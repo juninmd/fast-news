@@ -3,6 +3,11 @@ import { query } from "../database/client.js";
 export const FEED_SOURCES = [
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.sciencenews.org/feed",
+		category: "Ciência",
+		company: "Science News",
+	},
+	{
 		url: "https://9to5linux.com/feed",
 		category: "Tecnologia",
 		company: "9to5Linux",
