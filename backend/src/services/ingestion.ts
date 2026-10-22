@@ -5,13 +5,20 @@ import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
+import { isAiRelated } from "./aiScope.js";
 import { extractImageUrl, fetchOgImage } from "./articleImages.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedBatch, vectorToSQL } from "./embeddings.js";
 import { scoreRelevance } from "./relevance.js";
-import { getActiveFeeds } from "./sources.js";
+import { recordFeedResult, sanitizeError } from "./sourceHealth.js";
+import {
+	getActiveFeeds,
+	isLlmFreeCategory,
+	LLM_FREE_MAX_ITEMS,
+} from "./sources.js";
 import { canonicalUrl, resolveHttpUrl } from "./textSimilarity.js";
 import { classifyTheme } from "./themeClassification.js";
+import { pingWebSubHub, publicFeedUrls } from "./websub.js";
 
 const parser = new Parser({
 	customFields: {
@@ -138,12 +145,14 @@ export interface RawArticle {
 	company?: string;
 	publishedAt: Date | null;
 	imageUrl?: string;
+	promptHint?: string;
 }
 
 async function fetchFeed(source: {
 	url: string;
 	category: string;
 	company?: string;
+	promptHint?: string;
 }): Promise<RawArticle[]> {
 	try {
 		const host = new URL(source.url).hostname;
@@ -151,8 +160,14 @@ async function fetchFeed(source: {
 			withRetry(() => fetchXml(source.url)),
 		);
 		const feed = await parser.parseString(xml);
+		await recordFeedResult(source.url, true);
 		return (feed.items ?? [])
-			.slice(0, config.ingestion.maxArticlesPerFeed)
+			.slice(
+				0,
+				isLlmFreeCategory(source.category)
+					? Math.min(LLM_FREE_MAX_ITEMS, config.ingestion.maxArticlesPerFeed)
+					: config.ingestion.maxArticlesPerFeed,
+			)
 			.map((item) => {
 				// Robust date parsing
 				const dateStr = item.isoDate ?? item.pubDate;
@@ -189,6 +204,7 @@ async function fetchFeed(source: {
 					source: feed.title?.trim() || source.company || source.url,
 					category: source.category,
 					company: source.company,
+					...(source.promptHint ? { promptHint: source.promptHint } : {}),
 					publishedAt,
 					imageUrl: extractImageUrl(
 						item as unknown as Record<string, unknown>,
@@ -201,6 +217,11 @@ async function fetchFeed(source: {
 			"[ingestion] feed failed:",
 			source.url,
 			(err as Error).message,
+		);
+		await recordFeedResult(
+			source.url,
+			false,
+			sanitizeError((err as Error).message),
 		);
 		return [];
 	}
@@ -261,15 +282,23 @@ async function prepareArticle(
 	);
 	if (existing.rowCount && existing.rowCount > 0) return null;
 
+	// Budget categories keep a plain-text embedding input and no theme/relevance
+	// calls: see LLM_FREE_CATEGORIES.
+	const llmFree = isLlmFreeCategory(article.category);
 	const textToEmbed = ollamaUp
-		? await summarizeForEmbedding(article.title, article.content || "")
+		? llmFree
+			? `${article.title}. ${(article.content || "").replace(/<\/?[^>]+(>|$)/g, " ").replace(/\s+/g, " ")}`.slice(
+					0,
+					1000,
+				)
+			: await summarizeForEmbedding(article.title, article.content || "")
 		: "";
 
 	// Per-article editorial theme, separate from the static feed `category`.
 	// fact_check articles keep no theme — they are a sentinel, not editorial
 	// content (see editions/select.ts isFactCheck).
 	const themeCategory =
-		article.category === "fact_check"
+		article.category === "fact_check" || llmFree
 			? null
 			: await classifyTheme(
 					article.title,
@@ -315,8 +344,8 @@ async function storeArticle(
 	// reported by several portals is a signal (assignArticleToStory groups them),
 	// and dropping by similarity used to lose articles whose angle differed.
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url, is_ai)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -332,6 +361,7 @@ async function storeArticle(
 			article.imageUrl ?? null,
 			themeCategory,
 			canonicalUrl(article.url),
+			isAiRelated(article.title, article.content, article.category),
 		],
 	);
 
@@ -474,6 +504,24 @@ async function backfillMissing(ollamaUp: boolean): Promise<void> {
 		}
 	}
 
+	// Keyword classification only: cheap, no model, safe to run on every pass.
+	const unclassified = await query<{
+		id: string;
+		title: string;
+		content: string | null;
+		category: string;
+	}>(
+		`SELECT id, title, LEFT(content, 1500) AS content, category FROM news_articles
+     WHERE is_ai IS NULL AND created_at > NOW() - INTERVAL '7 days'
+     ORDER BY created_at DESC LIMIT 500`,
+	);
+	for (const row of unclassified.rows) {
+		await query("UPDATE news_articles SET is_ai = $1 WHERE id = $2", [
+			isAiRelated(row.title, row.content ?? "", row.category),
+			row.id,
+		]);
+	}
+
 	const noImage = await query<{ id: string; url: string }>(
 		`SELECT id, url FROM news_articles
      WHERE image_url IS NULL AND created_at > NOW() - INTERVAL '2 days'
@@ -584,14 +632,16 @@ export async function runIngestion(): Promise<IngestionResult> {
 					),
 				);
 				runBackground("buildArticleRelations", () => buildArticleRelations(id));
-				runBackground("scoreRelevance", () =>
-					scoreRelevance(
-						id,
-						article.title,
-						article.content ?? "",
-						article.category,
-					),
-				);
+				if (!isLlmFreeCategory(article.category))
+					runBackground("scoreRelevance", () =>
+						scoreRelevance(
+							id,
+							article.title,
+							article.content ?? "",
+							article.category,
+							article.promptHint,
+						),
+					);
 			} catch (err) {
 				console.error("[ingestion] article failed:", (err as Error).message, {
 					url: article.url,
@@ -603,5 +653,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 	console.log(
 		`[ingestion] Done. Fetched: ${fetched}, Stored: ${newArticles.length}`,
 	);
+	if (newArticles.length > 0)
+		runBackground("websub", () => pingWebSubHub(publicFeedUrls()));
 	return { fetched, stored: newArticles.length, newArticles };
 }

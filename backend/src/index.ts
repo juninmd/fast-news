@@ -13,6 +13,10 @@ import {
 	stopIngestionJob,
 } from "./jobs/ingestionJob.js";
 import { startLearningJob, stopLearningJob } from "./jobs/learningJob.js";
+import {
+	startPeriodicDigestJobs,
+	stopPeriodicDigestJobs,
+} from "./jobs/periodicDigestJob.js";
 import { startBot, stopBot } from "./services/telegram.js";
 import {
 	startTelegramQueueWorker,
@@ -57,6 +61,7 @@ async function bootstrap(): Promise<void> {
 		if (process.env["ENABLE_INTERNAL_CRONS"] === "true") {
 			startIngestionJob();
 			startLearningJob();
+			startPeriodicDigestJobs();
 			console.log(
 				"[DigestJob] Automatic digest disabled; use Telegram summarize button on demand.",
 			);
@@ -109,6 +114,7 @@ async function shutdown(signal?: string): Promise<void> {
 		console.log("⏹️  Stopping scheduled jobs...");
 		stopIngestionJob();
 		stopLearningJob();
+		stopPeriodicDigestJobs();
 		stopDigestJob();
 		// Give jobs time to finish current operations
 		await new Promise((resolve) => setTimeout(resolve, 2000));

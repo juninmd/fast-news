@@ -6,8 +6,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import {
 	getArticleTool,
+	getDigestTool,
+	getSourceHealthTool,
 	getSourcesTool,
 	getTrendingTool,
+	runGetDigest,
+	runGetSourceHealth,
 	searchNewsTool,
 	summarizeArticleTool,
 } from "./tools/newsp.js";
@@ -25,6 +29,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 			summarizeArticleTool,
 			getTrendingTool,
 			getSourcesTool,
+			getDigestTool,
+			getSourceHealthTool,
 		],
 	};
 });
@@ -34,6 +40,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 	try {
 		switch (name) {
+			case "get_digest":
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								await runGetDigest(args as { period?: string; scope?: string }),
+								null,
+								2,
+							),
+						},
+					],
+				};
+			case "get_source_health":
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								await runGetSourceHealth(args as { status?: string }),
+								null,
+								2,
+							),
+						},
+					],
+				};
 			case "search_news": {
 				const { query, filters } = args as { query: string; filters?: object };
 				return {

@@ -75,3 +75,69 @@ export const getSourcesTool = {
 		},
 	},
 };
+
+export const getDigestTool = {
+	name: "get_digest",
+	description:
+		"Get a ranked news digest for a period (4h, daily, weekly, monthly). Built from stored relevance scores and multi-outlet coverage, no LLM call. scope=ai keeps only AI news.",
+	inputSchema: {
+		type: "object",
+		properties: {
+			period: {
+				type: "string",
+				enum: ["4h", "daily", "weekly", "monthly"],
+				default: "daily",
+			},
+			scope: { type: "string", enum: ["all", "ai"], default: "all" },
+		},
+	},
+};
+
+export const getSourceHealthTool = {
+	name: "get_source_health",
+	description:
+		"Report feed health: healthy, degraded, quarantined (auto-paused after repeated failures) or disabled, with the last error.",
+	inputSchema: {
+		type: "object",
+		properties: {
+			status: {
+				type: "string",
+				enum: ["healthy", "degraded", "quarantined", "disabled", "unknown"],
+				description: "Only list sources in this state (optional)",
+			},
+		},
+	},
+};
+
+const API_URL = (
+	process.env["FAST_NEWS_API_URL"] ?? "http://localhost:3001"
+).replace(/\/+$/, "");
+
+async function getJson(path: string): Promise<unknown> {
+	const res = await fetch(`${API_URL}${path}`, {
+		signal: AbortSignal.timeout(15_000),
+	});
+	if (!res.ok) throw new Error(`API ${path} answered HTTP ${res.status}`);
+	return res.json();
+}
+
+export async function runGetDigest(args: {
+	period?: string;
+	scope?: string;
+}): Promise<unknown> {
+	const period = z
+		.enum(["4h", "daily", "weekly", "monthly"])
+		.default("daily")
+		.parse(args.period);
+	const scope = args.scope === "ai" ? "?scope=ai" : "";
+	return getJson(`/api/digests/${period}${scope}`);
+}
+
+export async function runGetSourceHealth(args: {
+	status?: string;
+}): Promise<unknown> {
+	const status = args.status
+		? `?status=${encodeURIComponent(args.status)}`
+		: "";
+	return getJson(`/api/sources${status}`);
+}
