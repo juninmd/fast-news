@@ -59,7 +59,9 @@ function App() {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [recentSearches, setRecentSearches] = useState<string[]>([]);
 	// @ts-ignore
-	const [toast, setToast] = useState(null);
+	const [toast, setToast] = useState<{ message: string; type: string } | null>(
+		null,
+	);
 	const { theme, toggleTheme } = useTheme();
 	const { markRead, history: readHistory } = useReadingHistory();
 	const { bookmarks, isBookmarked } = useBookmarks();

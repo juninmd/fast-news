@@ -108,9 +108,11 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 
 				const data = await response.json();
 				if (mine !== requestId.current) return;
-				const newArticles = (data.articles || data.data || []).map(
-					toNewsArticle,
-				);
+				const newArticles: NewsArticle[] = (
+					data.articles ||
+					data.data ||
+					[]
+				).map(toNewsArticle);
 
 				// New articles shift the offsets, so a later page can repeat
 				// entries already on screen.
