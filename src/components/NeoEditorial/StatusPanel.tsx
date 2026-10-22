@@ -10,6 +10,32 @@ interface Feed {
 	lastFetched?: string;
 }
 
+interface SourceHealth {
+	id: string;
+	name: string;
+	status: "healthy" | "degraded" | "quarantined" | "disabled" | "unknown";
+	consecutiveFailures: number;
+	lastError: string | null;
+	quarantinedUntil: string | null;
+	articlesLast24h: number;
+}
+
+const STATUS_STYLE: Record<SourceHealth["status"], string> = {
+	healthy: "text-green-400",
+	degraded: "text-yellow-400",
+	quarantined: "text-red-400",
+	disabled: "text-text-secondary",
+	unknown: "text-text-secondary",
+};
+
+const STATUS_LABEL: Record<SourceHealth["status"], string> = {
+	healthy: "saudáveis",
+	degraded: "instáveis",
+	quarantined: "em quarentena",
+	disabled: "desativadas",
+	unknown: "sem leitura",
+};
+
 interface HealthData {
 	status: string;
 	uptime: number;
@@ -30,13 +56,19 @@ export function StatusPanel() {
 		company: "",
 	});
 	const [, setLoading] = useState(true);
+	const [sources, setSources] = useState<{
+		data: SourceHealth[];
+		summary: Record<string, number>;
+	} | null>(null);
 
 	const loadData = useCallback(async () => {
 		try {
-			const [hRes, fRes] = await Promise.all([
+			const [hRes, fRes, sRes] = await Promise.all([
 				fetch("/health"),
 				fetch("/api/news/feeds/list"),
+				fetch("/api/sources"),
 			]);
+			if (sRes.ok) setSources(await sRes.json());
 			if (hRes.ok) setHealth(await hRes.json());
 			if (fRes.ok) {
 				const data = await fRes.json();
@@ -106,6 +138,50 @@ export function StatusPanel() {
 						</div>
 					))}
 			</div>
+
+			{/* Source health: failing feeds are quarantined automatically with backoff */}
+			{sources && (
+				<div className="p-6 rounded-xl bg-bg-secondary border border-border-subtle space-y-3 animate-fade-in">
+					<h3 className="text-md font-semibold text-text-primary">
+						Saúde das fontes
+					</h3>
+					<div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+						{(Object.keys(STATUS_LABEL) as SourceHealth["status"][]).map(
+							(status) =>
+								sources.summary[status] ? (
+									<span key={status} className={STATUS_STYLE[status]}>
+										{sources.summary[status]} {STATUS_LABEL[status]}
+									</span>
+								) : null,
+						)}
+					</div>
+					<ul className="divide-y divide-border-subtle/50 text-sm">
+						{sources.data
+							.filter(
+								(s) => s.status === "quarantined" || s.status === "degraded",
+							)
+							.slice(0, 20)
+							.map((s) => (
+								<li key={s.id} className="py-2">
+									<span className={`font-medium ${STATUS_STYLE[s.status]}`}>
+										{s.name}
+									</span>
+									<span className="ml-2 text-xs text-text-secondary">
+										{s.consecutiveFailures} falhas seguidas
+										{s.quarantinedUntil
+											? ` · volta ${new Date(s.quarantinedUntil).toLocaleString("pt-BR")}`
+											: ""}
+									</span>
+									{s.lastError && (
+										<p className="text-xs text-text-secondary truncate">
+											{s.lastError}
+										</p>
+									)}
+								</li>
+							))}
+					</ul>
+				</div>
+			)}
 
 			{/* Feeds CRUD */}
 			<div className="p-6 rounded-xl bg-bg-secondary border border-border-subtle space-y-4 animate-fade-in">

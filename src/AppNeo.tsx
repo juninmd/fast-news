@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
 	ArticleModal,
 	CategoryTabs,
+	FeedControls,
 	Header,
 	NewsCard,
 	SearchModal,
@@ -23,6 +24,10 @@ import type { CoverageLink } from "./hooks/useNews";
 import { useReadingHistory } from "./hooks/useReadingHistory";
 import type { ArticleNode, GraphEdge } from "./hooks/useStories";
 import { useGlobalGraph, useStories, useStoryDetail } from "./hooks/useStories";
+import {
+	type TranslateLang,
+	useTranslatedTitles,
+} from "./hooks/useTranslatedTitles";
 import "./styles/animations.css";
 
 function App() {
@@ -50,6 +55,8 @@ function App() {
 	const [politicalBias, setPoliticalBias] = useState<string>("all");
 	const [excludeMilitant, setExcludeMilitant] = useState<boolean>(false);
 	const [groupSources, setGroupSources] = useState<boolean>(true);
+	const [scope, setScope] = useState<"all" | "ai">("all");
+	const [lang, setLang] = useState<TranslateLang>("off");
 
 	const { stories, loading: storiesLoading } = useStories(activeCategory);
 	const { detail: storyDetail, loading: detailLoading } =
@@ -64,14 +71,23 @@ function App() {
 	const { markRead, history: readHistory } = useReadingHistory();
 	const { bookmarks, isBookmarked } = useBookmarks();
 
-	const { articles, loading, error, refetch, loadMore, hasMore } = useNews({
+	const {
+		articles: originalArticles,
+		loading,
+		error,
+		refetch,
+		loadMore,
+		hasMore,
+	} = useNews({
 		category: activeCategory,
+		scope,
 		minCredibility: minCredibility > 0 ? minCredibility : undefined,
 		politicalBias: politicalBias !== "all" ? politicalBias : undefined,
 		excludeMilitant: excludeMilitant ? true : undefined,
 		group: groupSources,
 		...filters,
 	});
+	const articles = useTranslatedTitles(originalArticles, lang);
 
 	// Open article from Telegram deep link (?id=<uuid>)
 	useEffect(() => {
@@ -219,6 +235,12 @@ function App() {
 
 				<div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_300px] xl:grid-cols-[240px_minmax(0,1fr)_320px]">
 					<aside className="lg:sticky lg:top-24 lg:self-start">
+						<FeedControls
+							scope={scope}
+							onScopeChange={setScope}
+							lang={lang}
+							onLangChange={setLang}
+						/>
 						<CategoryTabs
 							activeCategory={activeCategory}
 							onCategoryChange={(category) => {

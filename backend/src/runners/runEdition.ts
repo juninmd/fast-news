@@ -32,6 +32,7 @@ import {
 } from "../editions/store.js";
 import type { Edition } from "../editions/types.js";
 import { editionWindow, isEditionKind } from "../editions/window.js";
+import { notifyAll } from "../services/notifier.js";
 
 async function main(): Promise<number> {
 	const mode = process.env["EDITION_DELIVERY_MODE"] ?? "legacy_document";
@@ -143,6 +144,14 @@ async function main(): Promise<number> {
 			deliveryMode: mode,
 			links,
 		});
+		// Extra channels (Discord/Slack/webhook/Apprise/ntfy) get a short pointer, never the full file.
+		await notifyAll({
+			title: "Fast News — nova edição do O Fio",
+			body: editionUrl ?? "Nova edição publicada.",
+			...(editionUrl ? { url: editionUrl } : {}),
+		}).catch((err: Error) =>
+			console.warn("[Edition] extra channels failed:", err.message),
+		);
 		console.log(
 			`[Edition] Sent ${editionKey(window)} to ${delivered} chat(s), ${Math.round(html.length / 1024)} KB, in ${Date.now() - started}ms`,
 		);

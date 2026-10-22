@@ -20,6 +20,47 @@ export const config = {
 	),
 
 	databaseUrl: required("DATABASE_URL"),
+
+	// Mutating admin endpoints (OPML import, source edits). Unset = only open outside production.
+	adminToken: optional("ADMIN_TOKEN", ""),
+
+	// Push channels (all optional). Telegram stays on its own pipeline.
+	notify: {
+		discordWebhookUrl: optional("DISCORD_WEBHOOK_URL", ""),
+		slackWebhookUrl: optional("SLACK_WEBHOOK_URL", ""),
+		webhookUrl: optional("NOTIFY_WEBHOOK_URL", ""),
+		// Apprise API (https://github.com/caronc/apprise-api): POST {urls|tag, body}.
+		appriseUrl: optional("APPRISE_URL", ""),
+		ntfyUrl: optional("NTFY_URL", ""),
+		// Periods pushed by the periodic digest job, e.g. "daily,weekly". Empty = none.
+		digestPeriods: optional("NOTIFY_DIGEST_PERIODS", "")
+			.split(",")
+			.map((p) => p.trim())
+			.filter(Boolean),
+	},
+
+	// WebSub (PubSubHubbub): ping the hub when new articles land so subscribers are pushed.
+	websub: {
+		hubUrl: optional("WEBSUB_HUB_URL", ""),
+	},
+
+	// Optional LLM features are capped per process per day. 0 disables the feature.
+	llmBudget: {
+		translationPerDay: parseInt(optional("TRANSLATION_DAILY_LIMIT", "300"), 10),
+		// Existing relevance scoring: 0 = unlimited (previous behavior).
+		relevancePerDay: parseInt(optional("RELEVANCE_DAILY_LIMIT", "0"), 10),
+	},
+
+	// Server-side TTS for the podcast feed (OpenAI-compatible /audio/speech). Empty URL = disabled.
+	tts: {
+		apiUrl: optional("TTS_API_URL", ""),
+		apiKey: optional("TTS_API_KEY", ""),
+		model: optional("TTS_MODEL", "tts-1"),
+		voice: optional("TTS_VOICE", "alloy"),
+		cacheDir: optional("TTS_CACHE_DIR", "/tmp/fast-news-tts"),
+		dailyLimit: parseInt(optional("TTS_DAILY_LIMIT", "6"), 10),
+	},
+
 	redisUrl: optional("REDIS_URL", "redis://localhost:6379"),
 
 	// AI provider: 'ollama' | 'google' | 'openai' | 'anthropic'
@@ -79,6 +120,9 @@ export const config = {
 		ingestion: optional("CRON_INGESTION", "*/30 * * * *"),
 		learning: optional("CRON_LEARNING", "0 0 * * *"),
 		digest: optional("CRON_DIGEST", "0 11 * * *"),
+		digest4h: optional("CRON_DIGEST_4H", "0 */4 * * *"),
+		digestWeekly: optional("CRON_DIGEST_WEEKLY", "0 11 * * 1"),
+		digestMonthly: optional("CRON_DIGEST_MONTHLY", "0 11 1 * *"),
 	},
 
 	ingestion: {

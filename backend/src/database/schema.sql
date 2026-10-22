@@ -287,3 +287,32 @@ ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS canonical_url TEXT DEFAULT NU
 CREATE INDEX IF NOT EXISTS idx_articles_canonical_url ON news_articles(canonical_url) WHERE canonical_url IS NOT NULL;
 ALTER TABLE news_stories ADD COLUMN IF NOT EXISTS source_count INT DEFAULT 0;
 ALTER TABLE news_stories ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT NULL;
+
+-- Source health: failures are counted per feed and a failing feed is
+-- quarantined with exponential backoff instead of being fetched every run.
+-- Rollback: ALTER TABLE source_feeds DROP COLUMN consecutive_failures, DROP COLUMN total_failures,
+--   DROP COLUMN last_error, DROP COLUMN last_success_at, DROP COLUMN last_failure_at,
+--   DROP COLUMN quarantined_until, DROP COLUMN prompt_hint;
+--   ALTER TABLE news_articles DROP COLUMN is_ai; DROP TABLE article_translations;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS consecutive_failures INT DEFAULT 0;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS total_failures INT DEFAULT 0;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_error TEXT DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_success_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_failure_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS quarantined_until TIMESTAMPTZ DEFAULT NULL;
+-- Editorial hint appended to the (already existing) relevance prompt for this
+-- feed's articles: no extra LLM call, just a sharper criterion per source.
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS prompt_hint TEXT DEFAULT NULL;
+
+-- "Only AI" view: keyword classification at ingestion, no LLM involved.
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS is_ai BOOLEAN DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_is_ai ON news_articles(published_at DESC NULLS LAST) WHERE is_ai = TRUE;
+
+-- Translated titles/summaries, cached forever so an article is translated at most once per language.
+CREATE TABLE IF NOT EXISTS article_translations (
+  article_id UUID NOT NULL REFERENCES news_articles(id) ON DELETE CASCADE,
+  lang TEXT NOT NULL,
+  title TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (article_id, lang)
+);

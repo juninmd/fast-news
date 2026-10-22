@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { config } from "../config/env.js";
 import { query } from "../database/client.js";
+import { tryConsume } from "./llmBudget.js";
 import { generateWithFallback } from "./llmWithFallback.js";
 
 export const RelevanceSchema = z.object({
@@ -54,34 +56,42 @@ Critérios de Avaliação:
 
 Considere: impacto financeiro/mercado, novidade real, utilidade para tomadores de decisão, cibersegurança ou geopolítica relevante.`;
 
-export async function scoreRelevance(
-	articleId: string,
+// Titles that are never worth a model call: scored as spam locally.
+const JUNK_TITLE =
+	/hor[óo]scopo|frase do dia|previs[ãa]o para os \d+ signos|\btarot\b|\bbbb ?\d{0,2}\b|cupom de desconto|\bofertas? (?:do dia|imperd[ií]veis?)\b|promo[çc][ãa]o imperd[ií]vel|melhores? (?:ofertas|promo[çc][õo]es)|sorteio/i;
+
+/** Obvious junk is scored without a model call; null means "ask the model". */
+export function heuristicRelevance(title: string): RelevanceResult | null {
+	if (!JUNK_TITLE.test(title)) return null;
+	return {
+		relevanceScore: 2,
+		isSpamOrPromo: true,
+		isDuplicateOrRehash: false,
+		shouldPostTelegram: false,
+		reason: "Título de baixo valor editorial (filtro local, sem LLM)",
+	};
+}
+
+export function buildRelevancePrompt(
 	title: string,
 	content: string,
 	category: string,
-): Promise<RelevanceResult> {
-	const prompt = RELEVANCE_PROMPT.replace("{title}", title)
-		.replace("{category}", category)
-		.replace("{content}", (content ?? "").slice(0, 3000));
+	promptHint?: string | null,
+): string {
+	const hint = promptHint?.trim()
+		? `\n\nCritério adicional desta fonte (prioridade sobre os critérios acima quando houver conflito): ${promptHint.trim().slice(0, 500)}`
+		: "";
+	return (
+		RELEVANCE_PROMPT.replace("{title}", () => title)
+			.replace("{category}", () => category)
+			.replace("{content}", () => (content ?? "").slice(0, 3000)) + hint
+	);
+}
 
-	const defaultResult: RelevanceResult = {
-		relevanceScore: 5,
-		isSpamOrPromo: false,
-		isDuplicateOrRehash: false,
-		shouldPostTelegram: false,
-		reason: "Falha na análise de relevância",
-	};
-
-	const object = await generateWithFallback({
-		schema: RelevanceSchema,
-		prompt,
-		logTag: "relevance",
-	});
-	if (!object) {
-		console.warn(`[relevance] No model available for ${articleId}, defaulting`);
-		return defaultResult;
-	}
-
+async function persist(
+	articleId: string,
+	object: RelevanceResult,
+): Promise<void> {
 	await query(
 		`UPDATE news_articles SET
 			relevance_score = $1,
@@ -97,6 +107,48 @@ export async function scoreRelevance(
 			articleId,
 		],
 	).catch(console.error);
+}
+
+export async function scoreRelevance(
+	articleId: string,
+	title: string,
+	content: string,
+	category: string,
+	promptHint?: string | null,
+): Promise<RelevanceResult> {
+	const local = heuristicRelevance(title);
+	if (local) {
+		await persist(articleId, local);
+		return local;
+	}
+	const prompt = buildRelevancePrompt(title, content, category, promptHint);
+
+	const defaultResult: RelevanceResult = {
+		relevanceScore: 5,
+		isSpamOrPromo: false,
+		isDuplicateOrRehash: false,
+		shouldPostTelegram: false,
+		reason: "Falha na análise de relevância",
+	};
+
+	// 0 = unlimited. Past the cap the article keeps the neutral default instead
+	// of costing a model call for every feed item.
+	const cap = config.llmBudget.relevancePerDay;
+	if (cap > 0 && !tryConsume("relevance", cap)) {
+		return { ...defaultResult, reason: "Limite diário de análise atingido" };
+	}
+
+	const object = await generateWithFallback({
+		schema: RelevanceSchema,
+		prompt,
+		logTag: "relevance",
+	});
+	if (!object) {
+		console.warn(`[relevance] No model available for ${articleId}, defaulting`);
+		return defaultResult;
+	}
+
+	await persist(articleId, object);
 
 	console.log(
 		`[relevance] ${articleId} score=${object.relevanceScore} spam=${object.isSpamOrPromo} shouldPost=${object.shouldPostTelegram} reason=${object.reason}`,

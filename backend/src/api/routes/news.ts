@@ -69,9 +69,13 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 	// newest article) that lists the others in `also_in`; nothing is dropped,
 	// every member stays reachable and the entry carries the outlet count.
 	const group = req.query["group"] === "true";
+	// scope=ai keeps only AI-related articles (keyword classification at ingestion).
+	const aiOnly = req.query["scope"] === "ai";
+	// minScore hides articles the relevance pass rated lower; unscored ones stay.
+	const minScore = positiveInt(req.query["minScore"], 0, 10);
 	const offset = (page - 1) * limit;
 
-	const cacheKey = `news:list:${page}:${limit}:${category ?? "all"}:${minCredibility ?? "all"}:${politicalBias ?? "all"}:${excludeMilitant}:${group}`;
+	const cacheKey = `news:list:${page}:${limit}:${category ?? "all"}:${minCredibility ?? "all"}:${politicalBias ?? "all"}:${excludeMilitant}:${group}:${aiOnly}:${minScore}`;
 	const cached = await cacheGet(cacheKey);
 	if (cached) return res.json(cached);
 
@@ -101,6 +105,13 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 		filters.push(`@.political_bias = $${params.length}`);
 	}
 	if (excludeMilitant) filters.push(`@.is_militant = false`);
+	if (aiOnly) filters.push(`@.is_ai = TRUE`);
+	if (minScore > 0) {
+		params.push(minScore);
+		filters.push(
+			`(@.relevance_score IS NULL OR @.relevance_score >= $${params.length})`,
+		);
+	}
 	const clauses = (alias: string) =>
 		filters.map((f) => f.replaceAll("@.", `${alias}.`));
 
