@@ -1,53 +1,53 @@
 # AGENTS.md - Fast News
 
 ## Tech Stack
-- **Language**: TypeScript
-- **Frontend**: React 19 + Vite 8 + Tailwind CSS 3
-- **AI**: Google Generative AI (Gemini)
-- **Testing**: Vitest + Testing Library
+- **Language**: TypeScript (frontend com alguns módulos legados em JS)
+- **Frontend**: React 19 + Vite 8 + Tailwind CSS 4
+- **Mobile**: Capacitor (Android/iOS) em `src/mobile`
+- **Desktop**: Tauri + React em `desktop/` (bun, fora do workspace pnpm)
+- **Backend**: `backend/` (Node + tsx, PostgreSQL/Qdrant/Redis, Telegram), pacote independente (`--ignore-workspace`)
+- **AI**: Vercel AI SDK (`ai`) com provedores Google, Anthropic e OpenAI
+- **Testing**: Vitest + Testing Library (+ Playwright em `e2e/`)
 - **Linting**: Biome
-- **Monorepo**: pnpm workspaces
-- **Deploy**: Netlify
-- **Scraping**: RSS Parser
-- **Scripts**: Node.js agent scripts
+- **Docs**: VitePress em `site/`
+- **Deploy**: GitHub Pages / Netlify
 
 ## Project Structure
 ```
-src/                  # Main app source
-  components/         # React components
-  pages/              # Page components
-  styles/             # Tailwind styles
-  utils/              # Utilities
-packages/             # Monorepo packages
-  api/                # API package
-  mcp/                # MCP server package
-scripts/              # Agent scripts
-  news-agent.js       # AI news curation agent
-public/               # Static assets
-data/                 # Data files
-docs/                 # Documentation
+src/                  # App web e mobile
+  components/         # Componentes React (NeoEditorial é a UI ativa)
+  hooks/              # Hooks
+  mobile/             # App mobile-first (Capacitor)
+  services/           # Serviços legados de API
+backend/              # API, ingestão, jobs, agente de notícias
+packages/
+  mcp/                # Servidor MCP
+  shared/             # Tipos e fontes compartilhados
+scripts/              # Wrapper do agente (news-agent.js)
+desktop/              # App Tauri
+site/                 # Documentação VitePress
+docs/                 # Documentação interna
 ```
 
 ## Key Commands
 ```bash
 pnpm dev             # Vite dev server
-pnpm build           # Production build
+pnpm dev:api         # Backend em modo watch
+pnpm build           # Build de produção
 pnpm test            # Vitest
-pnpm lint            # Biome lint
-pnpm news-agent      # Run news agent once
-pnpm start-agent     # Run news agent in loop
-pnpm preview         # Preview production build
-pnpm coverage        # Test coverage report
+pnpm coverage        # Cobertura (com thresholds)
+pnpm lint            # Biome (aplica correções)
+pnpm lint:ci         # Biome sem alterar arquivos
+pnpm typecheck       # tsc no frontend e no backend
+pnpm news-agent      # Roda o agente uma vez
+pnpm start-agent     # Agente em loop
 ```
 
 ## Conventions
-- pnpm monorepo with workspaces
-- React 19 with Server Components
-- Biome for linting/formatting
-- Tailwind CSS for styling
-- ESM modules
+- pnpm é o único gerenciador (não commitar `package-lock.json`)
+- Biome para lint/format, Tailwind para estilo, módulos ESM
+- Rode `pnpm lint:ci`, `pnpm typecheck` e `pnpm test` antes de commitar
 
 ## Environment Variables
-- `GEMINI_API_KEY` - Google Gemini API key
-- `PUBLIC_URL` - Deployment URL
-- `NETLIFY_SITE_ID` - Netlify site ID
+- `GEMINI_API_KEY` e demais chaves de IA - veja `backend/.env.example`
+- `VITE_API_URL` - URL da API usada pelo frontend

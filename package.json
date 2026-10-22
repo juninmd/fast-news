@@ -12,6 +12,8 @@
 		"news-agent": "node scripts/news-agent.js",
 		"start-agent": "node scripts/news-agent.js --loop",
 		"lint": "biome check --write .",
+		"lint:ci": "biome ci .",
+		"typecheck": "tsc --noEmit -p . && pnpm --dir backend exec tsc --noEmit",
 		"format": "biome format --write .",
 		"preview": "vite preview",
 		"test": "vitest",

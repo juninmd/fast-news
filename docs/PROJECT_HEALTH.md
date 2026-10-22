@@ -37,9 +37,18 @@ This document records the repository improvement pass applied on 2026-05-17.
 3. Use .editorconfig to reduce formatting churn across agents and local editors.
 4. Treat this file as the lightweight audit entry for future improvements.
 
+## Update 2026-10-22
+
+- Root `tsconfig.json` and `pnpm typecheck` (frontend + backend) added; CI typechecks the frontend.
+- Coverage thresholds enforced in CI; `lint:ci` (`biome ci`) replaces the mutating `lint` in CI; pnpm store cached.
+- `coverage/` untracked; AGENTS.md rewritten to match the real stack.
+- Backend already exposes a health endpoint (`backend/src/api/health.ts`).
+
 ## Suggested Next Improvements
 
 - Add project-specific tests to the Project Health workflow once the default branch is stable.
 - Add CodeQL or language-native security scanning where the repository has a supported build path.
 - Convert manual setup notes into reproducible scripts when setup steps are repeated.
-- Add structured logging and health endpoints to service repositories that expose long-running APIs.
+- Add structured logging to the backend.
+- Remove dead frontend code (legacy `NeoPulse`, `Toast*`, old services) and migrate remaining JS to TS.
+- Include `backend` in the pnpm workspace and drop duplicate lockfiles.

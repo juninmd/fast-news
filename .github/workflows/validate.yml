@@ -28,20 +28,21 @@ jobs:
           fi
           echo "No committed secret files found."
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
       - name: Enable pnpm
         run: |
           corepack enable
           corepack prepare pnpm@10.33.2 --activate
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
       - name: Install root dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Lint frontend workspace
-        run: pnpm exec biome check .
+        run: pnpm lint:ci
 
       # @juninmd/* lives on GitHub Packages, which needs auth even when public.
       - name: Authenticate GitHub Packages
@@ -53,7 +54,10 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-workspace --ignore-scripts
 
       - name: Test frontend workspace
-        run: pnpm exec vitest run
+        run: pnpm exec vitest run --coverage
+
+      - name: Typecheck frontend
+        run: pnpm exec tsc --noEmit -p .
 
       - name: Validate backend types
         working-directory: backend
