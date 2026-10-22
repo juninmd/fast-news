@@ -3,6 +3,11 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{
+		url: "https://www.macstories.net/feed/",
+		category: "Tecnologia",
+		company: "MacStories",
+	},
+	{
 		url: "https://9to5linux.com/feed",
 		category: "Tecnologia",
 	},
