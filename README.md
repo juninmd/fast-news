@@ -51,6 +51,28 @@ pnpm build
 pnpm test
 ```
 
+## 🧩 Recursos de agregação (inspirados em awesome-ai-news)
+
+Tudo abaixo é **sem LLM**, exceto a tradução de títulos (cache permanente + limite diário).
+
+| Recurso | Como usar |
+|---|---|
+| Saúde das fontes | Feeds com 3+ falhas seguidas entram em quarentena com backoff (30min → 24h). `GET /api/sources[?status=quarantined]` e painel *Status* |
+| OPML | `GET /api/sources/opml` exporta; `POST /api/sources/opml` importa (`ADMIN_TOKEN`) |
+| RSS / JSON Feed | `/api/feed.xml` e `/api/feed.json` (`?scope=ai&category=&minScore=&limit=`), com link WebSub opcional |
+| Digests 4h/dia/semana/mês | `GET /api/digests/{4h,daily,weekly,monthly}?format=json\|md\|txt\|script&scope=ai` — ranking por relevância já gravada + cobertura multi-fonte |
+| Visão "Só IA" | `GET /api/news?scope=ai&minScore=6`; classificação por palavras-chave na ingestão |
+| Push plugável | Discord, Slack, webhook, Apprise, ntfy (`NOTIFY_*`); `runners/runPeriodicDigest.ts <período>` para CronJob |
+| Tradução | `GET /api/translate?lang=en&ids=...` — só títulos, cache em `article_translations`, `TRANSLATION_DAILY_LIMIT` |
+| Podcast | `/api/podcast.xml` com TTS opcional (`TTS_API_URL`); no app, botão *Ouvir resumo* usa a voz do navegador (grátis) |
+| Prompt por fonte | `PATCH /api/sources/:id {"promptHint": "..."}` — vira critério extra no prompt de relevância existente, sem chamada extra |
+| MCP | tools `get_digest` e `get_source_health` (`FAST_NEWS_API_URL`) |
+
+### Controle de custo de LLM
+- Categorias de alto volume (`Papers` = arXiv, `GitHub Trending`) pulam resumo vetorial, tema e relevância e são limitadas a 15 itens por feed.
+- Títulos obviamente lixo (horóscopo, cupom, sorteio…) recebem nota baixa localmente, sem modelo.
+- `RELEVANCE_DAILY_LIMIT` limita a análise de relevância; `TRANSLATION_DAILY_LIMIT` e `TTS_DAILY_LIMIT` limitam os recursos novos.
+
 ## 🤖 Agente de Notícias
 
 ```bash

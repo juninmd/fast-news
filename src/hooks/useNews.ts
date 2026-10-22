@@ -51,6 +51,8 @@ interface UseNewsOptions {
 	excludeMilitant?: boolean;
 	/** Fold the same story from several outlets into one entry. Default true. */
 	group?: boolean;
+	/** "ai" keeps only AI-related articles. */
+	scope?: "all" | "ai";
 }
 
 interface UseNewsReturn {
@@ -102,6 +104,9 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 				if (options.group ?? true) {
 					params.set("group", "true");
 				}
+				if (options.scope === "ai") {
+					params.set("scope", "ai");
+				}
 
 				const response = await fetch(`/api/news?${params}`);
 				if (!response.ok) throw new Error("Failed to fetch articles");
@@ -135,6 +140,7 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 			options.politicalBias,
 			options.excludeMilitant,
 			options.group,
+			options.scope,
 		],
 	);
 
