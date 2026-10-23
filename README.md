@@ -23,33 +23,90 @@
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** React 19 + Vite + Tailwind CSS
-- **Linguagem:** TypeScript
-- **IA:** Google Generative AI (Gemini)
-- **Testes:** Vitest + Testing Library
+- **Frontend:** React 19 + Vite 8 + Tailwind CSS 4 (também empacotado como app Android/iOS via Capacitor)
+- **Backend (`backend/`):** TypeScript, Express, PostgreSQL (pgvector), Redis/Bull, Qdrant opcional
+- **IA:** Vercel AI SDK com provedores Gemini, OpenAI, Anthropic, OpenRouter ou Ollama (`AI_PROVIDER`)
+- **Testes:** Vitest + Testing Library (unidade) e Playwright (`e2e/`)
 - **Linting:** Biome
-- **Deploy:** Netlify
-- **Package Manager:** pnpm (monorepo)
+- **Site de edições:** VitePress (`site/`) publicado no GitHub Pages
+- **Deploy:** imagem Docker no GHCR (`Dockerfile`), `netlify.toml` para o front estático
+- **Package Manager:** pnpm (monorepo com `packages/mcp` e `packages/shared`; `backend/` tem lockfile próprio)
+
+## 📋 Requisitos
+
+- Node.js 22 (versão usada no CI e no `Dockerfile`; `.nvmrc` fixa 20 e `engines` exige >= 18)
+- pnpm 10 (o CI usa `pnpm@10.33.2` via corepack)
+- Backend: PostgreSQL com pgvector e Redis (`docker compose up postgres redis` sobe os dois)
+- Opcional: Ollama (IA/embeddings locais), Qdrant (`VECTOR_STORE`), JDK 21 + `ANDROID_HOME` (APK), Xcode (iOS)
 
 ## 🚀 Instalação
 
 ```bash
-# Clonar
 git clone https://github.com/juninmd/fast-news.git
 cd fast-news
-
-# Instalar dependências
-pnpm install
-
-# Desenvolvimento
-pnpm dev
-
-# Build
-pnpm build
-
-# Testes
-pnpm test
+pnpm install                                 # raiz: front, packages/mcp, packages/shared
+pnpm --dir backend install --ignore-workspace   # backend tem lockfile próprio (como no CI)
 ```
+
+## ⚙️ Configuração
+
+Copie `.env.example` (raiz) e `backend/.env.example` para `.env` e preencha. Nunca versione `.env`; o workflow `Validate` falha se houver arquivo de segredo rastreado. Variáveis principais (o catálogo completo está em `backend/src/config/env.ts`):
+
+| Grupo | Variáveis |
+|---|---|
+| Servidor | `PORT` (padrão 3001), `PUBLIC_URL`, `ADMIN_TOKEN` |
+| Dados | `DATABASE_URL`, `REDIS_URL`, `VECTOR_STORE`, `QDRANT_URL`, `QDRANT_API_KEY` |
+| IA | `AI_PROVIDER`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `EMBEDDING_MODEL` |
+| Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_IDS`, `TELEGRAM_ENABLED`, `TELEGRAM_BOT_MODE` |
+| Push | `DISCORD_WEBHOOK_URL`, `SLACK_WEBHOOK_URL`, `NOTIFY_WEBHOOK_URL`, `NTFY_URL`, `APPRISE_URL` |
+| Agendamento | `CRON_INGESTION`, `CRON_DIGEST`, `CRON_LEARNING` |
+| O Fio | `EDITION_DELIVERY_MODE`, `EDITION_PAGES_BASE_URL`, `EDITION_PAGES_REPOSITORY`, `EDITION_PAGES_TOKEN` |
+
+## ▶️ Uso
+
+```bash
+pnpm dev:api        # API/backend (tsx watch, porta 3001)
+pnpm dev            # front Vite; proxy de /api e /health para localhost:3001
+pnpm news-agent     # agente de curadoria, uma execução
+pnpm start-agent    # agente em loop
+pnpm dev:mcp        # servidor MCP (@fast-news/mcp)
+pnpm docs:dev       # site VitePress das edições
+pnpm preview        # serve o build do front
+```
+
+Migrações do banco: `pnpm --dir backend db:migrate`.
+
+## ✅ Testes, lint e build
+
+```bash
+pnpm test                            # Vitest (watch); use `pnpm exec vitest run` para uma passada
+pnpm coverage                        # Vitest com cobertura
+pnpm test:e2e                        # Playwright (e2e/)
+pnpm exec biome check .              # lint (o CI usa este comando, sem --write)
+pnpm lint                            # biome check --write (corrige arquivos)
+pnpm build                           # build do front em dist/
+pnpm --dir backend build             # tsc do backend
+pnpm --dir backend test              # Vitest do backend
+pnpm --dir backend exec tsc --noEmit # checagem de tipos (gate do CI)
+pnpm docs:build                      # build do site VitePress
+```
+
+## 🖼️ Screenshot
+
+![Fast News em desktop](docs/evidence/edition-full-coverage/desktop.png)
+
+Mais capturas em `docs/evidence/` (`mobile/`, `news-grouping/`, `o-fio-pages-preview.png`).
+
+## 🚦 Gates de CI
+
+| Workflow | Quando | O que checa |
+|---|---|---|
+| `validate.yml` (Validate) | PR e push em `main`/`master` | Bloqueia arquivos de segredo rastreados; `biome check .`; `vitest run` (raiz, inclui testes do backend); `tsc --noEmit` no backend |
+| `security.yml` (Security Scan) | push em `main`/`master` e manual | Gitleaks via `juninmd/base-actions` |
+| `deploy.yml` (Deploy) | PR e push em `main`/`master` | Build da imagem Docker; só publica no GHCR fora de PR |
+| `mobile.yml` (Mobile) | push em `main` (src, android, ios, capacitor, package.json) e manual | Gera APK debug como artefato; valida build iOS no simulador |
+| `pages.yml` (Pages) | push em `main` (site, package.json, lockfile) e manual | Compila o VitePress e publica na branch `gh-pages` |
+| `release-drafter.yml` | push e PR | Rascunho de release |
 
 ## 🧩 Recursos de agregação (inspirados em awesome-ai-news)
 
@@ -72,16 +129,6 @@ Tudo abaixo é **sem LLM**, exceto a tradução de títulos (cache permanente + 
 - Categorias de alto volume (`Papers` = arXiv, `GitHub Trending`) pulam resumo vetorial, tema e relevância e são limitadas a 15 itens por feed.
 - Títulos obviamente lixo (horóscopo, cupom, sorteio…) recebem nota baixa localmente, sem modelo.
 - `RELEVANCE_DAILY_LIMIT` limita a análise de relevância; `TRANSLATION_DAILY_LIMIT` e `TTS_DAILY_LIMIT` limitam os recursos novos.
-
-## 🤖 Agente de Notícias
-
-```bash
-# Executar agente uma vez
-pnpm news-agent
-
-# Executar agente em loop
-pnpm start-agent
-```
 
 ## 🗞 O Fio: jornal digital
 
