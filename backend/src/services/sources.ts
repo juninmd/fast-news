@@ -56,6 +56,9 @@ export const FEED_SOURCES = [
 	},
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{ url: "https://www.sciencenews.org/feed", category: "Ciência" },
+	{ url: "https://www.eff.org/rss/updates.xml", category: "Tecnologia" },
+	{ url: "https://theintercept.com/feed/?lang=en", category: "Mundo" },
 	{
 		url: "https://www.macstories.net/feed/",
 		category: "Tecnologia",
