@@ -372,3 +372,29 @@ describe("pageMetaFromHtml", () => {
 		).toBeUndefined();
 	});
 });
+
+describe("Atom enclosure links", () => {
+	it("reads <link rel=enclosure> as attached media", () => {
+		const out = extractMedia({
+			linkNodes: [
+				{ $: { rel: "alternate", href: "https://x.com/post" } },
+				{
+					$: {
+						rel: "enclosure",
+						href: "https://x.com/clip.mp4",
+						type: "video/mp4",
+					},
+				},
+				{
+					$: {
+						rel: "enclosure",
+						href: "https://x.com/pic.jpg",
+						type: "image/jpeg",
+					},
+				},
+			],
+		});
+		expect(out.videoUrl).toBe("https://x.com/clip.mp4");
+		expect(out.imageUrl).toBe("https://x.com/pic.jpg");
+	});
+});

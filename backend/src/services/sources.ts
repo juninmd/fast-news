@@ -1210,6 +1210,8 @@ export async function getActiveFeeds(): Promise<
 		category: string;
 		company?: string;
 		promptHint?: string;
+		etag?: string;
+		lastModified?: string;
 	}>
 > {
 	try {
@@ -1219,8 +1221,10 @@ export async function getActiveFeeds(): Promise<
 			company: string;
 			prompt_hint: string | null;
 			quarantined_until: string | null;
+			etag: string | null;
+			last_modified: string | null;
 		}>(
-			"SELECT url, category, company, prompt_hint, quarantined_until FROM source_feeds WHERE is_active = true",
+			"SELECT url, category, company, prompt_hint, quarantined_until, etag, last_modified FROM source_feeds WHERE is_active = true",
 		);
 		if (res.rows.length > 0) {
 			// Quarantined feeds are skipped until their backoff expires; the static
@@ -1232,6 +1236,8 @@ export async function getActiveFeeds(): Promise<
 					category: r.category,
 					...(r.company ? { company: r.company } : {}),
 					...(r.prompt_hint ? { promptHint: r.prompt_hint } : {}),
+					...(r.etag ? { etag: r.etag } : {}),
+					...(r.last_modified ? { lastModified: r.last_modified } : {}),
 				}));
 		}
 	} catch (err) {

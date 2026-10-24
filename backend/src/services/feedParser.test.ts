@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	decodeFeedBytes,
 	FeedFormatError,
+	fetchFeedXml,
 	parseFeed,
 	sanitizeFeedXml,
 } from "./feedParser.js";
@@ -80,5 +81,61 @@ describe("parseFeed", () => {
 		);
 		expect(feed.items[0]?.["ytVideoId"]).toBe("abcdefghijk");
 		expect(feed.items[0]?.["mediaGroup"]).toBeDefined();
+	});
+});
+
+describe("fetchFeedXml (conditional GET)", () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	const reply = (status: number, headers: Record<string, string>, body = "") =>
+		vi.fn().mockResolvedValue({
+			status,
+			ok: status >= 200 && status < 300,
+			headers: new Headers(headers),
+			arrayBuffer: async () => new TextEncoder().encode(body).buffer,
+		});
+
+	it("sends the stored validators and reports 304 as no body", async () => {
+		const fetchMock = reply(304, {});
+		vi.stubGlobal("fetch", fetchMock);
+		const out = await fetchFeedXml("https://x.test/feed", 1000, {
+			etag: '"abc"',
+			lastModified: "Sat, 24 Oct 2026 10:00:00 GMT",
+		});
+		expect(out).toEqual({
+			xml: null,
+			etag: '"abc"',
+			lastModified: "Sat, 24 Oct 2026 10:00:00 GMT",
+		});
+		const headers = fetchMock.mock.calls[0]?.[1]?.headers as Record<
+			string,
+			string
+		>;
+		expect(headers["If-None-Match"]).toBe('"abc"');
+		expect(headers["If-Modified-Since"]).toBe("Sat, 24 Oct 2026 10:00:00 GMT");
+	});
+
+	it("returns the body with the new validators on 200", async () => {
+		vi.stubGlobal(
+			"fetch",
+			reply(200, { etag: '"v2"', "content-type": "application/xml" }, "<rss/>"),
+		);
+		const out = await fetchFeedXml("https://x.test/feed", 1000);
+		expect(out.xml).toBe("<rss/>");
+		expect(out.etag).toBe('"v2"');
+		expect(out.lastModified).toBeNull();
+	});
+
+	it("does not send validators it does not have, and fails on HTTP errors", async () => {
+		const fetchMock = reply(503, {});
+		vi.stubGlobal("fetch", fetchMock);
+		await expect(fetchFeedXml("https://x.test/feed", 1000)).rejects.toThrow(
+			"HTTP 503",
+		);
+		const headers = fetchMock.mock.calls[0]?.[1]?.headers as Record<
+			string,
+			string
+		>;
+		expect(headers["If-None-Match"]).toBeUndefined();
 	});
 });

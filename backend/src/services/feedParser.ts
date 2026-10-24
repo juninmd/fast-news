@@ -19,6 +19,8 @@ const parser = new Parser({
 			["yt:videoId", "ytVideoId"],
 			// Atom puts the tag in attributes (`<category term=".." label=".."/>`), which rss-parser drops.
 			["category", "categoryNodes", { keepArray: true }],
+			// Atom `<link rel="enclosure" href=".." type="..">` (attached media) is not mapped by rss-parser.
+			["link", "linkNodes", { keepArray: true }],
 			"enclosure",
 		],
 	},
@@ -92,18 +94,51 @@ export async function parseFeed(xml: string): Promise<ParsedFeed> {
 	};
 }
 
-/** Fetches a feed and decodes it to text (see {@link decodeFeedBytes}). */
+export interface FeedValidators {
+	etag?: string | null;
+	lastModified?: string | null;
+}
+
+export interface FetchedFeed extends FeedValidators {
+	/** Decoded body; null when the server answered 304 Not Modified. */
+	xml: string | null;
+}
+
+/**
+ * Fetches a feed and decodes it to text (see {@link decodeFeedBytes}). With the
+ * validators of the previous fetch the server can answer 304 and skip the body.
+ */
 export async function fetchFeedXml(
 	url: string,
 	timeoutMs: number,
-): Promise<string> {
+	previous: FeedValidators = {},
+): Promise<FetchedFeed> {
 	const resp = await fetch(url, {
 		signal: AbortSignal.timeout(timeoutMs),
-		headers: { "User-Agent": "FastNews/1.0", Accept: FEED_ACCEPT },
+		headers: {
+			"User-Agent": "FastNews/1.0",
+			Accept: FEED_ACCEPT,
+			...(previous.etag ? { "If-None-Match": previous.etag } : {}),
+			...(previous.lastModified
+				? { "If-Modified-Since": previous.lastModified }
+				: {}),
+		},
 	});
+	const etag = resp.headers.get("etag");
+	const lastModified = resp.headers.get("last-modified");
+	if (resp.status === 304)
+		return {
+			xml: null,
+			etag: previous.etag,
+			lastModified: previous.lastModified,
+		};
 	if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-	return decodeFeedBytes(
-		await resp.arrayBuffer(),
-		resp.headers.get("content-type") ?? "",
-	);
+	return {
+		xml: decodeFeedBytes(
+			await resp.arrayBuffer(),
+			resp.headers.get("content-type") ?? "",
+		),
+		etag,
+		lastModified,
+	};
 }

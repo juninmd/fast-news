@@ -17,6 +17,8 @@ export interface MemberRow {
 	content: string | null;
 	url: string;
 	source: string;
+	/** Publisher key; falls back to `source` for rows not backfilled yet. */
+	outlet?: string | null;
 	category: string;
 	company: string | null;
 	published_at: string;
@@ -59,8 +61,9 @@ export function uniqueSources(members: MemberRow[]): StorySource[] {
 	for (const m of [...members].sort(
 		(a, b) => Date.parse(b.published_at) - Date.parse(a.published_at),
 	)) {
-		if (seen.has(m.source)) continue;
-		seen.add(m.source);
+		const outlet = m.outlet ?? m.source;
+		if (seen.has(outlet)) continue;
+		seen.add(outlet);
 		out.push({
 			id: m.id,
 			source: m.source,

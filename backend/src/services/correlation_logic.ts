@@ -79,6 +79,11 @@ type CandidateRow = {
 
 const STORY_OF = `(SELECT sa.story_id FROM story_articles sa WHERE sa.article_id = na.id LIMIT 1)`;
 
+// Old coverage of a recurring topic can crowd the closest matches; the time
+// window is applied in code (a WHERE would stop the ivfflat index from being
+// used), so look at enough neighbours for the recent ones to still show up.
+const NEAREST_LIMIT = 24;
+
 /** Nearest stored articles by vector. LIMIT with no WHERE keeps the ivfflat index usable. */
 async function nearestByEmbedding(
 	articleId: string,
@@ -91,7 +96,7 @@ async function nearestByEmbedding(
      FROM news_articles na
      WHERE na.embedding IS NOT NULL AND na.id <> $2
      ORDER BY na.embedding <=> $1::vector
-     LIMIT 8`,
+     LIMIT ${NEAREST_LIMIT}`,
 		[embedding, articleId],
 	);
 	return res.rows;
@@ -129,7 +134,7 @@ export async function refreshStoryStats(storyId: string): Promise<void> {
 	await query(
 		`WITH s AS (
        SELECT COUNT(*)::int AS n,
-              COUNT(DISTINCT na.source)::int AS src,
+              COUNT(DISTINCT COALESCE(na.outlet, na.source))::int AS src,
               (ARRAY_AGG(na.image_url ORDER BY na.published_at DESC NULLS LAST)
                  FILTER (WHERE na.image_url IS NOT NULL))[1] AS img
        FROM story_articles sa

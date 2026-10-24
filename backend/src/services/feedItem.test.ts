@@ -3,11 +3,13 @@ import {
 	CONTENT_MAX_CHARS,
 	cleanAuthor,
 	cleanTags,
+	cleanTitle,
 	normalizeFeedItem,
 	normalizeFeedItems,
 	normalizeLanguage,
 	parseFeedDate,
 	resolvePublishedAt,
+	withoutTitleEcho,
 } from "./feedItem.js";
 import { type FeedItemData, parseFeed } from "./feedParser.js";
 
@@ -266,5 +268,45 @@ describe("normalizeFeedItem details", () => {
 		);
 		expect(a.author).toBe("bob");
 		expect(a.tags).toEqual(["r/LocalLLaMA"]);
+	});
+});
+
+describe("links and titles", () => {
+	it("unwraps Folha's redirect and strips tracking params", async () => {
+		const a = await first(
+			rss(
+				`<item><title>T</title><link>https://redir.folha.com.br/redir/online/poder/rss091/*https://www1.folha.uol.com.br/poder/2026/10/a.shtml?utm_source=rss&amp;id=7</link></item>`,
+			),
+		);
+		expect(a.url).toBe(
+			"https://www1.folha.uol.com.br/poder/2026/10/a.shtml?id=7",
+		);
+		expect(a.outlet).toBe("folha.uol.com.br");
+	});
+
+	it("keeps the guid stable when the link is cleaned", async () => {
+		const raw = "https://site.example/a?utm_source=rss";
+		const a = await first(
+			rss(`<item><title>T</title><link>${raw}</link></item>`),
+		);
+		expect(a.guid).toBe(raw);
+		expect(a.url).toBe("https://site.example/a");
+	});
+
+	it("normalizes title text", () => {
+		expect(cleanTitle("Cafe\u0301 \u00adbem\u200b  &amp; forte")).toBe(
+			"Café bem & forte",
+		);
+	});
+
+	it("drops teasers that only echo the headline", () => {
+		expect(withoutTitleEcho("Dólar cai a R$ 5", "Dólar cai a R$ 5")).toBe("");
+		expect(
+			withoutTitleEcho(
+				"Dólar cai a R$ 5. Moeda fecha em baixa.",
+				"Dólar cai a R$ 5",
+			),
+		).toBe("Moeda fecha em baixa.");
+		expect(withoutTitleEcho("Outro texto", "Dólar cai")).toBe("Outro texto");
 	});
 });

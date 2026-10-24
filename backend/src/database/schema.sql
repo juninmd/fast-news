@@ -330,3 +330,15 @@ ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS tags JSONB DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS comments_url TEXT DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS language TEXT DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS word_count INTEGER DEFAULT NULL;
+
+-- Conditional GET validators of the last good fetch: an unchanged feed answers 304 and is not re-parsed.
+-- Rollback: ALTER TABLE source_feeds DROP COLUMN etag, DROP COLUMN last_modified;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS etag TEXT DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_modified TEXT DEFAULT NULL;
+
+-- Publisher key (outlet.ts). Story source counts use it instead of the feed title, so an outlet with
+-- several section feeds counts once. Existing rows are filled by the ingestion backfill; until then
+-- queries fall back to `source` via COALESCE(outlet, source).
+-- Rollback: ALTER TABLE news_articles DROP COLUMN outlet;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS outlet TEXT DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_outlet_missing ON news_articles(created_at DESC) WHERE outlet IS NULL;

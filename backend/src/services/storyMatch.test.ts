@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { pickStoryMatch, type StoryCandidate } from "./storyMatch.js";
+import {
+	numbersConflict,
+	pickStoryMatch,
+	type StoryCandidate,
+} from "./storyMatch.js";
 
 const opts = { threshold: 0.82, windowHours: 72 };
 const at = (iso: string) => new Date(iso);
@@ -70,5 +74,46 @@ describe("pickStoryMatch", () => {
 			opts,
 		);
 		expect(m?.id).toBe("b");
+	});
+});
+
+describe("numbers in headlines", () => {
+	it("flags headlines that name different contest numbers", () => {
+		expect(
+			numbersConflict(
+				"Resultado do concurso 7150 da Quina: veja números do sorteio",
+				"Resultado do concurso 1329 da Dia de Sorte: veja números do sorteio",
+			),
+		).toBe(true);
+	});
+
+	it("ignores years, small counts and headlines without numbers", () => {
+		expect(
+			numbersConflict("Eleições 2026: debate", "Eleições 2024: debate"),
+		).toBe(false);
+		expect(
+			numbersConflict("Selic sobe 25 pontos", "Selic sobe 50 pontos"),
+		).toBe(false);
+		expect(
+			numbersConflict("Concurso 7150 da Quina", "Quina sorteia hoje"),
+		).toBe(false);
+		expect(
+			numbersConflict("Concurso 7150 da Quina", "Quina: concurso 7150 premia"),
+		).toBe(false);
+	});
+
+	it("keeps lottery draws apart when only the wording matches", () => {
+		const draw = {
+			title: "Resultado do concurso 7150 da Quina: veja números do sorteio",
+			publishedAt: at("2026-10-19T10:00:00Z"),
+		};
+		const other = cand({
+			title: "Resultado do concurso 1329 da Quina: veja números do sorteio",
+		});
+		expect(pickStoryMatch(draw, [other], opts)).toBeNull();
+		// a strong embedding match still wins (price updates of one market story)
+		expect(
+			pickStoryMatch(draw, [{ ...other, similarity: 0.9 }], opts),
+		).not.toBeNull();
 	});
 });

@@ -2,7 +2,13 @@ import { createHash } from "node:crypto";
 import { type ArticleMedia, extractMedia } from "./articleMedia.js";
 import type { FeedItemData } from "./feedParser.js";
 import { htmlToText, inlineText, truncateText } from "./htmlText.js";
-import { resolveHttpUrl } from "./textSimilarity.js";
+import { outletOf } from "./outlet.js";
+import {
+	resolveHttpUrl,
+	stripAccents,
+	stripTracking,
+	unwrapRedirect,
+} from "./textSimilarity.js";
 
 export interface RawArticle {
 	guid: string;
@@ -13,6 +19,8 @@ export interface RawArticle {
 	category: string;
 	company?: string;
 	publishedAt: Date | null;
+	/** Publisher key (see outlet.ts): one value per outlet, however many feeds it has. */
+	outlet?: string;
 	author?: string;
 	tags?: string[];
 	/** Discussion thread (HN, lobste.rs, WordPress `comments`). */
@@ -194,6 +202,37 @@ export function cleanContent(item: FeedItemData, feedUrl: string): string {
 	return truncateText(out.trim(), CONTENT_MAX_CHARS);
 }
 
+// ── Title ──────────────────────────────────────────────────────────────────
+
+const invisible = /[\u00ad\u200b-\u200d\ufeff]/g;
+
+/** Title as one line of NFC text, without soft hyphens and zero-width characters. */
+export function cleanTitle(raw: unknown): string {
+	return truncateText(
+		inlineText(raw).normalize("NFC").replace(invisible, ""),
+		TITLE_MAX_CHARS,
+	);
+}
+
+const squash = (text: string) =>
+	stripAccents(text)
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "");
+
+/** Teasers that only repeat the headline say nothing: drop them, or just the repeated lead. */
+export function withoutTitleEcho(content: string, title: string): string {
+	if (!content || !title) return content;
+	const c = squash(content);
+	const t = squash(title);
+	if (!t || c === t) return "";
+	if (c.startsWith(t) && content.toLowerCase().startsWith(title.toLowerCase()))
+		return content
+			.slice(title.length)
+			.replace(/^[\s:–—.-]+/, "")
+			.trim();
+	return content;
+}
+
 // ── Details ────────────────────────────────────────────────────────────────
 
 const MAX_TAGS = 8;
@@ -308,12 +347,14 @@ export function resolveGuid(
 
 /** Absolute article link: `link`, else a guid that is itself a URL. */
 export function resolveLink(item: FeedItemData, feedUrl: string): string {
-	return (
-		resolveHttpUrl(item.link, feedUrl) ||
-		resolveHttpUrl(
-			/^https?:\/\//.test(item.guid ?? "") ? item.guid : "",
-			feedUrl,
-		)
+	return stripTracking(
+		unwrapRedirect(
+			resolveHttpUrl(item.link, feedUrl) ||
+				resolveHttpUrl(
+					/^https?:\/\//.test(item.guid ?? "") ? item.guid : "",
+					feedUrl,
+				),
+		),
 	);
 }
 
@@ -327,7 +368,8 @@ export function normalizeFeedItem(
 	feed: FeedMeta = {},
 	now: Date = new Date(),
 ): RawArticle {
-	const title = truncateText(inlineText(item.title), TITLE_MAX_CHARS);
+	const sourceName = inlineText(feed.title) || source.company || source.url;
+	const title = cleanTitle(item.title);
 	const url = resolveLink(item, source.url);
 	const { media, imageUrl, videoUrl } = extractMedia(
 		item as Record<string, unknown>,
@@ -357,16 +399,19 @@ export function normalizeFeedItem(
 	const language = normalizeLanguage(item["language"] ?? feed.language);
 	const wordCount = wordCountOf(item);
 
+	const outlet = outletOf(url, source.company ?? sourceName);
+
 	return {
 		guid: resolveGuid(item, source.url, title),
 		title,
-		content: cleanContent(withGroupText, source.url),
+		content: withoutTitleEcho(cleanContent(withGroupText, source.url), title),
 		url,
-		source: inlineText(feed.title) || source.company || source.url,
+		source: sourceName,
 		category: source.category,
 		company: source.company,
 		...(source.promptHint ? { promptHint: source.promptHint } : {}),
 		publishedAt: resolvePublishedAt(item, now),
+		...(outlet ? { outlet } : {}),
 		...(author ? { author } : {}),
 		...(tags.length ? { tags } : {}),
 		...(commentsUrl ? { commentsUrl } : {}),

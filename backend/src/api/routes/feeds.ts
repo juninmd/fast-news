@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { config } from "../../config/env.js";
 import { query } from "../../database/client.js";
-import { cacheGet, cacheSet } from "../../services/cache.js";
+import { cacheWrap, hashKey } from "../../services/cache.js";
 import {
 	DIGEST_PERIODS,
 	type DigestPeriod,
@@ -61,54 +61,52 @@ async function loadItems(req: Request): Promise<FeedItem[]> {
 	const category = req.query["category"] as string | undefined;
 	const ai = req.query["scope"] === "ai";
 	const minScore = clamp(req.query["minScore"], 1, 10);
-	const key = `feed:${limit}:${category ?? "all"}:${ai}:${minScore}`;
-	const cached = await cacheGet<FeedItem[]>(key);
-	if (cached) return cached;
-
-	const params: unknown[] = [limit, minScore];
-	const where = [
-		"COALESCE(is_spam_or_promo, FALSE) = FALSE",
-		"published_at <= NOW()",
-		"COALESCE(relevance_score, $2) >= $2",
-	];
-	if (category) {
-		params.push(category);
-		where.push(
-			`(category = $${params.length} OR theme_category = $${params.length})`,
-		);
-	}
-	if (ai) where.push("is_ai = TRUE");
-	const res = await query<{
-		id: string;
-		title: string;
-		url: string;
-		source: string;
-		category: string;
-		summary: string | null;
-		content: string | null;
-		published_at: string;
-		image_url: string | null;
-	}>(
-		`SELECT id, title, url, source, category, summary, LEFT(content, 600) AS content,
+	const key = hashKey("feed", limit, category, ai, minScore);
+	return cacheWrap(key, 300, async () => {
+		const params: unknown[] = [limit, minScore];
+		const where = [
+			"COALESCE(is_spam_or_promo, FALSE) = FALSE",
+			"published_at <= NOW()",
+			"COALESCE(relevance_score, $2) >= $2",
+		];
+		if (category) {
+			params.push(category);
+			where.push(
+				`(category = $${params.length} OR theme_category = $${params.length})`,
+			);
+		}
+		if (ai) where.push("is_ai = TRUE");
+		const res = await query<{
+			id: string;
+			title: string;
+			url: string;
+			source: string;
+			category: string;
+			summary: string | null;
+			content: string | null;
+			published_at: string;
+			image_url: string | null;
+		}>(
+			`SELECT id, title, url, source, category, summary, LEFT(content, 600) AS content,
 		        published_at, image_url
 		 FROM news_articles
 		 WHERE ${where.join(" AND ")}
 		 ORDER BY published_at DESC NULLS LAST
 		 LIMIT $1`,
-		params,
-	);
-	const items = res.rows.map((r) => ({
-		id: r.id,
-		title: r.title,
-		url: r.url,
-		source: r.source,
-		category: r.category,
-		summary: snippet(r.summary ?? r.content),
-		publishedAt: r.published_at,
-		imageUrl: r.image_url,
-	}));
-	await cacheSet(key, items, 300);
-	return items;
+			params,
+		);
+		const items = res.rows.map((r) => ({
+			id: r.id,
+			title: r.title,
+			url: r.url,
+			source: r.source,
+			category: r.category,
+			summary: snippet(r.summary ?? r.content),
+			publishedAt: r.published_at,
+			imageUrl: r.image_url,
+		}));
+		return items;
+	});
 }
 
 // GET /api/feed.xml — RSS 2.0 of the (filterable) stream. ?scope=ai&category=&minScore=&limit=

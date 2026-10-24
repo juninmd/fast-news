@@ -9,10 +9,12 @@ import {
 	fetchPageMedia,
 	type PageMedia,
 } from "./articleMedia.js";
+import { invalidateArticleCaches } from "./cache.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedBatch, vectorToSQL } from "./embeddings.js";
 import { normalizeFeedItems, type RawArticle } from "./feedItem.js";
 import { fetchFeedXml, parseFeed } from "./feedParser.js";
+import { outletOf } from "./outlet.js";
 import { scoreRelevance } from "./relevance.js";
 import { recordFeedResult, sanitizeError } from "./sourceHealth.js";
 import {
@@ -96,16 +98,28 @@ async function fetchFeed(source: {
 	category: string;
 	company?: string;
 	promptHint?: string;
+	etag?: string;
+	lastModified?: string;
 }): Promise<RawArticle[]> {
 	try {
 		const host = new URL(source.url).hostname;
-		const xml = await hostGate.run(host, () =>
+		const fetched = await hostGate.run(host, () =>
 			withRetry(() =>
-				fetchFeedXml(source.url, config.ingestion.feedFetchTimeoutMs),
+				fetchFeedXml(source.url, config.ingestion.feedFetchTimeoutMs, {
+					etag: source.etag,
+					lastModified: source.lastModified,
+				}),
 			),
 		);
-		const feed = await parseFeed(xml);
-		await recordFeedResult(source.url, true);
+		if (fetched.xml === null) {
+			// 304: nothing new since the last good fetch, no body to parse.
+			await recordFeedResult(source.url, true);
+			return [];
+		}
+		const feed = await parseFeed(fetched.xml);
+		// Validators are saved only after a successful parse, so a feed that
+		// breaks is fetched in full again next time.
+		await recordFeedResult(source.url, true, undefined, fetched);
 		const limit = isLlmFreeCategory(source.category)
 			? Math.min(LLM_FREE_MAX_ITEMS, config.ingestion.maxArticlesPerFeed)
 			: config.ingestion.maxArticlesPerFeed;
@@ -247,8 +261,8 @@ async function storeArticle(
 	// reported by several portals is a signal (assignArticleToStory groups them),
 	// and dropping by similarity used to lose articles whose angle differed.
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url, is_ai, video_url, media, author, tags, comments_url, language, word_count)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17::jsonb, $18, $19, $20)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url, is_ai, video_url, media, author, tags, comments_url, language, word_count, outlet)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17::jsonb, $18, $19, $20, $21)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -272,6 +286,7 @@ async function storeArticle(
 			article.commentsUrl ?? null,
 			article.language ?? null,
 			article.wordCount ?? null,
+			article.outlet ?? null,
 		],
 	);
 
@@ -399,6 +414,44 @@ async function fillMissingDetails(
 }
 
 /**
+ * Fills `outlet` for articles stored before the column existed and refreshes the
+ * source count of the stories they belong to, so "N sources" stops counting one
+ * outlet's section feeds as separate confirmations.
+ */
+async function backfillOutlets(limit: number): Promise<void> {
+	const rows = await query<{ id: string; url: string; source: string }>(
+		`SELECT id, url, source FROM news_articles
+     WHERE outlet IS NULL AND created_at > NOW() - INTERVAL '14 days'
+     ORDER BY created_at DESC LIMIT $1`,
+		[Math.max(limit, 500)],
+	);
+	if (rows.rows.length === 0) return;
+	const ids = rows.rows.map((r) => r.id);
+	const outlets = rows.rows.map(
+		(r) => outletOf(r.url, r.source) ?? (r.source.toLowerCase() || "unknown"),
+	);
+	await query(
+		`UPDATE news_articles na SET outlet = v.outlet
+     FROM unnest($1::uuid[], $2::text[]) AS v(id, outlet)
+     WHERE na.id = v.id`,
+		[ids, outlets],
+	);
+	await query(
+		`UPDATE news_stories ns SET source_count = s.src
+     FROM (
+       SELECT sa.story_id, COUNT(DISTINCT COALESCE(na.outlet, na.source))::int AS src
+       FROM story_articles sa
+       JOIN news_articles na ON na.id = sa.article_id
+       WHERE sa.story_id IN (SELECT story_id FROM story_articles WHERE article_id = ANY($1::uuid[]))
+       GROUP BY sa.story_id
+     ) s
+     WHERE ns.id = s.story_id AND ns.source_count IS DISTINCT FROM s.src`,
+		[ids],
+	);
+	console.log(`[ingestion] backfilled outlet for ${ids.length} articles`);
+}
+
+/**
  * Articles stored while the embedding service was down (or whose feed had no
  * image) get a second chance, so a provider outage delays grouping instead of
  * losing it.
@@ -463,6 +516,8 @@ async function backfillMissing(ollamaUp: boolean): Promise<void> {
 			row.id,
 		]);
 	}
+
+	await backfillOutlets(limit);
 
 	const noImage = await query<{ id: string; url: string }>(
 		`SELECT id, url FROM news_articles
@@ -606,7 +661,12 @@ export async function runIngestion(): Promise<IngestionResult> {
 	console.log(
 		`[ingestion] Done. Fetched: ${fetched}, Stored: ${newArticles.length}`,
 	);
-	if (newArticles.length > 0)
+	if (newArticles.length > 0) {
+		// Lists cached before this run would hide the new articles until their TTL.
+		await invalidateArticleCaches().catch((err: Error) =>
+			console.warn("[ingestion] cache invalidation failed:", err.message),
+		);
 		runBackground("websub", () => pingWebSubHub(publicFeedUrls()));
+	}
 	return { fetched, stored: newArticles.length, newArticles };
 }

@@ -389,7 +389,11 @@ export function extractMedia(item: Dict, base?: string): ExtractedMedia {
 		...(c.width > 0 ? { width: c.width } : {}),
 	}));
 
-	const enclosures = asArray(item["enclosure"]);
+	const atomEnclosures = asArray(item["linkNodes"])
+		.map((n) => attrs(n))
+		.filter((a) => a["rel"] === "enclosure")
+		.map((a) => ({ url: a["href"], type: a["type"] }));
+	const enclosures = [...asArray(item["enclosure"]), ...atomEnclosures];
 	for (const node of enclosures) {
 		const e = attrs(node);
 		const url = normalizeImageUrl(e["url"], base);
