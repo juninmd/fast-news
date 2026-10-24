@@ -11,6 +11,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReadingHistory } from "../../hooks/useReadingHistory";
 import { ArticleVideo } from "./ArticleVideo";
+import { type GalleryImage, ImageGallery } from "./ImageGallery";
 
 interface Article {
 	id: string;
@@ -28,6 +29,12 @@ interface Article {
 	tags?: string[] | null;
 	comments_url?: string | null;
 	word_count?: number | null;
+	media?: Array<{
+		type: "image" | "video";
+		url: string;
+		alt?: string;
+		credit?: string;
+	}> | null;
 }
 
 interface RelatedArticle {
@@ -35,6 +42,12 @@ interface RelatedArticle {
 	title: string;
 	source: string;
 	url: string;
+}
+
+function galleryImages(article: Article): GalleryImage[] {
+	return (article.media ?? [])
+		.filter((m) => m.type === "image")
+		.map(({ url, alt, credit }) => ({ url, alt, credit }));
 }
 
 function formatDate(dateStr: string): string {
@@ -216,6 +229,12 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 									</div>
 								)
 							)}
+
+							<ImageGallery
+								images={galleryImages(article)}
+								title={article.title}
+								hidden={focusMode}
+							/>
 
 							<div className={`p-6 ${focusMode ? "py-8" : ""}`}>
 								<h2

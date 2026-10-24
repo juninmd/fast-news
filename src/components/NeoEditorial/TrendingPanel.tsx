@@ -1,6 +1,7 @@
 import { Flame, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { type TrendTerm, useTrends } from "../../hooks/useTrends";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 const WINDOWS = [
 	{ hours: 6, label: "6h" },
@@ -142,14 +143,15 @@ export function TrendingPanel({
 										<span className="mt-1 flex items-center gap-2">
 											<span className="h-1 flex-1 overflow-hidden bg-bg-tertiary">
 												<span
-													className="block h-full bg-accent-primary/70"
+													className="block h-full origin-left animate-[grow-x_700ms_cubic-bezier(0.22,1,0.36,1)_both] bg-accent-primary/70 motion-reduce:animate-none"
 													style={{
 														width: `${Math.max(6, (t.score / topScore) * 100)}%`,
 													}}
 												/>
 											</span>
-											<span className="shrink-0 font-mono text-[11px] tabular-nums text-text-secondary">
-												{t.sources} fontes · {t.count} notícias
+											<span className="w-44 shrink-0 text-right font-mono text-[11px] tabular-nums text-text-secondary">
+												<AnimatedNumber value={t.sources} /> fontes ·{" "}
+												<AnimatedNumber value={t.count} /> notícias
 											</span>
 										</span>
 									</span>
