@@ -4,6 +4,8 @@ import {
 	Clock,
 	ExternalLink,
 	Focus,
+	MessageSquare,
+	User,
 	X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -22,6 +24,10 @@ interface Article {
 	published_at: string;
 	image_url: string | null;
 	video_url?: string | null;
+	author?: string | null;
+	tags?: string[] | null;
+	comments_url?: string | null;
+	word_count?: number | null;
 }
 
 interface RelatedArticle {
@@ -226,19 +232,53 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 									{article.company && article.company !== article.source && (
 										<span>· {article.company}</span>
 									)}
+									{article.author && (
+										<span className="flex items-center gap-1">
+											<User className="w-3 h-3" />
+											{article.author}
+										</span>
+									)}
 									<span className="flex items-center gap-1">
 										<Clock className="w-3 h-3" />
 										{formatDate(article.published_at)}
 									</span>
 									<span className="flex items-center gap-1 text-text-secondary">
 										<BookOpen className="w-3 h-3" />~
-										{Math.ceil(
-											(article.content || article.summary).split(" ").length /
-												200,
+										{Math.max(
+											1,
+											Math.ceil(
+												(article.word_count ??
+													(article.content || article.summary).split(" ")
+														.length) / 200,
+											),
 										)}{" "}
 										min
 									</span>
+									{article.comments_url && (
+										<a
+											href={article.comments_url}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="flex items-center gap-1 hover:text-accent-primary transition-colors"
+										>
+											<MessageSquare className="w-3 h-3" />
+											Discussão
+										</a>
+									)}
 								</div>
+
+								{article.tags && article.tags.length > 0 && (
+									<ul className="flex flex-wrap gap-1.5 mb-4" aria-label="Tags">
+										{article.tags.map((tag) => (
+											<li
+												key={tag}
+												className="px-2 py-0.5 rounded-full border border-border-subtle font-mono text-[10px] uppercase tracking-wide text-text-secondary"
+											>
+												{tag}
+											</li>
+										))}
+									</ul>
+								)}
 
 								{/* Content */}
 								<div

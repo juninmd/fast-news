@@ -1,3 +1,5 @@
+import { decodeEntities } from "./htmlText.js";
+
 const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif|avif)(\?.*)?$/i;
 const VIDEO_EXT_RE = /\.(mp4|webm|m4v|mov|ogv|m3u8)(\?.*)?$/i;
 // Tracking pixels, icons and share buttons that feeds embed inside the HTML body.
@@ -30,6 +32,10 @@ export interface ArticleMedia {
 	height?: number;
 	/** Seconds. */
 	duration?: number;
+	/** Image alt text / Media RSS description. */
+	alt?: string;
+	/** Photographer or agency (`media:credit`). */
+	credit?: string;
 }
 
 export interface ExtractedMedia {
@@ -53,6 +59,21 @@ function attrs(node: unknown): Dict {
 	if (!node || typeof node !== "object") return {};
 	const n = node as Dict;
 	return (n["$"] as Dict | undefined) ?? n;
+}
+
+/** Short single-line text from an attribute or Media RSS node (`"x"` or `{ _: "x" }`); junk like "null" is dropped. */
+function shortText(value: unknown, max = 200): string | undefined {
+	const raw = Array.isArray(value) ? value[0] : value;
+	const text =
+		typeof raw === "string"
+			? raw
+			: raw && typeof raw === "object"
+				? String((raw as Dict)["_"] ?? "")
+				: "";
+	const clean = decodeEntities(text).replace(/\s+/g, " ").trim();
+	return clean && !/^(null|undefined)$/i.test(clean)
+		? clean.slice(0, max)
+		: undefined;
 }
 
 function num(value: unknown): number | undefined {
@@ -157,9 +178,11 @@ export function mediaFromHtml(html: unknown, base?: string): HtmlMedia {
 			"";
 		const url = normalizeImageUrl(raw, base);
 		if (!url || JUNK_IMAGE_RE.test(url)) continue;
+		const alt = shortText(a["alt"]);
 		out.images.push({
 			type: "image",
 			url,
+			...(alt ? { alt } : {}),
 			...(num(width) ? { width: num(width) } : {}),
 			...(num(height) ? { height: num(height) } : {}),
 		});
@@ -336,10 +359,14 @@ export function extractMedia(item: Dict, base?: string): ExtractedMedia {
 				...(num(a["duration"]) ? { duration: num(a["duration"]) } : {}),
 			});
 		} else if (looksLikeImage(url, a["type"], a["medium"])) {
+			const credit = shortText(nested["media:credit"], 120);
+			const alt = shortText(nested["media:description"]);
 			mediaImages.push({
 				value: {
 					type: "image",
 					url,
+					...(alt ? { alt } : {}),
+					...(credit ? { credit } : {}),
 					...(num(a["height"]) ? { height: num(a["height"]) } : {}),
 				},
 				width: Number(a["width"] ?? 0),
@@ -486,12 +513,49 @@ export function ogVideoFromHtml(
 	return undefined;
 }
 
+/** Editorial metadata of an article page, used to fill what the feed left empty. */
+export interface PageMeta {
+	description?: string;
+	author?: string;
+	tags?: string[];
+}
+
 export interface PageMedia {
 	imageUrl?: string;
 	video?: ArticleMedia;
+	meta?: PageMeta;
 }
 
-/** Fetches the article page and returns its og:image / og:video. Best effort: never throws. */
+/** `og:description` / `description`, `author` and `article:tag` / `keywords` of a page head. */
+export function pageMetaFromHtml(html: string): PageMeta {
+	const meta = metaTags(html);
+	const description = shortText(
+		meta.get("og:description") ??
+			meta.get("description") ??
+			meta.get("twitter:description"),
+		600,
+	);
+	const rawAuthor = meta.get("author") ?? meta.get("article:author");
+	// `article:author` is often a profile URL, not a name.
+	const author =
+		rawAuthor && !/^https?:\/\//i.test(rawAuthor)
+			? shortText(rawAuthor, 120)
+			: undefined;
+	const articleTags = [...html.slice(0, 200_000).matchAll(/<meta\b[^>]*>/gi)]
+		.map((tag) => parseAttrs(tag[0]))
+		.filter((a) => a["property"]?.toLowerCase() === "article:tag")
+		.map((a) => a["content"] ?? "");
+	const tags = [...articleTags, ...(meta.get("keywords") ?? "").split(",")]
+		.map((t) => shortText(t, 40))
+		.filter((t): t is string => !!t);
+	return {
+		...(description ? { description } : {}),
+		...(author ? { author } : {}),
+		...(tags.length ? { tags: [...new Set(tags)].slice(0, 8) } : {}),
+	};
+}
+
+/** Fetches the article page and returns its og:image / og:video / editorial meta. Best effort: never throws. */
 export async function fetchPageMedia(
 	pageUrl: string,
 	timeoutMs = 6000,
@@ -509,7 +573,12 @@ export async function fetchPageMedia(
 		const base = resp.url || pageUrl;
 		const imageUrl = ogImageFromHtml(html, base);
 		const video = ogVideoFromHtml(html, base);
-		return { ...(imageUrl ? { imageUrl } : {}), ...(video ? { video } : {}) };
+		const meta = pageMetaFromHtml(html);
+		return {
+			...(imageUrl ? { imageUrl } : {}),
+			...(video ? { video } : {}),
+			...(Object.keys(meta).length ? { meta } : {}),
+		};
 	} catch {
 		return {};
 	}

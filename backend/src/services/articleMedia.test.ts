@@ -9,6 +9,7 @@ import {
 	normalizeImageUrl,
 	ogImageFromHtml,
 	ogVideoFromHtml,
+	pageMetaFromHtml,
 	parseVideoUrl,
 } from "./articleMedia.js";
 
@@ -318,5 +319,56 @@ describe("og:video", () => {
 		vi.unstubAllGlobals();
 		expect(page.imageUrl).toBe("https://x.example/c.jpg");
 		expect(page.video?.provider).toBe("youtube");
+	});
+});
+
+describe("image alt and credit", () => {
+	it("keeps <img alt> and media:credit / media:description", () => {
+		const out = extractMedia({
+			mediaContent: [
+				{
+					$: { url: "https://x.com/a.jpg", medium: "image", width: "900" },
+					"media:credit": ["Jackal Pan/Getty Images"],
+					"media:description": [{ _: "Prédio da bolsa" }],
+				},
+			],
+			"content:encoded":
+				'<img src="https://x.com/b.jpg" alt="Gráfico &amp; dados">',
+		});
+		expect(out.media[0]).toMatchObject({
+			credit: "Jackal Pan/Getty Images",
+			alt: "Prédio da bolsa",
+		});
+		expect(out.media[1]).toMatchObject({ alt: "Gráfico & dados" });
+		expect(
+			extractMedia({
+				mediaContent: [
+					{
+						$: { url: "https://x.com/c.jpg", medium: "image" },
+						"media:credit": ["null"],
+					},
+				],
+			}).media[0]?.credit,
+		).toBeUndefined();
+	});
+});
+
+describe("pageMetaFromHtml", () => {
+	it("reads description, author and tags, ignoring profile urls", () => {
+		const html =
+			'<meta property="og:description" content="Resumo &amp; contexto">' +
+			'<meta name="author" content="Ana Souza">' +
+			'<meta property="article:tag" content="IA"><meta property="article:tag" content="Chips">' +
+			'<meta name="keywords" content="ia, mercado">';
+		expect(pageMetaFromHtml(html)).toEqual({
+			description: "Resumo & contexto",
+			author: "Ana Souza",
+			tags: ["IA", "Chips", "ia", "mercado"],
+		});
+		expect(
+			pageMetaFromHtml(
+				'<meta property="article:author" content="https://fb.com/ana">',
+			).author,
+		).toBeUndefined();
 	});
 });

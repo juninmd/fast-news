@@ -13,10 +13,22 @@ export interface RawArticle {
 	category: string;
 	company?: string;
 	publishedAt: Date | null;
+	author?: string;
+	tags?: string[];
+	/** Discussion thread (HN, lobste.rs, WordPress `comments`). */
+	commentsUrl?: string;
+	/** ISO 639-1 code of the article ("pt", "en"). */
+	language?: string;
+	wordCount?: number;
 	imageUrl?: string;
 	videoUrl?: string;
 	media?: ArticleMedia[];
 	promptHint?: string;
+}
+
+export interface FeedMeta {
+	title?: string;
+	language?: string;
 }
 
 export interface FeedSource {
@@ -182,6 +194,87 @@ export function cleanContent(item: FeedItemData, feedUrl: string): string {
 	return truncateText(out.trim(), CONTENT_MAX_CHARS);
 }
 
+// ── Details ────────────────────────────────────────────────────────────────
+
+const MAX_TAGS = 8;
+const MAX_AUTHOR_CHARS = 120;
+const ACCENTS: Record<string, string> = {
+	"'": "\u0301",
+	"`": "\u0300",
+	"^": "\u0302",
+	'"': "\u0308",
+	"~": "\u0303",
+};
+
+/** Author name from `dc:creator`, `author` (RSS email form or Atom name) or lobste.rs' "domain by user". */
+export function cleanAuthor(raw: unknown): string | undefined {
+	const value = Array.isArray(raw) ? raw[0] : raw;
+	const text =
+		typeof value === "string"
+			? value
+			: value && typeof value === "object"
+				? String((value as Record<string, unknown>)["name"] ?? "")
+				: "";
+	let name = inlineText(text);
+	// "joe@site.com (Joe Doe)" -> "Joe Doe"; a bare address says nothing.
+	const paren = name.match(/\(([^)]+)\)\s*$/);
+	if (/\S+@\S+/.test(name)) name = paren?.[1]?.trim() ?? "";
+	name = name
+		.replace(/^\S+\.\S+ by /, "")
+		.replace(/^\/?u\//, "")
+		// arXiv authors carry LaTeX accents: Lu\'is -> Luís
+		.replace(
+			/\\(['`^"~])\{?([a-zA-Z])\}?/g,
+			(_m, mark: string, letter: string) =>
+				`${letter}${ACCENTS[mark] ?? ""}`.normalize("NFC"),
+		);
+	if (name.length > MAX_AUTHOR_CHARS) {
+		// Long author lists (papers): the first three, then "et al."
+		name = `${name.split(/,\s*/).slice(0, 3).join(", ")} et al.`;
+	}
+	return name && name.length <= MAX_AUTHOR_CHARS ? name : undefined;
+}
+
+/** Categories of an item: RSS `<category>` text and Atom `term`/`label`, deduplicated. */
+export function cleanTags(item: FeedItemData): string[] {
+	const atom = (item["categoryNodes"] as unknown[] | undefined) ?? [];
+	const raw = [
+		...((item.categories as unknown[] | undefined) ?? []),
+		...atom.map((n) => {
+			const a =
+				n && typeof n === "object"
+					? ((n as Record<string, unknown>)["$"] as Record<string, unknown>)
+					: undefined;
+			return a?.["label"] ?? a?.["term"] ?? (typeof n === "string" ? n : "");
+		}),
+	];
+	const seen = new Set<string>();
+	const tags: string[] = [];
+	for (const entry of raw) {
+		const tag = inlineText(typeof entry === "string" ? entry : "");
+		const key = tag.toLowerCase();
+		if (!tag || tag.length > 40 || seen.has(key)) continue;
+		seen.add(key);
+		tags.push(tag);
+	}
+	return tags.slice(0, MAX_TAGS);
+}
+
+/** "pt-BR" / "en_US" / "EN" -> "pt" / "en"; undefined for anything else. */
+export function normalizeLanguage(raw: unknown): string | undefined {
+	if (typeof raw !== "string") return undefined;
+	const code = raw.trim().toLowerCase().split(/[-_]/)[0] ?? "";
+	return /^[a-z]{2,3}$/.test(code) ? code : undefined;
+}
+
+function wordCountOf(item: FeedItemData): number | undefined {
+	const body = htmlToText(
+		item["content:encoded"] ?? item["content"] ?? item["summary"],
+	);
+	const words = body ? body.split(/\s+/).length : 0;
+	return words > 0 ? words : undefined;
+}
+
 // ── Item ───────────────────────────────────────────────────────────────────
 
 /** `https://site.com///` — some CMSs emit the homepage as every item's guid, which would collapse a whole feed into one article. */
@@ -231,7 +324,7 @@ export function resolveLink(item: FeedItemData, feedUrl: string): string {
 export function normalizeFeedItem(
 	item: FeedItemData,
 	source: FeedSource,
-	feedTitle?: string,
+	feed: FeedMeta = {},
 	now: Date = new Date(),
 ): RawArticle {
 	const title = truncateText(inlineText(item.title), TITLE_MAX_CHARS);
@@ -253,16 +346,32 @@ export function normalizeFeedItem(
 			}
 		: item;
 
+	const author = cleanAuthor(
+		item["creator"] ?? item["dc:creator"] ?? item["author"],
+	);
+	const tags = cleanTags(item);
+	const commentsUrl =
+		typeof item["comments"] === "string"
+			? resolveHttpUrl(item["comments"], source.url) || undefined
+			: undefined;
+	const language = normalizeLanguage(item["language"] ?? feed.language);
+	const wordCount = wordCountOf(item);
+
 	return {
 		guid: resolveGuid(item, source.url, title),
 		title,
 		content: cleanContent(withGroupText, source.url),
 		url,
-		source: inlineText(feedTitle) || source.company || source.url,
+		source: inlineText(feed.title) || source.company || source.url,
 		category: source.category,
 		company: source.company,
 		...(source.promptHint ? { promptHint: source.promptHint } : {}),
 		publishedAt: resolvePublishedAt(item, now),
+		...(author ? { author } : {}),
+		...(tags.length ? { tags } : {}),
+		...(commentsUrl ? { commentsUrl } : {}),
+		...(language ? { language } : {}),
+		...(wordCount ? { wordCount } : {}),
 		...(imageUrl ? { imageUrl } : {}),
 		...(videoUrl ? { videoUrl } : {}),
 		...(media.length ? { media } : {}),
@@ -273,12 +382,12 @@ export function normalizeFeedItem(
 export function normalizeFeedItems(
 	items: FeedItemData[],
 	source: FeedSource,
-	feedTitle?: string,
+	feed: FeedMeta = {},
 	now: Date = new Date(),
 ): RawArticle[] {
 	const seen = new Set<string>();
 	return items
-		.map((item) => normalizeFeedItem(item, source, feedTitle, now))
+		.map((item) => normalizeFeedItem(item, source, feed, now))
 		.filter((article) => {
 			if (seen.has(article.guid)) return false;
 			seen.add(article.guid);

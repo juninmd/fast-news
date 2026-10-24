@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
 	CONTENT_MAX_CHARS,
+	cleanAuthor,
+	cleanTags,
 	normalizeFeedItem,
 	normalizeFeedItems,
+	normalizeLanguage,
 	parseFeedDate,
 	resolvePublishedAt,
 } from "./feedItem.js";
@@ -16,7 +19,7 @@ const rss = (item: string, extra = "") =>
 
 async function first(xml: string, src = source) {
 	const feed = await parseFeed(xml);
-	return normalizeFeedItem(feed.items[0] as FeedItemData, src, feed.title, NOW);
+	return normalizeFeedItem(feed.items[0] as FeedItemData, src, feed, NOW);
 }
 
 describe("parseFeedDate", () => {
@@ -136,7 +139,7 @@ describe("normalizeFeedItem", () => {
 				 <item><title>B</title><link>https://site.example/b</link><guid isPermaLink="false">https://site.example///</guid></item>`,
 			),
 		);
-		const articles = normalizeFeedItems(feed.items, source, feed.title, NOW);
+		const articles = normalizeFeedItems(feed.items, source, feed, NOW);
 		expect(articles.map((x) => x.guid)).toEqual([
 			"https://site.example/a",
 			"https://site.example/b",
@@ -146,9 +149,7 @@ describe("normalizeFeedItem", () => {
 	it("drops repeated items inside one feed", async () => {
 		const item = `<item><title>A</title><link>https://site.example/a</link></item>`;
 		const feed = await parseFeed(rss(item + item));
-		expect(
-			normalizeFeedItems(feed.items, source, feed.title, NOW),
-		).toHaveLength(1);
+		expect(normalizeFeedItems(feed.items, source, feed, NOW)).toHaveLength(1);
 	});
 
 	it("imports the video, poster and description of a YouTube Atom entry", async () => {
@@ -169,7 +170,7 @@ describe("normalizeFeedItem", () => {
 				...source,
 				url: "https://www.youtube.com/feeds/videos.xml?channel_id=x",
 			},
-			feed.title,
+			feed,
 			NOW,
 		);
 		expect(a.videoUrl).toBe("https://www.youtube.com/watch?v=LWxX6vvHfrc");
@@ -178,5 +179,92 @@ describe("normalizeFeedItem", () => {
 		);
 		expect(a.content).toBe("Resumo do vídeo");
 		expect(a.media?.map((m) => m.type)).toEqual(["image", "video"]);
+	});
+});
+
+describe("cleanAuthor", () => {
+	it("handles RSS email form, lobste.rs, Reddit and bare addresses", () => {
+		expect(cleanAuthor("joe@site.com (Joe Doe)")).toBe("Joe Doe");
+		expect(cleanAuthor("joe@site.com")).toBeUndefined();
+		expect(cleanAuthor("blog.luitjes.it by lucasluitjes")).toBe("lucasluitjes");
+		expect(cleanAuthor("/u/brainExploded99")).toBe("brainExploded99");
+		expect(cleanAuthor({ name: " Ana  Souza " })).toBe("Ana Souza");
+		expect(cleanAuthor(undefined)).toBeUndefined();
+	});
+
+	it("repairs arXiv LaTeX accents and shortens long author lists", () => {
+		expect(cleanAuthor("Lu\\'is Seabra, Sebasti\\'an Vera")).toBe(
+			"Luís Seabra, Sebastián Vera",
+		);
+		const many = Array.from({ length: 30 }, (_, i) => `Autor Numero${i}`).join(
+			", ",
+		);
+		expect(cleanAuthor(many)).toBe(
+			"Autor Numero0, Autor Numero1, Autor Numero2 et al.",
+		);
+	});
+});
+
+describe("cleanTags / normalizeLanguage", () => {
+	it("merges RSS categories and Atom terms without duplicates", () => {
+		expect(
+			cleanTags({
+				categories: ["php", "Security", "php", "x".repeat(60)],
+				categoryNodes: [
+					{ $: { term: "LocalLLaMA", label: "r/LocalLLaMA" } },
+					{ $: { term: "security" } },
+				],
+			} as unknown as FeedItemData),
+		).toEqual(["php", "Security", "r/LocalLLaMA"]);
+	});
+
+	it("reduces locale codes to the language", () => {
+		expect(normalizeLanguage("pt-BR")).toBe("pt");
+		expect(normalizeLanguage("en_US")).toBe("en");
+		expect(normalizeLanguage("")).toBeUndefined();
+		expect(normalizeLanguage(42)).toBeUndefined();
+	});
+});
+
+describe("normalizeFeedItem details", () => {
+	it("fills author, tags, discussion link, language and word count", async () => {
+		const feed = await parseFeed(
+			rss(
+				`<item><title>T</title><link>https://x.com/1</link><dc:creator>Ana</dc:creator>
+				<category>php</category><category>security</category>
+				<comments>https://news.ycombinator.com/item?id=1</comments>
+				<content:encoded><![CDATA[<p>um dois três quatro cinco</p>]]></content:encoded></item>`,
+				"<language>pt-BR</language>",
+			),
+		);
+		const a = normalizeFeedItem(
+			feed.items[0] as FeedItemData,
+			source,
+			feed,
+			NOW,
+		);
+		expect(a).toMatchObject({
+			author: "Ana",
+			tags: ["php", "security"],
+			commentsUrl: "https://news.ycombinator.com/item?id=1",
+			language: "pt",
+			wordCount: 5,
+		});
+	});
+
+	it("reads Atom categories and authors (Reddit)", async () => {
+		const feed = await parseFeed(
+			`<feed xmlns="http://www.w3.org/2005/Atom"><title>r/x</title><entry><title>P</title>
+			<author><name>/u/bob</name></author><category term="LocalLLaMA" label="r/LocalLLaMA"/>
+			<link href="https://www.reddit.com/r/x/comments/1/p/"/><id>t3_1</id></entry></feed>`,
+		);
+		const a = normalizeFeedItem(
+			feed.items[0] as FeedItemData,
+			source,
+			feed,
+			NOW,
+		);
+		expect(a.author).toBe("bob");
+		expect(a.tags).toEqual(["r/LocalLLaMA"]);
 	});
 });

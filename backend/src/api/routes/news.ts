@@ -143,6 +143,7 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 			published_at: string;
 			image_url: string | null;
 			video_url: string | null;
+			author: string | null;
 			cover_image: string | null;
 			sentiment: string;
 			importance_score: number;
@@ -153,7 +154,7 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 		}>(
 			`WITH page AS (
          SELECT na.id, na.title, na.summary, LEFT(na.content, 800) AS content, na.url,
-                na.source, na.category, na.theme_category, na.published_at, na.image_url, na.video_url,
+                na.source, na.category, na.theme_category, na.published_at, na.image_url, na.video_url, na.author,
                 na.sentiment, na.importance_score
          FROM news_articles na ${where}
          ORDER BY na.published_at DESC NULLS LAST
@@ -320,6 +321,11 @@ newsRouter.get("/:id", async (req: Request, res: Response) => {
 		image_url: string | null;
 		video_url: string | null;
 		media: unknown[] | null;
+		author: string | null;
+		tags: string[] | null;
+		comments_url: string | null;
+		language: string | null;
+		word_count: number | null;
 		sentiment: string;
 		importance_score: number;
 		fake_news_score: number | null;
@@ -329,7 +335,7 @@ newsRouter.get("/:id", async (req: Request, res: Response) => {
 		credibility_flags: string[];
 	}>(
 		`SELECT id, title, summary, content, url, source, category, company, published_at,
-            image_url, video_url, media, sentiment, importance_score, fake_news_score, political_bias,
+            image_url, video_url, media, author, tags, comments_url, language, word_count, sentiment, importance_score, fake_news_score, political_bias,
             is_militant, has_incoherence, credibility_flags
      FROM news_articles WHERE id = $1`,
 		[id],

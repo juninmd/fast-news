@@ -322,3 +322,11 @@ CREATE TABLE IF NOT EXISTS article_translations (
 -- Rollback: ALTER TABLE news_articles DROP COLUMN video_url, DROP COLUMN media;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT NULL;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS media JSONB DEFAULT NULL;
+
+-- Editorial details parsed from the feed item (or the article page when the feed has none).
+-- Rollback: ALTER TABLE news_articles DROP COLUMN author, DROP COLUMN tags, DROP COLUMN comments_url, DROP COLUMN language, DROP COLUMN word_count;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS author TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS tags JSONB DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS comments_url TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS language TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS word_count INTEGER DEFAULT NULL;

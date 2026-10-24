@@ -6,6 +6,7 @@ export class FeedFormatError extends Error {}
 export type FeedItemData = Parser.Item & Record<string, unknown>;
 export interface ParsedFeed {
 	title?: string;
+	language?: string;
 	items: FeedItemData[];
 }
 
@@ -16,6 +17,8 @@ const parser = new Parser({
 			["media:thumbnail", "mediaThumbnail", { keepArray: true }],
 			["media:group", "mediaGroup"],
 			["yt:videoId", "ytVideoId"],
+			// Atom puts the tag in attributes (`<category term=".." label=".."/>`), which rss-parser drops.
+			["category", "categoryNodes", { keepArray: true }],
 			"enclosure",
 		],
 	},
@@ -82,7 +85,11 @@ export function sanitizeFeedXml(raw: string): string {
 
 export async function parseFeed(xml: string): Promise<ParsedFeed> {
 	const feed = await parser.parseString(sanitizeFeedXml(xml));
-	return { title: feed.title, items: feed.items as unknown as FeedItemData[] };
+	return {
+		title: feed.title,
+		language: feed.language,
+		items: feed.items as unknown as FeedItemData[],
+	};
 }
 
 /** Fetches a feed and decodes it to text (see {@link decodeFeedBytes}). */

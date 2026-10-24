@@ -112,7 +112,7 @@ async function fetchFeed(source: {
 		return normalizeFeedItems(
 			feed.items.slice(0, limit),
 			source,
-			feed.title,
+			feed,
 			new Date(),
 		);
 	} catch (err) {
@@ -247,8 +247,8 @@ async function storeArticle(
 	// reported by several portals is a signal (assignArticleToStory groups them),
 	// and dropping by similarity used to lose articles whose angle differed.
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url, is_ai, video_url, media)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url, is_ai, video_url, media, author, tags, comments_url, language, word_count)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17::jsonb, $18, $19, $20)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -267,6 +267,11 @@ async function storeArticle(
 			isAiRelated(article.title, article.content, article.category),
 			article.videoUrl ?? null,
 			article.media?.length ? JSON.stringify(article.media) : null,
+			article.author ?? null,
+			article.tags?.length ? JSON.stringify(article.tags) : null,
+			article.commentsUrl ?? null,
+			article.language ?? null,
+			article.wordCount ?? null,
 		],
 	);
 
@@ -350,12 +355,16 @@ function pageMediaEntries(page: PageMedia): ArticleMedia[] {
 	];
 }
 
-/** One og:image/og:video lookup per image-less article, bounded per run and per host. */
-async function fillMissingMedia(
+/**
+ * One page lookup per article the feed left without a picture or a teaser,
+ * bounded per run and per host: og:image/og:video plus the page's description,
+ * author and tags for whatever the feed did not provide.
+ */
+async function fillMissingDetails(
 	articles: RawArticle[],
 	budget: { left: number },
 ): Promise<void> {
-	const missing = articles.filter((a) => !a.imageUrl && a.url);
+	const missing = articles.filter((a) => (!a.imageUrl || !a.content) && a.url);
 	await Promise.all(
 		missing.map(async (article) => {
 			if (budget.left <= 0) return;
@@ -365,13 +374,25 @@ async function fillMissingMedia(
 				const page = await hostGate.run(host, () =>
 					fetchPageMedia(article.url),
 				);
-				article.imageUrl = page.imageUrl ?? page.video?.thumbnail;
-				if (page.video && !article.videoUrl) article.videoUrl = page.video.url;
-				const entries = pageMediaEntries(page);
+				const hadImage = !!article.imageUrl;
+				const hadVideo = !!article.videoUrl;
+				if (!hadImage)
+					article.imageUrl = page.imageUrl ?? page.video?.thumbnail;
+				if (page.video && !hadVideo) article.videoUrl = page.video.url;
+				const entries = pageMediaEntries({
+					imageUrl: hadImage ? undefined : page.imageUrl,
+					video: hadVideo ? undefined : page.video,
+				});
 				if (entries.length)
 					article.media = [...(article.media ?? []), ...entries];
+				if (!article.content && page.meta?.description)
+					article.content = page.meta.description;
+				if (!article.author && page.meta?.author)
+					article.author = page.meta.author;
+				if (!article.tags?.length && page.meta?.tags)
+					article.tags = page.meta.tags;
 			} catch {
-				// invalid url: the article is kept without media
+				// invalid url: the article is kept as the feed delivered it
 			}
 		}),
 	);
@@ -528,7 +549,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 				});
 			}
 		}
-		await fillMissingMedia(
+		await fillMissingDetails(
 			prepared.map((item) => item.article),
 			ogBudget,
 		);
