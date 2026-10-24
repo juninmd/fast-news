@@ -56,6 +56,11 @@ export const FEED_SOURCES = [
 	},
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{
+		url: "https://code.visualstudio.com/feed.xml",
+		category: "Developer Tools",
+		company: "Microsoft",
+	},
 	{ url: "https://www.sciencenews.org/feed", category: "Ciência" },
 	{ url: "https://www.eff.org/rss/updates.xml", category: "Tecnologia" },
 	{ url: "https://theintercept.com/feed/?lang=en", category: "Mundo" },
