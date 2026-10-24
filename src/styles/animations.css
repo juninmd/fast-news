@@ -115,6 +115,15 @@
 	}
 }
 
+@keyframes grow-x {
+	0% {
+		transform: scaleX(0);
+	}
+	100% {
+		transform: scaleX(1);
+	}
+}
+
 @keyframes fade-in {
 	0% {
 		opacity: 0;
