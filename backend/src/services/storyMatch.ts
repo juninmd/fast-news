@@ -27,6 +27,31 @@ export interface ScoredCandidate extends StoryCandidate {
 	score: number;
 }
 
+const YEAR = /^(19|20)\d{2}$/;
+
+/** Identifying numbers of a headline: contest/round/version numbers, not years or small counts. */
+function identifyingNumbers(title: string): Set<string> {
+	const found = title.match(/\d[\d.,]*\d|\d/g) ?? [];
+	return new Set(
+		found
+			.map((n) => n.replace(/[.,]/g, ""))
+			.filter((n) => n.length >= 3 && !YEAR.test(n)),
+	);
+}
+
+/**
+ * "Quina concurso 7150" and "Dia de Sorte concurso 1329" share every other word
+ * and are different stories: two headlines that each name specific numbers
+ * with none in common are not the same event.
+ */
+export function numbersConflict(a: string, b: string): boolean {
+	const na = identifyingNumbers(a);
+	const nb = identifyingNumbers(b);
+	if (na.size === 0 || nb.size === 0) return false;
+	for (const n of na) if (nb.has(n)) return false;
+	return true;
+}
+
 /**
  * Picks the existing article that `article` most likely repeats. Embeddings do
  * the heavy lifting; the headline overlap rescues near-misses (same event, other
@@ -54,6 +79,13 @@ export function pickStoryMatch(
 		}
 		const lexical = titleSimilarity(article.title, c.title);
 		const sim = c.similarity;
+		// Headline overlap alone cannot tell two draws of a lottery apart; only a
+		// strong embedding match overrides the numbers.
+		if (
+			numbersConflict(article.title, c.title) &&
+			!(sim !== null && sim >= opts.threshold)
+		)
+			continue;
 		const accepted =
 			sim === null
 				? lexical >= lexicalOnly

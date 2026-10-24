@@ -1,3 +1,4 @@
+import { Play } from "lucide-react";
 import { useState } from "react";
 
 interface CoverImageProps {
@@ -7,6 +8,20 @@ interface CoverImageProps {
 	className?: string;
 	/** Above-the-fold images load eagerly; everything else lazily. */
 	eager?: boolean;
+	/** The article has a video: a play badge marks the cover. */
+	video?: boolean;
+}
+
+function PlayBadge() {
+	return (
+		<span
+			role="img"
+			aria-label="Vídeo"
+			className="absolute bottom-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white ring-1 ring-white/30"
+		>
+			<Play className="ml-px h-3 w-3 fill-current" />
+		</span>
+	);
 }
 
 function monogram(source: string): string {
@@ -31,6 +46,7 @@ export function CoverImage({
 	category,
 	className = "",
 	eager = false,
+	video = false,
 }: CoverImageProps) {
 	const [failed, setFailed] = useState(false);
 
@@ -59,13 +75,14 @@ export function CoverImage({
 						</span>
 					)}
 				</div>
+				{video && <PlayBadge />}
 			</div>
 		);
 	}
 
 	return (
 		<div
-			className={`overflow-hidden border border-border-subtle bg-bg-tertiary ${className}`}
+			className={`relative overflow-hidden border border-border-subtle bg-bg-tertiary ${className}`}
 		>
 			<img
 				src={src}
@@ -76,6 +93,7 @@ export function CoverImage({
 				onError={() => setFailed(true)}
 				className="h-full w-full object-cover"
 			/>
+			{video && <PlayBadge />}
 		</div>
 	);
 }

@@ -54,15 +54,17 @@ export async function recordFeedResult(
 	url: string,
 	ok: boolean,
 	error?: string,
+	validators?: { etag?: string | null; lastModified?: string | null },
 ): Promise<void> {
 	try {
 		if (ok) {
 			await query(
 				`UPDATE source_feeds
 				 SET consecutive_failures = 0, last_error = NULL, quarantined_until = NULL,
-				     last_success_at = NOW(), last_fetched = NOW()
+				     last_success_at = NOW(), last_fetched = NOW(),
+				     etag = COALESCE($2, etag), last_modified = COALESCE($3, last_modified)
 				 WHERE url = $1`,
-				[url],
+				[url, validators?.etag ?? null, validators?.lastModified ?? null],
 			);
 			return;
 		}

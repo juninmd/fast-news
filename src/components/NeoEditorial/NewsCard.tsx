@@ -26,6 +26,8 @@ interface NewsCardProps {
 	company?: string;
 	publishedAt: Date | string;
 	imageUrl?: string;
+	/** Video of the article (YouTube/Vimeo/file); the cover gets a play badge. */
+	videoUrl?: string;
 	sourceCount?: number;
 	alsoIn?: CoverageLink[];
 	variant?: "compact" | "standard" | "featured";
@@ -47,14 +49,6 @@ function formatDate(date: Date | string): string {
 	return d.toLocaleDateString("pt-BR");
 }
 
-function extractVideoUrl(text?: string): string | null {
-	if (!text) return null;
-	const match = text.match(
-		/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-	);
-	return match ? `https://www.youtube.com/embed/${match[1]}` : null;
-}
-
 const REACTIONS_KEY = "newsai_reactions";
 
 function getReactions(): Record<string, "like" | "dislike"> {
@@ -74,6 +68,7 @@ export function NewsCard({
 	category,
 	publishedAt,
 	imageUrl,
+	videoUrl,
 	sourceCount = 1,
 	alsoIn = [],
 	variant = "standard",
@@ -117,8 +112,6 @@ export function NewsCard({
 		}
 	}
 
-	const videoEmbedUrl = extractVideoUrl(excerpt);
-
 	async function handleSendToTelegram() {
 		setSendingTelegram(true);
 		try {
@@ -149,14 +142,13 @@ export function NewsCard({
 		<article
 			className={`group border-b border-border-subtle py-5 first:pt-0 last:border-b-0 ${read ? "opacity-60" : ""}`}
 		>
-			{!videoEmbedUrl && (
-				<CoverImage
-					src={imageUrl}
-					source={source}
-					category={category}
-					className="mb-3 aspect-[2/1] w-full sm:hidden"
-				/>
-			)}
+			<CoverImage
+				src={imageUrl}
+				source={source}
+				category={category}
+				video={!!videoUrl}
+				className="mb-3 aspect-[2/1] w-full sm:hidden"
+			/>
 			<div className="flex items-start gap-5">
 				<div className="min-w-0 flex-1">
 					<div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
@@ -280,31 +272,15 @@ export function NewsCard({
 					</div>
 				</div>
 
-				{videoEmbedUrl ? (
-					<div
-						className={`hidden shrink-0 overflow-hidden border border-border-subtle bg-black sm:block ${
-							featured ? "h-36 w-64" : "h-24 w-40"
-						}`}
-					>
-						<iframe
-							src={videoEmbedUrl}
-							title={title}
-							className="h-full w-full"
-							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-							allowFullScreen
-							loading="lazy"
-						/>
-					</div>
-				) : (
-					<CoverImage
-						src={imageUrl}
-						source={source}
-						category={category}
-						className={`hidden shrink-0 sm:block ${
-							featured ? "h-36 w-64" : "h-24 w-40"
-						}`}
-					/>
-				)}
+				<CoverImage
+					src={imageUrl}
+					source={source}
+					category={category}
+					video={!!videoUrl}
+					className={`hidden shrink-0 sm:block ${
+						featured ? "h-36 w-64" : "h-24 w-40"
+					}`}
+				/>
 			</div>
 		</article>
 	);

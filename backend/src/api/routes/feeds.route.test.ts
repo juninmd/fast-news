@@ -15,6 +15,13 @@ vi.mock("../../database/client.js", () => ({ query }));
 vi.mock("../../services/cache.js", () => ({
 	cacheGet: vi.fn(async () => null),
 	cacheSet: vi.fn(async () => undefined),
+	cacheWrap: async (
+		_key: string,
+		_ttl: number,
+		loader: () => Promise<unknown>,
+	) => loader(),
+	hashKey: (prefix: string, ...parts: unknown[]) =>
+		`${prefix}:${JSON.stringify(parts)}`,
 }));
 vi.mock("../../config/env.js", () => ({
 	config: {

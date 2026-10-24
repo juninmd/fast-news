@@ -35,7 +35,7 @@ export async function loadCandidates(
 		        na.relevance_score, st.story_id, st.source_count
 		 FROM news_articles na
 		 LEFT JOIN LATERAL (
-		   SELECT sa.story_id, COUNT(DISTINCT nb.source)::int AS source_count
+		   SELECT sa.story_id, COUNT(DISTINCT COALESCE(nb.outlet, nb.source))::int AS source_count
 		   FROM story_articles sa0
 		   JOIN story_articles sa ON sa.story_id = sa0.story_id
 		   JOIN news_articles nb ON nb.id = sa.article_id
