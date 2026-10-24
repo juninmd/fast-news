@@ -316,3 +316,29 @@ CREATE TABLE IF NOT EXISTS article_translations (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   PRIMARY KEY (article_id, lang)
 );
+
+-- Video + gallery of an article, filled at ingestion (Media RSS, enclosures, <video>, YouTube/Vimeo embeds, og:video).
+-- `video_url` is the best playable video; `media` is the full [{type,url,provider,embedUrl,thumbnail,...}] list.
+-- Rollback: ALTER TABLE news_articles DROP COLUMN video_url, DROP COLUMN media;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS media JSONB DEFAULT NULL;
+
+-- Editorial details parsed from the feed item (or the article page when the feed has none).
+-- Rollback: ALTER TABLE news_articles DROP COLUMN author, DROP COLUMN tags, DROP COLUMN comments_url, DROP COLUMN language, DROP COLUMN word_count;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS author TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS tags JSONB DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS comments_url TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS language TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS word_count INTEGER DEFAULT NULL;
+
+-- Conditional GET validators of the last good fetch: an unchanged feed answers 304 and is not re-parsed.
+-- Rollback: ALTER TABLE source_feeds DROP COLUMN etag, DROP COLUMN last_modified;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS etag TEXT DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_modified TEXT DEFAULT NULL;
+
+-- Publisher key (outlet.ts). Story source counts use it instead of the feed title, so an outlet with
+-- several section feeds counts once. Existing rows are filled by the ingestion backfill; until then
+-- queries fall back to `source` via COALESCE(outlet, source).
+-- Rollback: ALTER TABLE news_articles DROP COLUMN outlet;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS outlet TEXT DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_outlet_missing ON news_articles(created_at DESC) WHERE outlet IS NULL;

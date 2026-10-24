@@ -3,7 +3,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { closePool, getPool } from "./database/client.js";
 import { initVectorStore } from "./database/vectorStore.js";
-import { closeRedis, getRedis } from "./services/cache.js";
+import { closeRedis, connectRedis } from "./services/cache.js";
 import { syncDefaultFeeds } from "./services/sources.js";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -22,7 +22,7 @@ export async function initInfra(): Promise<void> {
 	await runMigrations();
 	await initVectorStore();
 	await syncDefaultFeeds();
-	await getRedis();
+	await connectRedis();
 }
 
 export async function shutdownInfra(): Promise<void> {
