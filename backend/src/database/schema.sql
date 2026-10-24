@@ -316,3 +316,9 @@ CREATE TABLE IF NOT EXISTS article_translations (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   PRIMARY KEY (article_id, lang)
 );
+
+-- Video + gallery of an article, filled at ingestion (Media RSS, enclosures, <video>, YouTube/Vimeo embeds, og:video).
+-- `video_url` is the best playable video; `media` is the full [{type,url,provider,embedUrl,thumbnail,...}] list.
+-- Rollback: ALTER TABLE news_articles DROP COLUMN video_url, DROP COLUMN media;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS media JSONB DEFAULT NULL;

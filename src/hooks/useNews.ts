@@ -10,6 +10,7 @@ interface NewsArticle {
 	company?: string;
 	publishedAt: Date;
 	imageUrl?: string;
+	videoUrl?: string;
 	/** Distinct outlets reporting the same story (1 = only this one). */
 	sourceCount: number;
 	/** Other outlets on the same story, newest first. */
@@ -38,6 +39,7 @@ type ApiArticle = {
 	publishedAt?: string;
 	image_url?: string | null;
 	imageUrl?: string | null;
+	video_url?: string | null;
 	source_count?: number;
 	also_in?: CoverageLink[];
 };
@@ -183,6 +185,7 @@ function toNewsArticle(article: ApiArticle): NewsArticle {
 			article.published_at ?? article.publishedAt ?? Date.now(),
 		),
 		imageUrl: article.image_url ?? article.imageUrl ?? undefined,
+		videoUrl: article.video_url ?? undefined,
 		sourceCount: article.source_count ?? 1,
 		alsoIn: article.also_in ?? [],
 	};

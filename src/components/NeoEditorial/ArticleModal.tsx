@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReadingHistory } from "../../hooks/useReadingHistory";
+import { ArticleVideo } from "./ArticleVideo";
 
 interface Article {
 	id: string;
@@ -20,6 +21,7 @@ interface Article {
 	company: string | null;
 	published_at: string;
 	image_url: string | null;
+	video_url?: string | null;
 }
 
 interface RelatedArticle {
@@ -188,15 +190,25 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 
 					{article && (
 						<>
-							{article.image_url && !focusMode && (
-								<div className="h-52 overflow-hidden flex-shrink-0">
-									<img
-										src={article.image_url}
-										alt=""
-										loading="lazy"
-										className="w-full h-full object-cover"
-									/>
-								</div>
+							{article.video_url && !focusMode ? (
+								<ArticleVideo
+									url={article.video_url}
+									title={article.title}
+									poster={article.image_url}
+									fallbackUrl={article.url}
+								/>
+							) : (
+								article.image_url &&
+								!focusMode && (
+									<div className="h-52 overflow-hidden flex-shrink-0">
+										<img
+											src={article.image_url}
+											alt=""
+											loading="lazy"
+											className="w-full h-full object-cover"
+										/>
+									</div>
+								)
 							)}
 
 							<div className={`p-6 ${focusMode ? "py-8" : ""}`}>

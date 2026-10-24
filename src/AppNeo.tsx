@@ -589,6 +589,7 @@ function toCardArticle(article: {
 	publishedAt?: string;
 	image_url?: string;
 	imageUrl?: string;
+	video_url?: string | null;
 	source_count?: number;
 	also_in?: CoverageLink[];
 }) {
@@ -603,6 +604,7 @@ function toCardArticle(article: {
 		publishedAt:
 			article.published_at ?? article.publishedAt ?? new Date().toISOString(),
 		imageUrl: article.image_url ?? article.imageUrl,
+		videoUrl: article.video_url ?? undefined,
 		sourceCount: article.source_count,
 		alsoIn: article.also_in,
 	};
