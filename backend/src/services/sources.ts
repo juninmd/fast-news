@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://techmeme.com/feed.xml",
+		category: "Tecnologia",
+		company: "Techmeme",
+	},
+	{
 		url: "https://code.visualstudio.com/feed.xml",
 		category: "Developer Tools",
 		company: "Microsoft",
