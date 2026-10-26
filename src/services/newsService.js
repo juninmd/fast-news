@@ -3,6 +3,11 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{
+		url: "https://netflixtechblog.com/feed",
+		category: "Tecnologia",
+		company: "Netflix",
+	},
+	{
 		url: "https://techmeme.com/feed.xml",
 		category: "Tecnologia",
 		company: "Techmeme",
