@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://netflixtechblog.com/feed",
+		category: "Tecnologia",
+		company: "Netflix",
+	},
+	{
 		url: "https://techmeme.com/feed.xml",
 		category: "Tecnologia",
 		company: "Techmeme",
