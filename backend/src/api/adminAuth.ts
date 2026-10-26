@@ -27,8 +27,9 @@ export function requireAdmin(
 		next();
 		return;
 	}
-	const header = req.get("authorization")?.replace(/^Bearer\s+/i, "");
-	const given = header ?? req.get("x-admin-token") ?? "";
+	const authorization = req.get("authorization") ?? "";
+	const bearer = /^Bearer\s+(.+)$/i.exec(authorization)?.[1];
+	const given = bearer ?? req.get("x-admin-token") ?? "";
 	if (!safeEqual(given, token)) {
 		res.status(401).json({ error: "Unauthorized" });
 		return;
