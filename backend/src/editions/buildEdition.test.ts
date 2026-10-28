@@ -14,6 +14,10 @@ vi.mock("./collect.js", () => ({ collectHeadlines: mocks.collect }));
 vi.mock("../services/llmWithFallback.js", () => ({
 	generateWithFallback: mocks.generate,
 }));
+vi.mock("./storyThreads.js", async (original) => ({
+	...(await original<typeof import("./storyThreads.js")>()),
+	fetchStoryThreads: async () => [],
+}));
 vi.mock("../services/marketData.js", () => ({
 	fetchMarketSnapshot: async () => ({
 		usdBrl: null,

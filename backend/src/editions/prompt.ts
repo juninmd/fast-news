@@ -17,7 +17,7 @@ const TASK: Record<EditionPart, string> = {
 	sections: `- Responda só com "secoes": 3 a 4 editorias (ex.: Política, Economia, Mundo, Tecnologia, Esportes, Cultura), cada uma com 1 a 2 matérias de até 60 palavras e até 3 notas curtas de uma frase.
 - Não repita a mesma notícia em seções diferentes. Quando vários veículos cobrem o mesmo fato, escreva UMA matéria e cite todos os ids em "fontes".`,
 	extras: `- Responda só com "fio", "numeros", "leve" e "quiz".
-- "fio": até 3 histórias que evoluíram ao longo das horas. Cada evento aponta para UMA manchete (campo fonte) e resume o que ela acrescentou. Mínimo 3 eventos por história, em ordem cronológica.
+- "fio": até 3 histórias que evoluíram ao longo das horas. Cada evento aponta para UMA manchete (campo fonte) e resume o que ela acrescentou. Mínimo 2 eventos por história, em ordem cronológica.
 - "numeros": até 5 números do período, com o valor exatamente como aparece no texto (ex.: "13,75%", "R$ 691") e "fonte" com o id da manchete onde o número aparece.
 - "leve": 3 a 4 curiosidades ou notícias leves para fechar a edição.
 - "quiz": 5 perguntas sobre as notícias do período, 3 opções cada, "correta" é o índice (0 a 2) da opção certa.`,
