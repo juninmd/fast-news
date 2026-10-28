@@ -1,6 +1,7 @@
 import { directUrl, esc, safeUrl } from "./escape.js";
 import { hourLabels } from "./select.js";
 import { clipWords } from "./text.js";
+import { kindMark } from "./threadKind.js";
 import type { Headline, QuizItem, Story, Thread } from "./types.js";
 import { formatLocalTime } from "./window.js";
 
@@ -54,7 +55,11 @@ export function threads(list: Thread[], known: Known): string {
 					const h = known.get(e.fonte);
 					const time = h ? formatLocalTime(h.createdAt) : "";
 					const link = h ? ` ${sources([h.id], known)}` : "";
-					return `<li><time>${time}</time>${esc(e.texto)}${link}</li>`;
+					const k = kindMark(e.tipo);
+					const badge = k
+						? `<b class="k k-${e.tipo}" title="${k.label}">${k.mark}</b> `
+						: "";
+					return `<li><time>${time}</time>${badge}${esc(e.texto)}${link}</li>`;
 				})
 				.join("");
 			return `<div><h4>${esc(t.tema)}</h4><ol>${items}</ol></div>`;

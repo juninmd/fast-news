@@ -68,6 +68,7 @@ p{margin:.55em 0 0;max-width:68ch}
 .thread li{position:relative;padding:0 0 14px 24px;font-size:15.5px;line-height:1.38}
 .thread li::before{content:"";position:absolute;left:0;top:5px;width:12px;height:12px;border-radius:50%;background:var(--ground);border:2px solid var(--accent)}
 .thread li:last-child::before{background:var(--accent)}
+.thread .k{font-weight:700;color:var(--accent)}.thread .k-contradiction{color:#b26a00}.thread .k-resolution{color:#2e7d32}
 .thread time{display:block;font:700 12.5px/1.2 var(--label);color:var(--accent);font-variant-numeric:tabular-nums}
 .pulse svg{display:block;width:100%;height:auto}
 .pulse text{font:12px var(--label);fill:var(--muted)}

@@ -6,7 +6,7 @@ import { collectHeadlines } from "./collect.js";
 import { extrasSchema, frontSchema, sectionsSchema } from "./draftSchema.js";
 import { buildEditionPrompt, type EditionPart } from "./prompt.js";
 import { extractJsonObject } from "./repairJson.js";
-import { sanitizeDraft } from "./sanitize.js";
+import { sanitizeDraft, threads as sanitizeThreads } from "./sanitize.js";
 import {
 	cleanHeadlines,
 	clusterHeadlines,
@@ -14,6 +14,7 @@ import {
 	isFactCheck,
 	pickForPrompt,
 } from "./select.js";
+import { fetchStoryThreads, mergeThreads } from "./storyThreads.js";
 import type {
 	Edition,
 	EditionDraft,
@@ -157,10 +158,18 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		secoes: generatedSections,
 		...(extras ?? { fio: [], numeros: [], leve: [], quiz: [] }),
 	};
-	const editorial = sanitizeDraft(raw as EditionDraft, known);
+	const sanitized = sanitizeDraft(raw as EditionDraft, known);
 	// The AI budget controls editorial generation, not publication coverage.
 	// Expand only after sanitizing model output against the IDs it actually saw.
 	for (const headline of news) known.set(headline.id, headline);
+	// Threads come from stored story timelines first; the model only fills in.
+	const editorial: EditionDraft = {
+		...sanitized,
+		fio: sanitizeThreads(
+			mergeThreads(await fetchStoryThreads(news), sanitized.fio),
+			known,
+		),
+	};
 	const used = new Set<number>([
 		...editorial.manchete.fontes,
 		...editorial.destaques.flatMap((story) => story.fontes),
