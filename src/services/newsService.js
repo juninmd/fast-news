@@ -3,6 +3,11 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{
+		url: "https://spacenews.com/feed/",
+		category: "Ciência",
+		company: "SpaceNews",
+	},
+	{
 		url: "https://feeds.businessinsider.com/custom/all",
 		category: "Negócios",
 		company: "Business Insider",
