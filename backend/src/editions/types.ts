@@ -40,14 +40,26 @@ export interface Section {
 	notas: string[];
 }
 
+/** How an event moved its story, from story_timeline.event_type. */
+export type ThreadEventKind =
+	| "development"
+	| "escalation"
+	| "contradiction"
+	| "resolution"
+	| "impact";
+
 export interface ThreadEvent {
 	fonte: number;
 	texto: string;
+	/** Optional: absent in model-written threads and in older snapshots. */
+	tipo?: ThreadEventKind;
 }
 
 export interface Thread {
 	tema: string;
 	eventos: ThreadEvent[];
+	/** news_stories id when the thread comes from a stored story cluster. */
+	storyId?: string;
 }
 
 export interface Figure {

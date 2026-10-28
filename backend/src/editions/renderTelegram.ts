@@ -1,4 +1,5 @@
 import { directUrl, esc } from "./escape.js";
+import { kindMark } from "./threadKind.js";
 import type { Edition, Story } from "./types.js";
 import { formatLocalDate, formatLocalTime } from "./window.js";
 
@@ -70,7 +71,13 @@ function build(
 			const h = e.headlines.get(ev.fonte);
 			const url = h ? directUrl(h.url) : null;
 			parts.push(
-				`${h ? formatLocalTime(h.createdAt) : ""} ${esc(ev.texto)}${url ? ` <a href="${esc(url)}">↗</a>` : ""}`,
+				[
+					h ? formatLocalTime(h.createdAt) : "",
+					kindMark(ev.tipo)?.mark,
+					esc(ev.texto),
+				]
+					.filter(Boolean)
+					.join(" ") + `${url ? ` <a href="${esc(url)}">↗</a>` : ""}`,
 			);
 		}
 	}
