@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://spacenews.com/feed/",
+		category: "Ciência",
+		company: "SpaceNews",
+	},
+	{
 		url: "https://feeds.businessinsider.com/custom/all",
 		category: "Negócios",
 		company: "Business Insider",
