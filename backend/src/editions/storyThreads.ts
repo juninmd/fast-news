@@ -1,4 +1,5 @@
 import { query } from "../database/client.js";
+import { titleSimilarity } from "../services/textSimilarity.js";
 import type {
 	Headline,
 	Thread,
@@ -9,6 +10,8 @@ import type {
 export interface TimelineRow {
 	story_id: string;
 	story_title: string;
+	/** news_stories.article_count: how widely the story was covered. */
+	article_count: number;
 	article_id: string;
 	event_type: string;
 	headline: string;
@@ -35,6 +38,10 @@ const WEIGHT: Record<ThreadEventKind, number> = {
 
 const MAX_THREADS = 3;
 
+// Outlets covering one fact cluster into the same story; their headlines are
+// near-copies, and a timeline of copies is not a timeline.
+const SAME_FACT = 0.5;
+
 /**
  * Groups stored story_timeline rows into threads of the edition's headlines:
  * one event per headline, oldest first, ranked by size and turning points.
@@ -45,7 +52,15 @@ export function buildStoryThreads(
 	rows: TimelineRow[],
 	byArticle: Map<string, Headline>,
 ): Thread[] {
-	const stories = new Map<string, { title: string; events: ThreadEvent[] }>();
+	const stories = new Map<
+		string,
+		{
+			title: string;
+			coverage: number;
+			events: ThreadEvent[];
+			headlines: string[];
+		}
+	>();
 	const seen = new Set<number>();
 	for (const row of [...rows].sort(
 		(a, b) => +new Date(a.occurred_at) - +new Date(b.occurred_at),
@@ -55,8 +70,13 @@ export function buildStoryThreads(
 		seen.add(h.id);
 		const story = stories.get(row.story_id) ?? {
 			title: row.story_title,
+			coverage: row.article_count,
 			events: [],
+			headlines: [],
 		};
+		if (story.headlines.some((t) => titleSimilarity(t, h.title) >= SAME_FACT))
+			continue;
+		story.headlines.push(h.title);
 		story.events.push({
 			fonte: h.id,
 			texto: row.what_changed?.trim() || row.headline,
@@ -64,13 +84,23 @@ export function buildStoryThreads(
 		});
 		stories.set(row.story_id, story);
 	}
-	const score = (t: Thread) =>
-		t.eventos.reduce((n, e) => n + 1 + WEIGHT[e.tipo ?? "development"], 0);
-	return [...stories]
-		.map(([storyId, s]) => ({ tema: s.title, eventos: s.events, storyId }))
-		.filter((t) => t.eventos.length >= 2)
-		.sort((a, b) => score(b) - score(a))
-		.slice(0, MAX_THREADS);
+	const turning = (t: Thread) =>
+		t.eventos.reduce((n, e) => n + WEIGHT[e.tipo ?? "development"], 0);
+	return (
+		[...stories]
+			.map(([storyId, s]) => ({
+				thread: { tema: s.title, eventos: s.events, storyId },
+				coverage: s.coverage,
+			}))
+			.filter((t) => t.thread.eventos.length >= 2)
+			// Wide coverage means a story that matters; turning points break ties.
+			.sort(
+				(a, b) =>
+					b.coverage - a.coverage || turning(b.thread) - turning(a.thread),
+			)
+			.slice(0, MAX_THREADS)
+			.map((t) => t.thread)
+	);
 }
 
 /**
@@ -97,7 +127,7 @@ export async function fetchStoryThreads(
 	if (byArticle.size === 0) return [];
 	try {
 		const res = await query<TimelineRow>(
-			`SELECT st.story_id, ns.title AS story_title, st.article_id, st.event_type,
+			`SELECT st.story_id, ns.title AS story_title, ns.article_count, st.article_id, st.event_type,
 			        st.headline, st.what_changed, st.occurred_at
 			   FROM story_timeline st
 			   JOIN news_stories ns ON ns.id = st.story_id

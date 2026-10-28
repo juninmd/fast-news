@@ -6,7 +6,7 @@ vi.mock("../database/client.js", () => ({ query: vi.fn() }));
 const { buildStoryThreads, mergeThreads } = await import("./storyThreads.js");
 
 const at = (min: number) => new Date(Date.UTC(2026, 9, 27, 18, min));
-const hs = [1, 2, 3, 4].map((n) =>
+const hs = [1, 2, 3, 4, 5, 6].map((n) =>
 	headline({ sourceId: `art-${n}`, createdAt: at(n) }),
 );
 const byArticle = new Map(hs.map((h) => [h.sourceId as string, h]));
@@ -16,6 +16,7 @@ const row = (
 ) => ({
 	story_id: "s1",
 	story_title: "Flávio Bolsonaro deixa o país",
+	article_count: 2,
 	article_id: `art-${n}`,
 	event_type: "new_development",
 	headline: `manchete ${n}`,
@@ -55,17 +56,33 @@ describe("buildStoryThreads", () => {
 		expect(out).toEqual([]);
 	});
 
-	it("ranks threads with turning points first", () => {
+	it("collapses outlets repeating the same fact into one event", () => {
+		const copies = ["a", "b", "c"].map((o, i) =>
+			headline({
+				sourceId: `c${i}`,
+				title: "Governo Trump dará vistos dos EUA a Flávio Bolsonaro e família",
+				source: o,
+				createdAt: at(10 + i),
+			}),
+		);
+		const map = new Map(copies.map((h) => [h.sourceId as string, h]));
+		const mk = (i: number) => ({ ...row(1), article_id: `c${i}` });
+		expect(buildStoryThreads([mk(0), mk(1), mk(2)], map)).toEqual([]);
+	});
+
+	it("ranks widely covered stories first, turning points breaking ties", () => {
 		const out = buildStoryThreads(
 			[
 				row(1),
 				row(2),
 				row(3, { story_id: "s2", event_type: "escalation" }),
 				row(4, { story_id: "s2", event_type: "resolution" }),
+				row(5, { story_id: "s3", article_count: 9 }),
+				row(6, { story_id: "s3", article_count: 9 }),
 			],
 			byArticle,
 		);
-		expect(out.map((t) => t.storyId)).toEqual(["s2", "s1"]);
+		expect(out.map((t) => t.storyId)).toEqual(["s3", "s2", "s1"]);
 	});
 });
 
