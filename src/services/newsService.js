@@ -194,6 +194,11 @@ export const FEED_SOURCES = [
 	{ url: "https://rss.uol.com.br/feed/jogos.xml", category: "Tecnologia" },
 	{ url: "https://rss.uol.com.br/feed/educacao.xml", category: "Educação" },
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml",
+		category: "Entretenimento",
+		company: "The New York Times",
+	},
 	{ url: "https://api.quantamagazine.org/feed/", category: "Ciência" },
 	{
 		url: "https://www.popularmechanics.com/rss/all.xml/",
