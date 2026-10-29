@@ -69,7 +69,7 @@ describe("sanitizeDraft", () => {
 		expect(out.quiz.map((q) => q.pergunta)).toEqual(["Selic?"]);
 	});
 
-	it("orders thread events by arrival time and drops threads with fewer than 3 real events", () => {
+	it("orders thread events by arrival time and drops threads with fewer than 2 real events", () => {
 		const out = sanitizeDraft(
 			draft({
 				manchete: { ...draft().manchete, fontes: [a] },

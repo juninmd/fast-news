@@ -156,7 +156,13 @@ function figures(
 		.slice(0, 5);
 }
 
-function threads(list: Thread[], known: Map<number, Headline>): Thread[] {
+/** A two-step development is already a timeline; three left too many threads out. */
+const MIN_THREAD_EVENTS = 2;
+
+export function threads(
+	list: Thread[],
+	known: Map<number, Headline>,
+): Thread[] {
 	return list
 		.map((t) => {
 			const seen = new Set<number>();
@@ -166,16 +172,24 @@ function threads(list: Thread[], known: Map<number, Headline>): Thread[] {
 					seen.add(e.fonte);
 					return true;
 				})
-				.map((e) => ({ fonte: e.fonte, texto: clip(e.texto, 200) }))
+				.map((e) => ({
+					fonte: e.fonte,
+					texto: clip(e.texto, 200),
+					...(e.tipo ? { tipo: e.tipo } : {}),
+				}))
 				.sort(
 					(a, b) =>
 						(known.get(a.fonte)?.createdAt.getTime() ?? 0) -
 						(known.get(b.fonte)?.createdAt.getTime() ?? 0),
 				)
 				.slice(0, 6);
-			return { tema: clip(t.tema, 90), eventos };
+			return {
+				tema: clip(t.tema, 90),
+				eventos,
+				...(t.storyId ? { storyId: t.storyId } : {}),
+			};
 		})
-		.filter((t) => t.tema && t.eventos.length >= 3)
+		.filter((t) => t.tema && t.eventos.length >= MIN_THREAD_EVENTS)
 		.slice(0, 3);
 }
 

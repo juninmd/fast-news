@@ -1,5 +1,6 @@
 import { directUrl } from "./escape.js";
 import { clipWords } from "./text.js";
+import { kindMark } from "./threadKind.js";
 import type { Edition, Headline, Story, Thread } from "./types.js";
 import { formatLocalDate, formatLocalTime } from "./window.js";
 
@@ -64,7 +65,8 @@ function threads(list: Thread[], known: Known): string {
 			const h = known.get(e.fonte);
 			const time = h ? `**${formatLocalTime(h.createdAt)}** · ` : "";
 			const link = h ? ` ${sources([h.id], known)}` : "";
-			return `- ${time}${mdEscape(e.texto)}${link}`;
+			const k = kindMark(e.tipo);
+			return `- ${time}${k ? `${k.mark} ` : ""}${mdEscape(e.texto)}${link}`;
 		});
 		return `### ${mdEscape(t.tema)}\n\n${items.join("\n")}`;
 	});

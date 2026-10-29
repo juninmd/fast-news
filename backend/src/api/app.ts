@@ -7,12 +7,15 @@ import { forwardAsyncErrors } from "./asyncErrors.js";
 import { healthHandler } from "./health.js";
 import { aiRouter } from "./routes/ai.js";
 import { editionsRouter } from "./routes/editions.js";
+import { feedsRouter } from "./routes/feeds.js";
 import { financialRouter } from "./routes/financial.js";
 import { newsRouter } from "./routes/news.js";
 import { ragRouter } from "./routes/rag.js";
+import { sourcesRouter } from "./routes/sources.js";
 import { storiesRouter } from "./routes/stories.js";
 import { telegramRouter } from "./routes/telegram.js";
 import { topicsRouter } from "./routes/topics.js";
+import { translateRouter } from "./routes/translate.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +37,10 @@ export function createApp(): express.Application {
 	app.use("/api/editions", forwardAsyncErrors(editionsRouter));
 	app.use("/api/telegram", forwardAsyncErrors(telegramRouter));
 	app.use("/api/ai", forwardAsyncErrors(aiRouter));
+	app.use("/api/sources", forwardAsyncErrors(sourcesRouter));
+	app.use("/api/translate", forwardAsyncErrors(translateRouter));
+	// feed.xml, feed.json, digests/*, podcast.xml
+	app.use("/api", forwardAsyncErrors(feedsRouter));
 
 	// Serve static files from frontend build (optional — only when built)
 	const clientPath = path.join(__dirname, "../../client");

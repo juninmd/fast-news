@@ -1,3 +1,16 @@
+/** Image or video attached to an article (see backend `articleMedia.ts`). */
+export interface ArticleMedia {
+	type: "image" | "video";
+	url: string;
+	provider?: "youtube" | "vimeo" | "file";
+	embedUrl?: string;
+	thumbnail?: string;
+	mimeType?: string;
+	width?: number;
+	height?: number;
+	duration?: number;
+}
+
 export interface NewsArticle {
 	id: string;
 	title: string;
@@ -10,6 +23,8 @@ export interface NewsArticle {
 	publishedAt: Date;
 	vectorId?: string;
 	imageUrl?: string;
+	videoUrl?: string;
+	media?: ArticleMedia[];
 }
 
 export interface FeedSource {

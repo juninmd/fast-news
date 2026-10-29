@@ -1,28 +1,30 @@
-import { createHash } from "node:crypto";
 import { generateText } from "ai";
-import Parser from "rss-parser";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
 import { getFastModel } from "./aiProvider.js";
-import { extractImageUrl, fetchOgImage } from "./articleImages.js";
+import { isAiRelated } from "./aiScope.js";
+import {
+	type ArticleMedia,
+	fetchPageMedia,
+	type PageMedia,
+} from "./articleMedia.js";
+import { invalidateArticleCaches } from "./cache.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedBatch, vectorToSQL } from "./embeddings.js";
+import { normalizeFeedItems, type RawArticle } from "./feedItem.js";
+import { fetchFeedXml, parseFeed } from "./feedParser.js";
+import { outletOf } from "./outlet.js";
 import { scoreRelevance } from "./relevance.js";
-import { getActiveFeeds } from "./sources.js";
-import { canonicalUrl, resolveHttpUrl } from "./textSimilarity.js";
+import { recordFeedResult, sanitizeError } from "./sourceHealth.js";
+import {
+	getActiveFeeds,
+	isLlmFreeCategory,
+	LLM_FREE_MAX_ITEMS,
+} from "./sources.js";
+import { canonicalUrl } from "./textSimilarity.js";
 import { classifyTheme } from "./themeClassification.js";
-
-const parser = new Parser({
-	customFields: {
-		item: [
-			["media:content", "mediaContent", { keepArray: true }],
-			["media:thumbnail", "mediaThumbnail", { keepArray: true }],
-			["media:group", "mediaGroup"],
-			"enclosure",
-		],
-	},
-});
+import { pingWebSubHub, publicFeedUrls } from "./websub.js";
 
 /** Bounds concurrent work per key (host, or a fixed budget for LLM calls) to avoid rate limits. */
 class KeyedSemaphore {
@@ -65,45 +67,6 @@ class KeyedSemaphore {
 // Max 1 concurrent request per news portal host — avoids hammering a single portal's rate limit.
 const hostGate = new KeyedSemaphore(1);
 
-/** Fetch feed XML with proper charset decoding (handles ISO-8859-1 / Windows-1252 Brazilian feeds) */
-async function fetchXml(url: string): Promise<string> {
-	const ac = new AbortController();
-	const t = setTimeout(() => ac.abort(), config.ingestion.feedFetchTimeoutMs);
-	try {
-		const resp = await fetch(url, {
-			signal: ac.signal,
-			headers: { "User-Agent": "FastNews/1.0" },
-		});
-		if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-		const buf = await resp.arrayBuffer();
-		const contentType = resp.headers.get("content-type") ?? "";
-		const headerCharset = contentType.match(/charset=([^\s;'"]+)/i)?.[1];
-		// XML prolog encoding wins over a generic/absent HTTP charset — BR feeds
-		// often serve ISO-8859-1 bodies while declaring utf-8 (or nothing) in HTTP.
-		const prolog = new TextDecoder("ascii").decode(buf.slice(0, 200));
-		const prologCharset = prolog.match(/encoding=["']([^"']+)["']/i)?.[1];
-		let charset = (prologCharset ?? headerCharset ?? "utf-8").toLowerCase();
-		// Normalize: TextDecoder accepts 'windows-1252' as alias for latin-1 variants
-		if (["iso-8859-1", "latin1", "latin-1", "cp1252"].includes(charset))
-			charset = "windows-1252";
-		let decoded: string;
-		try {
-			decoded = new TextDecoder(charset, { fatal: false }).decode(buf);
-		} catch {
-			decoded = new TextDecoder("utf-8").decode(buf);
-		}
-		// Safety net: U+FFFD means the charset guess was wrong (e.g. utf-8 header on a
-		// latin-1 body with no prolog). windows-1252 maps every byte, so it never
-		// yields U+FFFD — retry there before persisting irrecoverable mojibake.
-		if (charset !== "windows-1252" && decoded.includes("�")) {
-			decoded = new TextDecoder("windows-1252").decode(buf);
-		}
-		return decoded;
-	} finally {
-		clearTimeout(t);
-	}
-}
-
 function runBackground(label: string, task: () => Promise<unknown>): void {
 	task().catch((err: Error) => {
 		console.error(`[ingestion] ${label} failed:`, err.message);
@@ -128,79 +91,54 @@ async function withRetry<T>(
 	throw lastErr;
 }
 
-export interface RawArticle {
-	guid: string;
-	title: string;
-	content: string;
-	url: string;
-	source: string;
-	category: string;
-	company?: string;
-	publishedAt: Date | null;
-	imageUrl?: string;
-}
+export type { RawArticle };
 
 async function fetchFeed(source: {
 	url: string;
 	category: string;
 	company?: string;
+	promptHint?: string;
+	etag?: string;
+	lastModified?: string;
 }): Promise<RawArticle[]> {
 	try {
 		const host = new URL(source.url).hostname;
-		const xml = await hostGate.run(host, () =>
-			withRetry(() => fetchXml(source.url)),
+		const fetched = await hostGate.run(host, () =>
+			withRetry(() =>
+				fetchFeedXml(source.url, config.ingestion.feedFetchTimeoutMs, {
+					etag: source.etag,
+					lastModified: source.lastModified,
+				}),
+			),
 		);
-		const feed = await parser.parseString(xml);
-		return (feed.items ?? [])
-			.slice(0, config.ingestion.maxArticlesPerFeed)
-			.map((item) => {
-				// Robust date parsing
-				const dateStr = item.isoDate ?? item.pubDate;
-				const parsed = dateStr ? new Date(dateStr) : null;
-				// A missing or bogus date must not bury the article (the feed sorts by
-				// published_at) nor float it above "now" (feeds in the wrong timezone).
-				const now = new Date();
-				const publishedAt =
-					parsed && !Number.isNaN(parsed.getTime()) && parsed <= now
-						? parsed
-						: now;
-				const link =
-					resolveHttpUrl(item.link, source.url) ||
-					resolveHttpUrl(
-						/^https?:\/\//.test(item.guid ?? "") ? item.guid : "",
-						source.url,
-					);
-
-				const stableGuid =
-					item.guid ??
-					item.link ??
-					(item.title
-						? createHash("sha1")
-								.update(`${item.title}|${source.url}|${dateStr ?? ""}`)
-								.digest("hex")
-						: undefined);
-
-				return {
-					guid:
-						stableGuid ?? createHash("sha1").update(source.url).digest("hex"),
-					title: item.title?.replace(/\s+/g, " ").trim() ?? "",
-					content: item.contentSnippet || item.summary || item.content || "",
-					url: link,
-					source: feed.title?.trim() || source.company || source.url,
-					category: source.category,
-					company: source.company,
-					publishedAt,
-					imageUrl: extractImageUrl(
-						item as unknown as Record<string, unknown>,
-						link || source.url,
-					),
-				};
-			});
+		if (fetched.xml === null) {
+			// 304: nothing new since the last good fetch, no body to parse.
+			await recordFeedResult(source.url, true);
+			return [];
+		}
+		const feed = await parseFeed(fetched.xml);
+		// Validators are saved only after a successful parse, so a feed that
+		// breaks is fetched in full again next time.
+		await recordFeedResult(source.url, true, undefined, fetched);
+		const limit = isLlmFreeCategory(source.category)
+			? Math.min(LLM_FREE_MAX_ITEMS, config.ingestion.maxArticlesPerFeed)
+			: config.ingestion.maxArticlesPerFeed;
+		return normalizeFeedItems(
+			feed.items.slice(0, limit),
+			source,
+			feed,
+			new Date(),
+		);
 	} catch (err) {
 		console.warn(
 			"[ingestion] feed failed:",
 			source.url,
 			(err as Error).message,
+		);
+		await recordFeedResult(
+			source.url,
+			false,
+			sanitizeError((err as Error).message),
 		);
 		return [];
 	}
@@ -261,15 +199,23 @@ async function prepareArticle(
 	);
 	if (existing.rowCount && existing.rowCount > 0) return null;
 
+	// Budget categories keep a plain-text embedding input and no theme/relevance
+	// calls: see LLM_FREE_CATEGORIES.
+	const llmFree = isLlmFreeCategory(article.category);
 	const textToEmbed = ollamaUp
-		? await summarizeForEmbedding(article.title, article.content || "")
+		? llmFree
+			? `${article.title}. ${(article.content || "").replace(/<\/?[^>]+(>|$)/g, " ").replace(/\s+/g, " ")}`.slice(
+					0,
+					1000,
+				)
+			: await summarizeForEmbedding(article.title, article.content || "")
 		: "";
 
 	// Per-article editorial theme, separate from the static feed `category`.
 	// fact_check articles keep no theme — they are a sentinel, not editorial
 	// content (see editions/select.ts isFactCheck).
 	const themeCategory =
-		article.category === "fact_check"
+		article.category === "fact_check" || llmFree
 			? null
 			: await classifyTheme(
 					article.title,
@@ -315,8 +261,8 @@ async function storeArticle(
 	// reported by several portals is a signal (assignArticleToStory groups them),
 	// and dropping by similarity used to lose articles whose angle differed.
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url, is_ai, video_url, media, author, tags, comments_url, language, word_count, outlet)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17::jsonb, $18, $19, $20, $21)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -332,6 +278,15 @@ async function storeArticle(
 			article.imageUrl ?? null,
 			themeCategory,
 			canonicalUrl(article.url),
+			isAiRelated(article.title, article.content, article.category),
+			article.videoUrl ?? null,
+			article.media?.length ? JSON.stringify(article.media) : null,
+			article.author ?? null,
+			article.tags?.length ? JSON.stringify(article.tags) : null,
+			article.commentsUrl ?? null,
+			article.language ?? null,
+			article.wordCount ?? null,
+			article.outlet ?? null,
 		],
 	);
 
@@ -368,6 +323,7 @@ export interface IngestionResult {
 		company?: string;
 		content: string;
 		imageUrl?: string;
+		videoUrl?: string;
 		publishedAt?: Date | null;
 	}>;
 }
@@ -404,26 +360,95 @@ async function isOllamaAvailable(): Promise<boolean> {
 	}
 }
 
-/** One og:image lookup per image-less article, bounded per run and per host. */
-async function fillMissingImages(
+/** og:image / og:video of a page as the `media` entries stored with an article. */
+function pageMediaEntries(page: PageMedia): ArticleMedia[] {
+	return [
+		...(page.imageUrl
+			? [{ type: "image", url: page.imageUrl } satisfies ArticleMedia]
+			: []),
+		...(page.video ? [page.video] : []),
+	];
+}
+
+/**
+ * One page lookup per article the feed left without a picture or a teaser,
+ * bounded per run and per host: og:image/og:video plus the page's description,
+ * author and tags for whatever the feed did not provide.
+ */
+async function fillMissingDetails(
 	articles: RawArticle[],
 	budget: { left: number },
 ): Promise<void> {
-	const missing = articles.filter((a) => !a.imageUrl && a.url);
+	const missing = articles.filter((a) => (!a.imageUrl || !a.content) && a.url);
 	await Promise.all(
 		missing.map(async (article) => {
 			if (budget.left <= 0) return;
 			budget.left--;
 			try {
 				const host = new URL(article.url).hostname;
-				article.imageUrl = await hostGate.run(host, () =>
-					fetchOgImage(article.url),
+				const page = await hostGate.run(host, () =>
+					fetchPageMedia(article.url),
 				);
+				const hadImage = !!article.imageUrl;
+				const hadVideo = !!article.videoUrl;
+				if (!hadImage)
+					article.imageUrl = page.imageUrl ?? page.video?.thumbnail;
+				if (page.video && !hadVideo) article.videoUrl = page.video.url;
+				const entries = pageMediaEntries({
+					imageUrl: hadImage ? undefined : page.imageUrl,
+					video: hadVideo ? undefined : page.video,
+				});
+				if (entries.length)
+					article.media = [...(article.media ?? []), ...entries];
+				if (!article.content && page.meta?.description)
+					article.content = page.meta.description;
+				if (!article.author && page.meta?.author)
+					article.author = page.meta.author;
+				if (!article.tags?.length && page.meta?.tags)
+					article.tags = page.meta.tags;
 			} catch {
-				// invalid url: the article is kept without an image
+				// invalid url: the article is kept as the feed delivered it
 			}
 		}),
 	);
+}
+
+/**
+ * Fills `outlet` for articles stored before the column existed and refreshes the
+ * source count of the stories they belong to, so "N sources" stops counting one
+ * outlet's section feeds as separate confirmations.
+ */
+async function backfillOutlets(limit: number): Promise<void> {
+	const rows = await query<{ id: string; url: string; source: string }>(
+		`SELECT id, url, source FROM news_articles
+     WHERE outlet IS NULL AND created_at > NOW() - INTERVAL '14 days'
+     ORDER BY created_at DESC LIMIT $1`,
+		[Math.max(limit, 500)],
+	);
+	if (rows.rows.length === 0) return;
+	const ids = rows.rows.map((r) => r.id);
+	const outlets = rows.rows.map(
+		(r) => outletOf(r.url, r.source) ?? (r.source.toLowerCase() || "unknown"),
+	);
+	await query(
+		`UPDATE news_articles na SET outlet = v.outlet
+     FROM unnest($1::uuid[], $2::text[]) AS v(id, outlet)
+     WHERE na.id = v.id`,
+		[ids, outlets],
+	);
+	await query(
+		`UPDATE news_stories ns SET source_count = s.src
+     FROM (
+       SELECT sa.story_id, COUNT(DISTINCT COALESCE(na.outlet, na.source))::int AS src
+       FROM story_articles sa
+       JOIN news_articles na ON na.id = sa.article_id
+       WHERE sa.story_id IN (SELECT story_id FROM story_articles WHERE article_id = ANY($1::uuid[]))
+       GROUP BY sa.story_id
+     ) s
+     WHERE ns.id = s.story_id AND ns.source_count IS DISTINCT FROM s.src`,
+		[ids],
+	);
+	console.log(`[ingestion] backfilled outlet for ${ids.length} articles`);
 }
 
 /**
@@ -474,6 +499,26 @@ async function backfillMissing(ollamaUp: boolean): Promise<void> {
 		}
 	}
 
+	// Keyword classification only: cheap, no model, safe to run on every pass.
+	const unclassified = await query<{
+		id: string;
+		title: string;
+		content: string | null;
+		category: string;
+	}>(
+		`SELECT id, title, LEFT(content, 1500) AS content, category FROM news_articles
+     WHERE is_ai IS NULL AND created_at > NOW() - INTERVAL '7 days'
+     ORDER BY created_at DESC LIMIT 500`,
+	);
+	for (const row of unclassified.rows) {
+		await query("UPDATE news_articles SET is_ai = $1 WHERE id = $2", [
+			isAiRelated(row.title, row.content ?? "", row.category),
+			row.id,
+		]);
+	}
+
+	await backfillOutlets(limit);
+
 	const noImage = await query<{ id: string; url: string }>(
 		`SELECT id, url FROM news_articles
      WHERE image_url IS NULL AND created_at > NOW() - INTERVAL '2 days'
@@ -489,13 +534,23 @@ async function backfillMissing(ollamaUp: boolean): Promise<void> {
 			} catch {
 				return;
 			}
-			const image = await hostGate.run(host, () => fetchOgImage(row.url));
+			const page = await hostGate.run(host, () => fetchPageMedia(row.url));
+			const image = page.imageUrl ?? page.video?.thumbnail;
 			if (!image) return;
 			found++;
-			await query("UPDATE news_articles SET image_url = $1 WHERE id = $2", [
-				image,
-				row.id,
-			]);
+			await query(
+				`UPDATE news_articles
+         SET image_url = $1,
+             video_url = COALESCE(video_url, $2),
+             media = COALESCE(media, '[]'::jsonb) || $3::jsonb
+         WHERE id = $4`,
+				[
+					image,
+					page.video?.url ?? null,
+					JSON.stringify(pageMediaEntries(page)),
+					row.id,
+				],
+			);
 		}),
 	);
 	if (noImage.rows.length > 0)
@@ -549,7 +604,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 				});
 			}
 		}
-		await fillMissingImages(
+		await fillMissingDetails(
 			prepared.map((item) => item.article),
 			ogBudget,
 		);
@@ -572,6 +627,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 					company: article.company,
 					content: article.content,
 					imageUrl: article.imageUrl,
+					...(article.videoUrl ? { videoUrl: article.videoUrl } : {}),
 					publishedAt: article.publishedAt,
 				};
 				newArticles.push(newArticle);
@@ -584,14 +640,16 @@ export async function runIngestion(): Promise<IngestionResult> {
 					),
 				);
 				runBackground("buildArticleRelations", () => buildArticleRelations(id));
-				runBackground("scoreRelevance", () =>
-					scoreRelevance(
-						id,
-						article.title,
-						article.content ?? "",
-						article.category,
-					),
-				);
+				if (!isLlmFreeCategory(article.category))
+					runBackground("scoreRelevance", () =>
+						scoreRelevance(
+							id,
+							article.title,
+							article.content ?? "",
+							article.category,
+							article.promptHint,
+						),
+					);
 			} catch (err) {
 				console.error("[ingestion] article failed:", (err as Error).message, {
 					url: article.url,
@@ -603,5 +661,12 @@ export async function runIngestion(): Promise<IngestionResult> {
 	console.log(
 		`[ingestion] Done. Fetched: ${fetched}, Stored: ${newArticles.length}`,
 	);
+	if (newArticles.length > 0) {
+		// Lists cached before this run would hide the new articles until their TTL.
+		await invalidateArticleCaches().catch((err: Error) =>
+			console.warn("[ingestion] cache invalidation failed:", err.message),
+		);
+		runBackground("websub", () => pingWebSubHub(publicFeedUrls()));
+	}
 	return { fetched, stored: newArticles.length, newArticles };
 }

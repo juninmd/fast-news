@@ -4,6 +4,39 @@ export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{ url: "https://www.sciencenews.org/feed", category: "Ciência" },
 	{
+		url: "https://spacenews.com/feed/",
+		category: "Ciência",
+		company: "SpaceNews",
+	},
+	{
+		url: "https://feeds.businessinsider.com/custom/all",
+		category: "Negócios",
+		company: "Business Insider",
+	},
+	{
+		url: "https://netflixtechblog.com/feed",
+		category: "Tecnologia",
+		company: "Netflix",
+	},
+	{
+		url: "https://techmeme.com/feed.xml",
+		category: "Tecnologia",
+		company: "Techmeme",
+	},
+	{
+		url: "https://code.visualstudio.com/feed.xml",
+		category: "Developer Tools",
+		company: "Microsoft",
+	},
+	{ url: "https://www.sciencenews.org/feed", category: "Ciência" },
+	{ url: "https://www.eff.org/rss/updates.xml", category: "Tecnologia" },
+	{ url: "https://theintercept.com/feed/?lang=en", category: "Mundo" },
+	{
+		url: "https://www.macstories.net/feed/",
+		category: "Tecnologia",
+		company: "MacStories",
+	},
+	{
 		url: "https://9to5linux.com/feed",
 		category: "Tecnologia",
 	},
@@ -162,6 +195,11 @@ export const FEED_SOURCES = [
 	{ url: "https://rss.uol.com.br/feed/jogos.xml", category: "Tecnologia" },
 	{ url: "https://rss.uol.com.br/feed/educacao.xml", category: "Educação" },
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml",
+		category: "Entretenimento",
+		company: "The New York Times",
+	},
 	{ url: "https://api.quantamagazine.org/feed/", category: "Ciência" },
 	{
 		url: "https://www.popularmechanics.com/rss/all.xml/",

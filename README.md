@@ -23,43 +23,112 @@
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** React 19 + Vite + Tailwind CSS
-- **Linguagem:** TypeScript
-- **IA:** Google Generative AI (Gemini)
-- **Testes:** Vitest + Testing Library
+- **Frontend:** React 19 + Vite 8 + Tailwind CSS 4 (também empacotado como app Android/iOS via Capacitor)
+- **Backend (`backend/`):** TypeScript, Express, PostgreSQL (pgvector), Redis/Bull, Qdrant opcional
+- **IA:** Vercel AI SDK com provedores Gemini, OpenAI, Anthropic, OpenRouter ou Ollama (`AI_PROVIDER`)
+- **Testes:** Vitest + Testing Library (unidade) e Playwright (`e2e/`)
 - **Linting:** Biome
-- **Deploy:** Netlify
-- **Package Manager:** pnpm (monorepo)
+- **Site de edições:** VitePress (`site/`) publicado no GitHub Pages
+- **Deploy:** imagem Docker no GHCR (`Dockerfile`), `netlify.toml` para o front estático
+- **Package Manager:** pnpm (monorepo com `packages/mcp` e `packages/shared`; `backend/` tem lockfile próprio)
+
+## 📋 Requisitos
+
+- Node.js 22 (versão usada no CI e no `Dockerfile`; `.nvmrc` fixa 20 e `engines` exige >= 18)
+- pnpm 10 (o CI usa `pnpm@10.33.2` via corepack)
+- Backend: PostgreSQL com pgvector e Redis (`docker compose up postgres redis` sobe os dois)
+- Opcional: Ollama (IA/embeddings locais), Qdrant (`VECTOR_STORE`), JDK 21 + `ANDROID_HOME` (APK), Xcode (iOS)
 
 ## 🚀 Instalação
 
 ```bash
-# Clonar
 git clone https://github.com/juninmd/fast-news.git
 cd fast-news
-
-# Instalar dependências
-pnpm install
-
-# Desenvolvimento
-pnpm dev
-
-# Build
-pnpm build
-
-# Testes
-pnpm test
+pnpm install                                 # raiz: front, packages/mcp, packages/shared
+pnpm --dir backend install --ignore-workspace   # backend tem lockfile próprio (como no CI)
 ```
 
-## 🤖 Agente de Notícias
+## ⚙️ Configuração
+
+Copie `.env.example` (raiz) e `backend/.env.example` para `.env` e preencha. Nunca versione `.env`; o workflow `Validate` falha se houver arquivo de segredo rastreado. Variáveis principais (o catálogo completo está em `backend/src/config/env.ts`):
+
+| Grupo | Variáveis |
+|---|---|
+| Servidor | `PORT` (padrão 3001), `PUBLIC_URL`, `ADMIN_TOKEN` |
+| Dados | `DATABASE_URL`, `REDIS_URL`, `VECTOR_STORE`, `QDRANT_URL`, `QDRANT_API_KEY` |
+| IA | `AI_PROVIDER`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `EMBEDDING_MODEL` |
+| Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_IDS`, `TELEGRAM_ENABLED`, `TELEGRAM_BOT_MODE` |
+| Push | `DISCORD_WEBHOOK_URL`, `SLACK_WEBHOOK_URL`, `NOTIFY_WEBHOOK_URL`, `NTFY_URL`, `APPRISE_URL` |
+| Agendamento | `CRON_INGESTION`, `CRON_DIGEST`, `CRON_LEARNING` |
+| O Fio | `EDITION_DELIVERY_MODE`, `EDITION_PAGES_BASE_URL`, `EDITION_PAGES_REPOSITORY`, `EDITION_PAGES_TOKEN` |
+
+## ▶️ Uso
 
 ```bash
-# Executar agente uma vez
-pnpm news-agent
-
-# Executar agente em loop
-pnpm start-agent
+pnpm dev:api        # API/backend (tsx watch, porta 3001)
+pnpm dev            # front Vite; proxy de /api e /health para localhost:3001
+pnpm news-agent     # agente de curadoria, uma execução
+pnpm start-agent    # agente em loop
+pnpm dev:mcp        # servidor MCP (@fast-news/mcp)
+pnpm docs:dev       # site VitePress das edições
+pnpm preview        # serve o build do front
 ```
+
+Migrações do banco: `pnpm --dir backend db:migrate`.
+
+## ✅ Testes, lint e build
+
+```bash
+pnpm test                            # Vitest (watch); use `pnpm exec vitest run` para uma passada
+pnpm coverage                        # Vitest com cobertura
+pnpm test:e2e                        # Playwright (e2e/)
+pnpm exec biome check .              # lint (o CI usa este comando, sem --write)
+pnpm lint                            # biome check --write (corrige arquivos)
+pnpm build                           # build do front em dist/
+pnpm --dir backend build             # tsc do backend
+pnpm --dir backend test              # Vitest do backend
+pnpm --dir backend exec tsc --noEmit # checagem de tipos (gate do CI)
+pnpm docs:build                      # build do site VitePress
+```
+
+## 🖼️ Screenshot
+
+![Fast News em desktop](docs/evidence/edition-full-coverage/desktop.png)
+
+Mais capturas em `docs/evidence/` (`mobile/`, `news-grouping/`, `o-fio-pages-preview.png`).
+
+## 🚦 Gates de CI
+
+| Workflow | Quando | O que checa |
+|---|---|---|
+| `validate.yml` (Validate) | PR e push em `main`/`master` | Bloqueia arquivos de segredo rastreados; `biome check .`; `vitest run` (raiz, inclui testes do backend); `tsc --noEmit` no backend |
+| `security.yml` (Security Scan) | push em `main`/`master` e manual | Gitleaks via `juninmd/base-actions` |
+| `deploy.yml` (Deploy) | PR e push em `main`/`master` | Build da imagem Docker; só publica no GHCR fora de PR |
+| `mobile.yml` (Mobile) | push em `main` (src, android, ios, capacitor, package.json) e manual | Gera APK debug como artefato; valida build iOS no simulador |
+| `pages.yml` (Pages) | push em `main` (site, package.json, lockfile) e manual | Compila o VitePress e publica na branch `gh-pages` |
+| `release-drafter.yml` | push e PR | Rascunho de release |
+
+## 🧩 Recursos de agregação (inspirados em awesome-ai-news)
+
+Tudo abaixo é **sem LLM**, exceto a tradução de títulos (cache permanente + limite diário).
+
+| Recurso | Como usar |
+|---|---|
+| Saúde das fontes | Feeds com 3+ falhas seguidas entram em quarentena com backoff (30min → 24h). `GET /api/sources[?status=quarantined]` e painel *Status* |
+| OPML | `GET /api/sources/opml` exporta; `POST /api/sources/opml` importa (`ADMIN_TOKEN`) |
+| RSS / JSON Feed | `/api/feed.xml` e `/api/feed.json` (`?scope=ai&category=&minScore=&limit=`), com link WebSub opcional |
+| Digests 4h/dia/semana/mês | `GET /api/digests/{4h,daily,weekly,monthly}?format=json\|md\|txt\|script&scope=ai` — ranking por relevância já gravada + cobertura multi-fonte |
+| Visão "Só IA" | `GET /api/news?scope=ai&minScore=6`; classificação por palavras-chave na ingestão |
+| Push plugável | Discord, Slack, webhook, Apprise, ntfy (`NOTIFY_*`); `runners/runPeriodicDigest.ts <período>` para CronJob |
+| Tradução | `GET /api/translate?lang=en&ids=...` — só títulos, cache em `article_translations`, `TRANSLATION_DAILY_LIMIT` |
+| Podcast | `/api/podcast.xml` com TTS opcional (`TTS_API_URL`); no app, botão *Ouvir resumo* usa a voz do navegador (grátis) |
+| Prompt por fonte | `PATCH /api/sources/:id {"promptHint": "..."}` — vira critério extra no prompt de relevância existente, sem chamada extra |
+| MCP | tools `get_digest` e `get_source_health` (`FAST_NEWS_API_URL`) |
+
+### Controle de custo de LLM
+- Categorias de alto volume (`Papers` = arXiv, `GitHub Trending`) pulam resumo vetorial, tema e relevância e são limitadas a 15 itens por feed.
+- Títulos obviamente lixo (horóscopo, cupom, sorteio…) recebem nota baixa localmente, sem modelo.
+- `RELEVANCE_DAILY_LIMIT` limita a análise de relevância; `TRANSLATION_DAILY_LIMIT` e `TTS_DAILY_LIMIT` limitam os recursos novos.
 
 ## 🗞 O Fio: jornal digital
 
@@ -107,6 +176,21 @@ Nenhuma notícia é descartada por semelhança. A ingestão só pula duplicatas 
 - **UI**: bloco "Em alta agora" com foto e fontes por história, painel "Temas em alta" (clicar busca o termo), card com selo "N fontes" que expande os links de cada portal, e imagem em todo card, com placeholder quando a foto não carrega.
 
 Capturas em [`docs/evidence/news-grouping/`](docs/evidence/news-grouping).
+
+## 📱 App Android / iOS (Capacitor)
+
+O mesmo front React roda como app nativo via [Capacitor](https://capacitorjs.com) (`appId` `com.juninmd.fastnews`). Dentro do app, as chamadas `/api/*` e `/health` são reescritas por `src/apiBase.js` para a API publicada (`https://fast-news.antonio-code.duckdns.org`; sobrescreva com `VITE_API_URL` no build).
+
+```bash
+pnpm mobile:apk      # build web + sync + APK debug (precisa de JDK 21 e ANDROID_HOME)
+                     # -> android/app/build/outputs/apk/debug/app-debug.apk
+pnpm mobile:android  # abre no Android Studio
+pnpm mobile:ios      # abre no Xcode (somente macOS)
+```
+
+Em telas estreitas (até 767 px) e no app nativo o front usa o shell mobile em `src/mobile/`: barra inferior (Hoje, Em alta, Buscar, Salvos), leitor em tela cheia, filtros em folha inferior e botão voltar do Android tratado. Telas largas mantêm o layout desktop (`src/AppNeo.tsx`). Fontes embutidas (Bricolage Grotesque, Manrope, JetBrains Mono), então funcionam offline.
+
+O workflow `.github/workflows/mobile.yml` gera o APK como artefato e valida o build iOS no simulador. APK de exemplo e capturas de tela em [`docs/evidence/mobile/`](docs/evidence/mobile). O APK é *debug* (chave de debug); para a loja, configure um keystore de release e, no iOS, o time de assinatura no Xcode.
 
 ## 📜 Licença
 

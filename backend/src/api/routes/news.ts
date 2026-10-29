@@ -1,7 +1,12 @@
 import { Request, Response, Router } from "express";
 import { query } from "../../database/client.js";
 import { searchArticles } from "../../services/articleSearch.js";
-import { cacheGet, cacheSet } from "../../services/cache.js";
+import {
+	cacheGet,
+	cacheSet,
+	cacheWrap,
+	hashKey,
+} from "../../services/cache.js";
 import { analyzeCredibility } from "../../services/credibility.js";
 import { fetchFullArticle } from "../../services/fullArticle.js";
 import {
@@ -17,6 +22,7 @@ export const newsRouter: Router = Router();
 interface FeedMember {
 	id: string;
 	source: string;
+	outlet?: string | null;
 	title: string;
 	url: string;
 	published_at: string;
@@ -25,9 +31,10 @@ interface FeedMember {
 /** Other outlets covering the same story: one entry per outlet, newest first. */
 function alsoIn(
 	members: FeedMember[] | null,
-	self: { id: string; source: string },
+	self: { id: string; source: string; outlet?: string | null },
 ) {
-	const seen = new Set<string>([self.source]);
+	// One entry per outlet: Folha's "Poder" and "Mercado" feeds are the same source.
+	const seen = new Set<string>([self.outlet ?? self.source]);
 	const out: Array<{
 		id: string;
 		source: string;
@@ -36,8 +43,9 @@ function alsoIn(
 		publishedAt: string;
 	}> = [];
 	for (const m of members ?? []) {
-		if (m.id === self.id || seen.has(m.source)) continue;
-		seen.add(m.source);
+		const outlet = m.outlet ?? m.source;
+		if (m.id === self.id || seen.has(outlet)) continue;
+		seen.add(outlet);
 		out.push({
 			id: m.id,
 			source: m.source,
@@ -77,11 +85,24 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 	// newest article) that lists the others in `also_in`; nothing is dropped,
 	// every member stays reachable and the entry carries the outlet count.
 	const group = req.query["group"] === "true";
+	// scope=ai keeps only AI-related articles (keyword classification at ingestion).
+	const aiOnly = req.query["scope"] === "ai";
+	// minScore hides articles the relevance pass rated lower; unscored ones stay.
+	const minScore = positiveInt(req.query["minScore"], 0, 10);
 	const offset = (page - 1) * limit;
 
-	const cacheKey = `news:list:${page}:${limit}:${category ?? "all"}:${minCredibility ?? "all"}:${politicalBias ?? "all"}:${excludeMilitant}:${group}`;
-	const cached = await cacheGet(cacheKey);
-	if (cached) return res.json(cached);
+	const cacheKey = hashKey(
+		"news:list",
+		page,
+		limit,
+		category,
+		minCredibility,
+		politicalBias,
+		excludeMilitant,
+		group,
+		aiOnly,
+		minScore,
+	);
 
 	// Fetch one extra row instead of COUNT(*) OVER() — a window aggregate with no
 	// PARTITION BY forces Postgres to materialize the whole matching set before
@@ -109,6 +130,13 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 		filters.push(`@.political_bias = $${params.length}`);
 	}
 	if (excludeMilitant) filters.push(`@.is_militant = false`);
+	if (aiOnly) filters.push(`@.is_ai = TRUE`);
+	if (minScore > 0) {
+		params.push(minScore);
+		filters.push(
+			`(@.relevance_score IS NULL OR @.relevance_score >= $${params.length})`,
+		);
+	}
 	const clauses = (alias: string) =>
 		filters.map((f) => f.replaceAll("@.", `${alias}.`));
 
@@ -128,28 +156,31 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 	const where = pageWhere.length ? `WHERE ${pageWhere.join(" AND ")}` : "";
 
 	try {
-		const result = await query<{
-			id: string;
-			title: string;
-			summary: string | null;
-			content: string | null;
-			url: string;
-			source: string;
-			category: string;
-			theme_category: string | null;
-			published_at: string;
-			image_url: string | null;
-			cover_image: string | null;
-			sentiment: string;
-			importance_score: number;
-			story_id: string | null;
-			source_count: number | null;
-			article_count: number | null;
-			members: FeedMember[] | null;
-		}>(
-			`WITH page AS (
+		const response = await cacheWrap(cacheKey, 300, async () => {
+			const result = await query<{
+				id: string;
+				title: string;
+				summary: string | null;
+				content: string | null;
+				url: string;
+				source: string;
+				category: string;
+				theme_category: string | null;
+				published_at: string;
+				image_url: string | null;
+				video_url: string | null;
+				author: string | null;
+				cover_image: string | null;
+				sentiment: string;
+				importance_score: number;
+				story_id: string | null;
+				source_count: number | null;
+				article_count: number | null;
+				members: FeedMember[] | null;
+			}>(
+				`WITH page AS (
          SELECT na.id, na.title, na.summary, LEFT(na.content, 800) AS content, na.url,
-                na.source, na.category, na.theme_category, na.published_at, na.image_url,
+                na.source, COALESCE(na.outlet, na.source) AS outlet, na.category, na.theme_category, na.published_at, na.image_url, na.video_url, na.author,
                 na.sentiment, na.importance_score
          FROM news_articles na ${where}
          ORDER BY na.published_at DESC NULLS LAST
@@ -159,11 +190,11 @@ newsRouter.get("/", async (req: Request, res: Response) => {
        FROM page
        LEFT JOIN LATERAL (
          SELECT sa.story_id,
-                COUNT(DISTINCT nb.source)::int AS source_count,
+                COUNT(DISTINCT COALESCE(nb.outlet, nb.source))::int AS source_count,
                 COUNT(*)::int AS article_count,
                 (ARRAY_AGG(nb.image_url ORDER BY nb.published_at DESC NULLS LAST)
                    FILTER (WHERE nb.image_url IS NOT NULL))[1] AS cover_image,
-                JSON_AGG(JSON_BUILD_OBJECT('id', nb.id, 'source', nb.source, 'title', nb.title,
+                JSON_AGG(JSON_BUILD_OBJECT('id', nb.id, 'source', nb.source, 'outlet', COALESCE(nb.outlet, nb.source), 'title', nb.title,
                                            'url', nb.url, 'published_at', nb.published_at)
                          ORDER BY nb.published_at DESC NULLS LAST) AS members
          FROM story_articles sa0
@@ -175,23 +206,23 @@ newsRouter.get("/", async (req: Request, res: Response) => {
          LIMIT 1
        ) st ON TRUE
        ORDER BY page.published_at DESC NULLS LAST`,
-			params,
-		);
+				params,
+			);
 
-		const hasMore = result.rows.length > limit;
-		const articles = (hasMore ? result.rows.slice(0, limit) : result.rows).map(
-			({ members, cover_image, content, summary, ...row }) => ({
+			const hasMore = result.rows.length > limit;
+			const articles = (
+				hasMore ? result.rows.slice(0, limit) : result.rows
+			).map(({ members, cover_image, content, summary, ...row }) => ({
 				...row,
 				excerpt: toExcerpt(summary?.trim() || content),
 				image_url: row.image_url ?? cover_image,
 				source_count: row.source_count ?? 1,
 				article_count: row.article_count ?? 1,
 				also_in: alsoIn(members, row),
-			}),
-		);
+			}));
 
-		const response = { data: articles, articles, page, limit, hasMore };
-		await cacheSet(cacheKey, response, 300);
+			return { data: articles, articles, page, limit, hasMore };
+		});
 		return res.json(response);
 	} catch (err) {
 		console.error("[news] list failed:", (err as Error).message);
@@ -204,7 +235,7 @@ newsRouter.get("/search", async (req: Request, res: Response) => {
 	if (!q || q.trim().length < 3)
 		return res.status(400).json({ error: "Query too short" });
 
-	const cacheKey = `news:search:${q.toLowerCase().trim()}`;
+	const cacheKey = hashKey("news:search", q.toLowerCase().trim());
 	const cached = await cacheGet(cacheKey);
 	if (cached) return res.json(cached);
 
@@ -229,7 +260,7 @@ newsRouter.get("/top", async (_req: Request, res: Response) => {
 		const stories = await query<StoryRow>(
 			`SELECT ns.id AS story_id, ns.title AS story_title, ns.summary AS story_summary,
               ns.last_updated_at, COUNT(*)::int AS article_count,
-              COUNT(DISTINCT na.source)::int AS source_count
+              COUNT(DISTINCT COALESCE(na.outlet, na.source))::int AS source_count
        FROM news_stories ns
        JOIN story_articles sa ON sa.story_id = ns.id
        JOIN news_articles na ON na.id = sa.article_id
@@ -237,14 +268,14 @@ newsRouter.get("/top", async (_req: Request, res: Response) => {
          AND ns.last_updated_at > NOW() - INTERVAL '48 hours'
          AND COALESCE(na.is_spam_or_promo, FALSE) = FALSE
        GROUP BY ns.id
-       ORDER BY COUNT(DISTINCT na.source) DESC, ns.last_updated_at DESC
+       ORDER BY COUNT(DISTINCT COALESCE(na.outlet, na.source)) DESC, ns.last_updated_at DESC
        LIMIT 40`,
 		);
 		const ids = stories.rows.map((r) => r.story_id);
 		const members = ids.length
 			? await query<MemberRow>(
 					`SELECT sa.story_id, na.id, na.title, na.summary, LEFT(na.content, 800) AS content,
-                  na.url, na.source, na.category, na.company, na.published_at, na.image_url,
+                  na.url, na.source, COALESCE(na.outlet, na.source) AS outlet, na.category, na.company, na.published_at, na.image_url,
                   COALESCE(na.relevance_score, na.importance_score) AS importance_score,
                   na.fake_news_score, na.political_bias, na.is_militant
            FROM story_articles sa
@@ -317,6 +348,13 @@ newsRouter.get("/:id", async (req: Request, res: Response) => {
 		company: string | null;
 		published_at: string;
 		image_url: string | null;
+		video_url: string | null;
+		media: unknown[] | null;
+		author: string | null;
+		tags: string[] | null;
+		comments_url: string | null;
+		language: string | null;
+		word_count: number | null;
 		sentiment: string;
 		importance_score: number;
 		fake_news_score: number | null;
@@ -326,7 +364,7 @@ newsRouter.get("/:id", async (req: Request, res: Response) => {
 		credibility_flags: string[];
 	}>(
 		`SELECT id, title, summary, content, url, source, category, company, published_at,
-            image_url, sentiment, importance_score, fake_news_score, political_bias,
+            image_url, video_url, media, author, tags, comments_url, language, word_count, sentiment, importance_score, fake_news_score, political_bias,
             is_militant, has_incoherence, credibility_flags
      FROM news_articles WHERE id = $1`,
 		[id],

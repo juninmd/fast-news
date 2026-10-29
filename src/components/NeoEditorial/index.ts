@@ -1,5 +1,6 @@
 export { ArticleModal } from "./ArticleModal";
 export { CategoryTabs } from "./CategoryTabs";
+export { FeedControls } from "./FeedControls";
 export { Header } from "./Header";
 export { NewsCard } from "./NewsCard";
 export { SearchModal } from "./SearchModal";

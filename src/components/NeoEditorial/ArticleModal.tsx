@@ -4,10 +4,14 @@ import {
 	Clock,
 	ExternalLink,
 	Focus,
+	MessageSquare,
+	User,
 	X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReadingHistory } from "../../hooks/useReadingHistory";
+import { ArticleVideo } from "./ArticleVideo";
+import { type GalleryImage, ImageGallery } from "./ImageGallery";
 
 interface Article {
 	id: string;
@@ -20,6 +24,17 @@ interface Article {
 	company: string | null;
 	published_at: string;
 	image_url: string | null;
+	video_url?: string | null;
+	author?: string | null;
+	tags?: string[] | null;
+	comments_url?: string | null;
+	word_count?: number | null;
+	media?: Array<{
+		type: "image" | "video";
+		url: string;
+		alt?: string;
+		credit?: string;
+	}> | null;
 }
 
 interface RelatedArticle {
@@ -27,6 +42,12 @@ interface RelatedArticle {
 	title: string;
 	source: string;
 	url: string;
+}
+
+function galleryImages(article: Article): GalleryImage[] {
+	return (article.media ?? [])
+		.filter((m) => m.type === "image")
+		.map(({ url, alt, credit }) => ({ url, alt, credit }));
 }
 
 function formatDate(dateStr: string): string {
@@ -188,16 +209,32 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 
 					{article && (
 						<>
-							{article.image_url && !focusMode && (
-								<div className="h-52 overflow-hidden flex-shrink-0">
-									<img
-										src={article.image_url}
-										alt=""
-										loading="lazy"
-										className="w-full h-full object-cover"
-									/>
-								</div>
+							{article.video_url && !focusMode ? (
+								<ArticleVideo
+									url={article.video_url}
+									title={article.title}
+									poster={article.image_url}
+									fallbackUrl={article.url}
+								/>
+							) : (
+								article.image_url &&
+								!focusMode && (
+									<div className="h-52 overflow-hidden flex-shrink-0">
+										<img
+											src={article.image_url}
+											alt=""
+											loading="lazy"
+											className="w-full h-full object-cover"
+										/>
+									</div>
+								)
 							)}
+
+							<ImageGallery
+								images={galleryImages(article)}
+								title={article.title}
+								hidden={focusMode}
+							/>
 
 							<div className={`p-6 ${focusMode ? "py-8" : ""}`}>
 								<h2
@@ -214,19 +251,53 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 									{article.company && article.company !== article.source && (
 										<span>· {article.company}</span>
 									)}
+									{article.author && (
+										<span className="flex items-center gap-1">
+											<User className="w-3 h-3" />
+											{article.author}
+										</span>
+									)}
 									<span className="flex items-center gap-1">
 										<Clock className="w-3 h-3" />
 										{formatDate(article.published_at)}
 									</span>
 									<span className="flex items-center gap-1 text-text-secondary">
 										<BookOpen className="w-3 h-3" />~
-										{Math.ceil(
-											(article.content || article.summary).split(" ").length /
-												200,
+										{Math.max(
+											1,
+											Math.ceil(
+												(article.word_count ??
+													(article.content || article.summary).split(" ")
+														.length) / 200,
+											),
 										)}{" "}
 										min
 									</span>
+									{article.comments_url && (
+										<a
+											href={article.comments_url}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="flex items-center gap-1 hover:text-accent-primary transition-colors"
+										>
+											<MessageSquare className="w-3 h-3" />
+											Discussão
+										</a>
+									)}
 								</div>
+
+								{article.tags && article.tags.length > 0 && (
+									<ul className="flex flex-wrap gap-1.5 mb-4" aria-label="Tags">
+										{article.tags.map((tag) => (
+											<li
+												key={tag}
+												className="px-2 py-0.5 rounded-full border border-border-subtle font-mono text-[10px] uppercase tracking-wide text-text-secondary"
+											>
+												{tag}
+											</li>
+										))}
+									</ul>
+								)}
 
 								{/* Content */}
 								<div

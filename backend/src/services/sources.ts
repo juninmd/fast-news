@@ -1,11 +1,97 @@
 import { query } from "../database/client.js";
+import { isQuarantined } from "./sourceHealth.js";
+
+/**
+ * High-volume categories (hundreds of arXiv papers or trending repos a day).
+ * Their articles skip every per-article LLM call (vector summary, theme,
+ * relevance) and each feed is capped, so they feed the AI view and RSS output
+ * without spending model budget.
+ */
+export const LLM_FREE_CATEGORIES: ReadonlySet<string> = new Set([
+	"Papers",
+	"GitHub Trending",
+]);
+export const LLM_FREE_MAX_ITEMS = 15;
+
+export function isLlmFreeCategory(category: string): boolean {
+	return LLM_FREE_CATEGORIES.has(category);
+}
 
 export const FEED_SOURCES = [
+	// ── IA / PESQUISA / COMUNIDADE ────────────────────────────────────────────────────
+	{
+		url: "https://rss.arxiv.org/rss/cs.AI",
+		category: "Papers",
+		company: "arXiv cs.AI",
+	},
+	{
+		url: "https://rss.arxiv.org/rss/cs.CL",
+		category: "Papers",
+		company: "arXiv cs.CL",
+	},
+	{
+		url: "https://rss.arxiv.org/rss/cs.LG",
+		category: "Papers",
+		company: "arXiv cs.LG",
+	},
+	{
+		url: "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml",
+		category: "GitHub Trending",
+		company: "GitHub Trending",
+	},
+	{
+		url: "https://huggingface.co/blog/feed.xml",
+		category: "AI Frontier",
+		company: "Hugging Face",
+	},
+	{
+		url: "https://www.reddit.com/r/MachineLearning/.rss",
+		category: "AI Frontier",
+		company: "Reddit r/MachineLearning",
+	},
+	{
+		url: "https://www.reddit.com/r/LocalLLaMA/.rss",
+		category: "AI Frontier",
+		company: "Reddit r/LocalLLaMA",
+	},
+
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
 		url: "https://www.sciencenews.org/feed",
 		category: "Ciência",
 		company: "Science News",
+	},
+	{
+		url: "https://spacenews.com/feed/",
+		category: "Ciência",
+		company: "SpaceNews",
+	},
+	{
+		url: "https://feeds.businessinsider.com/custom/all",
+		category: "Negócios",
+		company: "Business Insider",
+	},
+	{
+		url: "https://netflixtechblog.com/feed",
+		category: "Tecnologia",
+		company: "Netflix",
+	},
+	{
+		url: "https://techmeme.com/feed.xml",
+		category: "Tecnologia",
+		company: "Techmeme",
+	},
+	{
+		url: "https://code.visualstudio.com/feed.xml",
+		category: "Developer Tools",
+		company: "Microsoft",
+	},
+	{ url: "https://www.eff.org/rss/updates.xml", category: "Tecnologia" },
+	{ url: "https://theintercept.com/feed/?lang=en", category: "Mundo" },
+	{
+		url: "https://www.macstories.net/feed/",
+		category: "Tecnologia",
+		company: "MacStories",
 	},
 	{
 		url: "https://9to5linux.com/feed",
@@ -361,6 +447,11 @@ export const FEED_SOURCES = [
 		company: "UOL",
 	},
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
+	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml",
+		category: "Entretenimento",
+		company: "The New York Times",
+	},
 	{
 		url: "https://api.quantamagazine.org/feed/",
 		category: "Ciência",
@@ -1143,18 +1234,40 @@ export async function syncDefaultFeeds(): Promise<void> {
 }
 
 export async function getActiveFeeds(): Promise<
-	Array<{ url: string; category: string; company?: string }>
+	Array<{
+		url: string;
+		category: string;
+		company?: string;
+		promptHint?: string;
+		etag?: string;
+		lastModified?: string;
+	}>
 > {
 	try {
-		const res = await query<{ url: string; category: string; company: string }>(
-			"SELECT url, category, company FROM source_feeds WHERE is_active = true",
+		const res = await query<{
+			url: string;
+			category: string;
+			company: string;
+			prompt_hint: string | null;
+			quarantined_until: string | null;
+			etag: string | null;
+			last_modified: string | null;
+		}>(
+			"SELECT url, category, company, prompt_hint, quarantined_until, etag, last_modified FROM source_feeds WHERE is_active = true",
 		);
 		if (res.rows.length > 0) {
-			return res.rows.map((r) => ({
-				url: r.url,
-				category: r.category,
-				...(r.company ? { company: r.company } : {}),
-			}));
+			// Quarantined feeds are skipped until their backoff expires; the static
+			// fallback below is only for an empty table, never for "all quarantined".
+			return res.rows
+				.filter((r) => !isQuarantined(r.quarantined_until))
+				.map((r) => ({
+					url: r.url,
+					category: r.category,
+					...(r.company ? { company: r.company } : {}),
+					...(r.prompt_hint ? { promptHint: r.prompt_hint } : {}),
+					...(r.etag ? { etag: r.etag } : {}),
+					...(r.last_modified ? { lastModified: r.last_modified } : {}),
+				}));
 		}
 	} catch (err) {
 		console.error(

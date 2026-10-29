@@ -91,6 +91,38 @@ export function resolveHttpUrl(raw: string | undefined, base: string): string {
 const TRACKING_PARAM =
 	/^(utm_|fbclid$|gclid$|mc_|ref$|ref_|cmpid$|ocid$|at_|src$)/i;
 
+/**
+ * Real article URL behind a click-tracking redirect of the form
+ * `https://redir.example.com/path/*https://site.com/article` (Folha, Yahoo).
+ * Anything else is returned unchanged.
+ */
+export function unwrapRedirect(raw: string): string {
+	const inner = raw.match(/^https?:\/\/[^/]+\/[^?#]*?\*(https?:\/\/.+)$/i)?.[1];
+	if (!inner) return raw;
+	try {
+		return new URL(inner).toString();
+	} catch {
+		return raw;
+	}
+}
+
+/** The link as published, minus tracking params (utm_*, fbclid, ...): same page, one URL. */
+export function stripTracking(raw: string): string {
+	try {
+		const u = new URL(raw);
+		let changed = false;
+		for (const key of [...u.searchParams.keys()]) {
+			if (TRACKING_PARAM.test(key)) {
+				u.searchParams.delete(key);
+				changed = true;
+			}
+		}
+		return changed ? u.toString() : raw;
+	} catch {
+		return raw;
+	}
+}
+
 /** URL without tracking params, fragment, `www.` and trailing slash, so one story shared via two links dedups. */
 export function canonicalUrl(raw: string): string {
 	try {

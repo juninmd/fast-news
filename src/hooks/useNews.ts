@@ -10,6 +10,7 @@ interface NewsArticle {
 	company?: string;
 	publishedAt: Date;
 	imageUrl?: string;
+	videoUrl?: string;
 	/** Distinct outlets reporting the same story (1 = only this one). */
 	sourceCount: number;
 	/** Other outlets on the same story, newest first. */
@@ -38,6 +39,7 @@ type ApiArticle = {
 	publishedAt?: string;
 	image_url?: string | null;
 	imageUrl?: string | null;
+	video_url?: string | null;
 	source_count?: number;
 	also_in?: CoverageLink[];
 };
@@ -51,6 +53,8 @@ interface UseNewsOptions {
 	excludeMilitant?: boolean;
 	/** Fold the same story from several outlets into one entry. Default true. */
 	group?: boolean;
+	/** "ai" keeps only AI-related articles. */
+	scope?: "all" | "ai";
 }
 
 interface UseNewsReturn {
@@ -102,6 +106,9 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 				if (options.group ?? true) {
 					params.set("group", "true");
 				}
+				if (options.scope === "ai") {
+					params.set("scope", "ai");
+				}
 
 				const response = await fetch(`/api/news?${params}`);
 				if (!response.ok) throw new Error("Failed to fetch articles");
@@ -135,6 +142,7 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 			options.politicalBias,
 			options.excludeMilitant,
 			options.group,
+			options.scope,
 		],
 	);
 
@@ -177,6 +185,7 @@ function toNewsArticle(article: ApiArticle): NewsArticle {
 			article.published_at ?? article.publishedAt ?? Date.now(),
 		),
 		imageUrl: article.image_url ?? article.imageUrl ?? undefined,
+		videoUrl: article.video_url ?? undefined,
 		sourceCount: article.source_count ?? 1,
 		alsoIn: article.also_in ?? [],
 	};

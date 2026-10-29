@@ -287,3 +287,58 @@ ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS canonical_url TEXT DEFAULT NU
 CREATE INDEX IF NOT EXISTS idx_articles_canonical_url ON news_articles(canonical_url) WHERE canonical_url IS NOT NULL;
 ALTER TABLE news_stories ADD COLUMN IF NOT EXISTS source_count INT DEFAULT 0;
 ALTER TABLE news_stories ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT NULL;
+
+-- Source health: failures are counted per feed and a failing feed is
+-- quarantined with exponential backoff instead of being fetched every run.
+-- Rollback: ALTER TABLE source_feeds DROP COLUMN consecutive_failures, DROP COLUMN total_failures,
+--   DROP COLUMN last_error, DROP COLUMN last_success_at, DROP COLUMN last_failure_at,
+--   DROP COLUMN quarantined_until, DROP COLUMN prompt_hint;
+--   ALTER TABLE news_articles DROP COLUMN is_ai; DROP TABLE article_translations;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS consecutive_failures INT DEFAULT 0;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS total_failures INT DEFAULT 0;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_error TEXT DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_success_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_failure_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS quarantined_until TIMESTAMPTZ DEFAULT NULL;
+-- Editorial hint appended to the (already existing) relevance prompt for this
+-- feed's articles: no extra LLM call, just a sharper criterion per source.
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS prompt_hint TEXT DEFAULT NULL;
+
+-- "Only AI" view: keyword classification at ingestion, no LLM involved.
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS is_ai BOOLEAN DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_is_ai ON news_articles(published_at DESC NULLS LAST) WHERE is_ai = TRUE;
+
+-- Translated titles/summaries, cached forever so an article is translated at most once per language.
+CREATE TABLE IF NOT EXISTS article_translations (
+  article_id UUID NOT NULL REFERENCES news_articles(id) ON DELETE CASCADE,
+  lang TEXT NOT NULL,
+  title TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (article_id, lang)
+);
+
+-- Video + gallery of an article, filled at ingestion (Media RSS, enclosures, <video>, YouTube/Vimeo embeds, og:video).
+-- `video_url` is the best playable video; `media` is the full [{type,url,provider,embedUrl,thumbnail,...}] list.
+-- Rollback: ALTER TABLE news_articles DROP COLUMN video_url, DROP COLUMN media;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS media JSONB DEFAULT NULL;
+
+-- Editorial details parsed from the feed item (or the article page when the feed has none).
+-- Rollback: ALTER TABLE news_articles DROP COLUMN author, DROP COLUMN tags, DROP COLUMN comments_url, DROP COLUMN language, DROP COLUMN word_count;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS author TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS tags JSONB DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS comments_url TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS language TEXT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS word_count INTEGER DEFAULT NULL;
+
+-- Conditional GET validators of the last good fetch: an unchanged feed answers 304 and is not re-parsed.
+-- Rollback: ALTER TABLE source_feeds DROP COLUMN etag, DROP COLUMN last_modified;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS etag TEXT DEFAULT NULL;
+ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_modified TEXT DEFAULT NULL;
+
+-- Publisher key (outlet.ts). Story source counts use it instead of the feed title, so an outlet with
+-- several section feeds counts once. Existing rows are filled by the ingestion backfill; until then
+-- queries fall back to `source` via COALESCE(outlet, source).
+-- Rollback: ALTER TABLE news_articles DROP COLUMN outlet;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS outlet TEXT DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_outlet_missing ON news_articles(created_at DESC) WHERE outlet IS NULL;

@@ -2,6 +2,8 @@ import { ChevronDown, ExternalLink, Layers } from "lucide-react";
 import { useState } from "react";
 import type { CoverageLink } from "../../hooks/useNews";
 import { timeAgoShort } from "../../utils/format";
+import { AnimatedNumber } from "./AnimatedNumber";
+import { SourcePreview } from "./SourcePreview";
 
 interface SourceStackProps {
 	/** Outlet of the entry the card is built on. */
@@ -23,24 +25,30 @@ export function SourceStack({ source, sourceCount, others }: SourceStackProps) {
 
 	return (
 		<div className="mt-3">
-			<button
-				type="button"
-				onClick={() => setOpen((v) => !v)}
-				aria-expanded={open}
-				className="group/stack flex max-w-full items-center gap-2 text-left font-mono text-[11px] text-text-secondary transition-colors hover:text-accent-primary"
-			>
-				<span className="inline-flex shrink-0 items-center gap-1 bg-accent-primary/10 px-1.5 py-0.5 font-semibold text-accent-primary">
+			<div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-text-secondary">
+				<button
+					type="button"
+					onClick={() => setOpen((v) => !v)}
+					aria-expanded={open}
+					aria-label={`${sourceCount} fontes`}
+					className="inline-flex shrink-0 items-center gap-1 bg-accent-primary/10 px-1.5 py-0.5 font-semibold text-accent-primary transition-colors hover:bg-accent-primary/20"
+				>
 					<Layers className="h-3 w-3" />
-					{sourceCount} fontes
-				</span>
-				<span className="truncate">
-					{source} · {shown.map((o) => o.source).join(" · ")}
-					{extra > 0 ? ` +${extra}` : ""}
-				</span>
-				<ChevronDown
-					className={`h-3 w-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
-				/>
-			</button>
+					<AnimatedNumber value={sourceCount} />
+					<span aria-hidden="true">fontes</span>
+					<ChevronDown
+						className={`h-3 w-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+					/>
+				</button>
+				<span>{source}</span>
+				{shown.map((o) => (
+					<span key={o.id} className="inline-flex items-center gap-2">
+						<span aria-hidden="true">·</span>
+						<SourcePreview link={o}>{o.source}</SourcePreview>
+					</span>
+				))}
+				{extra > 0 && <span>+{extra}</span>}
+			</div>
 
 			{open && (
 				<ul className="mt-2 divide-y divide-border-subtle border border-border-subtle bg-bg-secondary">
