@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.sciencenews.org/feed",
+		category: "Ciência",
+		company: "Science News",
+	},
+	{
 		url: "https://spacenews.com/feed/",
 		category: "Ciência",
 		company: "SpaceNews",
@@ -81,7 +86,6 @@ export const FEED_SOURCES = [
 		category: "Developer Tools",
 		company: "Microsoft",
 	},
-	{ url: "https://www.sciencenews.org/feed", category: "Ciência" },
 	{ url: "https://www.eff.org/rss/updates.xml", category: "Tecnologia" },
 	{ url: "https://theintercept.com/feed/?lang=en", category: "Mundo" },
 	{
