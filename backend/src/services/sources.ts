@@ -444,6 +444,11 @@ export const FEED_SOURCES = [
 	},
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml",
+		category: "Entretenimento",
+		company: "The New York Times",
+	},
+	{
 		url: "https://api.quantamagazine.org/feed/",
 		category: "Ciência",
 		company: "Quanta Magazine",
