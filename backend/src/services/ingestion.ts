@@ -164,6 +164,9 @@ Conteúdo: ${cleanContent.slice(0, 4000)}`;
 			model,
 			prompt,
 			maxTokens: 150,
+			// Provedor em cooldown responde "try again in 300s"; retry do SDK
+			// so multiplica o tempo por artigo e estoura o job de 25min.
+			maxRetries: 0,
 		});
 		return text.trim();
 	} catch (e) {
