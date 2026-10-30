@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.npr.org/1019/rss.xml",
+		category: "Tecnologia",
+		company: "NPR",
+	},
+	{
 		url: "https://www.sciencenews.org/feed",
 		category: "Ciência",
 		company: "Science News",
