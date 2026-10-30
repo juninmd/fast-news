@@ -73,7 +73,12 @@ export async function analyzeTopicWithRAG(
 		);
 
 	const model = await getLanguageModel();
-	const { text } = await generateText({ model, prompt, maxTokens: 2000 });
+	const { text } = await generateText({
+		model,
+		prompt,
+		maxTokens: 2000,
+		maxRetries: 0,
+	});
 
 	const embedding = await embedDocument(text.slice(0, 2000));
 	const inserted = await query<{ id: string }>(
