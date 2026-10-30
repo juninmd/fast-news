@@ -2,6 +2,11 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
+	{
+		url: "https://feeds.npr.org/1019/rss.xml",
+		category: "Tecnologia",
+		company: "NPR",
+	},
 	{ url: "https://www.sciencenews.org/feed", category: "Ciência" },
 	{
 		url: "https://spacenews.com/feed/",
