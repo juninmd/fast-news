@@ -1,5 +1,6 @@
 import { query } from "../database/client.js";
 import { titleSimilarity } from "../services/textSimilarity.js";
+import { beatText } from "./beatText.js";
 import type {
 	Headline,
 	Thread,
@@ -79,7 +80,7 @@ export function buildStoryThreads(
 		story.headlines.push(h.title);
 		story.events.push({
 			fonte: h.id,
-			texto: row.what_changed?.trim() || row.headline,
+			texto: beatText(row.what_changed, row.headline),
 			tipo: KIND[row.event_type] ?? "development",
 		});
 		stories.set(row.story_id, story);

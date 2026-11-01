@@ -1,11 +1,14 @@
 import { query } from "../database/client.js";
-import { clipWords } from "./text.js";
+import { outletName } from "./outlet.js";
+import { clipSentence } from "./text.js";
 import type { EditionWindow, Headline } from "./types.js";
 
 // A hard cap keeps a runaway feed from blowing the job's memory. Fetch one
 // extra row so hitting it becomes an explicit failed edition, never a quiet
 // partial success.
 const MAX_ROWS = 5000;
+
+const FACT_CHECK_LABEL = /fato ou fake/i;
 
 interface Row {
 	id: string;
@@ -39,10 +42,13 @@ export async function collectHeadlines(
 		id: i + 1,
 		sourceId: r.id,
 		title: r.title.replace(/\s+/g, " ").trim(),
-		source: (r.source ?? "Fonte desconhecida").trim(),
-		category: r.category ?? "",
+		source: outletName(r.source ?? "", r.url),
+		// The fact-check desk is told apart by its feed label, which outletName() shortens.
+		category: FACT_CHECK_LABEL.test(r.source ?? "")
+			? "fact_check"
+			: (r.category ?? ""),
 		url: r.url.trim(),
-		snippet: clipWords(r.snippet ?? "", 220),
+		snippet: clipSentence(r.snippet ?? "", 220),
 		createdAt: new Date(r.created_at),
 		imageUrl: r.image_url?.trim() || null,
 	}));
