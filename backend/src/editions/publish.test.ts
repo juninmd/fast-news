@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const sendMessage = vi.fn();
+const sendPhoto = vi.fn();
+const sendMediaGroup = vi.fn();
 vi.mock("../services/telegram.js", () => ({
-	getBot: () => ({ telegram: { sendMessage } }),
+	getBot: () => ({ telegram: { sendMessage, sendPhoto, sendMediaGroup } }),
 }));
 vi.mock("../config/env.js", () => ({
 	config: {
@@ -40,6 +42,8 @@ const hangUp = new Error(
 
 beforeEach(() => {
 	sendMessage.mockReset().mockResolvedValue({});
+	sendPhoto.mockReset().mockResolvedValue({});
+	sendMediaGroup.mockReset().mockResolvedValue([]);
 	fetchMock.mockReset();
 	vi.stubGlobal("fetch", fetchMock);
 	vi.useFakeTimers();
@@ -134,5 +138,92 @@ describe("publishEdition", () => {
 		);
 		expect(sendMessage).not.toHaveBeenCalled();
 		expect(result.chats["-1001234567890"]?.status).toBe("failed");
+	});
+
+	describe("photos", () => {
+		const media = {
+			cover: { url: "https://img.example.com/1.jpg", caption: "capa" },
+			album: {
+				urls: [
+					"https://img.example.com/2.jpg",
+					"https://img.example.com/3.jpg",
+				],
+				caption: "álbum",
+				stories: [{ titulo: "x", texto: "", fontes: [1] }],
+			},
+		};
+		const pages = "https://juninmd.github.io/fast-news/edicoes/x/";
+
+		it("sends cover, album and then the text built from what was delivered", async () => {
+			const summary = vi.fn().mockReturnValue("texto");
+			await publishEdition(w, summary, "<html>", pages, media);
+			expect(sendPhoto).toHaveBeenCalledWith(
+				"-1001234567890",
+				media.cover.url,
+				{ caption: "capa", parse_mode: "HTML" },
+			);
+			const [, group] = sendMediaGroup.mock.calls[0] ?? [];
+			expect(group).toHaveLength(2);
+			expect(group[0]).toMatchObject({ caption: "álbum", parse_mode: "HTML" });
+			expect(group[1]).not.toHaveProperty("caption");
+			expect(summary).toHaveBeenCalledWith({
+				cover: true,
+				album: media.album.stories,
+			});
+			expect(sendMessage).toHaveBeenCalledWith(
+				"-1001234567890",
+				"texto",
+				expect.anything(),
+			);
+		});
+
+		it("keeps the story in the text when Telegram cannot fetch the image", async () => {
+			sendPhoto.mockRejectedValue(new Error("wrong file identifier/HTTP URL"));
+			sendMediaGroup.mockRejectedValue(
+				new Error("failed to get HTTP URL content"),
+			);
+			const summary = vi.fn().mockReturnValue("texto completo");
+			const r = await publishEdition(w, summary, "<html>", pages, media);
+			expect(summary).toHaveBeenCalledWith({ cover: false, album: [] });
+			expect(sendMessage).toHaveBeenCalledTimes(1);
+			expect(r.chats["-1001234567890"]?.status).toBe("full");
+		});
+
+		it("sends a one-photo album as a plain photo", async () => {
+			const one = {
+				...media,
+				cover: undefined,
+				album: { ...media.album, urls: ["https://img.example.com/2.jpg"] },
+			};
+			await publishEdition(w, "t", "<html>", pages, one);
+			expect(sendMediaGroup).not.toHaveBeenCalled();
+			expect(sendPhoto).toHaveBeenCalledWith(
+				"-1001234567890",
+				"https://img.example.com/2.jpg",
+				{ caption: "álbum", parse_mode: "HTML" },
+			);
+		});
+
+		it("retries the text once after the photos went out, so a rerun never repeats them", async () => {
+			sendMessage
+				.mockRejectedValueOnce(new Error("boom"))
+				.mockResolvedValue({});
+			const r = await runPublish(w, "t", "<html>", pages, media);
+			expect(sendMessage).toHaveBeenCalledTimes(2);
+			expect(r.chats["-1001234567890"]?.status).toBe("full");
+		});
+
+		it("does not retry the text when no photo was sent", async () => {
+			sendMessage.mockRejectedValue(new Error("boom"));
+			const r = await runPublish(w, "t", "<html>", pages);
+			expect(sendMessage).toHaveBeenCalledTimes(1);
+			expect(r.chats["-1001234567890"]?.status).toBe("failed");
+		});
+
+		it("sends no photo when the edition has none", async () => {
+			await publishEdition(w, "t", "<html>", pages);
+			expect(sendPhoto).not.toHaveBeenCalled();
+			expect(sendMediaGroup).not.toHaveBeenCalled();
+		});
 	});
 });

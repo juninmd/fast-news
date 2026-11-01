@@ -1,3 +1,5 @@
+import type { XTrend } from "./xTrends.js";
+
 export type EditionKind = "manha" | "meiodia" | "tarde" | "noite" | "especial";
 
 export interface EditionWindow {
@@ -112,4 +114,6 @@ export interface Edition {
 	totalArticles: number;
 	totalSources: number;
 	market: MarketSnapshot;
+	/** Live trending topics on X; absent when the source was unavailable. */
+	xTrends?: XTrend[];
 }

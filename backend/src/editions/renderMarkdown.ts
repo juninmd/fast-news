@@ -1,4 +1,5 @@
 import { directUrl } from "./escape.js";
+import { storyImage } from "./media.js";
 import { clipWords } from "./text.js";
 import { kindMark } from "./threadKind.js";
 import type { Edition, Headline, Story, Thread } from "./types.js";
@@ -46,11 +47,21 @@ function sources(ids: number[], known: Known): string {
 	return links.length ? `*Fontes: ${links.join(" · ")}*` : "";
 }
 
+/** Cover image of a story as a markdown image, or "" when none is usable. */
+function image(s: Story, known: Known): string {
+	const url = storyImage(s.fontes, known);
+	return url
+		? `![${mdEscape(clipWords(s.titulo, 120))}](<${url.replace(/>/g, "%3E")}>)`
+		: "";
+}
+
 function story(s: Story, known: Known, level: number): string {
 	const heading = "#".repeat(level);
+	const pic = image(s, known);
 	return [
 		s.chapeu ? `**${mdEscape(s.chapeu).toUpperCase()}**\n` : "",
 		`${heading} ${mdEscape(s.titulo)}`,
+		pic ? `\n${pic}` : "",
 		s.texto ? `\n${mdEscape(s.texto)}` : "",
 		`\n${sources(s.fontes, known)}`,
 	]
@@ -100,6 +111,13 @@ function numbers(e: Edition): string {
 	return rows.length ? `## Números\n\n${rows.join("\n")}` : "";
 }
 
+function xTrends(e: Edition): string {
+	const list = e.xTrends ?? [];
+	if (!list.length) return "";
+	const items = list.map((t) => `- [${mdEscape(t.name)}](<${t.url}>)`);
+	return `## Em alta no X\n\n${items.join("\n")}\n\n*Assuntos mais comentados no X (Brasil) no momento da edição, via GetDayTrends. Os links abrem a busca no X.*`;
+}
+
 function coverage(e: Edition): string {
 	const c = e.coverage;
 	const published = c.publishedArticles ?? c.selectedForAi;
@@ -146,6 +164,7 @@ export function renderEditionMarkdown(e: Edition): EditionMarkdown {
 		lead.chapeu ? `**${mdEscape(lead.chapeu).toUpperCase()}**` : "",
 		lead.linhaFina ? `*${mdEscape(lead.linhaFina)}*` : "",
 		`${LABEL[w.kind]} · ${date} · período ${range} (Brasília) · ${nf.format(e.totalArticles)} notícias de ${nf.format(e.totalSources)} fontes`,
+		image(lead, headlines),
 		coverage(e),
 		...lead.paragrafos.map(mdEscape),
 		lead.citacao
@@ -194,6 +213,7 @@ export function renderEditionMarkdown(e: Edition): EditionMarkdown {
 	const body = [
 		...cover,
 		numbers(e),
+		xTrends(e),
 		highlights,
 		checks,
 		threads(draft.fio, headlines),

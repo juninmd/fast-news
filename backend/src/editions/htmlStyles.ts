@@ -34,6 +34,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 body.noite .tick small.up{color:#4ade80}
 body.noite .tick small.down{color:#f87171}
 .thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:2px;margin:0 0 10px;display:block;background:var(--raised)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{display:inline-block;padding:6px 12px;border:1px solid var(--rule);border-radius:999px;font-weight:600;font-size:13px;line-height:1;color:inherit;text-decoration:none;background:var(--raised)}.chip:hover{border-color:var(--accent)}
+.thumb.hero{margin:0 0 16px;border-radius:4px;max-height:420px}
 .kicker{font:700 12.5px/1.2 var(--label);text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:0 0 6px}
 h2,h3,h4{text-wrap:balance;margin:0}
 .lead h2{font:750 clamp(34px,5.2vw,56px)/1.03 var(--serif);letter-spacing:-.015em}

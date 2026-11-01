@@ -61,6 +61,27 @@ describe("renderEditionHtml", () => {
 		expect(html).toContain('class="thumb"');
 	});
 
+	it("renders the lead photo as a hero without a referrer", () => {
+		const h = headline({ imageUrl: "https://example.com/lead.jpg" });
+		const html = renderEditionHtml(
+			edition(
+				draft({
+					manchete: {
+						titulo: "Capa",
+						texto: "",
+						fontes: [h.id],
+						linhaFina: "",
+						paragrafos: [],
+					},
+				}),
+				knownOf([h]),
+			),
+		);
+		expect(html).toContain('class="thumb hero"');
+		expect(html).toContain('referrerpolicy="no-referrer"');
+		expect(html).toContain('alt="Capa"');
+	});
+
 	it("drops a javascript: image URL instead of rendering it", () => {
 		const evilImage = headline({ imageUrl: "javascript:alert(1)" });
 		const html = renderEditionHtml(

@@ -86,4 +86,42 @@ describe("renderEditionMarkdown", () => {
 			"**Selic:** 13,75% *Fontes: [G1](<https://example.com/fio>)*",
 		);
 	});
+
+	it("shows the lead and story photos as markdown images", () => {
+		const lead = headline({ imageUrl: "https://img.example.com/lead.jpg" });
+		const other = headline({ imageUrl: "https://img.example.com/other.jpg" });
+		const out = renderEditionMarkdown(
+			edition(
+				draft({
+					manchete: {
+						titulo: "Capa",
+						texto: "",
+						fontes: [lead.id],
+						linhaFina: "",
+						paragrafos: [],
+					},
+					destaques: [{ titulo: "Outra [x]", texto: "", fontes: [other.id] }],
+				}),
+				knownOf([lead, other]),
+			),
+		);
+		expect(out.markdown).toContain(
+			"![Capa](<https://img.example.com/lead.jpg>)",
+		);
+		expect(out.markdown).toContain(
+			"![Outra \\[x\\]](<https://img.example.com/other.jpg>)",
+		);
+	});
+
+	it("never emits an image for an unsafe URL", () => {
+		const h = headline({ imageUrl: "javascript:alert(1)" });
+		const out = renderEditionMarkdown(
+			edition(
+				draft({ destaques: [{ titulo: "T", texto: "", fontes: [h.id] }] }),
+				knownOf([h]),
+			),
+		);
+		expect(out.markdown).not.toContain("![");
+		expect(out.markdown).not.toContain("javascript:");
+	});
 });

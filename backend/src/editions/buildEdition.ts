@@ -21,6 +21,7 @@ import type {
 	EditionWindow,
 	Headline,
 } from "./types.js";
+import { fetchXTrends } from "./xTrends.js";
 
 // Some pool backends loop in JSON mode; a cap turns that into a parse
 // failure instead of a call that never returns.
@@ -132,7 +133,7 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 	const onFront = [front.manchete, ...front.destaques].map((s) => s.titulo);
 	// Sections, extras and the market snapshot are optional: a failed call
 	// drops them, not the edition.
-	const [sections, extras, market] = await Promise.all([
+	const [sections, extras, market, xTrends] = await Promise.all([
 		generatePart(
 			sectionsSchema,
 			(r) => r.secoes.some((s) => s.materias.length + s.notas.length > 0),
@@ -151,6 +152,7 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 			onFront,
 		),
 		fetchMarketSnapshot(),
+		fetchXTrends(),
 	]);
 	const generatedSections = sections?.secoes ?? [];
 	const raw = {
@@ -244,5 +246,6 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 		totalArticles: all.length,
 		totalSources: new Set(all.map((h) => h.source)).size,
 		market,
+		...(xTrends.length ? { xTrends } : {}),
 	};
 }
