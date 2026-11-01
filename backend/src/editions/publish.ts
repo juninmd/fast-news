@@ -1,5 +1,10 @@
 import { config } from "../config/env.js";
 import { getBot } from "../services/telegram.js";
+import {
+	type Delivered,
+	NOT_DELIVERED,
+	type TelegramMedia,
+} from "./telegramMedia.js";
 import type { EditionWindow } from "./types.js";
 
 export type ChatDeliveryStatus = "full" | "summaryOnly" | "failed";
@@ -41,6 +46,7 @@ export function editionFilename(w: EditionWindow): string {
 	return `o-fio-${w.day}-${w.kind}.html`;
 }
 
+const MESSAGE_RETRY_DELAY_MS = 2000;
 const DOCUMENT_SEND_ATTEMPTS = 3;
 const DOCUMENT_RETRY_DELAY_MS = 4000;
 
@@ -142,12 +148,72 @@ export async function deliverEditionDocument(
 	return result;
 }
 
-/** Sends the summary message and the full newspaper file to every chat. */
+type Telegram = ReturnType<typeof getBot>["telegram"];
+
+/**
+ * Sends the cover photo and the story album. Telegram fetches the image URLs
+ * itself and rejects a dead or oversized one, so each part is best-effort:
+ * what fails is reported back and the text summary carries it instead.
+ */
+async function sendMedia(
+	telegram: Telegram,
+	chatId: string,
+	media: TelegramMedia | undefined,
+): Promise<Delivered> {
+	const delivered = { ...NOT_DELIVERED };
+	if (media?.cover) {
+		try {
+			await telegram.sendPhoto(chatId, media.cover.url, {
+				caption: media.cover.caption,
+				parse_mode: "HTML",
+			});
+			delivered.cover = true;
+		} catch (err) {
+			console.warn(
+				`[Edition] Cover photo skipped for ${chatId}: ${safeMessage(err)}`,
+			);
+		}
+	}
+	const album = media?.album;
+	if (album) {
+		try {
+			if (album.urls.length === 1)
+				await telegram.sendPhoto(chatId, album.urls[0] as string, {
+					caption: album.caption,
+					parse_mode: "HTML",
+				});
+			else
+				await telegram.sendMediaGroup(
+					chatId,
+					album.urls.map((url, i) => ({
+						type: "photo" as const,
+						media: url,
+						...(i === 0
+							? { caption: album.caption, parse_mode: "HTML" as const }
+							: {}),
+					})),
+				);
+			delivered.album = album.stories;
+		} catch (err) {
+			console.warn(
+				`[Edition] Album skipped for ${chatId}: ${safeMessage(err)}`,
+			);
+		}
+	}
+	return delivered;
+}
+
+/**
+ * Sends the photos, the summary message and (without a Pages link) the full
+ * newspaper file to every chat. `summary` may be a function of what the photos
+ * delivered, so the text never repeats a story a photo already told.
+ */
 export async function publishEdition(
 	w: EditionWindow,
-	summary: string,
+	summary: string | ((delivered: Delivered) => string),
 	html: string,
 	editionUrl?: string,
+	media?: TelegramMedia,
 ): Promise<PublishResult> {
 	if (!config.telegramEnabled || !config.telegramBotToken)
 		throw new Error("[Edition] Telegram is disabled or has no bot token");
@@ -174,7 +240,16 @@ export async function publishEdition(
 					],
 				};
 			}
-			await telegram.sendMessage(chatId, summary, options);
+			const delivered = await sendMedia(telegram, chatId, media);
+			const text = typeof summary === "function" ? summary(delivered) : summary;
+			// One retry: photos are already out, and a rerun of the whole edition would repeat them.
+			await telegram
+				.sendMessage(chatId, text, options)
+				.catch(async (err: unknown) => {
+					if (!delivered.cover && !delivered.album.length) throw err;
+					await new Promise((r) => setTimeout(r, MESSAGE_RETRY_DELAY_MS));
+					await telegram.sendMessage(chatId, text, options);
+				});
 		} catch (err) {
 			result.chats[chatId] = { status: "failed", error: safeMessage(err) };
 			continue;

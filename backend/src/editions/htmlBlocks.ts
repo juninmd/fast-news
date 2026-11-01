@@ -1,4 +1,5 @@
-import { directUrl, esc, safeUrl } from "./escape.js";
+import { directUrl, esc } from "./escape.js";
+import { storyImage } from "./media.js";
 import { hourLabels } from "./select.js";
 import { clipWords } from "./text.js";
 import { kindMark } from "./threadKind.js";
@@ -21,19 +22,22 @@ export function sources(ids: number[], known: Known): string {
 	return links.length ? `<span class="src">${links.join(" · ")}</span>` : "";
 }
 
-function thumb(ids: number[], known: Known): string {
-	const url = ids
-		.map((id) => known.get(id)?.imageUrl)
-		.map((u) => (u ? safeUrl(u) : null))
-		.find((u): u is string => Boolean(u));
+/** Cover image of a story; no-referrer keeps hotlink-protected CDNs serving it. */
+export function thumb(
+	ids: number[],
+	known: Known,
+	alt = "",
+	cls = "thumb",
+): string {
+	const url = storyImage(ids, known);
 	return url
-		? `<img class="thumb" src="${esc(url)}" alt="" loading="lazy" width="640" height="360">`
+		? `<img class="${cls}" src="${esc(url)}" alt="${esc(alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="640" height="360">`
 		: "";
 }
 
 export function story(s: Story, known: Known, tag = "article"): string {
 	const kicker = s.chapeu ? `<p class="kicker">${esc(s.chapeu)}</p>` : "";
-	return `<${tag}>${thumb(s.fontes, known)}${kicker}<h3>${esc(s.titulo)}</h3>${s.texto ? `<p>${esc(s.texto)}</p>` : ""}${sources(s.fontes, known)}</${tag}>`;
+	return `<${tag}>${thumb(s.fontes, known, s.titulo)}${kicker}<h3>${esc(s.titulo)}</h3>${s.texto ? `<p>${esc(s.texto)}</p>` : ""}${sources(s.fontes, known)}</${tag}>`;
 }
 
 export function brief(items: string[]): string {

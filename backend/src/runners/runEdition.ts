@@ -7,7 +7,10 @@ import { GitHubPagesPublisher } from "../editions/githubPages.js";
 import { publishEdition } from "../editions/publish.js";
 import { renderEditionHtml } from "../editions/renderHtml.js";
 import { renderEditionMarkdown } from "../editions/renderMarkdown.js";
-import { renderTelegramSummary } from "../editions/renderTelegram.js";
+import {
+	renderTelegramMedia,
+	renderTelegramSummary,
+} from "../editions/renderTelegram.js";
 import {
 	createEditionSnapshot,
 	hydrateSnapshot,
@@ -120,9 +123,10 @@ async function main(): Promise<number> {
 		}
 		const result = await publishEdition(
 			window,
-			renderTelegramSummary(edition, editionUrl),
+			(delivered) => renderTelegramSummary(edition, editionUrl, delivered),
 			html,
 			editionUrl,
+			renderTelegramMedia(edition),
 		);
 		const chats = Object.entries(result.chats);
 		delivered = chats.filter(([, c]) => c.status !== "failed").length;

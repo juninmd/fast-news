@@ -134,6 +134,8 @@ Tudo abaixo é **sem LLM**, exceto a tradução de títulos (cache permanente + 
 
 O backend gera quatro janelas editoriais (manhã, meio-dia, tarde e noite). O padrão compatível continua enviando resumo e HTML ao `TELEGRAM_CHAT_IDS`. O modo Pages gera um snapshot imutável, publica o jornal estático no GitHub Pages, verifica a edição e só então envia o resumo com o botão **Ler o jornal completo**. A página não consulta banco, API privada nem exige download.
 
+No Telegram, a edição chega como uma **foto de capa** (cabeçalho + manchete + todos os veículos que deram o fato), um **álbum** com as próximas matérias que têm imagem e o resumo em texto com o restante (mercado, destaques, fio). O texto não repete o que as fotos já contaram; se o Telegram não conseguir baixar uma imagem, aquele bloco volta para o texto. A mesma notícia publicada em vários sites aparece uma vez, com os veículos agrupados. O jornal (HTML e página VitePress) mostra a foto da manchete e das matérias.
+
 | Edição | Disparo do CronJob / fechamento do backend | Cobre |
 |---|---|---|
 | Manhã | 06h05 / 06h | 20h do dia anterior até 06h |
