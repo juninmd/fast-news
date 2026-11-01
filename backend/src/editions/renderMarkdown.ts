@@ -111,6 +111,13 @@ function numbers(e: Edition): string {
 	return rows.length ? `## Números\n\n${rows.join("\n")}` : "";
 }
 
+function xTrends(e: Edition): string {
+	const list = e.xTrends ?? [];
+	if (!list.length) return "";
+	const items = list.map((t) => `- [${mdEscape(t.name)}](<${t.url}>)`);
+	return `## Em alta no X\n\n${items.join("\n")}\n\n*Assuntos mais comentados no X (Brasil) no momento da edição, via GetDayTrends. Os links abrem a busca no X.*`;
+}
+
 function coverage(e: Edition): string {
 	const c = e.coverage;
 	const published = c.publishedArticles ?? c.selectedForAi;
@@ -206,6 +213,7 @@ export function renderEditionMarkdown(e: Edition): EditionMarkdown {
 	const body = [
 		...cover,
 		numbers(e),
+		xTrends(e),
 		highlights,
 		checks,
 		threads(draft.fio, headlines),

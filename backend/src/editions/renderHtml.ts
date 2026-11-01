@@ -8,6 +8,7 @@ import {
 	story,
 	threads,
 	thumb,
+	xTrends,
 } from "./htmlBlocks.js";
 import { EDITION_CSS, QUIZ_SCRIPT } from "./htmlStyles.js";
 import type { Edition } from "./types.js";
@@ -140,7 +141,7 @@ export function renderEditionHtml(e: Edition, continuation = false): string {
 <div class="ear r"><b>${esc(range)}</b>período coberto, horário de Brasília</div></div>
 <div class="folio"><span class="ed">${edLabel}</span><span>${esc(formatLocalDate(w.day))}</span><span>fast-news</span></div></header>
 ${coverageNotice(e)}
-${continuation ? "" : market(e) + ticker(e) + front(e) + threads(draft.fio, e.headlines)}${sections(e)}
+${continuation ? "" : market(e) + ticker(e) + xTrends(e.xTrends) + front(e) + threads(draft.fio, e.headlines)}${sections(e)}
 ${!continuation && (draft.leve.length || draft.quiz.length) ? `<section class="sec"><div class="grid2"><div>${draft.leve.length ? sectionHead(closing) + brief(draft.leve.map(esc)) : ""}</div>${quiz(draft.quiz)}</div></section>` : ""}
 ${continuation ? "" : pulse(e.hourly, w.start)}
 <footer class="colophon" role="contentinfo">O Fio é montado automaticamente a partir das notícias captadas pelo fast-news. Os links levam à matéria original.</footer>

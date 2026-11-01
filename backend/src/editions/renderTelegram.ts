@@ -74,6 +74,13 @@ function figuresLine(e: Edition): string {
 		: "";
 }
 
+function xTrendsLine(e: Edition): string {
+	const list = (e.xTrends ?? []).slice(0, 6);
+	return list.length
+		? `📈 <b>Em alta no X</b>\n${list.map((t) => `<a href="${esc(t.url)}">${esc(t.name)}</a>`).join(" · ")}`
+		: "";
+}
+
 function storyLine(e: Edition, s: Story): string {
 	const by = outlets(s.fontes, e.headlines);
 	return `▪️ <b>${esc(clipWords(s.titulo, 140))}</b>${by ? `\n     <i>${by}</i>` : ""}`;
@@ -116,6 +123,8 @@ function build(
 
 	const facts = [marketLine(e), figuresLine(e)].filter(Boolean);
 	if (facts.length) parts.push(...(parts.length ? [""] : []), ...facts);
+	const trending = xTrendsLine(e);
+	if (trending) parts.push(...(parts.length ? [""] : []), trending);
 
 	const inAlbum = new Set(delivered.album);
 	const highlights = [

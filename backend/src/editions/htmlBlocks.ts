@@ -5,6 +5,7 @@ import { clipWords } from "./text.js";
 import { kindMark } from "./threadKind.js";
 import type { Headline, QuizItem, Story, Thread } from "./types.js";
 import { formatLocalTime } from "./window.js";
+import type { XTrend } from "./xTrends.js";
 
 type Known = Map<number, Headline>;
 
@@ -71,6 +72,18 @@ export function threads(list: Thread[], known: Known): string {
 		.join("");
 	return `<section class="sec">${sectionHead("O fio do dia")}<div class="thread">${cols}</div>
 <p class="note">Horários em que cada notícia chegou à redação do fast-news, não os de publicação na fonte.</p></section>`;
+}
+
+export function xTrends(list: XTrend[] | undefined): string {
+	if (!list?.length) return "";
+	const chips = list
+		.map(
+			(t) =>
+				`<a class="chip" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)}</a>`,
+		)
+		.join("");
+	return `<section class="sec">${sectionHead("Em alta no X")}<div class="chips">${chips}</div>
+<p class="note">Assuntos mais comentados no X (Brasil) no momento da edição, via GetDayTrends.</p></section>`;
 }
 
 export function pulse(hourly: number[], start: Date): string {

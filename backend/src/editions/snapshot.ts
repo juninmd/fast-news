@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Edition, EditionKind, EditionWindow, Headline } from "./types.js";
+import { sanitizeXTrends, type XTrend } from "./xTrends.js";
 
 export const EDITION_SNAPSHOT_SCHEMA = 1;
 export const EDITION_TEMPLATE_VERSION = 1;
@@ -19,6 +20,8 @@ export interface EditionSnapshot {
 	totalArticles: number;
 	totalSources: number;
 	market: Edition["market"];
+	/** Optional: snapshots made before the X section do not carry it. */
+	xTrends?: XTrend[];
 }
 
 export interface SnapshotEnvelope {
@@ -84,6 +87,7 @@ export function createEditionSnapshot(
 		totalArticles: edition.totalArticles,
 		totalSources: edition.totalSources,
 		market: edition.market,
+		...(edition.xTrends?.length ? { xTrends: edition.xTrends } : {}),
 	};
 	return { snapshot, checksum: checksumSnapshot(snapshot) };
 }
@@ -220,5 +224,8 @@ export function hydrateSnapshot(envelope: SnapshotEnvelope): Edition {
 		totalArticles: snapshot.totalArticles,
 		totalSources: snapshot.totalSources,
 		market: snapshot.market,
+		...(snapshot.xTrends?.length
+			? { xTrends: sanitizeXTrends(snapshot.xTrends) }
+			: {}),
 	};
 }
