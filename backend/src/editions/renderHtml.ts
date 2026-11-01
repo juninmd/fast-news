@@ -7,6 +7,8 @@ import {
 	sources,
 	story,
 	threads,
+	thumb,
+	xTrends,
 } from "./htmlBlocks.js";
 import { EDITION_CSS, QUIZ_SCRIPT } from "./htmlStyles.js";
 import type { Edition } from "./types.js";
@@ -36,7 +38,7 @@ function front(e: Edition): string {
 			)}</article>`
 		: "";
 	return `<section class="front"><article class="lead">
-${manchete.chapeu ? `<p class="kicker">${esc(manchete.chapeu)}</p>` : ""}<h2>${esc(manchete.titulo)}</h2>
+${thumb(manchete.fontes, known, manchete.titulo, "thumb hero")}${manchete.chapeu ? `<p class="kicker">${esc(manchete.chapeu)}</p>` : ""}<h2>${esc(manchete.titulo)}</h2>
 ${manchete.linhaFina ? `<p class="deck">${esc(manchete.linhaFina)}</p>` : ""}
 <div class="cols">${paragraphs}</div>${quote}${sources(manchete.fontes, known)}</article>
 <aside class="rail">${destaques.map((s) => story(s, known)).join("")}${checks}</aside></section>`;
@@ -139,7 +141,7 @@ export function renderEditionHtml(e: Edition, continuation = false): string {
 <div class="ear r"><b>${esc(range)}</b>período coberto, horário de Brasília</div></div>
 <div class="folio"><span class="ed">${edLabel}</span><span>${esc(formatLocalDate(w.day))}</span><span>fast-news</span></div></header>
 ${coverageNotice(e)}
-${continuation ? "" : market(e) + ticker(e) + front(e) + threads(draft.fio, e.headlines)}${sections(e)}
+${continuation ? "" : market(e) + ticker(e) + xTrends(e.xTrends) + front(e) + threads(draft.fio, e.headlines)}${sections(e)}
 ${!continuation && (draft.leve.length || draft.quiz.length) ? `<section class="sec"><div class="grid2"><div>${draft.leve.length ? sectionHead(closing) + brief(draft.leve.map(esc)) : ""}</div>${quiz(draft.quiz)}</div></section>` : ""}
 ${continuation ? "" : pulse(e.hourly, w.start)}
 <footer class="colophon" role="contentinfo">O Fio é montado automaticamente a partir das notícias captadas pelo fast-news. Os links levam à matéria original.</footer>

@@ -64,6 +64,8 @@ export default defineConfig({
 	base: process.env["VITEPRESS_BASE"] ?? "/fast-news/",
 	ignoreDeadLinks: true,
 	cleanUrls: true,
+	// Remote news photos: many CDNs block hotlinks that carry a Referer.
+	head: [["meta", { name: "referrer", content: "no-referrer" }]],
 	lastUpdated: true,
 	srcExclude: ["**/README.md"],
 	themeConfig: {
