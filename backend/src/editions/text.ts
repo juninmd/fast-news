@@ -18,6 +18,30 @@ export function clipWords(value: string | undefined, max: number): string {
 	return `${cut.replace(/[\s,;:.\-–—(]+$/, "")}…`;
 }
 
+const MIN_SENTENCE = 50;
+// A period then a capital, digit or quote; "Dr. Fauci" is checked by ABBREVIATION.
+const SENTENCE_END = /[.!?](?=\s+[\p{Lu}\p{N}"“‘'(])/gu;
+// A lone initial ("F. Kennedy") or a common abbreviation before the period.
+const ABBREVIATION =
+	/(?:^|[\s(])(?:\p{L}|dr|dra|sr|sra|prof|av|rua|inc|ltda|cia|etc|vs|mr|mrs|ms|st|jr|u\.s|u\.k)\.$/iu;
+
+/**
+ * Shortens to `max` characters at a sentence end when one fits after the
+ * first few words, else at a word with "…". A half sentence ending in "…"
+ * reads as a mistake; a shorter whole sentence does not.
+ */
+export function clipSentence(text: string, max: number): string {
+	const t = text.replace(/\s+/g, " ").trim();
+	if (t.length <= max) return t;
+	let cut = -1;
+	// One char past the limit, so a period right at the cut is judged by what follows it.
+	for (const m of t.slice(0, max + 1).matchAll(SENTENCE_END)) {
+		const at = m.index ?? 0;
+		if (at < max && !ABBREVIATION.test(t.slice(0, at + 1))) cut = at;
+	}
+	return cut + 1 >= MIN_SENTENCE ? t.slice(0, cut + 1) : clipWords(t, max);
+}
+
 const digitRuns = (title: string): string[] => title.match(/\d+/g) ?? [];
 
 /** Precomputed form of a title for comparing it against many others. */
