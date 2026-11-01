@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.theguardian.com/us/technology/rss",
+		category: "Tecnologia",
+		company: "The Guardian",
+	},
+	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
 		category: "Negócios",
 	},
