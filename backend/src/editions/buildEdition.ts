@@ -15,6 +15,7 @@ import {
 	pickForPrompt,
 } from "./select.js";
 import { fetchStoryThreads, mergeThreads } from "./storyThreads.js";
+import { translateDraft } from "./translate.js";
 import type {
 	Edition,
 	EditionDraft,
@@ -214,6 +215,11 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 				news.length,
 			)
 		: editorial;
+	// Polish only: if it throws, the untranslated edition still ships.
+	const published = await translateDraft(draft).catch((error) => {
+		console.warn("[Edition] Translation failed; keeping originals", error);
+		return draft;
+	});
 	const represented = new Set([
 		...draft.manchete.fontes,
 		...draft.destaques.flatMap((story) => story.fontes),
@@ -225,7 +231,7 @@ export async function buildEdition(window: EditionWindow): Promise<Edition> {
 
 	return {
 		window,
-		draft,
+		draft: published,
 		headlines: known,
 		checagens,
 		coverage: {
