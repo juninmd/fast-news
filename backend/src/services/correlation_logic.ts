@@ -14,7 +14,11 @@ import { pickStoryMatch, type StoryCandidate } from "./storyMatch.js";
 export const SIMILARITY_THRESHOLD = 0.62;
 
 const StorySchema = z.object({
-	title: z.string().describe("Título conciso da história (max 80 chars)"),
+	title: z
+		.string()
+		.describe(
+			"Título conciso da história em português do Brasil (max 80 chars)",
+		),
 	summary: z.string().describe("Resumo em 2-3 frases do que aconteceu"),
 	impactLevel: z.enum(["low", "medium", "high", "critical"]),
 	worldImpact: z.string().describe("Impactos no mundo em 3-4 frases"),
@@ -31,7 +35,9 @@ const StorySchema = z.object({
 	]),
 	whatChanged: z
 		.string()
-		.describe("O que mudou nesta notícia vs estado anterior da história"),
+		.describe(
+			"O fato novo desta notícia em UMA frase de até 180 caracteres, em português do Brasil, escrita como notícia (sujeito + verbo + dado). Nunca fale do artigo ou do estado anterior, nem use símbolos no início.",
+		),
 });
 
 export async function buildArticleRelations(articleId: string): Promise<void> {
@@ -256,6 +262,7 @@ async function enrichStory(
 		);
 
 		const contextPrompt = `Analise este artigo no contexto de uma história de notícias em evolução.
+Responda sempre em português do Brasil, traduzindo o que estiver em outro idioma.
 HISTÓRIA ATUAL: ${prev.rows[0]?.title ?? "Nova história"}
 ESTADO ANTERIOR: ${prev.rows[0]?.summary ?? "Primeira notícia desta história"}
 

@@ -1,5 +1,6 @@
 import { isPollutedProse } from "./proseGuards.js";
-import { clipWords, TitleIndex } from "./text.js";
+import { relatedIds } from "./relevance.js";
+import { clipSentence, clipWords, TitleIndex } from "./text.js";
 import type {
 	EditionDraft,
 	Figure,
@@ -21,7 +22,11 @@ function validIds(ids: number[], known: Map<number, Headline>): number[] {
 }
 
 function story(s: Story, known: Map<number, Headline>): Story | null {
-	const fontes = validIds(s.fontes, known);
+	const fontes = relatedIds(
+		validIds(s.fontes, known),
+		known,
+		`${s.titulo} ${s.texto}`,
+	);
 	const titulo = clip(s.titulo, 240);
 	if (!titulo || fontes.length === 0) return null;
 	if (isPollutedProse(s.titulo) || isPollutedProse(s.texto)) return null;
@@ -174,7 +179,7 @@ export function threads(
 				})
 				.map((e) => ({
 					fonte: e.fonte,
-					texto: clip(e.texto, 200),
+					texto: clipSentence(e.texto, 200),
 					...(e.tipo ? { tipo: e.tipo } : {}),
 				}))
 				.sort(
