@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://feeds.arstechnica.com/arstechnica/index",
+		category: "Tecnologia",
+	},
+
+	{
 		url: "https://www.theguardian.com/us/technology/rss",
 		category: "Tecnologia",
 		company: "The Guardian",
