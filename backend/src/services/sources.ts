@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://wccftech.com/feed/",
+		category: "Tecnologia",
+		company: "Wccftech",
+	},
+	{
 		url: "https://developer.apple.com/news/rss/news.rss",
 		category: "Tecnologia",
 	},
