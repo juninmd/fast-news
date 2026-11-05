@@ -3,6 +3,16 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{
+		url: "https://rss.slashdot.org/Slashdot/slashdotMain",
+		category: "Tecnologia",
+		company: "Slashdot",
+	},
+	{
+		url: "https://feeds.macrumors.com/MacRumors-All",
+		category: "Tecnologia",
+		company: "MacRumors",
+	},
+	{
 		url: "https://wccftech.com/feed/",
 		category: "Tecnologia",
 		company: "Wccftech",
