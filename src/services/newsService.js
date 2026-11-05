@@ -794,3 +794,9 @@ export const fetchTrendingTopics = async (apiKey = null) => {
 		return [];
 	}
 };
+
+export {
+	FALLBACK_TWITTER_TOPICS,
+	fetchTwitterNewsArticle,
+	fetchTwitterTrends,
+} from "./twitterTrendsClient";

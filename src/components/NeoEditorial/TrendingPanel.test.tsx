@@ -72,4 +72,31 @@ describe("TrendingPanel", () => {
 		render(<TrendingPanel onSelectTerm={vi.fn()} />);
 		expect(await screen.findByText(/Sem temas em alta/)).toBeInTheDocument();
 	});
+	it("renders X (Twitter) trends tab and sample tweets", async () => {
+		vi.spyOn(globalThis, "fetch").mockResolvedValue(
+			new Response(JSON.stringify(report)),
+		);
+		const onSelectTerm = vi.fn();
+		const onSelectArticle = vi.fn();
+		render(
+			<TrendingPanel
+				onSelectTerm={onSelectTerm}
+				onSelectArticle={onSelectArticle}
+			/>,
+		);
+
+		const twitterTab = screen.getByRole("tab", { name: /X \(Twitter\)/i });
+		await userEvent.click(twitterTab);
+
+		expect(
+			await screen.findByText(/Trending Topics Brasil/i),
+		).toBeInTheDocument();
+		expect(screen.getByText("#BetsNuncaMais")).toBeInTheDocument();
+		expect(screen.getByText(/Vozes no X/i)).toBeInTheDocument();
+		expect(screen.getByText(/Economia Popular/i)).toBeInTheDocument();
+
+		const readNewsBtn = screen.getByRole("button", { name: /Ler notícia/i });
+		await userEvent.click(readNewsBtn);
+		expect(onSelectArticle).toHaveBeenCalledWith("twitter-trends-today");
+	});
 });
