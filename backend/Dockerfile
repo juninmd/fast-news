@@ -25,3 +25,6 @@ ENV NODE_ENV=production
 EXPOSE 3001
 
 CMD ["node", "dist/index.js"]
+
+USER node
+ # DS-0002
