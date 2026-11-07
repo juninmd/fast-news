@@ -1,3 +1,7 @@
+import { extractArticleFromHtml } from "@juninmd/digest-kit/core";
+
+export { extractArticleFromHtml };
+
 const STOP_SECTIONS = [
 	"leia tambem",
 	"leia também",
@@ -73,7 +77,7 @@ function cleanLine(line: string): string {
 		.trim();
 }
 
-function extractArticleText(markdown: string): string {
+export function extractArticleText(markdown: string): string {
 	const lines = stripReaderChrome(markdown).split("\n").map(cleanLine);
 	const picked: string[] = [];
 	for (const line of lines) {
@@ -89,10 +93,45 @@ function extractArticleText(markdown: string): string {
 		.trim();
 }
 
+/**
+ * Extracts and cleans article markdown text directly from raw HTML using @juninmd/digest-kit.
+ */
+export function extractArticleFromHtmlContent(html: string): string {
+	const extracted = extractArticleFromHtml(html);
+	if (!extracted?.contentMarkdown) return "";
+	return extractArticleText(extracted.contentMarkdown);
+}
+
 export async function fetchFullArticle(url: string): Promise<string> {
 	const ac = new AbortController();
 	const t = setTimeout(() => ac.abort(), 15_000);
 	try {
+		// 1. Direct fetch using Readability from @juninmd/digest-kit
+		try {
+			const directResp = await fetch(url, {
+				signal: ac.signal,
+				headers: {
+					"User-Agent":
+						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+					Accept:
+						"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+				},
+			});
+			if (directResp.ok) {
+				const contentType = directResp.headers.get("content-type") || "";
+				if (contentType.includes("html") || contentType.includes("text")) {
+					const html = await directResp.text();
+					const parsed = extractArticleFromHtmlContent(html);
+					if (parsed && parsed.length > 200) {
+						return parsed;
+					}
+				}
+			}
+		} catch {
+			// Fallback to r.jina.ai reader below
+		}
+
+		// 2. Fallback to r.jina.ai
 		const resp = await fetch(`https://r.jina.ai/${url}`, {
 			signal: ac.signal,
 			headers: { Accept: "text/plain" },
