@@ -16,6 +16,7 @@ import {
 	toExcerpt,
 } from "../../services/topStories.js";
 import { getTrends } from "../../services/trendsStore.js";
+import { fetchLiveTwitterTrends } from "../../services/twitterTrends.js";
 
 export const newsRouter: Router = Router();
 
@@ -317,6 +318,46 @@ newsRouter.get("/trends", async (req: Request, res: Response) => {
 	}
 });
 
+// Twitter / X Trending topics with explanations, sample tweets, and editorial news piece
+newsRouter.get("/twitter-trends", async (_req: Request, res: Response) => {
+	try {
+		const cacheKey = "news:twitter:trends";
+		const cached = await cacheGet(cacheKey);
+		if (cached) return res.json(cached);
+
+		const report = await fetchLiveTwitterTrends();
+		await cacheSet(cacheKey, report, 300);
+		return res.json(report);
+	} catch (err) {
+		console.error("[news] twitter-trends failed:", (err as Error).message);
+		return res.status(500).json({ error: "Failed to fetch Twitter trends" });
+	}
+});
+
+// Get the Twitter trends editorial story formatted as a news article
+newsRouter.get(
+	"/twitter-trends/article",
+	async (_req: Request, res: Response) => {
+		try {
+			const cacheKey = "news:twitter:trends";
+			let report = await cacheGet<{ newsArticle: unknown }>(cacheKey);
+			if (!report) {
+				report = await fetchLiveTwitterTrends();
+				await cacheSet(cacheKey, report, 300);
+			}
+			return res.json(report.newsArticle);
+		} catch (err) {
+			console.error(
+				"[news] twitter-trends article failed:",
+				(err as Error).message,
+			);
+			return res
+				.status(500)
+				.json({ error: "Failed to build Twitter trends article" });
+		}
+	},
+);
+
 newsRouter.get("/categories", async (_req: Request, res: Response) => {
 	const cached = await cacheGet("news:categories");
 	if (cached) return res.json(cached);
@@ -330,6 +371,36 @@ newsRouter.get("/categories", async (_req: Request, res: Response) => {
 
 newsRouter.get("/:id", async (req: Request, res: Response) => {
 	const { id } = req.params;
+	if (
+		id === "twitter-trends" ||
+		id === "twitter-trends-today" ||
+		id === "x-trending-topics-brasil"
+	) {
+		const report = await fetchLiveTwitterTrends();
+		const article = report.newsArticle;
+		return res.json({
+			id: article.id,
+			title: article.title,
+			summary: article.summary,
+			content: article.content,
+			url: article.url,
+			source: article.source,
+			category: article.category,
+			company: "X / Twitter Brasil",
+			published_at: article.publishedAt,
+			image_url: article.imageUrl,
+			author: article.author,
+			tags: ["Twitter", "X", "Trending Topics", "Brasil", "Debate Público"],
+			word_count: article.content.split(" ").length,
+			sentiment: "neutral",
+			importance_score: 95,
+			fake_news_score: 5,
+			political_bias: "balanced",
+			is_militant: false,
+			has_incoherence: false,
+			credibility_flags: [],
+		});
+	}
 	if (!id || typeof id !== "string" || !UUID.test(id))
 		return res.status(404).json({ error: "Article not found" });
 
@@ -379,6 +450,13 @@ newsRouter.get("/:id", async (req: Request, res: Response) => {
 
 newsRouter.get("/:id/related", async (req: Request, res: Response) => {
 	const { id } = req.params;
+	if (
+		id === "twitter-trends" ||
+		id === "twitter-trends-today" ||
+		id === "x-trending-topics-brasil"
+	) {
+		return res.json([]);
+	}
 	if (!id || typeof id !== "string" || !UUID.test(id))
 		return res.status(404).json({ error: "Article not found" });
 
