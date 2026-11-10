@@ -3,9 +3,9 @@ import "@fontsource-variable/jetbrains-mono";
 import "@fontsource-variable/manrope";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import { installNativeFetch } from "./apiBase";
-import Root from "./Root";
+import "./styles/index.css";
+import Root from "./app/Root";
+import { installNativeFetch } from "./lib/apiBase";
 
 installNativeFetch();
 

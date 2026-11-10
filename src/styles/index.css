@@ -1,0 +1,132 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+@layer base {
+	:root {
+		/* Notch/gesture-bar insets: the CSS env() value, or the variable Capacitor injects on older Android WebViews. */
+		--sat: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+		--sab: max(
+			env(safe-area-inset-bottom, 0px),
+			var(--safe-area-inset-bottom, 0px)
+		);
+		/* Unbleached paper — not pure white, reduces glare, reads as newsprint. */
+		--canvas: #eef0ea;
+		--panel: #e4e7de;
+		--strong: #191b16;
+		--muted: #5b5f52;
+		--faint: #8b8f7e;
+		--ink: rgba(25, 27, 22, 0.14);
+		--bg-primary: var(--canvas);
+		--bg-secondary: var(--panel);
+		--bg-tertiary: #daddd2;
+		--text-primary: var(--strong);
+		--text-secondary: var(--muted);
+		--border-subtle: var(--ink);
+		/* Signal blue: reserved for live/breaking/interactive state only. */
+		--accent-primary: #1f4fd6;
+		/* Wire-verified green: credibility, confirmed facts. */
+		--accent-secondary: #15794d;
+		/* Alert red: corrections, urgent flags. */
+		--accent-tertiary: #b3311f;
+		--accent-glow: rgba(31, 79, 214, 0.18);
+		--glass-fill: var(--panel);
+		--glass-edge: var(--ink);
+		--bg-gradient: var(--canvas);
+	}
+
+	.dark {
+		/* Deep ink navy — not true black, keeps color temperature. */
+		--canvas: #12140f;
+		--panel: #1a1d16;
+		--strong: #edeee6;
+		--muted: #9a9d8d;
+		--faint: #676a5c;
+		--ink: rgba(237, 238, 230, 0.12);
+		--bg-primary: var(--canvas);
+		--bg-secondary: var(--panel);
+		--bg-tertiary: #23261d;
+		--text-primary: var(--strong);
+		--text-secondary: var(--muted);
+		--border-subtle: var(--ink);
+		--accent-primary: #5b86ff;
+		--accent-secondary: #3ecb8a;
+		--accent-tertiary: #ff6b57;
+		--accent-glow: rgba(91, 134, 255, 0.22);
+		--glass-fill: var(--panel);
+		--glass-edge: var(--ink);
+		--bg-gradient: var(--canvas);
+	}
+
+	body {
+		background: var(--bg-gradient);
+		min-height: 100vh;
+	}
+
+	/* WCAG 2.4.11 Focus Appearance: visible 2px accent outline on every interactive element */
+	:focus-visible {
+		outline: 2px solid var(--accent-primary);
+		outline-offset: 2px;
+	}
+}
+
+@layer utilities {
+	/* Flat wire-service surface: a hairline rule, no blur, no glow.
+	   Kept the .glass class name so existing consumers don't break,
+	   but the visual language is now print-flat, not frosted. */
+	.glass {
+		@apply relative border border-border-subtle bg-bg-secondary;
+	}
+
+	.wire-rule {
+		@apply border-t border-border-subtle;
+	}
+
+	.dispatch-index {
+		@apply font-mono text-[11px] tabular-nums text-text-secondary;
+	}
+
+	.neo-icon {
+		@apply inline-flex h-10 w-10 items-center justify-center border border-ink bg-panel text-muted transition-colors hover:border-accent-primary/50 hover:text-accent-primary;
+	}
+
+	.neo-action {
+		@apply inline-flex items-center gap-2 border border-accent-primary/40 bg-accent-primary/10 px-3 py-2 text-sm font-semibold text-accent-primary transition-colors hover:border-accent-primary hover:bg-accent-primary/15;
+	}
+
+	.neo-chip {
+		@apply shrink-0 border border-ink bg-panel px-3 py-2 text-sm font-semibold text-muted transition-colors hover:border-accent-primary/50 hover:text-strong;
+	}
+
+	.neo-tile {
+		@apply overflow-hidden border bg-panel transition-colors duration-150 hover:border-accent-primary/50;
+	}
+
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
+
+	.line-clamp-2 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.line-clamp-3 {
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+	.hide-mobile {
+		display: none !important;
+	}
+}
