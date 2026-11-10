@@ -1,4 +1,6 @@
-export async function sendArticleToTelegram(articleId) {
+export async function sendArticleToTelegram(
+	articleId: string,
+): Promise<unknown> {
 	const res = await fetch(
 		`/api/telegram/articles/${encodeURIComponent(articleId)}/send`,
 		{
@@ -7,7 +9,7 @@ export async function sendArticleToTelegram(articleId) {
 		},
 	);
 	if (!res.ok) {
-		const err = await res.json().catch(() => ({}));
+		const err = (await res.json().catch(() => ({}))) as { error?: string };
 		throw new Error(err.error || "Telegram send failed");
 	}
 	return res.json();

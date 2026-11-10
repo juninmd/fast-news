@@ -66,8 +66,7 @@ function App() {
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [recentSearches, setRecentSearches] = useState<string[]>([]);
-	// @ts-ignore
-	const [toast, setToast] = useState(null);
+	const [toast, setToast] = useState<{ message: string } | null>(null);
 	const { theme, toggleTheme } = useTheme();
 	const { markRead, history: readHistory } = useReadingHistory();
 	const { bookmarks, isBookmarked } = useBookmarks();
@@ -135,17 +134,17 @@ function App() {
 	}, []);
 
 	const handleBookmark = useCallback(() => {
-		setToast({ message: "Article saved!", type: "success" });
+		setToast({ message: "Article saved!" });
 	}, []);
 
 	const handleShare = useCallback(() => {
 		navigator.clipboard.writeText(window.location.href);
-		setToast({ message: "Link copied!", type: "success" });
+		setToast({ message: "Link copied!" });
 	}, []);
 
 	const handleSummarize = useCallback(
 		async (id: string, title?: string) => {
-			setToast({ message: "Analisando credibilidade...", type: "success" });
+			setToast({ message: "Analisando credibilidade..." });
 			try {
 				await fetch(`/api/news/${id}/credibility`, { method: "POST" });
 			} catch {

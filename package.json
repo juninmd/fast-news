@@ -12,6 +12,7 @@
 		"news-agent": "node scripts/news-agent.js",
 		"start-agent": "node scripts/news-agent.js --loop",
 		"lint": "biome check --write .",
+		"typecheck": "tsc --noEmit",
 		"format": "biome format --write .",
 		"preview": "vite preview",
 		"test": "vitest",
@@ -70,6 +71,7 @@
 		"globals": "^17.7.0",
 		"jsdom": "^29.1.1",
 		"msw": "^2.14.6",
+		"typescript": "^6.0.3",
 		"vitepress": "^1.6.4",
 		"vitest": "^4.0.17",
 		"vue": "^3.5.43"

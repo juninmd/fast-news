@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
+import { isNativeApp } from "../lib/apiBase";
 
 const QUERY = "(max-width: 767px)";
 
-function isNative(): boolean {
-	return !!(
-		globalThis as { Capacitor?: { isNativePlatform?: () => boolean } }
-	).Capacitor?.isNativePlatform?.();
-}
-
 function matches(): boolean {
-	return isNative() || (window.matchMedia?.(QUERY).matches ?? false);
+	return isNativeApp() || (window.matchMedia?.(QUERY).matches ?? false);
 }
 
 /** Phones and the native app get the mobile shell; wider screens keep the desktop layout. */

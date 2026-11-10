@@ -5,19 +5,24 @@ export const API_URL = (
 	import.meta.env.VITE_API_URL || "https://fast-news.antonio-code.duckdns.org"
 ).replace(/\/+$/, "");
 
-const isNative = () => !!globalThis.Capacitor?.isNativePlatform?.();
+type FetchInput = Parameters<typeof fetch>[0];
+type PatchedFetch = typeof fetch & { __fastNews?: boolean };
 
-export function resolveApiUrl(input) {
+export const isNativeApp = (): boolean =>
+	!!globalThis.Capacitor?.isNativePlatform?.();
+
+export function resolveApiUrl<T extends FetchInput>(input: T): T | string {
 	if (typeof input === "string" && /^\/(api\/|health)/.test(input)) {
 		return `${API_URL}${input}`;
 	}
 	return input;
 }
 
-export function installNativeFetch() {
-	if (!isNative() || globalThis.fetch.__fastNews) return;
+export function installNativeFetch(): void {
+	if (!isNativeApp() || (globalThis.fetch as PatchedFetch).__fastNews) return;
 	const original = globalThis.fetch.bind(globalThis);
-	const patched = (input, init) => original(resolveApiUrl(input), init);
+	const patched: PatchedFetch = (input, init) =>
+		original(resolveApiUrl(input), init);
 	patched.__fastNews = true;
 	globalThis.fetch = patched;
 }

@@ -3,7 +3,7 @@ import { API_URL, installNativeFetch, resolveApiUrl } from "./apiBase";
 
 describe("apiBase", () => {
 	afterEach(() => {
-		delete globalThis.Capacitor;
+		globalThis.Capacitor = undefined;
 		vi.restoreAllMocks();
 	});
 

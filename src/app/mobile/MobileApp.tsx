@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTheme } from "../../hooks/useTheme";
+import { isNativeApp } from "../../lib/apiBase";
 import { ReaderScreen } from "./ReaderScreen";
 import { SavedScreen } from "./SavedScreen";
 import { SearchScreen } from "./SearchScreen";
@@ -50,12 +51,7 @@ export default function MobileApp() {
 
 	// Android back button: close the reader, then go back to Today, then leave the app.
 	useEffect(() => {
-		const cap = (
-			globalThis as {
-				Capacitor?: { isNativePlatform?: () => boolean };
-			}
-		).Capacitor;
-		if (!cap?.isNativePlatform?.()) return;
+		if (!isNativeApp()) return;
 		let remove: (() => void) | undefined;
 		let cancelled = false;
 		import("@capacitor/app").then(({ App }) =>

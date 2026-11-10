@@ -1,11 +1,8 @@
-const isNative = () =>
-	!!(
-		globalThis as { Capacitor?: { isNativePlatform?: () => boolean } }
-	).Capacitor?.isNativePlatform?.();
+import { isNativeApp } from "../../lib/apiBase";
 
 /** Opens the original story in the system browser (a plain tab on the web). */
 export async function openExternal(url: string): Promise<void> {
-	if (isNative()) {
+	if (isNativeApp()) {
 		const { Browser } = await import("@capacitor/browser");
 		await Browser.open({ url });
 		return;
@@ -19,7 +16,7 @@ export async function shareLink(
 	url: string,
 ): Promise<"shared" | "copied" | "failed"> {
 	try {
-		if (isNative()) {
+		if (isNativeApp()) {
 			const { Share } = await import("@capacitor/share");
 			await Share.share({ title, url });
 			return "shared";
