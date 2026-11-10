@@ -1,0 +1,34 @@
+
+> fast-news@0.0.0 build /home/user/fast-news
+> vite build
+
+vite v8.3.6 building client environment for production...
+transforming...
+✓ 1840 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                          0.54 kB │ gzip:  0.34 kB
+dist/assets/jetbrains-mono-vietnamese-wght-normal-Bt-aOZkq.woff2         7.50 kB
+dist/assets/manrope-vietnamese-wght-normal-usUDDRr7.woff2                8.52 kB
+dist/assets/bricolage-grotesque-vietnamese-wght-normal-BUzh504Q.woff2    8.60 kB
+dist/assets/jetbrains-mono-greek-wght-normal-Bw9x6K1M.woff2              9.00 kB
+dist/assets/manrope-greek-wght-normal-DL7QRZyv.woff2                     9.44 kB
+dist/assets/jetbrains-mono-cyrillic-wght-normal-D73BlboJ.woff2          12.10 kB
+dist/assets/manrope-cyrillic-wght-normal-Dvxsihut.woff2                 14.50 kB
+dist/assets/manrope-latin-ext-wght-normal-Ch3YOpNY.woff2                15.12 kB
+dist/assets/jetbrains-mono-latin-ext-wght-normal-DBQx-q_a.woff2         15.19 kB
+dist/assets/bricolage-grotesque-latin-ext-wght-normal-CcLUaPy7.woff2    18.66 kB
+dist/assets/manrope-latin-wght-normal-DHIcAJRg.woff2                    24.83 kB
+dist/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2             40.40 kB
+dist/assets/bricolage-grotesque-latin-wght-normal-DLoelf7F.woff2        41.34 kB
+dist/assets/index-C00K4Zw3.css                                         110.56 kB │ gzip: 22.02 kB
+dist/assets/esm-C2JGGevT.js                                              0.32 kB │ gzip:  0.23 kB
+dist/assets/esm-DkZtAupr.js                                              0.33 kB │ gzip:  0.23 kB
+dist/assets/esm-CKENBtkm.js                                              0.33 kB │ gzip:  0.23 kB
+dist/assets/web-ChIHLz9W.js                                              0.36 kB │ gzip:  0.24 kB
+dist/assets/web-DmiICU0O.js                                              0.36 kB │ gzip:  0.24 kB
+dist/assets/web-DsTV1Qt7.js                                              0.84 kB │ gzip:  0.39 kB
+dist/assets/dist-C93lqtQh.js                                             7.74 kB │ gzip:  3.08 kB
+dist/assets/index-BcikFClx.js                                          326.99 kB │ gzip: 95.43 kB
+
+✓ built in 993ms

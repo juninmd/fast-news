@@ -1,0 +1,110 @@
+{
+	"base": "http://localhost:4173",
+	"runs": 5,
+	"cpuThrottle": 4,
+	"load": {
+		"fcp": 484,
+		"lcp": 952,
+		"cls": 0.1887,
+		"longTaskCount": 6,
+		"longTaskTotal": 669,
+		"longTaskMax": 190,
+		"commits": 6,
+		"renders": 767,
+		"bytes": {
+			"Document": 798,
+			"Stylesheet": 22242,
+			"Script": 95081,
+			"Font": 107544,
+			"Fetch": 83130
+		},
+		"requests": {
+			"Document": 1,
+			"Stylesheet": 1,
+			"Script": 1,
+			"Font": 3,
+			"Fetch": 6
+		}
+	},
+	"interaction": {
+		"idle5s": {
+			"commits": 5,
+			"renders": 25,
+			"longTaskCount": 0,
+			"longTaskTotal": 0,
+			"top": {
+				"Search": 10,
+				"it": 5,
+				"Menu": 5,
+				"Sun": 5
+			}
+		},
+		"toggleBookmark": {
+			"commits": 2,
+			"renders": 349,
+			"longTaskCount": 1,
+			"longTaskTotal": 72,
+			"top": {
+				"gt": 47,
+				"ExternalLink": 25,
+				"bt": 25,
+				"Sparkles": 21,
+				"Et": 20
+			}
+		},
+		"openCloseSearch": {
+			"commits": 4,
+			"renders": 698,
+			"longTaskCount": 2,
+			"longTaskTotal": 147,
+			"top": {
+				"gt": 94,
+				"ExternalLink": 50,
+				"bt": 50,
+				"Sparkles": 42,
+				"Et": 40
+			}
+		},
+		"switchTrendWindow": {
+			"commits": 5,
+			"renders": 147,
+			"longTaskCount": 0,
+			"longTaskTotal": 0,
+			"top": {
+				"bt": 70,
+				"Zt": 30,
+				"Xt": 30,
+				"en": 3,
+				"Flame": 3
+			}
+		},
+		"scrollThreePages": {
+			"commits": 15,
+			"renders": 3826,
+			"longTaskCount": 6,
+			"longTaskTotal": 477,
+			"top": {
+				"gt": 562,
+				"ExternalLink": 290,
+				"Sparkles": 266,
+				"Et": 260,
+				"Ct": 260
+			}
+		},
+		"openArticle": {
+			"commits": 5,
+			"renders": 1688,
+			"longTaskCount": 3,
+			"longTaskTotal": 284,
+			"top": {
+				"gt": 254,
+				"ExternalLink": 131,
+				"Sparkles": 122,
+				"Et": 120,
+				"Ct": 120
+			}
+		},
+		"articlesAfterScroll": 61,
+		"domNodesAfterScroll": 4296
+	}
+}
