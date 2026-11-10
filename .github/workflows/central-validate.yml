@@ -9,3 +9,8 @@ permissions:
 jobs:
   validate:
     uses: juninmd/base-actions/.github/workflows/reusable-validate.yml@main
+    with:
+      # A raiz do vitest tambem roda backend/src/**, que importa deps so do
+      # backend (express, pg, qdrant...). O validate reutilizavel so instala a
+      # raiz, entao o script de CI instala o backend antes de testar.
+      test-script: test:ci

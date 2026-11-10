@@ -15,6 +15,7 @@
 		"format": "biome format --write .",
 		"preview": "vite preview",
 		"test": "vitest",
+		"test:ci": "pnpm --dir backend install --frozen-lockfile --ignore-workspace --ignore-scripts && vitest run",
 		"test:e2e": "playwright test",
 		"coverage": "vitest run --coverage",
 		"dev:api": "pnpm --dir backend dev",
