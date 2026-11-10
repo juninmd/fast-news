@@ -3,6 +3,10 @@ const RSS2JSON_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FEED_SOURCES = [
 	// --- EXPANSÃO CONTÍNUA ---
 	{
+		url: "https://rss.nytimes.com/services/xml/rss/nyt/PersonalTech.xml",
+		category: "Tecnologia",
+	},
+	{
 		url: "https://rss.slashdot.org/Slashdot/slashdotMain",
 		category: "Tecnologia",
 		company: "Slashdot",
