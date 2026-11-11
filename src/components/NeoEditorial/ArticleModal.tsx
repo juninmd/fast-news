@@ -143,7 +143,7 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 			/>
 
 			<div
-				className={`relative w-full flex flex-col bg-bg-secondary border border-border-subtle rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${focusMode ? "max-w-2xl max-h-[95vh]" : "max-w-2xl max-h-[90vh]"}`}
+				className={`pulso-reader relative w-full flex flex-col bg-bg-secondary border border-border-subtle rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${focusMode ? "max-w-2xl max-h-[95vh]" : "max-w-2xl max-h-[90vh]"}`}
 			>
 				{/* Reading progress bar */}
 				<div className="absolute top-0 left-0 right-0 h-0.5 bg-bg-tertiary z-10">

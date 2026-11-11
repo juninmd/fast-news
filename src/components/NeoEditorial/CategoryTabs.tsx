@@ -1,4 +1,6 @@
-const CATEGORIES = [
+import { useLayoutEffect, useRef, useState } from "react";
+
+export const CATEGORIES = [
 	"Todas",
 	"Big Techs",
 	"AI Frontier",
@@ -18,35 +20,49 @@ interface CategoryTabsProps {
 	onCategoryChange: (category: string) => void;
 }
 
+/** Horizontal editorias with an ink bar that springs to the active one. */
 export function CategoryTabs({
 	activeCategory,
 	onCategoryChange,
 }: CategoryTabsProps) {
+	const ref = useRef<HTMLDivElement>(null);
+	const [ink, setInk] = useState({ left: 0, width: 0 });
+
+	useLayoutEffect(() => {
+		const measure = () => {
+			const on = ref.current?.querySelector<HTMLButtonElement>(
+				`[data-cat="${CSS.escape(activeCategory)}"]`,
+			);
+			if (on) setInk({ left: on.offsetLeft, width: on.offsetWidth });
+		};
+		measure();
+		window.addEventListener("resize", measure);
+		return () => window.removeEventListener("resize", measure);
+	}, [activeCategory]);
+
 	return (
-		<nav aria-label="Categorias" className="border border-border-subtle">
-			<div className="flex flex-col">
-				{CATEGORIES.map((category, i) => {
-					const active = category === activeCategory;
-					return (
-						<button
-							key={category}
-							onClick={() => onCategoryChange(category)}
-							className={`
-              flex items-center justify-between px-3 py-2.5 text-left text-sm transition-colors
-              ${i > 0 ? "border-t border-border-subtle" : ""}
-              ${
-								active
-									? "bg-accent-primary/10 text-accent-primary font-medium"
-									: "text-text-secondary hover:text-text-primary"
-							}
-            `}
-						>
-							<span>{category}</span>
-							{active && <span className="h-1.5 w-1.5 bg-accent-primary" />}
-						</button>
-					);
-				})}
-			</div>
-		</nav>
+		<div
+			ref={ref}
+			role="tablist"
+			aria-label="Categorias"
+			className="pulso-cats"
+		>
+			{CATEGORIES.map((category) => (
+				<button
+					key={category}
+					type="button"
+					role="tab"
+					data-cat={category}
+					aria-selected={category === activeCategory}
+					onClick={() => onCategoryChange(category)}
+				>
+					{category}
+				</button>
+			))}
+			<span
+				className="pulso-cats-ink"
+				style={{ left: ink.left, width: ink.width }}
+			/>
+		</div>
 	);
 }

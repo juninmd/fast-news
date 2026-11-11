@@ -137,150 +137,166 @@ export function NewsCard({
 	}
 
 	const featured = variant === "featured";
+	const wide = variant === "compact";
+	const [pop, setPop] = useState<string | null>(null);
+	const flash = (key: string) => {
+		setPop(key);
+		setTimeout(() => setPop(null), 450);
+	};
 
 	return (
 		<article
-			className={`group border-b border-border-subtle py-5 first:pt-0 last:border-b-0 ${read ? "opacity-60" : ""}`}
+			data-card={id}
+			data-read={read}
+			className={`pulso-card group ${featured ? "pulso-card--featured" : ""} ${wide ? "pulso-card--wide" : ""}`}
 		>
-			<CoverImage
-				src={imageUrl}
-				source={source}
-				category={category}
-				video={!!videoUrl}
-				className="mb-3 aspect-[2/1] w-full sm:hidden"
-			/>
-			<div className="flex items-start gap-5">
-				<div className="min-w-0 flex-1">
-					<div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
-						<span>{category}</span>
-						<span className="text-faint">·</span>
-						<span className="truncate">{source}</span>
-						<span className="text-faint">·</span>
-						<span className="tabular-nums">{formatDate(publishedAt)}</span>
-						{read && (
-							<CheckCircle2 className="h-3 w-3 text-text-secondary/50" />
-						)}
-					</div>
-
-					<h3
-						className={`font-display font-medium leading-snug text-text-primary transition-colors group-hover:text-accent-primary ${
-							featured ? "text-2xl" : "text-lg"
-						}`}
-					>
-						{title}
-					</h3>
-
-					{excerpt && (
-						<p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
-							{excerpt}
-						</p>
-					)}
-
-					<SourceStack
-						source={source}
-						sourceCount={sourceCount}
-						others={alsoIn}
-					/>
-
-					<div className="mt-3 flex items-center gap-1">
-						<button
-							onClick={() => handleReaction("like")}
-							className={`p-1.5 transition-colors ${
-								reaction === "like"
-									? "text-accent-secondary"
-									: "text-text-secondary hover:text-accent-secondary"
-							}`}
-							title="Curtir"
-						>
-							<ThumbsUp className="h-3.5 w-3.5" />
-						</button>
-						<button
-							onClick={() => handleReaction("dislike")}
-							className={`p-1.5 transition-colors ${
-								reaction === "dislike"
-									? "text-accent-tertiary"
-									: "text-text-secondary hover:text-accent-tertiary"
-							}`}
-							title="Não curtir"
-						>
-							<ThumbsDown className="h-3.5 w-3.5" />
-						</button>
-						<button
-							onClick={handleSendToTelegram}
-							disabled={sendingTelegram}
-							className="p-1.5 text-text-secondary transition-colors hover:text-accent-primary disabled:opacity-50"
-							title="Enviar para Telegram"
-						>
-							<Send
-								className={`h-3.5 w-3.5 ${sendingTelegram ? "animate-pulse" : ""}`}
-							/>
-						</button>
-						{telegramStatus === "success" && (
-							<span className="text-[11px] font-medium text-accent-secondary">
-								Enviado
-							</span>
-						)}
-						{telegramStatus === "error" && (
-							<span className="text-[11px] font-medium text-accent-tertiary">
-								Falha
-							</span>
-						)}
-
-						<div className="flex-1" />
-
-						<button
-							onClick={() => onSummarize?.(id)}
-							className="p-1.5 text-text-secondary transition-colors hover:text-accent-primary"
-							title="Abrir artigo"
-						>
-							<Sparkles className="h-3.5 w-3.5" />
-						</button>
-						<button
-							onClick={() => toggle(id)}
-							className={`p-1.5 transition-colors ${
-								bookmarked
-									? "text-accent-primary"
-									: "text-text-secondary hover:text-accent-primary"
-							}`}
-							title={bookmarked ? "Remover dos salvos" : "Salvar"}
-						>
-							<Bookmark
-								className={`h-3.5 w-3.5 ${bookmarked ? "fill-current" : ""}`}
-							/>
-						</button>
-						<button
-							onClick={handleCopyLink}
-							className="p-1.5 text-text-secondary transition-colors hover:text-accent-primary"
-							title="Copiar link"
-						>
-							{copied ? (
-								<CheckCircle2 className="h-3.5 w-3.5 text-accent-secondary" />
-							) : (
-								<Copy className="h-3.5 w-3.5" />
-							)}
-						</button>
-						<a
-							href={url}
-							target="_blank"
-							rel="noopener noreferrer"
-							onClick={() => onShare?.(id)}
-							className="p-1.5 text-text-secondary transition-colors hover:text-accent-primary"
-							title="Ler reportagem"
-						>
-							<ExternalLink className="h-3.5 w-3.5" />
-						</a>
-					</div>
-				</div>
-
+			<button
+				type="button"
+				tabIndex={-1}
+				aria-hidden
+				onClick={() => onSummarize?.(id)}
+				className="pulso-card-cover block w-full text-left"
+			>
 				<CoverImage
 					src={imageUrl}
 					source={source}
 					category={category}
 					video={!!videoUrl}
-					className={`hidden shrink-0 sm:block ${
-						featured ? "h-36 w-64" : "h-24 w-40"
-					}`}
+					eager={featured}
+					className={`w-full !border-0 ${featured ? "aspect-[16/10]" : "aspect-[16/9]"}`}
 				/>
+			</button>
+
+			<div className="flex flex-1 flex-col gap-2 px-4 pt-3 pb-3">
+				<div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-text-secondary">
+					<span className="truncate text-accent-primary">{category}</span>
+					<span className="text-faint">·</span>
+					<span className="truncate">{source}</span>
+					<span className="text-faint">·</span>
+					<span className="shrink-0 tabular-nums">
+						{formatDate(publishedAt)}
+					</span>
+					{read && (
+						<CheckCircle2
+							className="h-3 w-3 shrink-0 text-text-secondary/60"
+							aria-label="Lida"
+						/>
+					)}
+				</div>
+
+				<h3
+					className={`font-display leading-[1.12] tracking-tight text-text-primary ${
+						featured ? "text-[28px] font-extrabold" : "text-lg font-semibold"
+					}`}
+				>
+					<button
+						type="button"
+						onClick={() => onSummarize?.(id)}
+						className="text-left transition-colors hover:text-accent-primary"
+					>
+						{title}
+					</button>
+				</h3>
+
+				{excerpt && (featured || wide) && (
+					<p className="line-clamp-3 text-sm leading-relaxed text-text-secondary">
+						{excerpt}
+					</p>
+				)}
+
+				<SourceStack
+					source={source}
+					sourceCount={sourceCount}
+					others={alsoIn}
+				/>
+
+				<div className="pulso-card-actions">
+					<button
+						type="button"
+						onClick={() => {
+							handleReaction("like");
+							flash("like");
+						}}
+						className={`${reaction === "like" ? "!text-accent-secondary" : ""} ${pop === "like" ? "pulso-pop" : ""}`}
+						title="Curtir"
+						aria-pressed={reaction === "like"}
+					>
+						<ThumbsUp className="h-3.5 w-3.5" />
+					</button>
+					<button
+						type="button"
+						onClick={() => {
+							handleReaction("dislike");
+							flash("dislike");
+						}}
+						className={`${reaction === "dislike" ? "!text-accent-tertiary" : ""} ${pop === "dislike" ? "pulso-pop" : ""}`}
+						title="Não curtir"
+						aria-pressed={reaction === "dislike"}
+					>
+						<ThumbsDown className="h-3.5 w-3.5" />
+					</button>
+					<button
+						type="button"
+						onClick={handleSendToTelegram}
+						disabled={sendingTelegram}
+						className="disabled:opacity-50"
+						title="Enviar para Telegram"
+					>
+						<Send
+							className={`h-3.5 w-3.5 ${sendingTelegram ? "animate-pulse" : ""}`}
+						/>
+					</button>
+					{telegramStatus === "success" && (
+						<span className="text-[11px] font-semibold text-accent-secondary">
+							Enviado
+						</span>
+					)}
+					{telegramStatus === "error" && (
+						<span className="text-[11px] font-semibold text-accent-tertiary">
+							Falha
+						</span>
+					)}
+
+					<span className="flex-1" />
+
+					<button
+						type="button"
+						onClick={() => onSummarize?.(id)}
+						title="Abrir artigo"
+					>
+						<Sparkles className="h-3.5 w-3.5" />
+					</button>
+					<button
+						type="button"
+						data-save
+						onClick={() => {
+							toggle(id);
+							flash("save");
+						}}
+						className={`${bookmarked ? "!text-accent-primary" : ""} ${pop === "save" ? "pulso-pop" : ""}`}
+						title={bookmarked ? "Remover dos salvos" : "Salvar"}
+					>
+						<Bookmark
+							className={`h-3.5 w-3.5 ${bookmarked ? "fill-current" : ""}`}
+						/>
+					</button>
+					<button type="button" onClick={handleCopyLink} title="Copiar link">
+						{copied ? (
+							<CheckCircle2 className="h-3.5 w-3.5 text-accent-secondary" />
+						) : (
+							<Copy className="h-3.5 w-3.5" />
+						)}
+					</button>
+					<a
+						href={url}
+						target="_blank"
+						rel="noopener noreferrer"
+						onClick={() => onShare?.(id)}
+						title="Ler reportagem"
+					>
+						<ExternalLink className="h-3.5 w-3.5" />
+					</a>
+				</div>
 			</div>
 		</article>
 	);

@@ -1,17 +1,24 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { Moon, Search, SlidersHorizontal, Sun } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	ArticleModal,
 	CategoryTabs,
-	FeedControls,
-	Header,
 	NewsCard,
-	SearchModal,
-	Sidebar,
 	SkeletonCard,
 	StatusPanel,
-	TopNewsSection,
-	TrendingPanel,
 } from "./components/NeoEditorial";
+import {
+	activeFilterCount,
+	BriefingView,
+	CommandPalette,
+	DEFAULT_FILTERS,
+	type FeedFilters,
+	FilterDrawer,
+	type PaletteCommand,
+	type PulsoView,
+	Rail,
+	VIEW_LABELS,
+} from "./components/Pulso";
 import {
 	CorrelationGraph,
 	IntelligencePanel,
@@ -24,52 +31,71 @@ import type { CoverageLink } from "./hooks/useNews";
 import { useReadingHistory } from "./hooks/useReadingHistory";
 import type { ArticleNode, GraphEdge } from "./hooks/useStories";
 import { useGlobalGraph, useStories, useStoryDetail } from "./hooks/useStories";
-import {
-	type TranslateLang,
-	useTranslatedTitles,
-} from "./hooks/useTranslatedTitles";
+import { useTranslatedTitles } from "./hooks/useTranslatedTitles";
+import { useTrends } from "./hooks/useTrends";
 import "./styles/animations.css";
+import "./styles/pulso.css";
+
+const VIEW_KEY = "fn_view";
+const VIEWS = Object.keys(VIEW_LABELS) as PulsoView[];
+
+const EXPORTS = [
+	["RSS", "/api/feed.xml"],
+	["JSON", "/api/feed.json"],
+	["OPML", "/api/sources/opml"],
+	["Podcast", "/api/podcast.xml"],
+] as const;
+
+/** Bento rhythm: a big lead, then wide tiles every few cards. */
+function variantFor(i: number): "featured" | "compact" | "standard" {
+	if (i % 11 === 0) return "featured";
+	if (i % 11 === 5 || i % 11 === 9) return "compact";
+	return "standard";
+}
+
+function initialView(): PulsoView {
+	try {
+		const v = localStorage.getItem(VIEW_KEY) as PulsoView | null;
+		if (v && VIEWS.includes(v)) return v;
+	} catch {
+		// storage blocked: start on the briefing
+	}
+	return "briefing";
+}
 
 function App() {
 	const [activeCategory, setActiveCategory] = useState("Todas");
-	const [activeView, setActiveView] = useState<
-		| "feed"
-		| "stories"
-		| "graph"
-		| "intelligence"
-		| "bookmarks"
-		| "history"
-		| "status"
-	>("feed");
+	const [activeView, setActiveView] = useState<PulsoView>(initialView);
 	const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
 	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
 		null,
 	);
 	const [searchResults, setSearchResults] = useState<unknown[] | null>(null);
+	const [searchQuery, setSearchQuery] = useState("");
 	const [searchGraph, setSearchGraph] = useState<{
 		nodes: ArticleNode[];
 		edges: GraphEdge[];
 	} | null>(null);
-	const [filters, setFilters] = useState({});
-	const [minCredibility, setMinCredibility] = useState<number>(0);
-	const [politicalBias, setPoliticalBias] = useState<string>("all");
-	const [excludeMilitant, setExcludeMilitant] = useState<boolean>(false);
-	const [groupSources, setGroupSources] = useState<boolean>(true);
-	const [scope, setScope] = useState<"all" | "ai">("all");
-	const [lang, setLang] = useState<TranslateLang>("off");
+	const [sidebarFilters, setSidebarFilters] = useState<{
+		company?: string;
+		category?: string;
+	}>({});
+	const [filters, setFilters] = useState<FeedFilters>(DEFAULT_FILTERS);
+	const [drawerOpen, setDrawerOpen] = useState(false);
+	const [paletteOpen, setPaletteOpen] = useState(false);
+	const [paletteQuery, setPaletteQuery] = useState("");
+	const [recentSearches, setRecentSearches] = useState<string[]>([]);
+	const [toast, setToast] = useState<string | null>(null);
+	const [cursor, setCursor] = useState(-1);
 
 	const { stories, loading: storiesLoading } = useStories(activeCategory);
 	const { detail: storyDetail, loading: detailLoading } =
 		useStoryDetail(selectedStoryId);
 	const { graph, loading: graphLoading } = useGlobalGraph(activeCategory);
-	const [searchOpen, setSearchOpen] = useState(false);
-	const [menuOpen, setMenuOpen] = useState(false);
-	const [recentSearches, setRecentSearches] = useState<string[]>([]);
-	// @ts-ignore
-	const [toast, setToast] = useState(null);
 	const { theme, toggleTheme } = useTheme();
 	const { markRead, history: readHistory } = useReadingHistory();
 	const { bookmarks, isBookmarked } = useBookmarks();
+	const { report: trends } = useTrends(24);
 
 	const {
 		articles: originalArticles,
@@ -80,14 +106,35 @@ function App() {
 		hasMore,
 	} = useNews({
 		category: activeCategory,
-		scope,
-		minCredibility: minCredibility > 0 ? minCredibility : undefined,
-		politicalBias: politicalBias !== "all" ? politicalBias : undefined,
-		excludeMilitant: excludeMilitant ? true : undefined,
-		group: groupSources,
-		...filters,
+		scope: filters.scope,
+		minCredibility:
+			filters.minCredibility > 0 ? filters.minCredibility : undefined,
+		politicalBias:
+			filters.politicalBias !== "all" ? filters.politicalBias : undefined,
+		excludeMilitant: filters.excludeMilitant ? true : undefined,
+		group: filters.groupSources,
+		...sidebarFilters,
 	});
-	const articles = useTranslatedTitles(originalArticles, lang);
+	const articles = useTranslatedTitles(originalArticles, filters.lang);
+
+	const go = useCallback((v: PulsoView) => {
+		setActiveView(v);
+		setCursor(-1);
+		try {
+			localStorage.setItem(VIEW_KEY, v);
+		} catch {
+			// remembering the view is a convenience only
+		}
+		window.scrollTo({ top: 0 });
+	}, []);
+
+	const notify = useCallback((message: string) => setToast(message), []);
+
+	useEffect(() => {
+		if (!toast) return;
+		const t = setTimeout(() => setToast(null), 2600);
+		return () => clearTimeout(t);
+	}, [toast]);
 
 	// Open article from Telegram deep link (?id=<uuid>)
 	useEffect(() => {
@@ -103,61 +150,55 @@ function App() {
 		[markRead],
 	);
 
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-				e.preventDefault();
-				setSearchOpen(true);
-			}
-			if (e.key === "Escape") {
-				setSearchOpen(false);
-			}
-		};
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, []);
+	const handleSearch = useCallback(
+		(query: string) => {
+			const q = query.trim();
+			if (!q) return;
+			setRecentSearches((prev) =>
+				[q, ...prev.filter((s) => s !== q)].slice(0, 5),
+			);
+			setSearchQuery(q);
+			go("feed");
+			fetch(`/api/rag/search?q=${encodeURIComponent(q)}&limit=18`)
+				.then((r) => r.json())
+				.then((d) => {
+					setSearchResults((d.results ?? []).map(toCardArticle));
+					setSearchGraph(d.graph ?? null);
+				})
+				.catch(() => notify("A busca semântica não respondeu. Tente de novo."));
+		},
+		[go, notify],
+	);
 
-	const handleSearch = useCallback((query: string) => {
-		setRecentSearches((prev) =>
-			[query, ...prev.filter((s) => s !== query)].slice(0, 5),
-		);
-		fetch(`/api/rag/search?q=${encodeURIComponent(query)}&limit=18`)
-			.then((r) => r.json())
-			.then((d) => {
-				setSearchResults((d.results ?? []).map(toCardArticle));
-				setSearchGraph(d.graph ?? null);
-				setActiveView("feed");
-			})
-			.catch(() => {
-				// best-effort deep-link routing; ignore navigation failures
-			});
-	}, []);
-
-	const handleBookmark = useCallback(() => {
-		setToast({ message: "Article saved!", type: "success" });
-	}, []);
-
-	const handleShare = useCallback(() => {
-		navigator.clipboard.writeText(window.location.href);
-		setToast({ message: "Link copied!", type: "success" });
-	}, []);
+	const clearSearch = () => {
+		setSearchResults(null);
+		setSearchGraph(null);
+		setSearchQuery("");
+	};
 
 	const handleSummarize = useCallback(
 		async (id: string, title?: string) => {
-			setToast({ message: "Analisando credibilidade...", type: "success" });
+			notify("Analisando credibilidade…");
 			try {
 				await fetch(`/api/news/${id}/credibility`, { method: "POST" });
 			} catch {
-				// modal will show whatever data is available
+				// the reader shows whatever data is available
 			}
 			setToast(null);
 			openArticle(id, title);
 		},
-		[openArticle],
+		[openArticle, notify],
 	);
 
+	const openPalette = useCallback((q = "") => {
+		setPaletteQuery(q);
+		setPaletteOpen(true);
+	}, []);
+
+	// Infinite scroll on the feed.
 	useEffect(() => {
-		const handleScroll = () => {
+		if (activeView !== "feed" || searchResults) return;
+		const onScroll = () => {
 			if (
 				window.innerHeight + window.scrollY >=
 					document.body.offsetHeight - 1000 &&
@@ -167,390 +208,528 @@ function App() {
 				loadMore();
 			}
 		};
-		window.addEventListener("scroll", handleScroll);
-		return () => window.removeEventListener("scroll", handleScroll);
-	}, [hasMore, loading, loadMore]);
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
+	}, [activeView, searchResults, hasMore, loading, loadMore]);
 
+	const feedList = (searchResults !== null ? searchResults : articles) as Array<
+		Parameters<typeof NewsCard>[0]
+	>;
+
+	// Global shortcuts: ⌘K / "/" palette, J/K move, O open, S save, F filters.
 	useEffect(() => {
-		if (toast) {
-			const timer = setTimeout(() => setToast(null), 3000);
-			return () => clearTimeout(timer);
-		}
-	}, [toast]);
+		const onKey = (e: KeyboardEvent) => {
+			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+				e.preventDefault();
+				setPaletteOpen((o) => !o);
+				return;
+			}
+			const t = e.target as HTMLElement;
+			if (
+				paletteOpen ||
+				drawerOpen ||
+				selectedArticleId ||
+				e.metaKey ||
+				e.ctrlKey ||
+				e.altKey ||
+				t.closest("input, textarea, select, [contenteditable]")
+			)
+				return;
+			if (e.key === "/") {
+				e.preventDefault();
+				openPalette();
+				return;
+			}
+			if (e.key === "f" && activeView === "feed") {
+				setDrawerOpen(true);
+				return;
+			}
+			if (activeView !== "feed" || feedList.length === 0) return;
+			const cards = document.querySelectorAll<HTMLElement>("[data-card]");
+			if (e.key === "j" || e.key === "k") {
+				e.preventDefault();
+				const next = Math.max(
+					0,
+					Math.min(cards.length - 1, cursor + (e.key === "j" ? 1 : -1)),
+				);
+				setCursor(next);
+				cards[next]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+			}
+			const current = cursor >= 0 ? feedList[cursor] : undefined;
+			if (!current) return;
+			if (e.key === "o" || e.key === "Enter") {
+				handleSummarize(current.id, current.title);
+			}
+			if (e.key === "s") {
+				cards[cursor]
+					?.querySelector<HTMLButtonElement>("button[data-save]")
+					?.click();
+			}
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [
+		paletteOpen,
+		drawerOpen,
+		selectedArticleId,
+		activeView,
+		feedList,
+		cursor,
+		handleSummarize,
+		openPalette,
+	]);
+
+	const commands = useMemo<PaletteCommand[]>(
+		() => [
+			...VIEWS.map((v) => ({
+				id: `go-${v}`,
+				label: `Ir para ${VIEW_LABELS[v]}`,
+				run: () => go(v),
+			})),
+			{
+				id: "filters",
+				label: "Abrir filtros do feed",
+				hint: "F",
+				run: () => {
+					go("feed");
+					setDrawerOpen(true);
+				},
+			},
+			{
+				id: "theme",
+				label: theme === "dark" ? "Usar tema claro" : "Usar tema escuro",
+				run: toggleTheme,
+			},
+			{
+				id: "scope",
+				label: filters.scope === "ai" ? "Mostrar todas as editorias" : "Só IA",
+				run: () =>
+					setFilters((f) => ({
+						...f,
+						scope: f.scope === "ai" ? "all" : "ai",
+					})),
+			},
+			{
+				id: "reset",
+				label: "Limpar filtros",
+				run: () => {
+					setFilters(DEFAULT_FILTERS);
+					setActiveCategory("Todas");
+				},
+			},
+			...EXPORTS.map(([label, href]) => ({
+				id: `export-${label}`,
+				label: `Abrir feed ${label}`,
+				run: () => window.open(href, "_blank", "noopener"),
+			})),
+			{
+				id: "jornal",
+				label: "Abrir o jornal O Fio",
+				run: () =>
+					window.open("https://juninmd.github.io/fast-news/", "_blank"),
+			},
+		],
+		[go, theme, toggleTheme, filters.scope],
+	);
+
+	const filterCount = activeFilterCount(
+		filters,
+		Object.values(sidebarFilters).filter(Boolean).length,
+	);
 
 	return (
-		<div className="min-h-screen bg-bg-primary text-text-primary">
-			<Header
-				onSearchOpen={() => setSearchOpen(true)}
-				onMenuToggle={() => setMenuOpen(!menuOpen)}
-				isMenuOpen={menuOpen}
-				theme={theme}
-				onThemeToggle={toggleTheme}
+		<div className="pulso-shell bg-bg-primary text-text-primary">
+			<Rail
+				active={activeView}
+				onChange={go}
+				counts={{
+					bookmarks: bookmarks.length,
+					history: readHistory.length,
+				}}
 			/>
 
-			<main className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-10 py-8">
-				<div className="mb-10 grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-					<TopNewsSection onArticleClick={openArticle} />
-					<TrendingPanel
-						onSelectTerm={handleSearch}
-						onSelectArticle={openArticle}
-					/>
-				</div>
+			<div className="pulso-main min-w-0">
+				<header className="pulso-topbar">
+					<h1 key={activeView} className="pulso-title">
+						{VIEW_LABELS[activeView]}
+					</h1>
+					<span className="hidden items-center gap-2 font-mono text-[11px] tracking-widest text-accent-tertiary xl:flex">
+						<span className="pulso-live-dot" />
+						AO VIVO
+					</span>
+					<button
+						type="button"
+						className="pulso-cmdk"
+						onClick={() => openPalette()}
+						aria-label="Buscar ou executar comando"
+					>
+						<Search className="h-4 w-4 shrink-0" />
+						<span className="pulso-cmdk-label truncate">
+							Buscar por significado, ou um comando…
+						</span>
+						<kbd className="pulso-kbd">⌘K</kbd>
+					</button>
+					<button
+						type="button"
+						className="pulso-icon-btn"
+						onClick={() => setDrawerOpen(true)}
+						aria-label="Filtros"
+						title="Filtros"
+					>
+						<SlidersHorizontal className="h-4 w-4" />
+						{filterCount > 0 && (
+							<span className="pulso-badge">{filterCount}</span>
+						)}
+					</button>
+					<button
+						type="button"
+						className="pulso-icon-btn"
+						onClick={toggleTheme}
+						aria-label="Alternar tema"
+						title="Alternar tema"
+					>
+						{theme === "dark" ? (
+							<Sun className="h-4 w-4" />
+						) : (
+							<Moon className="h-4 w-4" />
+						)}
+					</button>
+				</header>
 
-				<section className="mb-8 border-b border-border-subtle">
-					<div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
-						{(
-							[
-								"feed",
-								"stories",
-								"graph",
-								"intelligence",
-								"bookmarks",
-								"history",
-								"status",
-							] as const
-						).map((v) => {
-							const labels: Record<string, string> = {
-								feed: "Feed",
-								stories: "Histórias",
-								graph: "Grafo",
-								intelligence: "Inteligência",
-								bookmarks: `Salvos${bookmarks.length > 0 ? ` (${bookmarks.length})` : ""}`,
-								history: `Lidos${readHistory.length > 0 ? ` (${readHistory.length})` : ""}`,
-								status: "Status",
-							};
-							return (
+				<main key={activeView} className="pulso-view">
+					{activeView === "briefing" && (
+						<BriefingView
+							scope={filters.scope}
+							onScopeChange={(scope) => setFilters((f) => ({ ...f, scope }))}
+							onOpenArticle={openArticle}
+							onSearch={(term) => openPalette(term)}
+							onSeeFeed={() => go("feed")}
+							headlines={articles.slice(0, 12)}
+						/>
+					)}
+
+					{activeView === "feed" && (
+						<>
+							<CategoryTabs
+								activeCategory={activeCategory}
+								onCategoryChange={(category) => {
+									setActiveCategory(category);
+									clearSearch();
+								}}
+							/>
+							<div className="mb-4 flex flex-wrap items-center gap-2">
 								<button
-									key={v}
-									onClick={() => setActiveView(v)}
-									className={`whitespace-nowrap border-b-2 py-2.5 font-mono text-xs font-semibold uppercase tracking-wide transition-colors ${
-										activeView === v
-											? "border-accent-primary text-text-primary"
-											: "border-transparent text-text-secondary hover:text-text-primary"
-									}`}
+									type="button"
+									className="pulso-chip"
+									onClick={() => setDrawerOpen(true)}
 								>
-									{labels[v]}
+									<SlidersHorizontal className="h-3.5 w-3.5" />
+									Filtros{filterCount > 0 ? ` · ${filterCount}` : ""}
 								</button>
-							);
-						})}
-					</div>
-				</section>
+								<span className="flex-1" />
+								<span className="pulso-eyebrow hidden tabular-nums sm:inline">
+									{feedList.length} matérias · J/K navega · O abre · S salva
+								</span>
+							</div>
 
-				<div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_300px] xl:grid-cols-[240px_minmax(0,1fr)_320px]">
-					<aside className="lg:sticky lg:top-24 lg:self-start">
-						<FeedControls
-							scope={scope}
-							onScopeChange={setScope}
-							lang={lang}
-							onLangChange={setLang}
-						/>
-						<CategoryTabs
-							activeCategory={activeCategory}
-							onCategoryChange={(category) => {
-								setActiveCategory(category);
-								setSearchResults(null);
-								setSearchGraph(null);
-							}}
-						/>
-					</aside>
+							{searchResults !== null && (
+								<div className="pulso-panel mb-5 p-4">
+									<div className="mb-3 flex flex-wrap items-center gap-2">
+										<p className="text-sm font-semibold">
+											{searchResults.length} resultados semânticos para “
+											{searchQuery}”
+										</p>
+										<button
+											type="button"
+											onClick={clearSearch}
+											className="ml-auto text-xs font-semibold text-accent-primary hover:underline"
+										>
+											Limpar busca
+										</button>
+									</div>
+									{searchGraph && searchGraph.nodes.length > 1 && (
+										<CorrelationGraph
+											nodes={searchGraph.nodes}
+											edges={searchGraph.edges}
+											stories={[]}
+											height={260}
+											onNodeClick={(n) => window.open(n.url, "_blank")}
+										/>
+									)}
+								</div>
+							)}
 
-					<div className="min-w-0">
-						{/* Bookmarks view */}
-						{activeView === "bookmarks" && (
-							<div>
-								{bookmarks.length === 0 ? (
-									<p className="text-center py-16 text-text-secondary">
-										Nenhum artigo salvo ainda. Clique em 🔖 nos cards para
-										salvar.
-									</p>
-								) : (
-									<div className="divide-y divide-border-subtle border-t border-border-subtle">
-										{articles
-											.filter((a) => isBookmarked(a.id))
-											.map((article) => (
+							{error && (
+								<div className="py-12 text-center">
+									<p className="mb-4 text-accent-tertiary">{error.message}</p>
+									<button
+										type="button"
+										onClick={refetch}
+										className="rounded-xl bg-accent-primary px-4 py-2 font-semibold text-white"
+									>
+										Retry
+									</button>
+								</div>
+							)}
+
+							<div className="pulso-bento">
+								{loading && feedList.length === 0
+									? Array.from({ length: 6 }).map((_, i) => (
+											<SkeletonCard key={i} />
+										))
+									: feedList.map((article, i) => (
+											<div
+												key={article.id}
+												className={`contents ${cursor === i ? "[&>article]:outline-2 [&>article]:outline-offset-2 [&>article]:outline-accent-primary [&>article]:outline" : ""}`}
+											>
 												<NewsCard
-													key={article.id}
 													{...article}
+													variant={variantFor(i)}
+													onShare={() =>
+														notify("Abrindo a reportagem original")
+													}
 													onSummarize={() =>
 														handleSummarize(article.id, article.title)
 													}
-													onShare={handleShare}
 												/>
-											))}
+											</div>
+										))}
+							</div>
+
+							{!loading &&
+								!error &&
+								feedList.length === 0 &&
+								searchResults === null && (
+									<div className="py-16 text-center text-text-secondary">
+										<p className="font-display text-xl font-bold text-text-primary">
+											Nada passa por esses filtros
+										</p>
+										<p className="mt-1">
+											Afrouxe a credibilidade ou volte para “Todas”.
+										</p>
+										<button
+											type="button"
+											className="pulso-chip mt-4"
+											onClick={() => {
+												setFilters(DEFAULT_FILTERS);
+												setActiveCategory("Todas");
+											}}
+										>
+											Limpar filtros
+										</button>
 									</div>
 								)}
-							</div>
-						)}
 
-						{/* History view */}
-						{activeView === "history" && (
-							<div>
-								{readHistory.length === 0 ? (
-									<p className="text-center py-16 text-text-secondary">
-										Nenhum artigo lido ainda. Artigos lidos (80%+) aparecem
-										aqui.
-									</p>
-								) : (
-									<ul className="space-y-2">
-										{readHistory.map((h) => (
-											<li key={h.id}>
-												<button
-													onClick={() => openArticle(h.id, h.title)}
-													className="w-full text-left px-4 py-3 rounded-xl bg-bg-secondary border border-border-subtle hover:border-accent-primary/30 transition-colors"
-												>
-													<p className="text-sm text-text-primary line-clamp-1">
-														{h.title}
-													</p>
-													<p className="text-xs text-text-secondary mt-1">
-														{new Date(h.readAt).toLocaleString("pt-BR", {
-															day: "2-digit",
-															month: "2-digit",
-															hour: "2-digit",
-															minute: "2-digit",
-														})}
-													</p>
-												</button>
-											</li>
-										))}
-									</ul>
-								)}
-							</div>
-						)}
+							{loading && feedList.length > 0 && (
+								<div className="pulso-loadmore">
+									<span className="pulso-dots" aria-hidden>
+										<i />
+										<i />
+										<i />
+									</span>
+									Carregando mais matérias
+								</div>
+							)}
+							{!hasMore && feedList.length > 0 && searchResults === null && (
+								<p className="pulso-loadmore">Você chegou ao fim</p>
+							)}
+						</>
+					)}
 
-						{/* Stories view */}
-						{activeView === "stories" && (
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					{activeView === "bookmarks" &&
+						(bookmarks.length === 0 ? (
+							<EmptyState
+								title="Nada salvo ainda"
+								text="Toque no marcador de um card, ou aperte S no feed."
+							/>
+						) : (
+							<div className="pulso-bento">
+								{articles
+									.filter((a) => isBookmarked(a.id))
+									.map((article) => (
+										<NewsCard
+											key={article.id}
+											{...article}
+											onSummarize={() =>
+												handleSummarize(article.id, article.title)
+											}
+										/>
+									))}
+							</div>
+						))}
+
+					{activeView === "history" &&
+						(readHistory.length === 0 ? (
+							<EmptyState
+								title="Nenhuma matéria lida ainda"
+								text="As matérias que você abrir aparecem aqui."
+							/>
+						) : (
+							<ul className="grid max-w-3xl gap-2">
+								{readHistory.map((h, i) => (
+									<li
+										key={h.id}
+										className="pulso-keypoint !p-0"
+										style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}
+									>
+										<button
+											type="button"
+											onClick={() => openArticle(h.id, h.title)}
+											className="pulso-panel w-full px-4 py-3 text-left transition-colors hover:border-accent-primary/40"
+										>
+											<p className="line-clamp-1 font-display text-base font-semibold">
+												{h.title}
+											</p>
+											<p className="mt-1 font-mono text-xs text-text-secondary">
+												{new Date(h.readAt).toLocaleString("pt-BR", {
+													day: "2-digit",
+													month: "2-digit",
+													hour: "2-digit",
+													minute: "2-digit",
+												})}
+											</p>
+										</button>
+									</li>
+								))}
+							</ul>
+						))}
+
+					{activeView === "stories" && (
+						<>
+							<CategoryTabs
+								activeCategory={activeCategory}
+								onCategoryChange={setActiveCategory}
+							/>
+							<div className="pulso-story-grid">
 								{storiesLoading
 									? Array.from({ length: 6 }).map((_, i) => (
 											<SkeletonCard key={i} />
 										))
-									: stories.map((story) => (
-											<StoryCard
+									: stories.map((story, i) => (
+											<div
 												key={story.id}
-												story={story}
-												selected={selectedStoryId === story.id}
-												onClick={() =>
-													setSelectedStoryId(
-														story.id === selectedStoryId ? null : story.id,
-													)
-												}
-											/>
+												style={{
+													animationDelay: `${Math.min(i, 12) * 50}ms`,
+												}}
+											>
+												<StoryCard
+													story={story}
+													selected={selectedStoryId === story.id}
+													onClick={() =>
+														setSelectedStoryId(
+															story.id === selectedStoryId ? null : story.id,
+														)
+													}
+												/>
+											</div>
 										))}
-								{!storiesLoading && stories.length === 0 && (
-									<p className="col-span-3 text-center py-12 text-text-secondary">
-										Nenhuma história detectada ainda. Aguarde a próxima
-										ingestão.
-									</p>
-								)}
 							</div>
-						)}
+							{!storiesLoading && stories.length === 0 && (
+								<EmptyState
+									title="Nenhuma história detectada ainda"
+									text="Aguarde a próxima ingestão."
+								/>
+							)}
+						</>
+					)}
 
-						{/* Graph view */}
-						{activeView === "graph" && (
-							<div className="space-y-4">
-								{graphLoading ? (
-									<div className="h-96 flex items-center justify-center text-text-secondary">
-										Carregando grafo...
-									</div>
-								) : (
-									graph && (
+					{activeView === "graph" && (
+						<div className="space-y-4">
+							<CategoryTabs
+								activeCategory={activeCategory}
+								onCategoryChange={setActiveCategory}
+							/>
+							{graphLoading ? (
+								<div className="flex h-96 items-center justify-center gap-3 text-text-secondary">
+									<span className="pulso-dots" aria-hidden>
+										<i />
+										<i />
+										<i />
+									</span>
+									Carregando grafo
+								</div>
+							) : (
+								graph && (
+									<div className="pulso-panel overflow-hidden p-2">
 										<CorrelationGraph
 											nodes={graph.nodes}
 											edges={graph.edges}
 											stories={graph.stories}
-											height={500}
-											onNodeClick={(n) => window.open(n.url, "_blank")}
+											height={560}
+											onNodeClick={(n) => openArticle(n.id, n.title)}
 										/>
-									)
-								)}
-								<p className="text-xs text-text-secondary text-center">
-									Cada ponto é um artigo. Linhas = correlação semântica. Clique
-									para abrir o artigo.
-								</p>
-							</div>
-						)}
-
-						{/* Intelligence view */}
-						{activeView === "intelligence" && (
-							<IntelligencePanel
-								stories={stories}
-								onStoryClick={(s) => {
-									setSelectedStoryId(s.id);
-									setActiveView("stories");
-								}}
-							/>
-						)}
-
-						{/* Status view */}
-						{activeView === "status" && <StatusPanel />}
-
-						{/* Feed view */}
-						{activeView === "feed" && (
-							<>
-								{/* Advanced Filters */}
-								<div className="mb-6 p-4 rounded-xl bg-bg-secondary border border-border-subtle flex flex-wrap gap-4 items-center animate-fade-in">
-									<div className="flex flex-col gap-1">
-										<label className="text-xs text-text-secondary font-medium">
-											Credibilidade Mínima
-										</label>
-										<select
-											value={minCredibility}
-											onChange={(e) =>
-												setMinCredibility(Number(e.target.value))
-											}
-											className="bg-bg-tertiary border border-border-subtle rounded-lg px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-primary"
-										>
-											<option value={0}>Todas</option>
-											<option value={7}>{"Confiável (>= 7/10)"}</option>
-											<option value={9}>
-												{"Alta Confiabilidade (>= 9/10)"}
-											</option>
-										</select>
 									</div>
-
-									<div className="flex flex-col gap-1">
-										<label className="text-xs text-text-secondary font-medium">
-											Viés Político
-										</label>
-										<select
-											value={politicalBias}
-											onChange={(e) => setPoliticalBias(e.target.value)}
-											className="bg-bg-tertiary border border-border-subtle rounded-lg px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-primary"
-										>
-											<option value="all">Todos</option>
-											<option value="neutral">⚖️ Neutro</option>
-											<option value="left">🔵 Esquerda</option>
-											<option value="right">🔴 Direita</option>
-										</select>
-									</div>
-
-									<div className="flex items-center gap-2 mt-4 sm:mt-0">
-										<input
-											type="checkbox"
-											id="group-sources"
-											checked={groupSources}
-											onChange={(e) => setGroupSources(e.target.checked)}
-											className="rounded border-border-subtle bg-bg-tertiary text-accent-primary focus:ring-accent-primary w-4 h-4 cursor-pointer"
-										/>
-										<label
-											htmlFor="group-sources"
-											className="text-sm font-medium text-text-primary cursor-pointer select-none"
-										>
-											Agrupar mesma notícia de várias fontes
-										</label>
-									</div>
-
-									<div className="flex items-center gap-2 mt-4 sm:mt-0">
-										<input
-											type="checkbox"
-											id="exclude-militant"
-											checked={excludeMilitant}
-											onChange={(e) => setExcludeMilitant(e.target.checked)}
-											className="rounded border-border-subtle bg-bg-tertiary text-accent-primary focus:ring-accent-primary w-4 h-4 cursor-pointer"
-										/>
-										<label
-											htmlFor="exclude-militant"
-											className="text-sm font-medium text-text-primary cursor-pointer select-none"
-										>
-											Ocultar Panfletário/Militante
-										</label>
-									</div>
-								</div>
-								{error && (
-									<div className="text-center py-12">
-										<p className="text-red-400 mb-4">{error.message}</p>
-										<button
-											onClick={refetch}
-											className="px-4 py-2 rounded-lg bg-accent-primary text-white hover:bg-accent-primary/80 transition-colors"
-										>
-											Retry
-										</button>
-									</div>
-								)}
-								{searchResults !== null && (
-									<div className="mb-4 rounded-xl border border-accent-primary/20 bg-accent-primary/5 p-4">
-										<div className="mb-3 flex items-center gap-2">
-											<p className="text-sm font-medium text-text-primary">
-												{(searchResults as unknown[]).length} resultados
-												semanticos
-											</p>
-											<button
-												onClick={() => {
-													setSearchResults(null);
-													setSearchGraph(null);
-												}}
-												className="ml-auto text-xs text-accent-primary hover:underline"
-											>
-												Limpar busca
-											</button>
-										</div>
-										{searchGraph && searchGraph.nodes.length > 1 && (
-											<CorrelationGraph
-												nodes={searchGraph.nodes}
-												edges={searchGraph.edges}
-												stories={[]}
-												height={260}
-												onNodeClick={(n) => window.open(n.url, "_blank")}
-											/>
-										)}
-									</div>
-								)}
-								<div className="divide-y divide-border-subtle border-t border-border-subtle stagger-reveal">
-									{loading && articles.length === 0
-										? Array.from({ length: 6 }).map((_, i) => (
-												<SkeletonCard key={i} />
-											))
-										: (searchResults !== null
-												? (searchResults as Array<{
-														id: string;
-														[k: string]: unknown;
-													}>)
-												: articles
-											).map((article) => (
-												<NewsCard
-													key={article.id as string}
-													{...(article as Parameters<typeof NewsCard>[0])}
-													onBookmark={handleBookmark}
-													onShare={handleShare}
-													onSummarize={() =>
-														handleSummarize(
-															article.id as string,
-															(article as { title?: string }).title,
-														)
-													}
-												/>
-											))}
-								</div>
-							</>
-						)}
-
-						{activeView === "feed" && loading && articles.length > 0 && (
-							<div className="divide-y divide-border-subtle">
-								{Array.from({ length: 3 }).map((_, i) => (
-									<SkeletonCard key={`loading-${i}`} />
-								))}
-							</div>
-						)}
-
-						{activeView === "feed" && !hasMore && articles.length > 0 && (
-							<p className="text-center py-8 text-text-secondary">
-								Você chegou ao fim
+								)
+							)}
+							<p className="text-center text-xs text-text-secondary">
+								Cada ponto é um artigo. Linhas = correlação semântica. Clique
+								para abrir.
 							</p>
-						)}
-					</div>
+						</div>
+					)}
 
-					<Sidebar onFilterChange={setFilters} />
-				</div>
-			</main>
+					{activeView === "intelligence" && (
+						<IntelligencePanel
+							stories={stories}
+							onStoryClick={(s) => {
+								setSelectedStoryId(s.id);
+								go("stories");
+							}}
+						/>
+					)}
 
-			<SearchModal
-				isOpen={searchOpen}
-				onClose={() => setSearchOpen(false)}
-				onSearch={(q) => {
-					handleSearch(q);
-					setSearchOpen(false);
-				}}
+					{activeView === "status" && (
+						<div className="space-y-6">
+							<StatusPanel />
+							<section className="pulso-panel flex flex-wrap items-center gap-2 p-4">
+								<span className="pulso-eyebrow mr-2">Exportar</span>
+								{EXPORTS.map(([label, href]) => (
+									<a
+										key={label}
+										className="pulso-chip"
+										href={
+											filters.scope === "ai" && label !== "OPML"
+												? `${href}?scope=ai`
+												: href
+										}
+										target="_blank"
+										rel="noreferrer"
+									>
+										{label}
+									</a>
+								))}
+								<a
+									className="pulso-chip"
+									href="https://juninmd.github.io/fast-news/"
+									target="_blank"
+									rel="noreferrer"
+								>
+									Jornal O Fio ↗
+								</a>
+							</section>
+						</div>
+					)}
+				</main>
+			</div>
+
+			<FilterDrawer
+				open={drawerOpen}
+				filters={filters}
+				onChange={setFilters}
+				onClose={() => setDrawerOpen(false)}
+				onSidebarFilters={setSidebarFilters}
+			/>
+
+			<CommandPalette
+				open={paletteOpen}
+				initialQuery={paletteQuery}
+				onClose={() => setPaletteOpen(false)}
+				onSearch={handleSearch}
+				onOpenArticle={(id, title) => openArticle(id, title)}
 				recentSearches={recentSearches}
+				trending={(trends?.terms ?? []).map((t) => t.term)}
+				articles={articles}
+				commands={commands}
 			/>
 
 			<ArticleModal
@@ -562,8 +741,8 @@ function App() {
 			/>
 
 			{toast && (
-				<div className="fixed bottom-4 right-4 px-4 py-2 bg-bg-secondary border border-border-subtle rounded-lg shadow-lg animate-slide-up">
-					<p className="text-sm text-text-primary">{toast.message}</p>
+				<div className="pulso-toast" role="status">
+					{toast}
 				</div>
 			)}
 
@@ -573,6 +752,17 @@ function App() {
 					onClose={() => setSelectedStoryId(null)}
 				/>
 			)}
+		</div>
+	);
+}
+
+function EmptyState({ title, text }: { title: string; text: string }) {
+	return (
+		<div className="py-20 text-center text-text-secondary">
+			<p className="font-display text-xl font-bold text-text-primary">
+				{title}
+			</p>
+			<p className="mt-1">{text}</p>
 		</div>
 	);
 }

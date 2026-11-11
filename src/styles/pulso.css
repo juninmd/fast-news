@@ -1,0 +1,841 @@
+/* Pulso: shell, motion and components of the desktop app.
+   Tokens live in index.css (:root = Névoa, .dark = Tinta). */
+
+.pulso-shell {
+	display: grid;
+	grid-template-columns: 84px minmax(0, 1fr);
+	min-height: 100vh;
+}
+
+/* ---------- Rail / tab bar ---------- */
+.pulso-rail {
+	position: sticky;
+	top: 0;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 16px 0;
+	border-right: 1px solid var(--border-subtle);
+	background: var(--bg-primary);
+	z-index: 30;
+}
+.pulso-logo {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	margin-bottom: 14px;
+	border-radius: 13px;
+	background: var(--text-primary);
+	color: var(--bg-primary);
+	font-family: var(--font-display, "Bricolage Grotesque Variable", sans-serif);
+	font-size: 20px;
+	font-weight: 800;
+}
+.pulso-logo::after,
+.pulso-live-dot {
+	content: "";
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--accent-tertiary);
+	animation: pulso-beat 1.4s var(--ease-out) infinite;
+}
+.pulso-logo::after {
+	position: absolute;
+	top: 7px;
+	right: 7px;
+}
+.pulso-live-dot {
+	display: inline-block;
+}
+.pulso-rail-btn {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 3px;
+	width: 64px;
+	padding: 8px 0 6px;
+	border-radius: 14px;
+	font-size: 10.5px;
+	font-weight: 600;
+	color: var(--text-secondary);
+	transition: color 0.2s;
+	isolation: isolate;
+}
+.pulso-rail-btn svg {
+	width: 21px;
+	height: 21px;
+	transition: transform 0.35s var(--ease-spring);
+}
+.pulso-rail-btn:hover {
+	color: var(--text-primary);
+}
+.pulso-rail-btn:hover svg {
+	transform: translateY(-2px);
+}
+.pulso-rail-btn[aria-current="page"] {
+	color: var(--text-primary);
+}
+.pulso-rail-btn[aria-current="page"]::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: 14px;
+	background: var(--bg-tertiary);
+	animation: pulso-pop 0.35s var(--ease-spring);
+}
+.pulso-badge {
+	position: absolute;
+	top: 3px;
+	right: 10px;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 4px;
+	border-radius: 8px;
+	background: var(--accent-primary);
+	color: #fff;
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 9.5px;
+	line-height: 16px;
+	text-align: center;
+}
+.pulso-rail-spacer {
+	flex: 1;
+}
+
+@media (max-width: 1023px) {
+	.pulso-shell {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.pulso-rail {
+		position: fixed;
+		top: auto;
+		left: 12px;
+		right: 12px;
+		bottom: calc(12px + var(--sab));
+		height: auto;
+		flex-direction: row;
+		justify-content: space-between;
+		overflow-x: auto;
+		padding: 6px;
+		border: 1px solid var(--border-subtle);
+		border-radius: 20px;
+		background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
+		backdrop-filter: blur(16px);
+		box-shadow: var(--shadow-lift);
+		scrollbar-width: none;
+	}
+	.pulso-logo,
+	.pulso-rail-spacer {
+		display: none;
+	}
+	.pulso-rail-btn {
+		flex: 1 0 58px;
+		width: auto;
+	}
+	.pulso-rail-btn[aria-current="page"] {
+		color: var(--accent-primary);
+	}
+	.pulso-rail-btn[aria-current="page"]::before {
+		background: var(--accent-soft);
+	}
+	.pulso-main {
+		padding-bottom: 110px;
+	}
+}
+
+/* ---------- Topbar ---------- */
+.pulso-topbar {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px clamp(16px, 3vw, 40px);
+	border-bottom: 1px solid var(--border-subtle);
+	background: color-mix(in srgb, var(--bg-primary) 86%, transparent);
+	backdrop-filter: blur(14px);
+}
+.pulso-title {
+	margin-right: auto;
+	font-family: "Bricolage Grotesque Variable", sans-serif;
+	font-size: clamp(22px, 2.4vw, 30px);
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	white-space: nowrap;
+	animation: pulso-rise 0.5s var(--ease-out);
+}
+.pulso-cmdk {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: min(380px, 40vw);
+	padding: 9px 12px;
+	border: 1px solid var(--border-subtle);
+	border-radius: 12px;
+	background: var(--bg-secondary);
+	color: var(--text-secondary);
+	font-size: 13px;
+	text-align: left;
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s;
+}
+.pulso-cmdk:hover {
+	border-color: var(--accent-primary);
+	box-shadow: 0 0 0 4px var(--accent-glow);
+}
+.pulso-kbd {
+	margin-left: auto;
+	padding: 1px 6px;
+	border: 1px solid var(--border-subtle);
+	border-radius: 6px;
+	background: var(--bg-primary);
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 11px;
+}
+.pulso-icon-btn {
+	position: relative;
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border: 1px solid var(--border-subtle);
+	border-radius: 12px;
+	background: var(--bg-secondary);
+	color: var(--text-primary);
+	transition: transform 0.3s var(--ease-spring);
+}
+.pulso-icon-btn:hover {
+	transform: rotate(-8deg) scale(1.06);
+}
+.pulso-icon-btn .pulso-badge {
+	top: -5px;
+	right: -5px;
+}
+@media (max-width: 640px) {
+	.pulso-cmdk {
+		width: auto;
+	}
+	.pulso-cmdk .pulso-cmdk-label,
+	.pulso-cmdk .pulso-kbd {
+		display: none;
+	}
+}
+
+.pulso-view {
+	padding: 22px clamp(16px, 3vw, 40px) 48px;
+	animation: pulso-rise 0.5s var(--ease-out);
+}
+
+/* ---------- Primitives ---------- */
+.pulso-eyebrow {
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 11px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+.pulso-panel {
+	min-width: 0;
+	border: 1px solid var(--border-subtle);
+	border-radius: 20px;
+	background: var(--bg-secondary);
+}
+.pulso-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border: 1px solid var(--border-subtle);
+	border-radius: 999px;
+	background: var(--bg-secondary);
+	font-size: 13px;
+	color: var(--text-primary);
+	transition:
+		border-color 0.2s,
+		transform 0.3s var(--ease-spring);
+}
+.pulso-chip:hover {
+	border-color: var(--accent-primary);
+}
+.pulso-chip:active {
+	transform: scale(0.96);
+}
+.pulso-chip[aria-pressed="true"] {
+	border-color: var(--text-primary);
+	background: var(--text-primary);
+	color: var(--bg-primary);
+}
+
+.pulso-seg {
+	position: relative;
+	display: inline-flex;
+	padding: 3px;
+	border-radius: 11px;
+	background: var(--bg-tertiary);
+}
+.pulso-seg button {
+	position: relative;
+	z-index: 1;
+	padding: 5px 11px;
+	border-radius: 8px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-secondary);
+	transition: color 0.2s;
+}
+.pulso-seg button[aria-pressed="true"] {
+	color: var(--text-primary);
+}
+.pulso-seg-thumb {
+	position: absolute;
+	top: 3px;
+	bottom: 3px;
+	border-radius: 8px;
+	background: var(--bg-secondary);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+	transition:
+		left 0.4s var(--ease-spring),
+		width 0.4s var(--ease-spring);
+}
+
+.pulso-switch {
+	position: relative;
+	flex: none;
+	width: 42px;
+	height: 24px;
+	border: 1px solid var(--border-subtle);
+	border-radius: 12px;
+	background: var(--bg-tertiary);
+	transition: background 0.3s;
+}
+.pulso-switch::after {
+	content: "";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+	transition: transform 0.4s var(--ease-spring);
+}
+.pulso-switch[aria-checked="true"] {
+	border-color: var(--accent-primary);
+	background: var(--accent-primary);
+}
+.pulso-switch[aria-checked="true"]::after {
+	transform: translateX(18px);
+}
+
+/* ---------- Briefing ---------- */
+.pulso-brief {
+	position: relative;
+	overflow: hidden;
+	padding: 20px;
+	background: linear-gradient(
+		160deg,
+		var(--accent-soft),
+		var(--bg-secondary) 70%
+	);
+}
+.pulso-brief-title {
+	margin: 10px 0 12px;
+	font-family: "Bricolage Grotesque Variable", sans-serif;
+	font-size: clamp(26px, 3vw, 40px);
+	font-weight: 800;
+	line-height: 1.04;
+	letter-spacing: -0.02em;
+	text-wrap: balance;
+}
+.pulso-typed {
+	min-height: 4.8em;
+	max-width: 68ch;
+	font-size: 15.5px;
+	line-height: 1.6;
+}
+.pulso-typed[data-typing="true"]::after {
+	content: "▍";
+	color: var(--accent-primary);
+	animation: pulso-blink 1s steps(1) infinite;
+}
+.pulso-play {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 16px 9px 12px;
+	border-radius: 999px;
+	background: var(--text-primary);
+	color: var(--bg-primary);
+	font-size: 13px;
+	font-weight: 700;
+	transition: transform 0.3s var(--ease-spring);
+}
+.pulso-play:hover {
+	transform: scale(1.04);
+}
+.pulso-eq {
+	display: flex;
+	align-items: flex-end;
+	gap: 2px;
+	height: 16px;
+}
+.pulso-eq i {
+	width: 3px;
+	height: 4px;
+	border-radius: 2px;
+	background: currentColor;
+}
+.pulso-play[data-on="true"] .pulso-eq i {
+	animation: pulso-eq 0.9s ease-in-out infinite;
+}
+.pulso-play[data-on="true"] .pulso-eq i:nth-child(2) {
+	animation-delay: -0.3s;
+}
+.pulso-play[data-on="true"] .pulso-eq i:nth-child(3) {
+	animation-delay: -0.6s;
+}
+.pulso-play[data-on="true"] .pulso-eq i:nth-child(4) {
+	animation-delay: -0.15s;
+}
+.pulso-keypoint {
+	display: grid;
+	grid-template-columns: 26px minmax(0, 1fr) auto;
+	gap: 8px;
+	align-items: baseline;
+	width: 100%;
+	padding: 8px 8px;
+	border-radius: 10px;
+	text-align: left;
+	font-size: 14px;
+	transition:
+		background 0.2s,
+		transform 0.3s var(--ease-spring);
+	animation: pulso-rise 0.5s var(--ease-out) both;
+}
+.pulso-keypoint:hover {
+	background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+	transform: translateX(4px);
+}
+.pulso-keypoint b {
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 11px;
+	color: var(--accent-primary);
+}
+
+.pulso-ticker {
+	overflow: hidden;
+	padding-block: 10px;
+	border-block: 1px solid var(--border-subtle);
+	white-space: nowrap;
+	mask-image: linear-gradient(
+		90deg,
+		transparent,
+		#000 6%,
+		#000 94%,
+		transparent
+	);
+}
+.pulso-ticker-track {
+	display: inline-flex;
+	gap: 42px;
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 12.5px;
+	animation: pulso-tick 60s linear infinite;
+}
+.pulso-ticker:hover .pulso-ticker-track {
+	animation-play-state: paused;
+}
+.pulso-ticker-track b {
+	margin-right: 8px;
+	color: var(--accent-primary);
+}
+
+/* ---------- Feed / bento ---------- */
+.pulso-cats {
+	position: relative;
+	display: flex;
+	gap: 2px;
+	overflow-x: auto;
+	margin-bottom: 14px;
+	border-bottom: 1px solid var(--border-subtle);
+	scrollbar-width: none;
+}
+.pulso-cats button {
+	padding: 9px 12px;
+	font-size: 13px;
+	white-space: nowrap;
+	color: var(--text-secondary);
+	transition: color 0.2s;
+}
+.pulso-cats button[aria-selected="true"] {
+	font-weight: 700;
+	color: var(--text-primary);
+}
+.pulso-cats-ink {
+	position: absolute;
+	bottom: 0;
+	height: 2px;
+	border-radius: 2px;
+	background: var(--accent-primary);
+	transition:
+		left 0.45s var(--ease-spring),
+		width 0.45s var(--ease-spring);
+}
+
+.pulso-bento {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	grid-auto-flow: dense;
+	gap: 14px;
+}
+@media (min-width: 900px) {
+	.pulso-bento .pulso-card--featured {
+		grid-column: span 2;
+		grid-row: span 2;
+	}
+	.pulso-bento .pulso-card--wide {
+		grid-column: span 2;
+	}
+}
+
+.pulso-card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	overflow: hidden;
+	border: 1px solid var(--border-subtle);
+	border-radius: 20px;
+	background: var(--bg-secondary);
+	transition:
+		transform 0.45s var(--ease-spring),
+		box-shadow 0.3s,
+		border-color 0.3s;
+	animation: pulso-card-in 0.6s var(--ease-out) both;
+}
+.pulso-card:hover,
+.pulso-card:focus-within,
+.pulso-card[data-active="true"] {
+	transform: translateY(-4px);
+	border-color: color-mix(
+		in srgb,
+		var(--accent-primary) 45%,
+		var(--border-subtle)
+	);
+	box-shadow: var(--shadow-lift);
+}
+.pulso-card[data-read="true"] {
+	opacity: 0.66;
+}
+.pulso-card-cover {
+	position: relative;
+	overflow: hidden;
+}
+.pulso-card-cover > * {
+	transition: transform 0.8s var(--ease-out);
+}
+.pulso-card:hover .pulso-card-cover > * {
+	transform: scale(1.05);
+}
+.pulso-card-actions {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	margin-top: auto;
+	padding-top: 6px;
+}
+.pulso-card-actions button,
+.pulso-card-actions a {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 9px;
+	color: var(--text-secondary);
+	transition:
+		transform 0.3s var(--ease-spring),
+		color 0.2s,
+		background 0.2s;
+}
+.pulso-card-actions button:hover,
+.pulso-card-actions a:hover {
+	transform: scale(1.15);
+	background: var(--bg-tertiary);
+	color: var(--accent-primary);
+}
+.pulso-pop {
+	animation: pulso-pop 0.45s var(--ease-spring);
+}
+
+.pulso-bias {
+	position: relative;
+	flex: none;
+	width: 44px;
+	height: 6px;
+	border-radius: 3px;
+	background: linear-gradient(
+		90deg,
+		var(--bias-left),
+		var(--bias-center),
+		var(--bias-right)
+	);
+}
+
+.pulso-loadmore {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 22px;
+	font-size: 13px;
+	color: var(--text-secondary);
+}
+.pulso-dots i {
+	display: inline-block;
+	width: 5px;
+	height: 5px;
+	margin: 0 2px;
+	border-radius: 50%;
+	background: var(--accent-primary);
+	animation: pulso-beat 1s infinite;
+}
+.pulso-dots i:nth-child(2) {
+	animation-delay: 0.15s;
+}
+.pulso-dots i:nth-child(3) {
+	animation-delay: 0.3s;
+}
+
+/* ---------- Drawer ---------- */
+.pulso-scrim {
+	position: fixed;
+	inset: 0;
+	z-index: 45;
+	background: rgba(8, 11, 18, 0.4);
+	backdrop-filter: blur(3px);
+	animation: pulso-fade 0.3s ease-out;
+}
+.pulso-drawer {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 46;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	width: min(400px, 100%);
+	overflow-y: auto;
+	padding: 20px;
+	border-left: 1px solid var(--border-subtle);
+	background: var(--bg-secondary);
+	box-shadow: var(--shadow-lift);
+	animation: pulso-drawer-in 0.5s var(--ease-out);
+}
+@media (max-width: 640px) {
+	.pulso-drawer {
+		top: auto;
+		left: 0;
+		width: 100%;
+		max-height: 86vh;
+		border-left: 0;
+		border-top: 1px solid var(--border-subtle);
+		border-radius: 22px 22px 0 0;
+		padding-bottom: calc(20px + var(--sab));
+		animation-name: pulso-sheet-in;
+	}
+}
+
+/* ---------- Command palette ---------- */
+.pulso-palette {
+	position: fixed;
+	inset: 0;
+	z-index: 60;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 12vh 12px 12px;
+	background: rgba(8, 11, 18, 0.45);
+	backdrop-filter: blur(5px);
+	animation: pulso-fade 0.2s ease-out;
+}
+.pulso-palette-box {
+	width: min(640px, 100%);
+	overflow: hidden;
+	border: 1px solid var(--border-subtle);
+	border-radius: 20px;
+	background: var(--bg-secondary);
+	box-shadow: var(--shadow-lift);
+	animation: pulso-palette-in 0.45s var(--ease-spring);
+}
+.pulso-palette-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 9px 10px;
+	border-radius: 10px;
+	text-align: left;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+.pulso-palette-item[aria-selected="true"] {
+	background: var(--bg-tertiary);
+}
+.pulso-palette-item small {
+	margin-left: auto;
+	flex: none;
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 11px;
+	color: var(--text-secondary);
+}
+
+/* ---------- Toast ---------- */
+.pulso-toast {
+	position: fixed;
+	left: 50%;
+	bottom: calc(24px + var(--sab));
+	z-index: 70;
+	padding: 10px 16px;
+	border-radius: 12px;
+	background: var(--text-primary);
+	color: var(--bg-primary);
+	font-size: 13px;
+	font-weight: 700;
+	white-space: nowrap;
+	transform: translateX(-50%);
+	animation: pulso-toast-in 0.45s var(--ease-spring);
+}
+@media (max-width: 1023px) {
+	.pulso-toast {
+		bottom: calc(100px + var(--sab));
+	}
+}
+
+/* ---------- Reader (ArticleModal) ---------- */
+.pulso-reader {
+	animation: pulso-reader-in 0.55s var(--ease-out);
+}
+
+/* ---------- Stories ---------- */
+.pulso-story-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 14px;
+}
+.pulso-story-grid > * {
+	animation: pulso-card-in 0.6s var(--ease-out) both;
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes pulso-beat {
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.6);
+		opacity: 0.4;
+	}
+}
+@keyframes pulso-pop {
+	from {
+		transform: scale(0.6);
+		opacity: 0;
+	}
+}
+@keyframes pulso-rise {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+}
+@keyframes pulso-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes pulso-card-in {
+	from {
+		opacity: 0;
+		transform: translateY(18px) scale(0.98);
+	}
+}
+@keyframes pulso-blink {
+	50% {
+		opacity: 0;
+	}
+}
+@keyframes pulso-eq {
+	0%,
+	100% {
+		height: 4px;
+	}
+	50% {
+		height: 16px;
+	}
+}
+@keyframes pulso-tick {
+	to {
+		transform: translateX(-50%);
+	}
+}
+@keyframes pulso-drawer-in {
+	from {
+		transform: translateX(100%);
+	}
+}
+@keyframes pulso-sheet-in {
+	from {
+		transform: translateY(100%);
+	}
+}
+@keyframes pulso-palette-in {
+	from {
+		opacity: 0;
+		transform: translateY(-14px) scale(0.97);
+	}
+}
+@keyframes pulso-toast-in {
+	from {
+		opacity: 0;
+		transform: translate(-50%, 30px);
+	}
+}
+@keyframes pulso-reader-in {
+	from {
+		opacity: 0;
+		clip-path: inset(8% 6% 8% 6% round 28px);
+		transform: translateY(16px) scale(0.98);
+	}
+	to {
+		clip-path: inset(0 0 0 0 round 16px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pulso-shell *,
+	.pulso-shell *::before,
+	.pulso-shell *::after,
+	.pulso-reader,
+	.pulso-palette,
+	.pulso-palette-box,
+	.pulso-drawer,
+	.pulso-toast {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
