@@ -110,7 +110,7 @@ export function Rail({ active, onChange, counts }: RailProps) {
 				{ICONS[v]}
 				{VIEW_LABELS[v]}
 				{n > 0 && (
-					<span className="pulso-badge tabular-nums" aria-hidden>
+					<span key={n} className="pulso-badge tabular-nums" aria-hidden>
 						{n > 99 ? "99+" : n}
 					</span>
 				)}

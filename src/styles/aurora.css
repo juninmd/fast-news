@@ -190,6 +190,16 @@
 .pulso-rail-btn {
 	z-index: 1;
 }
+/* Count badges pop whenever the number changes (keyed by count). */
+.pulso-rail-btn .pulso-badge {
+	animation: aurora-badge 0.5s var(--ease-spring);
+}
+@keyframes aurora-badge {
+	from {
+		transform: scale(0.2);
+		opacity: 0;
+	}
+}
 .pulso-rail-btn[aria-current="page"]::before {
 	display: none;
 }

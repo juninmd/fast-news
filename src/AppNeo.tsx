@@ -450,6 +450,7 @@ function App() {
 							onOpenArticle={openArticle}
 							onSearch={(term) => openPalette(term)}
 							onSeeFeed={() => go("feed")}
+							onOpenWords={() => go("words")}
 							headlines={articles.slice(0, 12)}
 						/>
 					)}

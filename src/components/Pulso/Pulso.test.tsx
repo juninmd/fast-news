@@ -81,6 +81,8 @@ describe("Rail", () => {
 		);
 		fireEvent.click(screen.getByRole("button", { name: "Status" }));
 		expect(onChange).toHaveBeenCalledWith("status");
+		fireEvent.click(screen.getByRole("button", { name: "Palavras" }));
+		expect(onChange).toHaveBeenCalledWith("words");
 	});
 });
 
