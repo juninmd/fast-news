@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { MOCK_ARTICLES, mockBackend } from "./fixtures";
+import { gotoFeed, MOCK_ARTICLES, mockBackend } from "./fixtures";
 
 test.describe("Feed", () => {
 	test.beforeEach(async ({ page }) => {
@@ -7,7 +7,7 @@ test.describe("Feed", () => {
 	});
 
 	test("loads and renders news cards from the API", async ({ page }) => {
-		await page.goto("/");
+		await gotoFeed(page);
 
 		const article = page.locator("article", {
 			hasText: MOCK_ARTICLES[0].title,
@@ -31,7 +31,7 @@ test.describe("Feed", () => {
 			}),
 		);
 
-		await page.goto("/");
+		await gotoFeed(page);
 
 		await expect(page.locator("article")).toHaveCount(0);
 	});
