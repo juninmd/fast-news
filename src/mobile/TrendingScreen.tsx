@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { WordWheel } from "../components/Pulso/WordWheel";
 import { type TrendTerm, useTrends } from "../hooks/useTrends";
 
 const WINDOWS = [6, 24, 48] as const;
@@ -99,6 +100,19 @@ export function TrendingScreen({
 			</header>
 
 			<div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-2">
+				{terms.length >= 3 && (
+					<section aria-label="Roda de palavras" className="mb-3">
+						<WordWheel
+							terms={report?.terms ?? terms}
+							max={14}
+							className="m-wheel"
+							onActivate={(w) => onSelectTerm(w.term.term)}
+						/>
+						<p className="mt-2 text-center text-xs text-text-secondary">
+							Gire a roda; toque de novo na palavra para buscar
+						</p>
+					</section>
+				)}
 				{loading && !report
 					? Array.from({ length: 8 }).map((_, i) => (
 							<div

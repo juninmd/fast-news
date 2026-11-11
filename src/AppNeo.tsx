@@ -1,5 +1,12 @@
 import { Moon, Search, SlidersHorizontal, Sun } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+	type CSSProperties,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	ArticleModal,
 	CategoryTabs,
@@ -18,7 +25,13 @@ import {
 	type PulsoView,
 	Rail,
 	VIEW_LABELS,
+	WordsView,
 } from "./components/Pulso";
+import {
+	auroraTint,
+	useCardTilt,
+	withViewTransition,
+} from "./components/Pulso/motion";
 import {
 	CorrelationGraph,
 	IntelligencePanel,
@@ -35,6 +48,7 @@ import { useTranslatedTitles } from "./hooks/useTranslatedTitles";
 import { useTrends } from "./hooks/useTrends";
 import "./styles/animations.css";
 import "./styles/pulso.css";
+import "./styles/aurora.css";
 
 const VIEW_KEY = "fn_view";
 const VIEWS = Object.keys(VIEW_LABELS) as PulsoView[];
@@ -117,9 +131,14 @@ function App() {
 	});
 	const articles = useTranslatedTitles(originalArticles, filters.lang);
 
+	const mainRef = useRef<HTMLDivElement>(null);
+	useCardTilt(mainRef);
+
 	const go = useCallback((v: PulsoView) => {
-		setActiveView(v);
-		setCursor(-1);
+		withViewTransition(() => {
+			setActiveView(v);
+			setCursor(-1);
+		});
 		try {
 			localStorage.setItem(VIEW_KEY, v);
 		} catch {
@@ -338,7 +357,22 @@ function App() {
 	);
 
 	return (
-		<div className="pulso-shell bg-bg-primary text-text-primary">
+		<div
+			className="pulso-shell bg-bg-primary text-text-primary"
+			style={
+				auroraTint(activeCategory)
+					? ({
+							"--aurora-tint": auroraTint(activeCategory),
+						} as CSSProperties)
+					: undefined
+			}
+		>
+			<div className="pulso-aurora" aria-hidden>
+				<i />
+				<i />
+				<i />
+			</div>
+			<div className="pulso-progress" aria-hidden />
 			<Rail
 				active={activeView}
 				onChange={go}
@@ -348,10 +382,22 @@ function App() {
 				}}
 			/>
 
-			<div className="pulso-main min-w-0">
+			<div ref={mainRef} className="pulso-main min-w-0">
 				<header className="pulso-topbar">
-					<h1 key={activeView} className="pulso-title">
-						{VIEW_LABELS[activeView]}
+					<h1
+						key={activeView}
+						className="pulso-title"
+						aria-label={VIEW_LABELS[activeView]}
+					>
+						{[...VIEW_LABELS[activeView]].map((ch, i) => (
+							<span
+								key={i}
+								aria-hidden
+								style={{ animationDelay: `${i * 28}ms` }}
+							>
+								{ch}
+							</span>
+						))}
 					</h1>
 					<span className="hidden items-center gap-2 font-mono text-[11px] tracking-widest text-accent-tertiary xl:flex">
 						<span className="pulso-live-dot" />
@@ -534,6 +580,14 @@ function App() {
 								<p className="pulso-loadmore">Você chegou ao fim</p>
 							)}
 						</>
+					)}
+
+					{activeView === "words" && (
+						<WordsView
+							onSearch={handleSearch}
+							onOpenArticle={openArticle}
+							articles={articles}
+						/>
 					)}
 
 					{activeView === "bookmarks" &&

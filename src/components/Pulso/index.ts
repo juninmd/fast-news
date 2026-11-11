@@ -13,3 +13,5 @@ export {
 export { type PulsoView, Rail, VIEW_LABELS } from "./Rail";
 export { Segmented } from "./Segmented";
 export { Switch } from "./Switch";
+export { WordsView } from "./WordsView";
+export { WordWheel } from "./WordWheel";

@@ -1,0 +1,336 @@
+/* Pulso Aurora: living background, glass surfaces, dock ink, circular view
+   transitions, 3D cards and the Roda de Palavras. Loads after pulso.css and
+   only extends it; every color comes from the tokens in index.css. */
+
+.pulso-shell {
+	position: relative;
+	isolation: isolate;
+	background: transparent;
+}
+
+/* ---------- Aurora ---------- */
+.pulso-aurora {
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	overflow: hidden;
+	pointer-events: none;
+	background: var(--bg-primary);
+}
+.pulso-aurora i {
+	position: absolute;
+	width: 70vmax;
+	height: 70vmax;
+	border-radius: 50%;
+	opacity: var(--aurora-strength);
+	will-change: transform;
+	transition: background 1.2s var(--ease-out);
+}
+.pulso-aurora i:nth-child(1) {
+	top: -40vmax;
+	left: -20vmax;
+	background: radial-gradient(
+		closest-side,
+		color-mix(in srgb, var(--aurora-tint) 70%, transparent),
+		transparent
+	);
+	animation: aurora-drift-a 28s var(--ease-out) infinite alternate;
+}
+.pulso-aurora i:nth-child(2) {
+	top: -10vmax;
+	right: -35vmax;
+	background: radial-gradient(
+		closest-side,
+		color-mix(in srgb, var(--accent-secondary) 55%, transparent),
+		transparent
+	);
+	animation: aurora-drift-b 34s var(--ease-out) infinite alternate;
+}
+.pulso-aurora i:nth-child(3) {
+	bottom: -50vmax;
+	left: 20vw;
+	background: radial-gradient(
+		closest-side,
+		color-mix(in srgb, var(--accent-tertiary) 45%, transparent),
+		transparent
+	);
+	animation: aurora-drift-a 40s var(--ease-out) infinite alternate-reverse;
+}
+.pulso-aurora::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	opacity: 0.05;
+	background-image: radial-gradient(
+		var(--text-primary) 0.6px,
+		transparent 0.6px
+	);
+	background-size: 3px 3px;
+}
+@keyframes aurora-drift-a {
+	to {
+		transform: translate(12vw, 10vh) scale(1.2) rotate(30deg);
+	}
+}
+@keyframes aurora-drift-b {
+	to {
+		transform: translate(-14vw, 18vh) scale(0.9);
+	}
+}
+
+/* ---------- Reading progress (scroll-driven, no JS) ---------- */
+.pulso-progress {
+	display: none;
+}
+@supports (animation-timeline: scroll()) {
+	.pulso-progress {
+		display: block;
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 60;
+		height: 3px;
+		transform-origin: 0 50%;
+		background: linear-gradient(
+			90deg,
+			var(--accent-primary),
+			var(--accent-secondary),
+			var(--accent-tertiary)
+		);
+		animation: aurora-progress linear both;
+		animation-timeline: scroll(root);
+	}
+}
+@keyframes aurora-progress {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+/* ---------- Glass ---------- */
+.pulso-panel,
+.pulso-topbar,
+.pulso-rail {
+	background: color-mix(in srgb, var(--bg-secondary) 74%, transparent);
+	backdrop-filter: blur(18px) saturate(1.4);
+	-webkit-backdrop-filter: blur(18px) saturate(1.4);
+}
+.pulso-topbar {
+	background: color-mix(in srgb, var(--bg-primary) 62%, transparent);
+	border-bottom-color: transparent;
+	box-shadow: 0 1px 0 var(--border-subtle);
+}
+.pulso-cmdk {
+	background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+	border-radius: 14px;
+}
+.pulso-cmdk:hover {
+	transform: translateY(-1px);
+}
+
+/* ---------- Kinetic title ---------- */
+.pulso-title {
+	animation: none;
+}
+.pulso-title span {
+	display: inline-block;
+	white-space: pre;
+	animation: aurora-letter 0.7s var(--ease-spring) both;
+}
+@keyframes aurora-letter {
+	from {
+		opacity: 0;
+		transform: translateY(60%) rotate(8deg);
+		filter: blur(4px);
+	}
+}
+/* ---------- Dock ---------- */
+.pulso-rail {
+	border-right: 0;
+	box-shadow: 1px 0 0 var(--border-subtle);
+}
+.pulso-logo {
+	background: conic-gradient(
+		from 0deg,
+		var(--accent-primary),
+		var(--accent-secondary),
+		var(--accent-tertiary),
+		var(--accent-primary)
+	);
+	color: #fff;
+	animation: aurora-hue 14s linear infinite;
+	box-shadow: 0 8px 24px -8px var(--accent-primary);
+}
+@keyframes aurora-hue {
+	to {
+		filter: hue-rotate(360deg);
+	}
+}
+.pulso-rail-ink {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 0;
+	border-radius: 14px;
+	background: var(--bg-tertiary);
+	box-shadow:
+		inset 0 0 0 1px var(--border-subtle),
+		0 0 26px -6px var(--aurora-tint);
+	pointer-events: none;
+	transition:
+		transform 0.55s var(--ease-spring),
+		width 0.55s var(--ease-spring),
+		height 0.55s var(--ease-spring),
+		opacity 0.3s;
+}
+.pulso-rail-btn {
+	z-index: 1;
+}
+.pulso-rail-btn[aria-current="page"]::before {
+	display: none;
+}
+.pulso-rail-btn[aria-current="page"] svg {
+	color: var(--aurora-tint);
+	transform: scale(1.12);
+}
+.pulso-rail-btn:active svg {
+	transform: scale(0.88);
+}
+@media (max-width: 1023px) {
+	.pulso-rail {
+		border-radius: 24px;
+		background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+	}
+	.pulso-rail-ink {
+		border-radius: 16px;
+		background: var(--accent-soft);
+	}
+}
+
+/* ---------- Circular view transitions ---------- */
+::view-transition-old(root) {
+	animation: none;
+}
+::view-transition-new(root) {
+	animation: aurora-reveal 0.6s var(--ease-out);
+}
+@keyframes aurora-reveal {
+	from {
+		clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
+	}
+	to {
+		clip-path: circle(
+			var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%)
+		);
+	}
+}
+
+/* ---------- 3D cards with spotlight ---------- */
+.pulso-bento {
+	perspective: 1600px;
+}
+.pulso-card {
+	--lift: 0px;
+	background: color-mix(in srgb, var(--bg-secondary) 88%, transparent);
+	transform: translateY(var(--lift)) rotateX(var(--rx, 0deg))
+		rotateY(var(--ry, 0deg));
+	transform-style: preserve-3d;
+	transition:
+		transform 0.5s var(--ease-spring),
+		box-shadow 0.3s,
+		border-color 0.3s;
+}
+.pulso-card:hover,
+.pulso-card:focus-within,
+.pulso-card[data-active="true"] {
+	--lift: -6px;
+	transform: translateY(var(--lift)) rotateX(var(--rx, 0deg))
+		rotateY(var(--ry, 0deg));
+	box-shadow:
+		var(--shadow-lift),
+		0 24px 60px -30px var(--aurora-tint);
+}
+.pulso-card:hover {
+	transition:
+		transform 0.12s linear,
+		box-shadow 0.3s,
+		border-color 0.3s;
+}
+.pulso-card::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	border-radius: inherit;
+	pointer-events: none;
+	opacity: 0;
+	background: radial-gradient(
+		420px circle at var(--mx, 50%) var(--my, 0%),
+		color-mix(in srgb, var(--aurora-tint) 18%, transparent),
+		transparent 55%
+	);
+	transition: opacity 0.35s;
+}
+.pulso-card:hover::after {
+	opacity: 1;
+}
+.pulso-card--featured {
+	background: linear-gradient(
+		160deg,
+		color-mix(in srgb, var(--aurora-tint) 16%, var(--bg-secondary)),
+		color-mix(in srgb, var(--bg-secondary) 90%, transparent) 60%
+	);
+}
+.pulso-bento > :nth-child(n) .pulso-card,
+.pulso-bento > .pulso-card {
+	animation-name: aurora-card-in;
+}
+@keyframes aurora-card-in {
+	from {
+		opacity: 0;
+		transform: translateY(28px) rotateX(10deg) scale(0.96);
+	}
+}
+
+/* ---------- Briefing hero ---------- */
+.pulso-brief {
+	position: relative;
+	overflow: hidden;
+}
+.pulso-brief::before {
+	content: "";
+	position: absolute;
+	inset: -40% -20% auto auto;
+	width: 70%;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: radial-gradient(
+		closest-side,
+		color-mix(in srgb, var(--aurora-tint) 22%, transparent),
+		transparent
+	);
+	animation: aurora-drift-b 18s var(--ease-out) infinite alternate;
+	pointer-events: none;
+	z-index: -1;
+}
+.pulso-brief {
+	isolation: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pulso-aurora i,
+	.pulso-logo,
+	.pulso-title span {
+		animation: none !important;
+	}
+	.pulso-card {
+		transform: none !important;
+	}
+	::view-transition-new(root) {
+		animation: none;
+	}
+}
