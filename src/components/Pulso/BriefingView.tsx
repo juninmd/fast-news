@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { type DigestPeriod, useDigest } from "../../hooks/useDigest";
 import { useDigestSpeech } from "../../hooks/useDigestSpeech";
+import { useTrends } from "../../hooks/useTrends";
 import { TopNewsSection } from "../NeoEditorial/TopNewsSection";
 import { TrendingPanel } from "../NeoEditorial/TrendingPanel";
 import { Segmented } from "./Segmented";
+import { WordWheel } from "./WordWheel";
+import { titleCase, type WheelWord } from "./wordWheel";
 
 const PERIODS = [
 	["4h", "4h"],
@@ -47,6 +50,8 @@ interface BriefingViewProps {
 	onOpenArticle: (id: string, title?: string) => void;
 	onSearch: (term: string) => void;
 	onSeeFeed: () => void;
+	/** Opens the full "Palavras" view; the wheel teaser hides without it. */
+	onOpenWords?: () => void;
 	headlines: Array<{ id: string; title: string; category: string }>;
 }
 
@@ -56,6 +61,7 @@ export function BriefingView({
 	onOpenArticle,
 	onSearch,
 	onSeeFeed,
+	onOpenWords,
 	headlines,
 }: BriefingViewProps) {
 	const [period, setPeriod] = useState<DigestPeriod>("daily");
@@ -176,6 +182,10 @@ export function BriefingView({
 				</div>
 			</div>
 
+			{onOpenWords && (
+				<WheelTeaser onSearch={onSearch} onOpenWords={onOpenWords} />
+			)}
+
 			<div className="flex items-center justify-between gap-3">
 				<span className="pulso-eyebrow">Mesma notícia, várias fontes</span>
 				<button type="button" className="pulso-chip" onClick={onSeeFeed}>
@@ -186,5 +196,64 @@ export function BriefingView({
 				<TopNewsSection onArticleClick={(id) => onOpenArticle(id)} />
 			</div>
 		</div>
+	);
+}
+
+/** Compact Roda de Palavras on the briefing, linking to the full view. */
+function WheelTeaser({
+	onSearch,
+	onOpenWords,
+}: {
+	onSearch: (term: string) => void;
+	onOpenWords: () => void;
+}) {
+	const { report } = useTrends(24);
+	const [word, setWord] = useState<WheelWord | null>(null);
+	const terms = report?.terms ?? [];
+	if (terms.length < 3) return null;
+	const t = word?.term;
+	return (
+		<section
+			className="pulso-panel pulso-wheel-teaser"
+			aria-labelledby="pulso-wheel-teaser-title"
+		>
+			<WordWheel
+				terms={terms}
+				max={12}
+				className="pulso-wheel--mini"
+				label="Roda de palavras das últimas 24h"
+				onFocusChange={setWord}
+				onActivate={(w) => onSearch(w.term.term)}
+			/>
+			<div className="grid min-w-0 content-center gap-3">
+				<span className="pulso-eyebrow">✦ Roda de palavras · 24h</span>
+				<h2
+					id="pulso-wheel-teaser-title"
+					className="font-display text-2xl font-extrabold leading-tight"
+				>
+					{t ? titleCase(t.term) : "O que domina os portais"}
+				</h2>
+				{t && (
+					<p className="text-sm text-text-secondary">
+						{t.count} menções em {t.sources} portais. Gire a roda; toque de novo
+						na palavra para buscar.
+					</p>
+				)}
+				<div className="flex flex-wrap gap-2">
+					{t && (
+						<button
+							type="button"
+							className="pulso-chip"
+							onClick={() => onSearch(t.term)}
+						>
+							Buscar “{t.term}”
+						</button>
+					)}
+					<button type="button" className="pulso-chip" onClick={onOpenWords}>
+						Abrir a roda completa →
+					</button>
+				</div>
+			</div>
+		</section>
 	);
 }

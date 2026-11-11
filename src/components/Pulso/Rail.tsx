@@ -6,13 +6,21 @@ import {
 	LayoutGrid,
 	Network,
 	Newspaper,
+	Orbit,
 	Radio,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+	type CSSProperties,
+	type ReactNode,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react";
 
 export type PulsoView =
 	| "briefing"
 	| "feed"
+	| "words"
 	| "stories"
 	| "graph"
 	| "intelligence"
@@ -23,6 +31,7 @@ export type PulsoView =
 export const VIEW_LABELS: Record<PulsoView, string> = {
 	briefing: "Briefing",
 	feed: "Feed",
+	words: "Palavras",
 	stories: "Histórias",
 	graph: "Grafo",
 	intelligence: "Inteligência",
@@ -34,6 +43,7 @@ export const VIEW_LABELS: Record<PulsoView, string> = {
 const ICONS: Record<PulsoView, ReactNode> = {
 	briefing: <Newspaper aria-hidden />,
 	feed: <LayoutGrid aria-hidden />,
+	words: <Orbit aria-hidden />,
 	stories: <Activity aria-hidden />,
 	graph: <Network aria-hidden />,
 	intelligence: <Brain aria-hidden />,
@@ -45,6 +55,7 @@ const ICONS: Record<PulsoView, ReactNode> = {
 const ORDER: PulsoView[] = [
 	"briefing",
 	"feed",
+	"words",
 	"stories",
 	"graph",
 	"intelligence",
@@ -58,8 +69,33 @@ interface RailProps {
 	counts: Partial<Record<PulsoView, number>>;
 }
 
-/** Vertical rail on desktop; floating tab bar below 1024px (same markup, CSS decides). */
+/**
+ * Glass dock: vertical on desktop, floating pill below 1024px (same markup,
+ * CSS decides). An ink blob springs to the active item.
+ */
 export function Rail({ active, onChange, counts }: RailProps) {
+	const navRef = useRef<HTMLElement>(null);
+	const [ink, setInk] = useState<CSSProperties>({ opacity: 0 });
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the active view changes
+	useLayoutEffect(() => {
+		const place = () => {
+			const on = navRef.current?.querySelector<HTMLElement>(
+				'[aria-current="page"]',
+			);
+			if (!on) return;
+			setInk({
+				opacity: 1,
+				transform: `translate(${on.offsetLeft}px, ${on.offsetTop}px)`,
+				width: on.offsetWidth,
+				height: on.offsetHeight,
+			});
+		};
+		place();
+		window.addEventListener("resize", place);
+		return () => window.removeEventListener("resize", place);
+	}, [active]);
+
 	const item = (v: PulsoView) => {
 		const n = counts[v] ?? 0;
 		return (
@@ -74,7 +110,7 @@ export function Rail({ active, onChange, counts }: RailProps) {
 				{ICONS[v]}
 				{VIEW_LABELS[v]}
 				{n > 0 && (
-					<span className="pulso-badge tabular-nums" aria-hidden>
+					<span key={n} className="pulso-badge tabular-nums" aria-hidden>
 						{n > 99 ? "99+" : n}
 					</span>
 				)}
@@ -83,7 +119,8 @@ export function Rail({ active, onChange, counts }: RailProps) {
 	};
 
 	return (
-		<nav className="pulso-rail" aria-label="Navegação principal">
+		<nav ref={navRef} className="pulso-rail" aria-label="Navegação principal">
+			<span className="pulso-rail-ink" style={ink} aria-hidden />
 			<a href="/" className="pulso-logo" aria-label="Fast News, início">
 				f
 			</a>
