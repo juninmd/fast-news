@@ -57,6 +57,11 @@ export const FEED_SOURCES = [
 
 	// ── EXPANSÃO CONTÍNUA ─────────────────────────────────────────────────────────────
 	{
+		url: "https://www.infomoney.com.br/feed/",
+		category: "Negócios",
+		company: "InfoMoney",
+	},
+	{
 		url: "https://rss.nytimes.com/services/xml/rss/nyt/PersonalTech.xml",
 		category: "Tecnologia",
 	},
