@@ -24,6 +24,6 @@ jobs:
         with:
           image-name: ${{ github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          push: false
+          push: 'false'
           secrets: |
             npmrc=//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}
