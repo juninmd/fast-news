@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useTrends } from "../../hooks/useTrends";
 import { Segmented } from "./Segmented";
 import { WordWheel } from "./WordWheel";
-import { titleCase, type WheelWord } from "./wordWheel";
+import { titleCase, type WheelWord } from "./wheelModel";
 
 const WINDOWS = [
 	["6", "6h"],

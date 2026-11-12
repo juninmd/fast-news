@@ -20,7 +20,7 @@ import {
 	titleCase,
 	type WheelWord,
 	wrap,
-} from "./wordWheel";
+} from "./wheelModel";
 
 const FRICTION = 0.94;
 const SNAP = 0.14;
