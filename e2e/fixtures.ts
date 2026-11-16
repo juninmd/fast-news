@@ -65,6 +65,25 @@ export async function mockBackend(page: Page) {
 			body: JSON.stringify({ data: [] }),
 		}),
 	);
+	await page.route("**/api/digests/**", (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: "application/json",
+			body: JSON.stringify({ period: "daily", data: [] }),
+		}),
+	);
+	await page.route("**/api/news/trends**", (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: "application/json",
+			body: JSON.stringify({
+				windowHours: 24,
+				totalArticles: 0,
+				terms: [],
+				themes: [],
+			}),
+		}),
+	);
 	await page.route("**/api/health", (route) =>
 		route.fulfill({ status: 200, contentType: "text/plain", body: "" }),
 	);
@@ -83,4 +102,13 @@ export async function mockBackend(page: Page) {
 			}),
 		}),
 	);
+}
+
+/** The app opens on the Briefing; the article list lives in the Feed view. */
+export async function gotoFeed(page: Page) {
+	await page.goto("/");
+	await page
+		.getByRole("navigation", { name: "Navegação principal" })
+		.getByRole("button", { name: "Feed", exact: true })
+		.click();
 }

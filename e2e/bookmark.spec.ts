@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { MOCK_ARTICLES, mockBackend } from "./fixtures";
+import { gotoFeed, MOCK_ARTICLES, mockBackend } from "./fixtures";
 
 test.describe("Bookmarks", () => {
 	test.beforeEach(async ({ page }) => {
 		await mockBackend(page);
-		await page.goto("/");
+		await gotoFeed(page);
 	});
 
 	test("adds and removes a bookmark, and it persists in the Salvos tab", async ({
@@ -31,7 +31,7 @@ test.describe("Bookmarks", () => {
 			.getByTitle("Remover dos salvos")
 			.click();
 
-		await expect(page.getByText("Nenhum artigo salvo ainda.")).toBeVisible();
+		await expect(page.getByText("Nada salvo ainda")).toBeVisible();
 
 		const afterRemove = await page.evaluate(() =>
 			localStorage.getItem("fn_bookmarks"),

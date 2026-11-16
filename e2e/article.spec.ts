@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { MOCK_ARTICLES, mockBackend } from "./fixtures";
+import { gotoFeed, MOCK_ARTICLES, mockBackend } from "./fixtures";
 
 test.describe("Article detail", () => {
 	test.beforeEach(async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe("Article detail", () => {
 	});
 
 	test("opens the article modal with the full content", async ({ page }) => {
-		await page.goto("/");
+		await gotoFeed(page);
 
 		const card = page.locator("article", { hasText: MOCK_ARTICLES[0].title });
 		await card.getByTitle("Abrir artigo").click();

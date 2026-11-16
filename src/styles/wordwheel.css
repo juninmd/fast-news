@@ -1,0 +1,372 @@
+/* Roda de Palavras: shared by the desktop "Palavras" view and the mobile
+   "Em alta" screen, so it carries its own keyframes. */
+.pulso-wheel-stage {
+	display: grid;
+	justify-items: center;
+	gap: 14px;
+	min-width: 0;
+}
+.pulso-wheel {
+	position: relative;
+	width: min(600px, 100%);
+	aspect-ratio: 1;
+	max-width: 100%;
+	container-type: inline-size;
+	border-radius: 50%;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	cursor: grab;
+	background:
+		radial-gradient(
+			circle,
+			transparent 55%,
+			color-mix(in srgb, var(--aurora-tint) 8%, transparent) 70%,
+			transparent 71%
+		),
+		radial-gradient(
+			circle,
+			color-mix(in srgb, var(--bg-secondary) 50%, transparent),
+			transparent 72%
+		);
+}
+.pulso-wheel:active {
+	cursor: grabbing;
+}
+.pulso-wheel:focus-visible {
+	outline-offset: 6px;
+}
+.pulso-wheel--loading {
+	display: grid;
+	place-items: center;
+	cursor: default;
+	border: 1px dashed var(--border-subtle);
+}
+.pulso-wheel-ticks {
+	position: absolute;
+	inset: 1.5%;
+	border-radius: 50%;
+	border: 1px solid var(--border-subtle);
+	background: repeating-conic-gradient(
+		from 0deg,
+		var(--border-subtle) 0deg 0.6deg,
+		transparent 0.6deg 5deg
+	);
+	-webkit-mask: radial-gradient(circle, transparent 95.5%, #000 96%);
+	mask: radial-gradient(circle, transparent 95.5%, #000 96%);
+	animation: aurora-spin 120s linear infinite;
+}
+@keyframes aurora-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+.pulso-wheel::before,
+.pulso-wheel::after {
+	content: "";
+	position: absolute;
+	border-radius: 50%;
+	border: 1px solid var(--border-subtle);
+	pointer-events: none;
+}
+.pulso-wheel::before {
+	inset: 11%;
+}
+.pulso-wheel::after {
+	inset: 20.5%;
+}
+.pulso-wheel-layer {
+	position: absolute;
+	inset: 0;
+	will-change: transform;
+}
+.pulso-wheel-word {
+	--tone: var(--accent-primary);
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	padding: 0.2em 0.35em;
+	border-radius: 0.5em;
+	font-family: "Bricolage Grotesque Variable", sans-serif;
+	font-size: max(11px, calc(2.1cqw + var(--rel) * 2.5cqw));
+	font-weight: 650;
+	line-height: 1;
+	white-space: nowrap;
+	color: var(--tone);
+	transform: translate(-50%, -50%) rotate(var(--a))
+		translateY(calc(var(--r) * -1));
+	transition:
+		color 0.25s,
+		font-size 0.35s var(--ease-spring),
+		text-shadow 0.25s;
+	cursor: pointer;
+}
+.pulso-wheel-word span {
+	display: inline-block;
+	transition: transform 0.35s var(--ease-spring);
+}
+.pulso-wheel-word::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	bottom: -0.3em;
+	width: 0.28em;
+	height: 0.28em;
+	border-radius: 50%;
+	background: var(--tone);
+	transform: translateX(-50%);
+}
+.pulso-wheel-word:hover span {
+	transform: scale(1.08);
+}
+.pulso-wheel-word[data-focus="true"] {
+	color: var(--text-primary);
+	font-weight: 800;
+	text-shadow: 0 0 22px color-mix(in srgb, var(--tone) 70%, transparent);
+}
+.pulso-wheel-word[data-focus="true"] span {
+	transform: scale(1.28);
+}
+[data-tone="new"] {
+	--tone: var(--accent-tertiary);
+}
+[data-tone="rising"] {
+	--tone: var(--accent-secondary);
+}
+[data-tone="steady"] {
+	--tone: var(--accent-primary);
+}
+.pulso-wheel-pointer {
+	position: absolute;
+	top: -1.5%;
+	left: 50%;
+	width: 0;
+	height: 0;
+	border: 10px solid transparent;
+	border-top: 15px solid var(--accent-tertiary);
+	transform: translateX(-50%);
+	filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+	animation: aurora-bob 2.4s var(--ease-out) infinite;
+}
+@keyframes aurora-bob {
+	50% {
+		transform: translate(-50%, 3px);
+	}
+}
+.pulso-wheel-hub {
+	position: absolute;
+	inset: 34%;
+	display: grid;
+	place-content: center;
+	gap: 4px;
+	padding: 6%;
+	border-radius: 50%;
+	border: 1px solid var(--border-subtle);
+	background: radial-gradient(
+		circle,
+		color-mix(in srgb, var(--bg-secondary) 94%, transparent),
+		color-mix(in srgb, var(--bg-secondary) 55%, transparent)
+	);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 0 60px -20px var(--aurora-tint);
+	text-align: center;
+	pointer-events: none;
+}
+.pulso-wheel-hub small {
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: clamp(9px, 1.8cqw, 11px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+.pulso-wheel-hub b {
+	display: block;
+	font-family: "Bricolage Grotesque Variable", sans-serif;
+	font-size: clamp(14px, 4.2cqw, 28px);
+	font-weight: 800;
+	line-height: 1.02;
+	overflow-wrap: anywhere;
+	animation: wheel-pop 0.4s var(--ease-spring);
+}
+.pulso-wheel-legend {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 16px;
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 11px;
+	color: var(--text-secondary);
+}
+.pulso-wheel-legend span::before {
+	content: "";
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	margin-right: 6px;
+	border-radius: 50%;
+	background: var(--tone);
+	vertical-align: -1px;
+}
+.pulso-wheel-detail {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 24px;
+}
+.pulso-wheel-term {
+	font-family: "Bricolage Grotesque Variable", sans-serif;
+	font-size: clamp(30px, 4vw, 48px);
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	text-wrap: balance;
+	animation: aurora-letter 0.5s var(--ease-spring);
+}
+.pulso-tone-badge {
+	align-self: flex-start;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--tone);
+	background: color-mix(in srgb, var(--tone) 16%, transparent);
+}
+.pulso-wheel-stats {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 10px;
+	margin: 0;
+}
+.pulso-wheel-stats div {
+	padding: 10px 12px;
+	border-radius: 14px;
+	background: var(--bg-tertiary);
+}
+.pulso-wheel-stats dt {
+	font-family: "JetBrains Mono Variable", monospace;
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+.pulso-wheel-stats dd {
+	margin: 0;
+	font-family: "Bricolage Grotesque Variable", sans-serif;
+	font-size: 24px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+.pulso-wheel-spark {
+	display: block;
+	width: 100%;
+	height: 56px;
+	margin-top: 6px;
+	overflow: visible;
+}
+.pulso-wheel-spark .fill {
+	fill: var(--tone);
+	opacity: 0.15;
+}
+.pulso-wheel-spark .line {
+	fill: none;
+	stroke: var(--tone);
+	stroke-width: 2;
+	stroke-linejoin: round;
+	vector-effect: non-scaling-stroke;
+	stroke-dasharray: 600;
+	animation: aurora-draw 1s var(--ease-out);
+}
+.pulso-wheel-spark .dot {
+	fill: var(--tone);
+}
+@keyframes aurora-draw {
+	from {
+		stroke-dashoffset: 600;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+.pulso-theme-bar {
+	display: flex;
+	gap: 3px;
+	height: 12px;
+	margin-top: 12px;
+	overflow: hidden;
+	border-radius: 999px;
+}
+.pulso-theme-bar span {
+	background: var(--aurora-tint);
+	transform-origin: left;
+	animation: aurora-grow 0.8s var(--ease-spring) both;
+}
+.pulso-theme-bar span:nth-child(2) {
+	background: var(--accent-secondary);
+}
+.pulso-theme-bar span:nth-child(3) {
+	background: var(--accent-tertiary);
+}
+.pulso-theme-bar span:nth-child(4) {
+	background: var(--warn);
+}
+.pulso-theme-bar span:nth-child(n + 5) {
+	background: var(--text-secondary);
+}
+@keyframes aurora-grow {
+	from {
+		transform: scaleX(0);
+	}
+}
+
+/* Briefing teaser: mini wheel beside its caption. */
+.pulso-wheel-teaser {
+	display: grid;
+	grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+	align-items: center;
+	gap: 24px;
+	padding: 20px 24px;
+}
+.pulso-wheel--mini {
+	width: 100%;
+}
+@media (max-width: 640px) {
+	.pulso-wheel-teaser {
+		grid-template-columns: minmax(0, 1fr);
+		justify-items: center;
+		text-align: center;
+	}
+	.pulso-wheel-teaser .flex {
+		justify-content: center;
+	}
+	.pulso-wheel--mini {
+		width: min(300px, 100%);
+	}
+}
+
+/* Mobile app: compact wheel on top of “Em alta”. */
+.m-wheel {
+	width: min(340px, 100%);
+	margin: 8px auto 0;
+}
+
+@keyframes wheel-pop {
+	from {
+		transform: scale(0.6);
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pulso-wheel-ticks,
+	.pulso-wheel-pointer,
+	.pulso-wheel-hub b,
+	.pulso-wheel-spark .line,
+	.pulso-theme-bar span {
+		animation: none !important;
+	}
+	.pulso-wheel-word,
+	.pulso-wheel-word span {
+		transition: none !important;
+	}
+}

@@ -19,7 +19,7 @@ export function TabBar({
 	return (
 		<nav
 			aria-label="Navegação principal"
-			className="flex shrink-0 border-t border-border-subtle bg-bg-secondary pb-[var(--sab)]"
+			className="mx-3 mt-1 mb-[calc(var(--sab)+10px)] flex shrink-0 gap-1 rounded-[22px] border border-border-subtle bg-bg-secondary/85 p-1.5 shadow-[var(--shadow-lift)] backdrop-blur-xl"
 		>
 			{TABS.map((t) => {
 				const on = t.id === active;
@@ -29,9 +29,9 @@ export function TabBar({
 						type="button"
 						onClick={() => onChange(t.id)}
 						aria-current={on ? "page" : undefined}
-						className={`flex h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px] transition-colors ${
+						className={`flex h-14 flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] transition-all duration-300 active:scale-95 ${
 							on
-								? "font-semibold text-accent-primary"
+								? "bg-[var(--accent-soft)] font-semibold text-accent-primary"
 								: "font-medium text-text-secondary"
 						}`}
 					>

@@ -36,6 +36,13 @@ function monogram(source: string): string {
 	return letters.toUpperCase();
 }
 
+/** Stable hue per editoria, so the same section always gets the same color. */
+function hueFor(key: string): number {
+	let h = 0;
+	for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) % 360;
+	return (h + 210) % 360;
+}
+
 /**
  * Article picture with a typographic stand-in when the feed has none or the
  * hotlinked image fails, so every card keeps the same shape.
@@ -51,26 +58,30 @@ export function CoverImage({
 	const [failed, setFailed] = useState(false);
 
 	if (!src || failed) {
+		const hue = hueFor(category || source);
 		return (
 			<div
 				role="img"
 				aria-label={`Sem imagem — ${source}`}
-				className={`relative flex items-center justify-center overflow-hidden border border-border-subtle bg-bg-tertiary ${className}`}
+				className={`relative flex items-center justify-center overflow-hidden border border-border-subtle ${className}`}
+				style={{
+					background: `radial-gradient(120% 90% at 15% 10%, hsl(${hue} 85% 62% / 0.9), transparent 60%), linear-gradient(135deg, hsl(${hue} 70% 42%), hsl(${(hue + 50) % 360} 55% 14%))`,
+				}}
 			>
 				<div
 					aria-hidden="true"
-					className="absolute inset-0 opacity-[0.07]"
+					className="absolute inset-0 opacity-[0.12] text-white"
 					style={{
 						backgroundImage:
-							"repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 9px)",
+							"repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 11px)",
 					}}
 				/>
-				<div className="relative text-center">
-					<span className="block font-display text-2xl font-semibold tracking-tight text-text-secondary/70">
+				<div className="relative text-center text-white">
+					<span className="block font-display text-3xl font-extrabold tracking-tight drop-shadow-sm">
 						{monogram(source)}
 					</span>
 					{category && (
-						<span className="mt-0.5 block font-mono text-[9px] uppercase tracking-widest text-text-secondary/60">
+						<span className="mt-0.5 block font-mono text-[9px] uppercase tracking-widest opacity-80">
 							{category}
 						</span>
 					)}

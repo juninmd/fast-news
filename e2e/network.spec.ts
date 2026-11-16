@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { MOCK_ARTICLES, mockBackend } from "./fixtures";
+import { gotoFeed, MOCK_ARTICLES, mockBackend } from "./fixtures";
 
 test.describe("Network error handling", () => {
 	test("shows an error with retry when the feed request fails, and recovers", async ({
@@ -10,7 +10,7 @@ test.describe("Network error handling", () => {
 			route.fulfill({ status: 500, body: "Internal Server Error" }),
 		);
 
-		await page.goto("/");
+		await gotoFeed(page);
 
 		await expect(page.getByText("Failed to fetch articles")).toBeVisible();
 		const retryButton = page.getByRole("button", { name: "Retry" });
