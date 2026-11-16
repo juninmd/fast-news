@@ -6,7 +6,7 @@ import { TopNewsSection } from "../NeoEditorial/TopNewsSection";
 import { TrendingPanel } from "../NeoEditorial/TrendingPanel";
 import { Segmented } from "./Segmented";
 import { WordWheel } from "./WordWheel";
-import { titleCase, type WheelWord } from "./wordWheel";
+import { titleCase, type WheelWord } from "./wheelModel";
 
 const PERIODS = [
 	["4h", "4h"],

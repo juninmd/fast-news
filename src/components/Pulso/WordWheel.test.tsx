@@ -12,7 +12,7 @@ import {
 	TAU,
 	toneOf,
 	wrap,
-} from "./wordWheel";
+} from "./wheelModel";
 
 const term = (t: string, score: number, extra: Partial<TrendTerm> = {}) =>
 	({
