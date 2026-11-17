@@ -272,6 +272,9 @@ Conteúdo: ${(article.content ?? "").slice(0, 1500)}`;
 
 		const model = await getFastModel();
 		const { object } = await generateObject({
+			// O LiteLLM já reintenta e cai para o fallback; o retry do SDK só multiplicava a espera.
+			maxRetries: 0,
+			maxTokens: 2000,
 			model,
 			schema: StorySchema,
 			prompt: contextPrompt,

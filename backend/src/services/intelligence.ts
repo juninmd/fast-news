@@ -60,6 +60,8 @@ _Gerado por Fast-News Intelligence v2_
 
 	const model = await getLanguageModel();
 	const { text } = await generateText({
+		// O LiteLLM já reintenta e cai para o fallback; o retry do SDK só multiplicava a espera.
+		maxRetries: 0,
 		model,
 		prompt,
 		maxTokens: 1500,

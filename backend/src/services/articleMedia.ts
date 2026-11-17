@@ -1,4 +1,5 @@
 import { decodeEntities } from "./htmlText.js";
+import { safeFetch } from "./safeFetch.js";
 
 const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif|avif)(\?.*)?$/i;
 const VIDEO_EXT_RE = /\.(mp4|webm|m4v|mov|ogv|m3u8)(\?.*)?$/i;
@@ -565,10 +566,9 @@ export async function fetchPageMedia(
 	timeoutMs = 6000,
 ): Promise<PageMedia> {
 	try {
-		const resp = await fetch(pageUrl, {
+		const resp = await safeFetch(pageUrl, {
 			signal: AbortSignal.timeout(timeoutMs),
 			headers: { "User-Agent": "Mozilla/5.0 (compatible; FastNews/1.0)" },
-			redirect: "follow",
 		});
 		if (!resp.ok) return {};
 		const type = resp.headers.get("content-type") ?? "";
