@@ -1,5 +1,7 @@
+import { adminFetch } from "./adminFetch.js";
+
 export async function sendArticleToTelegram(articleId) {
-	const res = await fetch(
+	const res = await adminFetch(
 		`/api/telegram/articles/${encodeURIComponent(articleId)}/send`,
 		{
 			method: "POST",

@@ -116,6 +116,7 @@ Tudo abaixo é **sem LLM**, exceto a tradução de títulos (cache permanente + 
 |---|---|
 | Saúde das fontes | Feeds com 3+ falhas seguidas entram em quarentena com backoff (30min → 24h). `GET /api/sources[?status=quarantined]` e painel *Status* |
 | OPML | `GET /api/sources/opml` exporta; `POST /api/sources/opml` importa (`ADMIN_TOKEN`) |
+| Escritas | Feeds (`/api/news/feeds/*`), tópicos, `PATCH /api/financial/:id/dismiss` e envio manual ao Telegram exigem `ADMIN_TOKEN` (Bearer ou `x-admin-token`); em produção, sem o segredo, ficam fechadas. O painel pede o token uma vez e guarda no navegador. O webhook do Telegram só aceita updates com o `secret_token` derivado do token do bot. |
 | RSS / JSON Feed | `/api/feed.xml` e `/api/feed.json` (`?scope=ai&category=&minScore=&limit=`), com link WebSub opcional |
 | Digests 4h/dia/semana/mês | `GET /api/digests/{4h,daily,weekly,monthly}?format=json\|md\|txt\|script&scope=ai` — ranking por relevância já gravada + cobertura multi-fonte |
 | Visão "Só IA" | `GET /api/news?scope=ai&minScore=6`; classificação por palavras-chave na ingestão |

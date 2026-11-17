@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { adminFetch } from "../../services/adminFetch.js";
 
 interface Feed {
 	id: string;
@@ -86,7 +87,7 @@ export function StatusPanel() {
 	}, [loadData]);
 
 	const handleToggle = async (id: string, active: boolean) => {
-		await fetch("/api/news/feeds/toggle", {
+		await adminFetch("/api/news/feeds/toggle", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ id, isActive: !active }),
@@ -96,14 +97,14 @@ export function StatusPanel() {
 
 	const handleDelete = async (id: string) => {
 		if (!confirm("Excluir este feed?")) return;
-		await fetch(`/api/news/feeds/${id}`, { method: "DELETE" });
+		await adminFetch(`/api/news/feeds/${id}`, { method: "DELETE" });
 		setFeeds(feeds.filter((f) => f.id !== id));
 	};
 
 	const handleAdd = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!newFeed.name || !newFeed.url) return;
-		await fetch("/api/news/feeds/add", {
+		await adminFetch("/api/news/feeds/add", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(newFeed),

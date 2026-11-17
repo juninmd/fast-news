@@ -17,6 +17,7 @@ import {
 } from "../../services/topStories.js";
 import { getTrends } from "../../services/trendsStore.js";
 import { fetchLiveTwitterTrends } from "../../services/twitterTrends.js";
+import { requireAdmin } from "../adminAuth.js";
 
 export const newsRouter: Router = Router();
 
@@ -485,6 +486,12 @@ newsRouter.get("/:id/related", async (req: Request, res: Response) => {
 	return res.json(response);
 });
 
+// Cliques simultâneos no mesmo artigo dividem uma única chamada ao modelo.
+const credibilityInFlight = new Map<
+	string,
+	ReturnType<typeof analyzeCredibility>
+>();
+
 newsRouter.post("/:id/credibility", async (req: Request, res: Response) => {
 	const { id } = req.params;
 	if (!id || typeof id !== "string" || !UUID.test(id))
@@ -496,25 +503,57 @@ newsRouter.post("/:id/credibility", async (req: Request, res: Response) => {
 		url: string;
 		source: string;
 		category: string;
+		fake_news_score: number | null;
+		political_bias: string | null;
+		is_militant: boolean | null;
+		has_incoherence: boolean | null;
+		credibility_flags: string[] | null;
+		credibility_reasoning: string | null;
 	}>(
-		"SELECT title, content, url, source, category FROM news_articles WHERE id = $1",
+		`SELECT title, content, url, source, category, fake_news_score, political_bias,
+		        is_militant, has_incoherence, credibility_flags, credibility_reasoning
+		   FROM news_articles WHERE id = $1`,
 		[id],
 	);
-	if (!article.rows[0])
-		return res.status(404).json({ error: "Article not found" });
+	const row = article.rows[0];
+	if (!row) return res.status(404).json({ error: "Article not found" });
 
-	const { title, content, url, source, category } = article.rows[0];
-	const fullContent =
-		(await fetchFullArticle(url).catch(() => null)) || content;
+	// Rota pública: uma análise já gravada é devolvida sem chamar o modelo de novo.
+	if (row.fake_news_score != null && row.credibility_reasoning) {
+		return res.json({
+			fakeNewsScore: row.fake_news_score,
+			politicalBias: row.political_bias,
+			isMilitant: row.is_militant,
+			hasIncoherence: row.has_incoherence,
+			credibilityFlags: row.credibility_flags ?? [],
+			reasoning: row.credibility_reasoning,
+			cached: true,
+		});
+	}
+	const pending = credibilityInFlight.get(id);
+	if (pending) {
+		const result = await pending;
+		return result
+			? res.json(result)
+			: res.status(500).json({ error: "Failed to analyze credibility" });
+	}
 
-	const result = await analyzeCredibility(
-		id as string,
-		title,
-		fullContent,
-		source,
-		category,
-		AbortSignal.timeout(120_000),
-	);
+	const { title, content, url, source, category } = row;
+	// Registrado antes de qualquer await, para o segundo clique cair no `pending`.
+	const run = (async () => {
+		const fullContent =
+			(await fetchFullArticle(url).catch(() => null)) || content;
+		return analyzeCredibility(
+			id,
+			title,
+			fullContent,
+			source,
+			category,
+			AbortSignal.timeout(120_000),
+		);
+	})();
+	credibilityInFlight.set(id, run);
+	const result = await run.finally(() => credibilityInFlight.delete(id));
 	if (!result)
 		return res.status(500).json({ error: "Failed to analyze credibility" });
 
@@ -538,44 +577,56 @@ newsRouter.get("/feeds/list", async (req: Request, res: Response) => {
 	}
 });
 
-newsRouter.post("/feeds/toggle", async (req: Request, res: Response) => {
-	const { id, isActive } = req.body;
-	if (!id) return res.status(400).json({ error: "Missing feed ID" });
-	try {
-		await query("UPDATE source_feeds SET is_active = $1 WHERE id = $2", [
-			isActive,
-			id,
-		]);
-		return res.json({ success: true });
-	} catch (error) {
-		console.error("[API] Failed to toggle feed:", error);
-		return res.status(500).json({ error: "Failed to toggle feed" });
-	}
-});
+newsRouter.post(
+	"/feeds/toggle",
+	requireAdmin,
+	async (req: Request, res: Response) => {
+		const { id, isActive } = req.body;
+		if (!id) return res.status(400).json({ error: "Missing feed ID" });
+		try {
+			await query("UPDATE source_feeds SET is_active = $1 WHERE id = $2", [
+				isActive,
+				id,
+			]);
+			return res.json({ success: true });
+		} catch (error) {
+			console.error("[API] Failed to toggle feed:", error);
+			return res.status(500).json({ error: "Failed to toggle feed" });
+		}
+	},
+);
 
-newsRouter.post("/feeds/add", async (req: Request, res: Response) => {
-	const { name, url, category, company } = req.body;
-	if (!name || !url)
-		return res.status(400).json({ error: "Missing feed name or URL" });
-	try {
-		await query(
-			"INSERT INTO source_feeds (name, url, category, company, is_active) VALUES ($1, $2, $3, $4, true) ON CONFLICT (url) DO NOTHING",
-			[name, url, category || "Tecnologia", company || name],
-		);
-		return res.json({ success: true });
-	} catch (error) {
-		console.error("[API] Failed to add feed:", error);
-		return res.status(500).json({ error: "Failed to add feed" });
-	}
-});
+newsRouter.post(
+	"/feeds/add",
+	requireAdmin,
+	async (req: Request, res: Response) => {
+		const { name, url, category, company } = req.body;
+		if (!name || !url)
+			return res.status(400).json({ error: "Missing feed name or URL" });
+		try {
+			await query(
+				"INSERT INTO source_feeds (name, url, category, company, is_active) VALUES ($1, $2, $3, $4, true) ON CONFLICT (url) DO NOTHING",
+				[name, url, category || "Tecnologia", company || name],
+			);
+			return res.json({ success: true });
+		} catch (error) {
+			console.error("[API] Failed to add feed:", error);
+			return res.status(500).json({ error: "Failed to add feed" });
+		}
+	},
+);
 
-newsRouter.delete("/feeds/:id", async (req: Request, res: Response) => {
-	const { id } = req.params;
-	try {
-		await query("DELETE FROM source_feeds WHERE id = $1", [id]);
-		return res.json({ success: true });
-	} catch (error) {
-		console.error("[API] Failed to delete feed:", error);
-		return res.status(500).json({ error: "Failed to delete feed" });
-	}
-});
+newsRouter.delete(
+	"/feeds/:id",
+	requireAdmin,
+	async (req: Request, res: Response) => {
+		const { id } = req.params;
+		try {
+			await query("DELETE FROM source_feeds WHERE id = $1", [id]);
+			return res.json({ success: true });
+		} catch (error) {
+			console.error("[API] Failed to delete feed:", error);
+			return res.status(500).json({ error: "Failed to delete feed" });
+		}
+	},
+);
