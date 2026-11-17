@@ -43,6 +43,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build site
+        # 150+ editions (~44 MB of markdown) exceed Node's default ~4 GB heap (exit 134).
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
         run: pnpm docs:build
 
       # The branch only holds build output, so it is rewritten on every deploy.
