@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import { Context, Telegraf } from "telegraf";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
@@ -330,6 +331,23 @@ async function sendLongMessage(ctx: Context, text: string): Promise<void> {
 			.reply(chunk, { parse_mode: "HTML" })
 			.catch(() => ctx.reply(chunk));
 }
+/**
+ * Segredo do webhook derivado do token do bot: o Telegram o reenvia no header
+ * X-Telegram-Bot-Api-Secret-Token, e só quem tem o token consegue forjá-lo.
+ */
+export function webhookSecret(): string {
+	return createHash("sha256")
+		.update(`fast-news-webhook:${config.telegramBotToken}`)
+		.digest("hex");
+}
+
+export function isValidWebhookSecret(given: string | undefined): boolean {
+	if (!config.telegramBotToken || !given) return false;
+	const expected = Buffer.from(webhookSecret());
+	const actual = Buffer.from(given);
+	return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
 export async function startBot(): Promise<void> {
 	if (!config.telegramEnabled || !config.telegramBotToken) return;
 
@@ -343,7 +361,9 @@ export async function startBot(): Promise<void> {
 			return;
 		}
 		try {
-			await b.telegram.setWebhook(config.telegramWebhookUrl);
+			await b.telegram.setWebhook(config.telegramWebhookUrl, {
+				secret_token: webhookSecret(),
+			});
 			console.log(
 				`[Telegram] Webhook registered successfully: ${config.telegramWebhookUrl}`,
 			);

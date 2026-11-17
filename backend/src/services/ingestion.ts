@@ -1,9 +1,8 @@
-import { generateText } from "ai";
 import { config } from "../config/env.js";
 import { query } from "../database/client.js";
 import { upsertVector } from "../database/vectorStore.js";
-import { getFastModel } from "./aiProvider.js";
 import { isAiRelated } from "./aiScope.js";
+import { analyzeArticle } from "./articleAnalysis.js";
 import {
 	type ArticleMedia,
 	fetchPageMedia,
@@ -15,7 +14,6 @@ import { embedBatch, vectorToSQL } from "./embeddings.js";
 import { normalizeFeedItems, type RawArticle } from "./feedItem.js";
 import { fetchFeedXml, parseFeed } from "./feedParser.js";
 import { outletOf } from "./outlet.js";
-import { scoreRelevance } from "./relevance.js";
 import { recordFeedResult, sanitizeError } from "./sourceHealth.js";
 import {
 	getActiveFeeds,
@@ -23,7 +21,6 @@ import {
 	LLM_FREE_MAX_ITEMS,
 } from "./sources.js";
 import { canonicalUrl } from "./textSimilarity.js";
-import { classifyTheme } from "./themeClassification.js";
 import { pingWebSubHub, publicFeedUrls } from "./websub.js";
 
 /** Bounds concurrent work per key (host, or a fixed budget for LLM calls) to avoid rate limits. */
@@ -144,43 +141,18 @@ async function fetchFeed(source: {
 	}
 }
 
-async function summarizeForEmbedding(
-	title: string,
-	content: string,
-): Promise<string> {
-	try {
-		const model = await getFastModel();
-		const cleanContent = content
-			.replace(/<\/?[^>]+(>|$)/g, " ")
-			.replace(/https?:\/\/\S+/g, " ")
-			.replace(/\s+/g, " ")
-			.trim();
-		const prompt = `Extraia as entidades principais, palavras-chave e o contexto central desta notícia para criar um resumo hiper-denso voltado para busca vetorial. Não inclua jargões genéricos, tags HTML ou introduções. Apenas dados puros (nomes, empresas, locais, eventos) e o fato principal. Limite a 50 palavras.
-
-Título: ${title}
-
-Conteúdo: ${cleanContent.slice(0, 4000)}`;
-		const { text } = await generateText({
-			model,
-			prompt,
-			maxTokens: 150,
-			// Provedor em cooldown responde "try again in 300s"; retry do SDK
-			// so multiplica o tempo por artigo e estoura o job de 25min.
-			maxRetries: 0,
-		});
-		return text.trim();
-	} catch (e) {
-		console.warn(
-			"[ingestion] summarizeForEmbedding failed, falling back to raw content:",
-			(e as Error).message.slice(0, 80),
-		);
-		const cleanContentFallback = content
-			.replace(/<\/?[^>]+(>|$)/g, " ")
-			.replace(/https?:\/\/\S+/g, " ")
-			.replace(/\s+/g, " ")
-			.trim();
-		return `${title}. ${cleanContentFallback}`.slice(0, 1000);
-	}
+/**
+ * Texto do embedding: título + início do conteúdo, sem HTML nem URLs. Antes
+ * um LLM resumia cada artigo só para isto (uma chamada por artigo); o mesmo
+ * texto cru já era o que o backfill de embeddings usava.
+ */
+export function embeddingText(title: string, content: string): string {
+	const clean = content
+		.replace(/<\/?[^>]+(>|$)/g, " ")
+		.replace(/https?:\/\/\S+/g, " ")
+		.replace(/\s+/g, " ")
+		.trim();
+	return `${title}. ${clean}`.slice(0, 1000);
 }
 
 type PreparedArticle = {
@@ -202,29 +174,12 @@ async function prepareArticle(
 	);
 	if (existing.rowCount && existing.rowCount > 0) return null;
 
-	// Budget categories keep a plain-text embedding input and no theme/relevance
-	// calls: see LLM_FREE_CATEGORIES.
-	const llmFree = isLlmFreeCategory(article.category);
+	// Tema e relevância saem depois do agrupamento (analyzeArticle), numa
+	// chamada só e apenas para a primeira cópia de cada história.
 	const textToEmbed = ollamaUp
-		? llmFree
-			? `${article.title}. ${(article.content || "").replace(/<\/?[^>]+(>|$)/g, " ").replace(/\s+/g, " ")}`.slice(
-					0,
-					1000,
-				)
-			: await summarizeForEmbedding(article.title, article.content || "")
+		? embeddingText(article.title, article.content || "")
 		: "";
-
-	// Per-article editorial theme, separate from the static feed `category`.
-	// fact_check articles keep no theme — they are a sentinel, not editorial
-	// content (see editions/select.ts isFactCheck).
-	const themeCategory =
-		article.category === "fact_check" || llmFree
-			? null
-			: await classifyTheme(
-					article.title,
-					article.content || "",
-					article.category,
-				);
+	const themeCategory = null;
 
 	return { article, textToEmbed, themeCategory };
 }
@@ -572,6 +527,8 @@ export async function runIngestion(): Promise<IngestionResult> {
 	const newArticles: IngestionResult["newArticles"] = [];
 	const seenThisRun = new Set<string>();
 	const ogBudget = { left: config.ingestion.ogImageMaxPerRun };
+	// Aguardadas no fim: o CronJob sai ao terminar e levaria análises pela metade.
+	const analyses: Promise<unknown>[] = [];
 
 	await backfillMissing(ollamaUp).catch((err: Error) =>
 		console.error("[ingestion] backfill failed:", err.message),
@@ -588,7 +545,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 			candidates.push(...result.value);
 		}
 
-		// Prepare (exact-dedup, summary, theme) first, then embed the whole feed
+		// Prepare (exact-dedup) first, then embed the whole feed
 		// batch in a few requests: see embedInBatches for why per-article calls
 		// exhausted the embedding quota.
 		const prepared: PreparedArticle[] = [];
@@ -636,22 +593,28 @@ export async function runIngestion(): Promise<IngestionResult> {
 				newArticles.push(newArticle);
 				// Grouping is awaited (and ordered) so two outlets' copies of one story
 				// from the same run see each other instead of opening two stories.
-				await assignArticleToStory(id).catch((err: Error) =>
+				const storyId = await assignArticleToStory(id).catch((err: Error) => {
 					console.error(
 						"[ingestion] assignArticleToStory failed:",
 						err.message,
-					),
-				);
+					);
+					return null;
+				});
 				runBackground("buildArticleRelations", () => buildArticleRelations(id));
-				if (!isLlmFreeCategory(article.category))
-					runBackground("scoreRelevance", () =>
-						scoreRelevance(
+				// fact_check fica sem tema (é sentinela, ver editions/select.ts isFactCheck).
+				if (
+					!isLlmFreeCategory(article.category) &&
+					article.category !== "fact_check"
+				)
+					analyses.push(
+						analyzeArticle({
 							id,
-							article.title,
-							article.content ?? "",
-							article.category,
-							article.promptHint,
-						),
+							title: article.title,
+							content: article.content ?? "",
+							category: article.category,
+							promptHint: article.promptHint,
+							storyId,
+						}),
 					);
 			} catch (err) {
 				console.error("[ingestion] article failed:", (err as Error).message, {
@@ -661,6 +624,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 		}
 	}
 
+	await Promise.allSettled(analyses);
 	console.log(
 		`[ingestion] Done. Fetched: ${fetched}, Stored: ${newArticles.length}`,
 	);

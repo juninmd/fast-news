@@ -1,6 +1,7 @@
 import { embed, embedMany } from "ai";
 import { config } from "../config/env.js";
 import { getEmbeddingModel } from "./aiProvider.js";
+import { cacheWrap, hashKey } from "./cache.js";
 
 /**
  * Embeddings go through a LiteLLM deployment that can enter cooldown; without a
@@ -30,9 +31,23 @@ export async function embedDocument(
 	return embedding;
 }
 
+/** Buscas se repetem ("selic", "openai"): o vetor da mesma consulta vem do Redis. */
+const QUERY_EMBEDDING_TTL_SECONDS = 7 * 24 * 3600;
+
 export async function embedQuery(text: string): Promise<number[]> {
 	// AI SDK handles task type internally per provider
-	return embedDocument(text);
+	const normalized = text.trim().toLowerCase().replace(/\s+/g, " ");
+	// O modelo entra na chave: trocar EMBEDDING_MODEL não pode servir vetor de outro espaço.
+	return cacheWrap(
+		hashKey(
+			"emb:query",
+			"litellm",
+			config.ai.embeddingModel || config.ollama.embeddingModel,
+			normalized,
+		),
+		QUERY_EMBEDDING_TTL_SECONDS,
+		() => embedDocument(normalized),
+	);
 }
 
 export async function embedBatch(

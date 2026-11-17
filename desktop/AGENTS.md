@@ -74,7 +74,7 @@ src-tauri/src/
 - Testes marcados `#[ignore]` batem na API real (`live.rs`). A busca semântica pode cair para palavra-chave
   (`mode: "keyword"`) se o modelo de embedding do cluster estiver frio; o teste aceita os dois modos de propósito.
 - O app é somente leitura: não há comando que escreva no backend. Endpoints de escrita (`POST /api/topics`,
-  `/api/news/feeds/*`, `/api/ai/generate`) existem na API mas ficaram fora do escopo.
+  `/api/news/feeds/*`) existem na API, exigem `ADMIN_TOKEN` e ficaram fora do escopo.
 - `desktop/` está excluído do Biome e do vitest da raiz do monorepo (ver `biome.json` e `vite.config.js`): este
   pacote tem o próprio toolchain (bun + tsc + cargo).
 

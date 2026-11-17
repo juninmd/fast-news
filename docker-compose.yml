@@ -89,7 +89,6 @@ services:
     environment:
       DATABASE_URL: postgresql://fastnews:${POSTGRES_PASSWORD:-fastnews_secret}@${POSTGRES_HOST:-postgres}:5432/fastnews
       REDIS_URL: redis://redis:6379
-      AI_PROVIDER: ollama
       OLLAMA_BASE_URL: http://ollama:11434/v1
       OLLAMA_MODEL: llama3.2
       OLLAMA_EMBEDDING_MODEL: nomic-embed-text

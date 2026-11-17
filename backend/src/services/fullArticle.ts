@@ -1,4 +1,5 @@
 import { extractArticleFromHtml } from "@juninmd/digest-kit/core";
+import { assertPublicUrl, safeFetch } from "./safeFetch.js";
 
 export { extractArticleFromHtml };
 
@@ -108,7 +109,7 @@ export async function fetchFullArticle(url: string): Promise<string> {
 	try {
 		// 1. Direct fetch using Readability from @juninmd/digest-kit
 		try {
-			const directResp = await fetch(url, {
+			const directResp = await safeFetch(url, {
 				signal: ac.signal,
 				headers: {
 					"User-Agent":
@@ -131,7 +132,8 @@ export async function fetchFullArticle(url: string): Promise<string> {
 			// Fallback to r.jina.ai reader below
 		}
 
-		// 2. Fallback to r.jina.ai
+		// 2. Fallback to r.jina.ai (só para URL pública: o leitor externo não deve receber endereços internos)
+		await assertPublicUrl(url);
 		const resp = await fetch(`https://r.jina.ai/${url}`, {
 			signal: ac.signal,
 			headers: { Accept: "text/plain" },

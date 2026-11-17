@@ -6,6 +6,7 @@ import {
 	getTopicLatestAnalysis,
 } from "../../services/analysis.js";
 import { cacheGet, cacheSet } from "../../services/cache.js";
+import { requireAdmin } from "../adminAuth.js";
 
 export const topicsRouter: Router = Router();
 
@@ -18,7 +19,7 @@ topicsRouter.get("/", async (_req: Request, res: Response) => {
 	return res.json({ data: topics });
 });
 
-topicsRouter.post("/", async (req: Request, res: Response) => {
+topicsRouter.post("/", requireAdmin, async (req: Request, res: Response) => {
 	const { name, description, keywords } = req.body as {
 		name?: string;
 		description?: string;
@@ -87,9 +88,13 @@ topicsRouter.get("/:id/history", async (req: Request, res: Response) => {
 	return res.json({ data: result.rows });
 });
 
-topicsRouter.delete("/:id", async (req: Request, res: Response) => {
-	await query("UPDATE tracked_topics SET is_active = FALSE WHERE id = $1", [
-		req.params.id as string,
-	]);
-	return res.json({ success: true });
-});
+topicsRouter.delete(
+	"/:id",
+	requireAdmin,
+	async (req: Request, res: Response) => {
+		await query("UPDATE tracked_topics SET is_active = FALSE WHERE id = $1", [
+			req.params.id as string,
+		]);
+		return res.json({ success: true });
+	},
+);

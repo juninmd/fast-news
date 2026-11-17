@@ -5,7 +5,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { forwardAsyncErrors } from "./asyncErrors.js";
 import { healthHandler } from "./health.js";
-import { aiRouter } from "./routes/ai.js";
 import { editionsRouter } from "./routes/editions.js";
 import { feedsRouter } from "./routes/feeds.js";
 import { financialRouter } from "./routes/financial.js";
@@ -22,7 +21,6 @@ const __dirname = path.dirname(__filename);
 
 export function createApp(): express.Application {
 	const app = express();
-
 	app.use(cors({ origin: "*" }));
 	app.use(express.json());
 
@@ -36,7 +34,6 @@ export function createApp(): express.Application {
 	app.use("/api/stories", forwardAsyncErrors(storiesRouter));
 	app.use("/api/editions", forwardAsyncErrors(editionsRouter));
 	app.use("/api/telegram", forwardAsyncErrors(telegramRouter));
-	app.use("/api/ai", forwardAsyncErrors(aiRouter));
 	app.use("/api/sources", forwardAsyncErrors(sourcesRouter));
 	app.use("/api/translate", forwardAsyncErrors(translateRouter));
 	// feed.xml, feed.json, digests/*, podcast.xml

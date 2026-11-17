@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	extractImageUrl,
 	extractMedia,
@@ -12,6 +12,10 @@ import {
 	pageMetaFromHtml,
 	parseVideoUrl,
 } from "./articleMedia.js";
+import { setResolverForTests } from "./safeFetch.js";
+
+// Hosts de exemplo não resolvem DNS; o guarda de SSRF precisa de um IP público.
+beforeAll(() => setResolverForTests(async () => ["93.184.216.34"]));
 
 describe("normalizeImageUrl", () => {
 	it("resolves relative and protocol-relative urls and upgrades to https", () => {
