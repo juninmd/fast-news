@@ -22,6 +22,9 @@ const __dirname = path.dirname(__filename);
 
 export function createApp(): express.Application {
 	const app = express();
+	// Atrás do ingress: req.ip passa a ser o cliente (X-Forwarded-For), não o
+	// ingress — o limite por IP de /api/ai depende disso.
+	app.set("trust proxy", Number(process.env["TRUST_PROXY_HOPS"] ?? 1));
 
 	app.use(cors({ origin: "*" }));
 	app.use(express.json());

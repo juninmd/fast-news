@@ -53,6 +53,9 @@ export async function extractFinancialOpportunities(
 
 	const model = await getFastModel();
 	const { object } = await generateObject({
+		// O LiteLLM já reintenta e cai para o fallback; o retry do SDK só multiplicava a espera.
+		maxRetries: 0,
+		maxTokens: 2000,
 		model,
 		schema: OpportunitySchema,
 		prompt: FINANCIAL_PROMPT.replace(

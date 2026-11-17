@@ -98,6 +98,14 @@ export const config = {
 		optional("TELEGRAM_MAX_NEWS_PER_RUN", "0"),
 		10,
 	),
+	// POST /api/ai/generate é público: chamadas ao modelo por IP por janela (0 desliga).
+	aiGenerate: {
+		rateLimitMax: parseInt(optional("AI_GENERATE_RATE_LIMIT_MAX", "30"), 10),
+		rateLimitWindowMs: parseInt(
+			optional("AI_GENERATE_RATE_LIMIT_WINDOW_MS", "600000"),
+			10,
+		),
+	},
 	telegramQueue: {
 		name: optional("TELEGRAM_QUEUE_NAME", "telegram:posts"),
 		attempts: parseInt(optional("TELEGRAM_QUEUE_ATTEMPTS", "5"), 10),
