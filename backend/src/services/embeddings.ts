@@ -41,7 +41,7 @@ export async function embedQuery(text: string): Promise<number[]> {
 	return cacheWrap(
 		hashKey(
 			"emb:query",
-			config.aiProvider,
+			"litellm",
 			config.ai.embeddingModel || config.ollama.embeddingModel,
 			normalized,
 		),

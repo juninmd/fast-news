@@ -63,24 +63,20 @@ export const config = {
 
 	redisUrl: optional("REDIS_URL", "redis://localhost:6379"),
 
-	// AI provider: 'ollama' | 'google' | 'openai' | 'anthropic'
-	aiProvider: optional("AI_PROVIDER", "ollama"),
-
 	ollama: {
-		baseUrl: optional("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+		// LiteLLM do cluster (API OpenAI); o nome OLLAMA_* ficou por compatibilidade.
+		baseUrl: optional(
+			"LITELLM_BASE_URL",
+			optional(
+				"OLLAMA_BASE_URL",
+				"http://litellm.ai.svc.cluster.local:4000/v1",
+			),
+		),
 		model: optional("OLLAMA_MODEL", "cloud/auto"),
 		embeddingModel: optional("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text"),
-		// Separate URL for embeddings — use native Ollama (no /v1) to avoid
-		// encoding_format:float rejection from LiteLLM OpenAI-compat proxies.
-		// Defaults to stripping /v1 from baseUrl if not explicitly set.
+		// Endpoint de embeddings; vazio usa o mesmo LiteLLM do chat.
 		embeddingBaseUrl: optional("OLLAMA_EMBEDDING_BASE_URL", ""),
 	},
-
-	geminiApiKey: optional("GEMINI_API_KEY", ""),
-	openaiApiKey: optional("OPENAI_API_KEY", ""),
-	anthropicApiKey: optional("ANTHROPIC_API_KEY", ""),
-	openrouterApiKey: optional("OPENROUTER_API_KEY", ""),
-	openrouterModel: optional("OPENROUTER_MODEL", "anthropic/claude-3-haiku"),
 
 	telegramBotToken: optional("TELEGRAM_BOT_TOKEN", ""),
 	telegramEnabled: optional("TELEGRAM_ENABLED", "false") === "true",

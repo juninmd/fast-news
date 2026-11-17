@@ -10,13 +10,13 @@
 
 ## 📝 Descrição
 
-**Fast News** é uma plataforma moderna que agrega e resume notícias utilizando IA. Com agentes autônomos de curadoria, o sistema coleta conteúdo de diversas fontes RSS, processa com modelos de linguagem (Gemini) e publica resumos inteligentes em uma interface web elegante.
+**Fast News** é uma plataforma moderna que agrega e resume notícias utilizando IA. Com agentes autônomos de curadoria, o sistema coleta conteúdo de diversas fontes RSS, processa com modelos de linguagem (via LiteLLM) e publica resumos inteligentes em uma interface web elegante.
 
 ## ✨ Funcionalidades
 
 - Curadoria automatizada de notícias via agentes de IA
 - Agregação de múltiplas fontes RSS
-- Resumo inteligente com Google Gemini
+- Resumo inteligente com LLMs via LiteLLM
 - Interface web responsiva com React + Tailwind
 - Publicação automática em Netlify
 - Suporte a monorepo com workspaces
@@ -25,7 +25,7 @@
 
 - **Frontend:** React 19 + Vite 8 + Tailwind CSS 4 (também empacotado como app Android/iOS via Capacitor)
 - **Backend (`backend/`):** TypeScript, Express, PostgreSQL (pgvector), Redis/Bull, Qdrant opcional
-- **IA:** Vercel AI SDK com provedores Gemini, OpenAI, Anthropic, OpenRouter ou Ollama (`AI_PROVIDER`)
+- **IA:** Vercel AI SDK apontando só para o LiteLLM do cluster (API OpenAI)
 - **Testes:** Vitest + Testing Library (unidade) e Playwright (`e2e/`)
 - **Linting:** Biome
 - **Site de edições:** VitePress (`site/`) publicado no GitHub Pages
@@ -56,7 +56,7 @@ Copie `.env.example` (raiz) e `backend/.env.example` para `.env` e preencha. Nun
 |---|---|
 | Servidor | `PORT` (padrão 3001), `PUBLIC_URL`, `ADMIN_TOKEN` |
 | Dados | `DATABASE_URL`, `REDIS_URL`, `VECTOR_STORE`, `QDRANT_URL`, `QDRANT_API_KEY` |
-| IA | `AI_PROVIDER`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `EMBEDDING_MODEL` |
+| IA (LiteLLM) | `OLLAMA_BASE_URL` (URL do LiteLLM), `OLLAMA_API_KEY`, `OLLAMA_MODEL`, `FAST_MODEL`, `ANALYSIS_MODEL`, `OLLAMA_EMBEDDING_MODEL` |
 | Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_IDS`, `TELEGRAM_ENABLED`, `TELEGRAM_BOT_MODE` |
 | Push | `DISCORD_WEBHOOK_URL`, `SLACK_WEBHOOK_URL`, `NOTIFY_WEBHOOK_URL`, `NTFY_URL`, `APPRISE_URL` |
 | Agendamento | `CRON_INGESTION`, `CRON_DIGEST`, `CRON_LEARNING` |
