@@ -28,7 +28,7 @@ async function buildKnowledgeInsights(): Promise<void> {
 			const { object } = await generateObject({
 				// O LiteLLM já reintenta e cai para o fallback; o retry do SDK só multiplicava a espera.
 				maxRetries: 0,
-				maxTokens: 1000,
+				maxOutputTokens: 1000,
 				model,
 				schema: InsightsSchema,
 				prompt: `Baseado nessa análise sobre "${topic.name}", extraia até 3 insights duradouros para análises futuras. Cada insight em 1 frase concisa.\n\nANÁLISE:\n${latestAnalysis.slice(0, 2000)}`,

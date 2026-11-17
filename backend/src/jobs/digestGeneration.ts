@@ -29,7 +29,7 @@ async function runDigestGeneration(
 		maxRetries: 0,
 		model,
 		prompt,
-		maxTokens: config.digest.maxTokens,
+		maxOutputTokens: config.digest.maxTokens,
 		abortSignal: AbortSignal.timeout(config.ai.backgroundTaskTimeoutMs),
 	});
 	return text;
