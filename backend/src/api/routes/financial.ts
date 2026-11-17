@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { query } from "../../database/client.js";
 import { getActiveOpportunities } from "../../services/financial.js";
+import { requireAdmin } from "../adminAuth.js";
 
 export const financialRouter: Router = Router();
 
@@ -38,10 +39,14 @@ financialRouter.get("/summary", async (_req: Request, res: Response) => {
 	return res.json({ data: result.rows });
 });
 
-financialRouter.patch("/:id/dismiss", async (req: Request, res: Response) => {
-	await query(
-		"UPDATE financial_opportunities SET is_active = FALSE WHERE id = $1",
-		[req.params["id"]],
-	);
-	return res.json({ success: true });
-});
+financialRouter.patch(
+	"/:id/dismiss",
+	requireAdmin,
+	async (req: Request, res: Response) => {
+		await query(
+			"UPDATE financial_opportunities SET is_active = FALSE WHERE id = $1",
+			[req.params["id"]],
+		);
+		return res.json({ success: true });
+	},
+);

@@ -121,6 +121,8 @@ export async function analyzeCredibility(
 		prompt,
 		abortSignal,
 		logTag: "credibility",
+		// Saída é um JSON curto; sem teto, um modelo que se repete cobra até o limite.
+		maxTokens: 800,
 	});
 	if (!object) return null;
 

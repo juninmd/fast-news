@@ -21,6 +21,8 @@ export async function generateArticleBlurb(
 		const m = model ?? (await getFastModel());
 		const input = `Título: ${title}\n\nConteúdo: ${content.slice(0, 8000)}`;
 		const { text } = await generateText({
+			// O LiteLLM já reintenta e cai para o fallback; o retry do SDK só multiplicava a espera.
+			maxRetries: 0,
 			model: m,
 			prompt: `${BLURB_PROMPT}\n\n${input}`,
 			maxTokens: 160,
@@ -28,6 +30,8 @@ export async function generateArticleBlurb(
 		const blurb = text.trim();
 		if (looksPortuguese(blurb)) return blurb;
 		const retry = await generateText({
+			// O LiteLLM já reintenta e cai para o fallback; o retry do SDK só multiplicava a espera.
+			maxRetries: 0,
 			model: m,
 			prompt: `${BLURB_PROMPT}\n\nATENÇÃO: responda OBRIGATORIAMENTE em português do Brasil. Traduza tudo.\n\n${input}`,
 			maxTokens: 160,
@@ -66,6 +70,8 @@ export async function rewriteMisleadingTitle(
 	try {
 		const m = model ?? (await getFastModel());
 		const { text } = await generateText({
+			// O LiteLLM já reintenta e cai para o fallback; o retry do SDK só multiplicava a espera.
+			maxRetries: 0,
 			model: m,
 			prompt: `Reescreva este título sensacionalista para uma versão factual e direta em português (PT-BR). Máximo 100 caracteres. NUNCA invente fatos — baseie-se apenas no conteúdo.\n\nTítulo original: ${title}\n\nConteúdo: ${content.slice(0, 6000)}`,
 			maxTokens: 80,
