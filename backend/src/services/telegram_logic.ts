@@ -25,7 +25,7 @@ export async function generateArticleBlurb(
 			maxRetries: 0,
 			model: m,
 			prompt: `${BLURB_PROMPT}\n\n${input}`,
-			maxTokens: 160,
+			maxOutputTokens: 160,
 		});
 		const blurb = text.trim();
 		if (looksPortuguese(blurb)) return blurb;
@@ -34,7 +34,7 @@ export async function generateArticleBlurb(
 			maxRetries: 0,
 			model: m,
 			prompt: `${BLURB_PROMPT}\n\nATENÇÃO: responda OBRIGATORIAMENTE em português do Brasil. Traduza tudo.\n\n${input}`,
-			maxTokens: 160,
+			maxOutputTokens: 160,
 		});
 		const retried = retry.text.trim();
 		return looksPortuguese(retried) ? retried : blurb;
@@ -74,7 +74,7 @@ export async function rewriteMisleadingTitle(
 			maxRetries: 0,
 			model: m,
 			prompt: `Reescreva este título sensacionalista para uma versão factual e direta em português (PT-BR). Máximo 100 caracteres. NUNCA invente fatos — baseie-se apenas no conteúdo.\n\nTítulo original: ${title}\n\nConteúdo: ${content.slice(0, 6000)}`,
-			maxTokens: 80,
+			maxOutputTokens: 80,
 		});
 		return text.trim() || title;
 	} catch {

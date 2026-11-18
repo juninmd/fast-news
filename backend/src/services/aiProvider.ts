@@ -14,6 +14,7 @@ const apiKey = () =>
 	process.env["OPENAI_API_KEY"] ||
 	"placeholder";
 
+// Responses API é o padrão do @ai-sdk/openai v2; o LiteLLM é usado como chat/completions.
 const litellm = createOpenAI({
 	baseURL: config.ollama.baseUrl,
 	apiKey: apiKey(),
@@ -27,11 +28,13 @@ const litellmEmbeddings = createOpenAI({
 export async function getLanguageModel(
 	modelId?: string,
 ): Promise<LanguageModel> {
-	return litellm(modelId || config.ai.analysisModel || config.ollama.model);
+	return litellm.chat(
+		modelId || config.ai.analysisModel || config.ollama.model,
+	);
 }
 
 export async function getFastModel(): Promise<LanguageModel> {
-	return litellm(config.ai.fastModel || config.ollama.model);
+	return litellm.chat(config.ai.fastModel || config.ollama.model);
 }
 
 export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
@@ -44,5 +47,5 @@ export async function getEmbeddingModel(): Promise<EmbeddingModel<string>> {
 export async function getCloudFallbackModel(): Promise<LanguageModel | null> {
 	// LiteLLM virtual keys are scoped per app (see AGENTS.md): only pool aliases
 	// like "cloud/auto" are callable with the fast-news key.
-	return litellm(config.ai.fastModel || "cloud/auto");
+	return litellm.chat(config.ai.fastModel || "cloud/auto");
 }
