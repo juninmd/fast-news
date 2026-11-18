@@ -66,7 +66,7 @@ export async function generateWithFallback<T>({
 			prompt,
 			abortSignal,
 			mode,
-			maxTokens,
+			maxOutputTokens: maxTokens,
 			maxRetries: 0,
 			experimental_repairText: repairText,
 		});
@@ -88,7 +88,7 @@ export async function generateWithFallback<T>({
 				prompt,
 				abortSignal,
 				mode,
-				maxTokens,
+				maxOutputTokens: maxTokens,
 				maxRetries: 0,
 				experimental_repairText: repairText,
 			});

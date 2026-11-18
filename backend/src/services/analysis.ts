@@ -76,7 +76,7 @@ export async function analyzeTopicWithRAG(
 	const { text } = await generateText({
 		model,
 		prompt,
-		maxTokens: 2000,
+		maxOutputTokens: 2000,
 		maxRetries: 0,
 	});
 

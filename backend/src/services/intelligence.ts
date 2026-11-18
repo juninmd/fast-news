@@ -64,7 +64,7 @@ _Gerado por Fast-News Intelligence v2_
 		maxRetries: 0,
 		model,
 		prompt,
-		maxTokens: 1500,
+		maxOutputTokens: 1500,
 	});
 
 	return text;
