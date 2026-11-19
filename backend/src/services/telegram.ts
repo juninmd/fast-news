@@ -22,6 +22,7 @@ import {
 	SIGNAL_EMOJI,
 } from "./telegram_format.js";
 import { generateArticleBlurb } from "./telegram_logic.js";
+import { withFloodRetry } from "./telegramFlood.js";
 
 /** Shared by the interactive bot (/stories) and telegramBroadcast.ts (article cards). */
 export const FAST_NEWS_URL = "https://fast-news.antonio-code.duckdns.org";
@@ -33,6 +34,7 @@ export function getBot(): Telegraf {
 		throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 	if (!bot) {
 		bot = new Telegraf(config.telegramBotToken);
+		withFloodRetry(bot.telegram);
 		setupCommands(bot);
 	}
 	return bot;

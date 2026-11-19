@@ -74,6 +74,7 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 	const [progress, setProgress] = useState(0);
 	const [focusMode, setFocusMode] = useState(false);
 	const scrollRef = useRef<HTMLDivElement>(null);
+	const dialogRef = useRef<HTMLDivElement>(null);
 	const { markRead } = useReadingHistory();
 
 	useEffect(() => {
@@ -89,7 +90,12 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 		setRelated([]);
 		setProgress(0);
 
-		fetch(`/api/news/${articleId}`)
+		// Aborting on change/unmount keeps a slow response for article A from
+		// overwriting article B after the reader switched.
+		const ctrl = new AbortController();
+		const { signal } = ctrl;
+
+		fetch(`/api/news/${articleId}`, { signal })
 			.then((r) => {
 				if (!r.ok) throw new Error();
 				return r.json();
@@ -99,16 +105,19 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 				setLoading(false);
 			})
 			.catch(() => {
+				if (signal.aborted) return;
 				setError(true);
 				setLoading(false);
 			});
 
-		fetch(`/api/news/${articleId}/related`)
+		fetch(`/api/news/${articleId}/related`, { signal })
 			.then((r) => r.json())
 			.then((d) => setRelated((d.data ?? []).slice(0, 4)))
 			.catch(() => {
 				// related articles are optional; ignore fetch failures
 			});
+
+		return () => ctrl.abort();
 	}, [articleId]);
 
 	// Track reading progress
@@ -133,6 +142,14 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 		return () => window.removeEventListener("keydown", handler);
 	}, [articleId, onClose]);
 
+	// Move focus into the dialog and give it back to the opener on close.
+	useEffect(() => {
+		if (!articleId) return;
+		const opener = document.activeElement as HTMLElement | null;
+		dialogRef.current?.focus();
+		return () => opener?.focus?.();
+	}, [articleId]);
+
 	if (!articleId) return null;
 
 	return (
@@ -143,7 +160,12 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 			/>
 
 			<div
-				className={`pulso-reader relative w-full flex flex-col bg-bg-secondary border border-border-subtle rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${focusMode ? "max-w-2xl max-h-[95vh]" : "max-w-2xl max-h-[90vh]"}`}
+				ref={dialogRef}
+				role="dialog"
+				aria-modal="true"
+				aria-label={article?.title ?? "Artigo"}
+				tabIndex={-1}
+				className={`pulso-reader outline-none relative w-full flex flex-col bg-bg-secondary border border-border-subtle rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${focusMode ? "max-w-2xl max-h-[95vh]" : "max-w-2xl max-h-[90vh]"}`}
 			>
 				{/* Reading progress bar */}
 				<div className="absolute top-0 left-0 right-0 h-0.5 bg-bg-tertiary z-10">
@@ -170,6 +192,8 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 					<div className="flex items-center gap-1">
 						<button
 							onClick={() => setFocusMode((f) => !f)}
+							aria-pressed={focusMode}
+							aria-label="Modo foco"
 							className={`p-1.5 rounded-lg transition-colors ${focusMode ? "bg-accent-primary/20 text-accent-primary" : "hover:bg-bg-tertiary text-text-secondary"}`}
 							title={focusMode ? "Sair do modo foco" : "Modo foco"}
 						>
@@ -177,6 +201,7 @@ export function ArticleModal({ articleId, onClose }: ArticleModalProps) {
 						</button>
 						<button
 							onClick={onClose}
+							aria-label="Fechar"
 							className="p-1.5 rounded-lg hover:bg-bg-tertiary text-text-secondary transition-colors"
 						>
 							<X className="w-4 h-4" />
