@@ -66,22 +66,19 @@ function positiveInt(raw: unknown, fallback: number, max: number): number {
 	return Number.isFinite(n) && n >= 1 ? Math.min(n, max) : fallback;
 }
 
+/** Query-string text; a repeated key (`?q=a&q=b`) arrives as an array and is dropped. */
+function queryString(raw: unknown): string | undefined {
+	return typeof raw === "string" ? raw : undefined;
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 newsRouter.get("/", async (req: Request, res: Response) => {
 	const page = positiveInt(req.query["page"], 1, 1000);
 	const limit = positiveInt(req.query["limit"], 20, 50);
-	const category = req.query["category"] as string | string[] | undefined as
-		| string
-		| undefined;
-	const minCredibility = req.query["minCredibility"] as
-		| string
-		| string[]
-		| undefined as string | undefined;
-	const politicalBias = req.query["politicalBias"] as
-		| string
-		| string[]
-		| undefined as string | undefined;
+	const category = queryString(req.query["category"]);
+	const minCredibility = queryString(req.query["minCredibility"]);
+	const politicalBias = queryString(req.query["politicalBias"]);
 	const excludeMilitant = req.query["excludeMilitant"] === "true";
 	// group=true folds the same story from several outlets into one entry (the
 	// newest article) that lists the others in `also_in`; nothing is dropped,
@@ -233,7 +230,7 @@ newsRouter.get("/", async (req: Request, res: Response) => {
 });
 
 newsRouter.get("/search", async (req: Request, res: Response) => {
-	const q = req.query["q"] as string | string[] | undefined as string;
+	const q = queryString(req.query["q"]);
 	if (!q || q.trim().length < 3)
 		return res.status(400).json({ error: "Query too short" });
 
