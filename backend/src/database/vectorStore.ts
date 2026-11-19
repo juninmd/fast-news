@@ -333,7 +333,9 @@ async function searchPgvector(
 		similarity: number;
 	}>(sql, params);
 
-	return res.rows.map((row) => ({
+	// iterative ivfflat scans use relaxed_order: re-sort the (small) page.
+	const rows = [...res.rows].sort((a, b) => b.similarity - a.similarity);
+	return rows.map((row) => ({
 		id: row.id,
 		similarity: row.similarity,
 		metadata: {
@@ -662,5 +664,5 @@ async function searchInsightsPgvector(
 		 LIMIT $3`,
 		[vectorString, minSimilarity, limit],
 	);
-	return res.rows;
+	return [...res.rows].sort((a, b) => b.similarity - a.similarity);
 }

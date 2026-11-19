@@ -86,8 +86,8 @@ type CandidateRow = {
 const STORY_OF = `(SELECT sa.story_id FROM story_articles sa WHERE sa.article_id = na.id LIMIT 1)`;
 
 // Old coverage of a recurring topic can crowd the closest matches; the time
-// window is applied in code (a WHERE would stop the ivfflat index from being
-// used), so look at enough neighbours for the recent ones to still show up.
+// window is applied in code (a WHERE filters after the ivfflat lists are picked,
+// see client.ts), so look at enough neighbours for the recent ones to still show up.
 const NEAREST_LIMIT = 24;
 
 /** Nearest stored articles by vector. LIMIT with no WHERE keeps the ivfflat index usable. */
