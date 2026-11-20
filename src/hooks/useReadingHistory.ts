@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 const KEY = "fn_history";
 
@@ -10,24 +10,47 @@ interface HistoryEntry {
 
 function load(): HistoryEntry[] {
 	try {
-		return JSON.parse(localStorage.getItem(KEY) ?? "[]");
+		const saved = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+		return Array.isArray(saved) ? saved : [];
 	} catch {
 		return [];
 	}
 }
 
+let history: HistoryEntry[] = load();
+const listeners = new Set<() => void>();
+
+function subscribe(listener: () => void): () => void {
+	listeners.add(listener);
+	return () => listeners.delete(listener);
+}
+
+function getSnapshot(): HistoryEntry[] {
+	return history;
+}
+
+// Shared across hook instances so a read marked in AppNeo/ArticleModal shows
+// on every NewsCard and no instance overwrites storage with a stale list.
+function setHistory(next: HistoryEntry[]) {
+	history = next;
+	try {
+		localStorage.setItem(KEY, JSON.stringify(next));
+	} catch {
+		// storage blocked or full: history lasts until the tab closes
+	}
+	for (const listener of listeners) listener();
+}
+
 export function useReadingHistory() {
-	const [history, setHistory] = useState<HistoryEntry[]>(load);
+	const history = useSyncExternalStore(subscribe, getSnapshot);
 
 	const markRead = useCallback((id: string, title: string) => {
-		setHistory((prev) => {
-			const next = [
+		setHistory(
+			[
 				{ id, title, readAt: Date.now() },
-				...prev.filter((h) => h.id !== id),
-			].slice(0, 50);
-			localStorage.setItem(KEY, JSON.stringify(next));
-			return next;
-		});
+				...getSnapshot().filter((h) => h.id !== id),
+			].slice(0, 50),
+		);
 	}, []);
 
 	const wasRead = useCallback(
