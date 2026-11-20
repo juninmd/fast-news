@@ -63,4 +63,29 @@ describe("useNews", () => {
 
 		expect(fetchMock).toHaveBeenCalledTimes(2);
 	});
+
+	it("retries the same page after a failed loadMore instead of skipping it", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockImplementationOnce(() =>
+				respond({ articles: [article("a")], hasMore: true }),
+			)
+			.mockImplementationOnce(() => Promise.resolve({ ok: false }))
+			.mockImplementation(() =>
+				respond({ articles: [article("b")], hasMore: false }),
+			);
+		vi.stubGlobal("fetch", fetchMock);
+
+		const { result } = renderHook(() => useNews());
+		await waitFor(() => expect(result.current.articles).toHaveLength(1));
+		await act(() => result.current.loadMore());
+		expect(result.current.error).not.toBeNull();
+		await act(() => result.current.loadMore());
+
+		const pages = fetchMock.mock.calls.map(([url]) =>
+			new URL(url, "http://x").searchParams.get("page"),
+		);
+		expect(pages).toEqual(["1", "2", "2"]);
+		expect(result.current.articles.map((a) => a.id)).toEqual(["a", "b"]);
+	});
 });
