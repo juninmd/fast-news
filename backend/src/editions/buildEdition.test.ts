@@ -113,8 +113,14 @@ describe("edition coverage beyond the AI budget", () => {
 		);
 		const pages = [...files].filter(([path]) => path.startsWith("edicoes/"));
 		expect(pages).toHaveLength(50);
-		const published = pages.map(([, html]) => html).join("\n");
-		for (const row of rows) expect(published).toContain(`href="${row.url}"`);
+		// One pass over ~25 MB of HTML: 5000 toContain scans took seconds and timed the test out.
+		const hrefs = new Set(
+			pages.flatMap(([, html]) =>
+				[...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]),
+			),
+		);
+		const missing = rows.filter((row) => !hrefs.has(row.url));
+		expect(missing).toEqual([]);
 		for (const [, html] of pages) {
 			expect(Buffer.byteLength(html)).toBeLessThanOrEqual(500 * 1024);
 			expect(html).toContain("Página");
