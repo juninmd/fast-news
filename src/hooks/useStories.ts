@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -60,19 +60,22 @@ export function useStories(category?: string) {
 	const [stories, setStories] = useState<StoryNode[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<Error | null>(null);
+	// Switching categories fast must not let a slower, older response win.
+	const latest = useRef(0);
 
 	const fetch = useCallback(async () => {
+		const request = ++latest.current;
 		try {
 			setLoading(true);
 			const params = new URLSearchParams({ limit: "30" });
 			if (category && category !== "Todas") params.set("category", category);
 			const res = await window.fetch(`${API_BASE}/api/stories?${params}`);
 			const data = await res.json();
-			setStories(data.data ?? []);
+			if (request === latest.current) setStories(data.data ?? []);
 		} catch (e) {
-			setError(e as Error);
+			if (request === latest.current) setError(e as Error);
 		} finally {
-			setLoading(false);
+			if (request === latest.current) setLoading(false);
 		}
 	}, [category]);
 
@@ -89,13 +92,21 @@ export function useStoryDetail(storyId: string | null) {
 
 	useEffect(() => {
 		if (!storyId) return;
+		let active = true;
 		setLoading(true);
 		window
 			.fetch(`${API_BASE}/api/stories/${storyId}`)
 			.then((r) => r.json())
-			.then((d) => setDetail(d))
+			.then((d) => {
+				if (active) setDetail(d);
+			})
 			.catch(console.error)
-			.finally(() => setLoading(false));
+			.finally(() => {
+				if (active) setLoading(false);
+			});
+		return () => {
+			active = false;
+		};
 	}, [storyId]);
 
 	return { detail, loading };
@@ -108,12 +119,20 @@ export function useGlobalGraph(category?: string) {
 	useEffect(() => {
 		const params = new URLSearchParams();
 		if (category && category !== "Todas") params.set("category", category);
+		let active = true;
 		window
 			.fetch(`${API_BASE}/api/stories/graph?${params}`)
 			.then((r) => r.json())
-			.then(setGraph)
+			.then((g) => {
+				if (active) setGraph(g);
+			})
 			.catch(console.error)
-			.finally(() => setLoading(false));
+			.finally(() => {
+				if (active) setLoading(false);
+			});
+		return () => {
+			active = false;
+		};
 	}, [category]);
 
 	return { graph, loading };
