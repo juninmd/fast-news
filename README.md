@@ -18,7 +18,6 @@
 - Agregação de múltiplas fontes RSS
 - Resumo inteligente com LLMs via LiteLLM
 - Interface web responsiva com React + Tailwind
-- Publicação automática em Netlify
 - Suporte a monorepo com workspaces
 
 ## 🛠️ Tech Stack
@@ -29,7 +28,7 @@
 - **Testes:** Vitest + Testing Library (unidade) e Playwright (`e2e/`)
 - **Linting:** Biome
 - **Site de edições:** VitePress (`site/`) publicado no GitHub Pages
-- **Deploy:** imagem Docker no GHCR (`Dockerfile`), `netlify.toml` para o front estático
+- **Deploy:** imagem Docker no GHCR (`Dockerfile`)
 - **Package Manager:** pnpm (monorepo com `packages/mcp` e `packages/shared`; `backend/` tem lockfile próprio)
 
 ## 📋 Requisitos
