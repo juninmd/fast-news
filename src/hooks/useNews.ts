@@ -78,7 +78,7 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 	const loadingMore = useRef(false);
 
 	const fetchArticles = useCallback(
-		async (pageNum: number, append = false) => {
+		async (pageNum: number, append = false): Promise<boolean> => {
 			const mine = ++requestId.current;
 			try {
 				setLoading(!append);
@@ -114,7 +114,7 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 				if (!response.ok) throw new Error("Failed to fetch articles");
 
 				const data = await response.json();
-				if (mine !== requestId.current) return;
+				if (mine !== requestId.current) return false;
 				const newArticles = (data.articles || data.data || []).map(
 					toNewsArticle,
 				);
@@ -127,9 +127,11 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 					return [...prev, ...newArticles.filter((a) => !have.has(a.id))];
 				});
 				setHasMore(data.hasMore ?? newArticles.length > 0);
+				return true;
 			} catch (err) {
-				if (mine !== requestId.current) return;
+				if (mine !== requestId.current) return false;
 				setError(err instanceof Error ? err : new Error("Unknown error"));
+				return false;
 			} finally {
 				if (mine === requestId.current) setLoading(false);
 			}
@@ -160,9 +162,9 @@ export function useNews(options: UseNewsOptions = {}): UseNewsReturn {
 		if (!hasMore || loading || loadingMore.current) return;
 		loadingMore.current = true;
 		try {
+			// Advance only on success, so a retry after an error asks for the same page.
 			const nextPage = page + 1;
-			setPage(nextPage);
-			await fetchArticles(nextPage, true);
+			if (await fetchArticles(nextPage, true)) setPage(nextPage);
 		} finally {
 			loadingMore.current = false;
 		}
