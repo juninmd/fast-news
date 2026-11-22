@@ -164,25 +164,55 @@ export function computeTrends(
 	// phrase over a bare word on a tie, and ranked by its best member's score.
 	type Group = { rep: TrendTerm; ids: Set<string>; score: number };
 	const groups: Group[] = [];
+	// article id -> indexes of the groups holding it. Only groups sharing an id can
+	// reach the 0.6 overlap, so the candidate is compared with those alone instead
+	// of scanning every group's id set (quadratic on a busy window).
+	const groupsById = new Map<string, number[]>();
+	const index = (gi: number, ids: Set<string>, add: boolean) => {
+		for (const id of ids) {
+			const list = groupsById.get(id);
+			if (add) {
+				if (list) list.push(gi);
+				else groupsById.set(id, [gi]);
+			} else if (list) {
+				const at = list.indexOf(gi);
+				if (at >= 0) list.splice(at, 1);
+			}
+		}
+	};
 	for (const c of candidates) {
 		const ids = new Set(fullIds.get(c.term));
-		const group = groups.find((g) => {
-			let shared = 0;
-			for (const id of ids) if (g.ids.has(id)) shared++;
-			return shared / (ids.size + g.ids.size - shared) >= 0.6;
-		});
-		if (!group) {
+		const shared = new Map<number, number>();
+		for (const id of ids) {
+			for (const gi of groupsById.get(id) ?? []) {
+				shared.set(gi, (shared.get(gi) ?? 0) + 1);
+			}
+		}
+		// Same pick as a scan in creation order: the earliest qualifying group wins.
+		let gi = -1;
+		for (const [g, n] of shared) {
+			if (
+				(gi === -1 || g < gi) &&
+				n / (ids.size + (groups[g] as Group).ids.size - n) >= 0.6
+			)
+				gi = g;
+		}
+		if (gi === -1) {
 			groups.push({ rep: c, ids, score: c.score });
+			index(groups.length - 1, ids, true);
 			continue;
 		}
+		const group = groups[gi] as Group;
 		const broader =
 			c.count > group.rep.count ||
 			(c.count === group.rep.count &&
 				c.term.includes(" ") &&
 				!group.rep.term.includes(" "));
 		if (broader) {
+			index(gi, group.ids, false);
 			group.rep = c;
 			group.ids = ids;
+			index(gi, ids, true);
 		}
 		group.score = Math.max(group.score, c.score);
 	}
