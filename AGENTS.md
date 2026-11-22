@@ -1,36 +1,47 @@
-# AGENTS.md - Fast News
+# AGENTS.md
 
-Curadoria de notícias com IA: front React (Vite) + backend Express/TypeScript + agente de ingestão, jornal "O Fio" (VitePress) e app Capacitor.
+Fast News: AI-curated news. React (Vite) front, Express/TypeScript backend with an ingestion agent, the "O Fio" newspaper (VitePress in `site/`), and a Capacitor mobile app.
 
 ## Stack
-- Front: React 19, Vite 8, Tailwind 4, Vitest + Testing Library, Playwright (`e2e/`)
-- Backend (`backend/`, lockfile próprio): Express, PostgreSQL/pgvector, Redis/Bull, Vercel AI SDK
-- Monorepo pnpm: `packages/mcp`, `packages/shared`; site em `site/` (VitePress)
-- Lint/format: Biome. Node 22 no CI/Docker, pnpm 10.33.2
 
-## Comandos reais
+- Front: React 19, Vite 8, Tailwind 4, Vitest + Testing Library, Playwright (`e2e/`).
+- Backend (`backend/`, its own lockfile): Express, PostgreSQL/pgvector, Redis/Bull, Vercel AI SDK.
+- pnpm monorepo: `packages/mcp`, `packages/shared`. Site: `site/` (VitePress). Lint/format: Biome.
+- Versions differ by place: CI (`validate.yml`) uses Node 22 and pnpm 10.33.2; Docker uses `node:26`; `.nvmrc` says v20; `package.json` `packageManager` says pnpm 10.34.5. Do not assume one; check the file you touch.
+
+## Commands
+
 ```bash
 pnpm install && pnpm --dir backend install --ignore-workspace
-pnpm dev:api              # backend (porta 3001)
-pnpm dev                  # front (proxy /api -> 3001)
-pnpm news-agent           # agente, uma execução
-pnpm exec biome check .   # lint (gate do CI)
-pnpm exec vitest run      # testes (raiz inclui backend/src)
-pnpm --dir backend exec tsc --noEmit   # tipos do backend (gate do CI)
-pnpm build                # build do front
-pnpm test:e2e             # Playwright
+pnpm dev:api                              # backend, port 3001
+pnpm dev                                  # front (proxies /api to 3001)
+pnpm news-agent                           # ingestion agent, one run
+pnpm exec biome check .                   # lint (CI gate)
+pnpm exec vitest run                      # tests (root includes backend/src)
+pnpm --dir backend exec tsc --noEmit      # backend types (CI gate)
+pnpm build                                # front build
+pnpm test:e2e                             # Playwright
 ```
 
-## Gates de CI (`.github/workflows`)
-- `validate.yml`: sem arquivos de segredo rastreados, biome, vitest run, tsc do backend
-- `security.yml`: Gitleaks; `deploy.yml`: build da imagem Docker (publica só em push)
-- `mobile.yml` (APK/iOS) e `pages.yml` (VitePress -> gh-pages) rodam por paths
+## Structure
 
-## Não fazer
-- Não commitar `.env`, tokens ou chaves; só nomes de variáveis em docs (`backend/src/config/env.ts` é a fonte)
-- Não editar lockfiles à mão; não usar `npm` (há `package-lock.json` legado, o CI usa pnpm)
-- Não alterar `site/edicoes/*`: artigos publicados são imutáveis e commitados pelo backend
-- `pnpm lint` roda `--write`; use `biome check .` para só verificar
+- `src/`: front. `backend/src/`: API, agent, and queues. `backend/src/config/env.ts`: env var source of truth.
+- `scripts/`: news agent (`news-agent.js`). `packages/`: `mcp`, `shared`.
+- `site/`: VitePress newspaper. `site/edicoes/*`: published editions.
+- `desktop/`, `android/`, `ios/`, `capacitor.config.json`: native shells.
+- `docs/`: technical notes. `e2e/`: Playwright specs.
+
+## Conventions
+
+- CI gates (`.github/workflows`): `validate.yml` (no tracked secret files, `biome check`, `vitest run`, backend `tsc`), `security.yml` (Gitleaks), `deploy.yml` (Docker image, publishes on push only), `mobile.yml` (APK/iOS) and `pages.yml` (VitePress to gh-pages), the last two by path.
+- Lint with `biome check .` (verify only). `pnpm lint` runs `biome check --write` and changes files.
+
+## Gotchas
+
+- Never commit `.env`, tokens, or keys. Docs may name env vars, never values.
+- Do not edit lockfiles by hand. Do not use `npm`; CI uses pnpm.
+- Do not edit `site/edicoes/*`. Published articles are immutable and committed by the backend.
+- Packages come from GitHub Packages (`@juninmd/*`), so CI writes an `_authToken` into `~/.npmrc` before installing.
 
 <!-- base-actions-main-policy -->
 ## GitHub Actions — padrão obrigatório (@main)

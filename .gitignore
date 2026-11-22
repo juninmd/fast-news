@@ -33,6 +33,7 @@ test-results
 playwright-report
 .env
 history.json
+temp/
 
 site/.vitepress/cache
 site/.vitepress/dist
