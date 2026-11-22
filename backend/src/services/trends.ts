@@ -172,8 +172,11 @@ export function computeTrends(
 		for (const id of ids) {
 			const list = groupsById.get(id);
 			if (add) {
-				if (list) list.push(gi);
-				else groupsById.set(id, [gi]);
+				if (list) {
+					if (list.indexOf(gi) < 0) list.push(gi);
+				} else {
+					groupsById.set(id, [gi]);
+				}
 			} else if (list) {
 				const at = list.indexOf(gi);
 				if (at >= 0) list.splice(at, 1);
@@ -184,8 +187,14 @@ export function computeTrends(
 		const ids = new Set(fullIds.get(c.term));
 		const shared = new Map<number, number>();
 		for (const id of ids) {
-			for (const gi of groupsById.get(id) ?? []) {
-				shared.set(gi, (shared.get(gi) ?? 0) + 1);
+			const list = groupsById.get(id);
+			if (!list) continue;
+			const seen = new Set<number>();
+			for (const gi of list) {
+				if (seen.has(gi)) continue;
+				seen.add(gi);
+				const prev = shared.get(gi) ?? 0;
+				shared.set(gi, prev + 1);
 			}
 		}
 		// Same pick as a scan in creation order: the earliest qualifying group wins.
