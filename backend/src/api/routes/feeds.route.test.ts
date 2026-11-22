@@ -120,6 +120,35 @@ describe("sources", () => {
 		]);
 	});
 
+	const SOURCE_ID = "0b6f5c1e-8a4d-4c2b-9f3e-1d2c3b4a5f60";
+	const patchSource = (id: string, body: unknown) =>
+		fetch(`${base}/api/sources/${id}`, {
+			method: "PATCH",
+			headers: {
+				"content-type": "application/json",
+				authorization: "Bearer secret",
+			},
+			body: JSON.stringify(body),
+		});
+
+	it("answers 400 for a malformed source id without touching the database", async () => {
+		const res = await patchSource("abc", { isActive: true });
+		expect(res.status).toBe(400);
+		expect(query).not.toHaveBeenCalled();
+	});
+
+	it("answers 404 for a well-formed id that matches no source", async () => {
+		query.mockResolvedValueOnce({ rowCount: 0, rows: [] });
+		const res = await patchSource(SOURCE_ID, { isActive: true });
+		expect(res.status).toBe(404);
+	});
+
+	it("does not blame the id when the database fails", async () => {
+		query.mockRejectedValueOnce(new Error("connect ECONNREFUSED"));
+		const res = await patchSource(SOURCE_ID, { isActive: true });
+		expect(res.status).toBe(500);
+	});
+
 	it("exports OPML", async () => {
 		query.mockResolvedValueOnce({
 			rows: [{ name: "X", url: "https://x.test/f", category: "IA" }],

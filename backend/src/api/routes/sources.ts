@@ -6,6 +6,8 @@ import { requireAdmin } from "../adminAuth.js";
 
 export const sourcesRouter: Router = Router();
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // GET /api/sources — every feed with its health; ?status=quarantined filters.
 sourcesRouter.get("/", async (req: Request, res: Response) => {
 	const status = req.query["status"] as string | undefined;
@@ -72,8 +74,11 @@ sourcesRouter.patch(
 			promptHint?: string | null;
 			resetHealth?: boolean;
 		};
+		const id = req.params["id"];
+		if (typeof id !== "string" || !UUID.test(id))
+			return res.status(400).json({ error: "Invalid source id" });
 		const sets: string[] = [];
-		const params: unknown[] = [req.params["id"]];
+		const params: unknown[] = [id];
 		if (typeof isActive === "boolean") {
 			params.push(isActive);
 			sets.push(`is_active = $${params.length}`);
@@ -88,16 +93,12 @@ sourcesRouter.patch(
 			);
 		if (!sets.length)
 			return res.status(400).json({ error: "Nothing to update" });
-		try {
-			const r = await query(
-				`UPDATE source_feeds SET ${sets.join(", ")} WHERE id = $1`,
-				params,
-			);
-			if (!r.rowCount)
-				return res.status(404).json({ error: "Source not found" });
-			return res.json({ ok: true });
-		} catch {
-			return res.status(400).json({ error: "Invalid source id" });
-		}
+		// DB failures reach the error middleware as 500; the id was validated above.
+		const r = await query(
+			`UPDATE source_feeds SET ${sets.join(", ")} WHERE id = $1`,
+			params,
+		);
+		if (!r.rowCount) return res.status(404).json({ error: "Source not found" });
+		return res.json({ ok: true });
 	},
 );
