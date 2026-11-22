@@ -580,11 +580,15 @@ newsRouter.post(
 	async (req: Request, res: Response) => {
 		const { id, isActive } = req.body;
 		if (!id) return res.status(400).json({ error: "Missing feed ID" });
+		// A missing flag would be stored as NULL, which hides the feed like false does.
+		if (typeof isActive !== "boolean")
+			return res.status(400).json({ error: "isActive must be a boolean" });
 		try {
-			await query("UPDATE source_feeds SET is_active = $1 WHERE id = $2", [
-				isActive,
-				id,
-			]);
+			const r = await query(
+				"UPDATE source_feeds SET is_active = $1 WHERE id = $2",
+				[isActive, id],
+			);
+			if (!r.rowCount) return res.status(404).json({ error: "Feed not found" });
 			return res.json({ success: true });
 		} catch (error) {
 			console.error("[API] Failed to toggle feed:", error);
@@ -619,7 +623,8 @@ newsRouter.delete(
 	async (req: Request, res: Response) => {
 		const { id } = req.params;
 		try {
-			await query("DELETE FROM source_feeds WHERE id = $1", [id]);
+			const r = await query("DELETE FROM source_feeds WHERE id = $1", [id]);
+			if (!r.rowCount) return res.status(404).json({ error: "Feed not found" });
 			return res.json({ success: true });
 		} catch (error) {
 			console.error("[API] Failed to delete feed:", error);

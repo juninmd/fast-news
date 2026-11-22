@@ -128,12 +128,46 @@ describe("escritas da API exigem ADMIN_TOKEN", () => {
 	});
 
 	it("com o token a escrita passa", async () => {
+		query.mockResolvedValueOnce({ rows: [], rowCount: 1 });
 		const res = await fetch(`${base}/api/news/feeds/1`, {
 			method: "DELETE",
 			headers: { "x-admin-token": "secret" },
 		});
 		expect(res.status).toBe(200);
 		expect(query).toHaveBeenCalledOnce();
+	});
+});
+
+describe("toggle e exclusão de feed", () => {
+	const admin = {
+		"content-type": "application/json",
+		"x-admin-token": "secret",
+	};
+	const toggle = (body: unknown) =>
+		fetch(`${base}/api/news/feeds/toggle`, {
+			method: "POST",
+			headers: admin,
+			body: JSON.stringify(body),
+		});
+
+	it("toggle sem isActive booleano → 400, sem gravar NULL", async () => {
+		expect((await toggle({ id: ID })).status).toBe(400);
+		expect((await toggle({ id: ID, isActive: "no" })).status).toBe(400);
+		expect(query).not.toHaveBeenCalled();
+	});
+
+	it("toggle de feed inexistente → 404", async () => {
+		query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+		expect((await toggle({ id: ID, isActive: false })).status).toBe(404);
+	});
+
+	it("exclusão de feed inexistente → 404", async () => {
+		query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+		const res = await fetch(`${base}/api/news/feeds/${ID}`, {
+			method: "DELETE",
+			headers: admin,
+		});
+		expect(res.status).toBe(404);
 	});
 });
 
