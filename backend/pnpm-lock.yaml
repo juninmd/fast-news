@@ -20,8 +20,8 @@ importers:
         specifier: ^2.0.143
         version: 2.0.143(zod@4.6.7)
       '@juninmd/digest-kit':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.6.0
+        version: 0.6.0
       '@qdrant/js-client-rest':
         specifier: ^1.18.0
         version: 1.18.0(typescript@5.9.3)
@@ -270,8 +270,8 @@ packages:
   '@ioredis/commands@1.10.0':
     resolution: {integrity: sha512-UmeW7z4LfctwoQ5wkhVzgq8tXkreED2xZGpX+Bg+zA+WJFZCT6c062AfCK/Dfk81xZnnwdhJCUMkitihRaoC2Q==}
 
-  '@juninmd/digest-kit@0.4.0':
-    resolution: {integrity: sha512-zSkh0bvrOjVGd9FDhZDbtuz5VmenO4KfqqDl1WJh4X71m0BTM4LX4pfI4dswXWctoXwXPybn+KqOF7YVa2c9Pg==}
+  '@juninmd/digest-kit@0.6.0':
+    resolution: {integrity: sha512-7Kdb8vNIngqw5s7ukdVWuBagSJmZOUsIWKxD3HUdg/Rrqk5Ua9P7uFBn1BiNMafU1t84qxF80psBelcG7UiVQA==}
     engines: {bun: '>=1.1.0', node: '>=20'}
 
   '@mixmark-io/domino@2.2.0':
@@ -1287,7 +1287,7 @@ snapshots:
 
   '@ioredis/commands@1.10.0': {}
 
-  '@juninmd/digest-kit@0.4.0':
+  '@juninmd/digest-kit@0.6.0':
     dependencies:
       '@mozilla/readability': 0.6.0
       linkedom: 0.18.15
