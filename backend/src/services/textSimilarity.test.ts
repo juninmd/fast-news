@@ -46,6 +46,18 @@ describe("canonicalUrl", () => {
 		).toBe("example.com/a/b?id=2");
 	});
 
+	it("folds mobile and AMP mirrors into the article URL", () => {
+		expect(canonicalUrl("https://m.site.com/news/a/amp?amp=1")).toBe(
+			"site.com/news/a",
+		);
+		expect(canonicalUrl("https://amp.site.com/a.html?outputType=amp")).toBe(
+			"site.com/a.html",
+		);
+		expect(canonicalUrl("https://site.com/a?output=json")).toBe(
+			"site.com/a?output=json",
+		);
+	});
+
 	it("keeps unparseable input", () => {
 		expect(canonicalUrl("not a url")).toBe("not a url");
 	});

@@ -141,3 +141,49 @@ describe("clusterHeadlines", () => {
 		expect(groups.map((g) => g.length)).toEqual([2, 1]);
 	});
 });
+
+describe("engagement-aware selection", () => {
+	it("merges copies of one link into the richest, keeping the top engagement", () => {
+		const rows = [
+			headline({
+				title: "Show HN: X",
+				url: "https://m.x.dev/a",
+				snippet: "",
+				engagement: 5,
+			}),
+			headline({
+				title: "X launches",
+				url: "https://x.dev/a?utm_source=hn",
+				snippet: "A long and useful description of the launch.",
+				engagement: 2,
+			}),
+		];
+		const out = cleanHeadlines(rows, []);
+		expect(out).toHaveLength(1);
+		expect(out[0]?.title).toBe("X launches");
+		expect(out[0]?.engagement).toBe(5);
+	});
+
+	it("picks the most-discussed items of a source before the newest", () => {
+		const rows = [
+			headline({
+				title: "new",
+				source: "HN",
+				createdAt: new Date(3000),
+				engagement: 1,
+			}),
+			headline({
+				title: "hot",
+				source: "HN",
+				createdAt: new Date(1000),
+				engagement: 6,
+			}),
+			headline({ title: "mid", source: "HN", createdAt: new Date(2000) }),
+		];
+		expect(
+			pickForPrompt(rows, 2, 2)
+				.map((h) => h.title)
+				.sort(),
+		).toEqual(["hot", "new"]);
+	});
+});

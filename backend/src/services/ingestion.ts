@@ -11,6 +11,11 @@ import {
 import { invalidateArticleCaches } from "./cache.js";
 import { assignArticleToStory, buildArticleRelations } from "./correlation.js";
 import { embedBatch, vectorToSQL } from "./embeddings.js";
+import {
+	type Engagement,
+	fetchRedditEngagement,
+	redditPostId,
+} from "./engagement.js";
 import { normalizeFeedItems, type RawArticle } from "./feedItem.js";
 import { fetchFeedXml, parseFeed } from "./feedParser.js";
 import { outletOf } from "./outlet.js";
@@ -172,7 +177,13 @@ async function prepareArticle(
 		"SELECT id FROM news_articles WHERE guid = $1 OR url = $2 OR canonical_url = $3",
 		[article.guid, article.url, canonicalUrl(article.url)],
 	);
-	if (existing.rowCount && existing.rowCount > 0) return null;
+	if (existing.rowCount && existing.rowCount > 0) {
+		// Votes keep growing after the first sighting: refresh them on every pass.
+		const id = existing.rows[0]?.id;
+		if (id && article.engagement)
+			await updateEngagement(id, article.engagement);
+		return null;
+	}
 
 	// Tema e relevância saem depois do agrupamento (analyzeArticle), numa
 	// chamada só e apenas para a primeira cópia de cada história.
@@ -209,6 +220,31 @@ async function embedInBatches(texts: string[]): Promise<(number[] | null)[]> {
 	return out;
 }
 
+async function updateEngagement(id: string, e: Engagement): Promise<void> {
+	await query(
+		`UPDATE news_articles
+		    SET engagement_score = GREATEST(coalesce(engagement_score, 0), $2),
+		        engagement_comments = GREATEST(coalesce(engagement_comments, 0), $3)
+		  WHERE id = $1`,
+		[id, e.score, e.comments],
+	);
+}
+
+/** Reddit RSS has no votes: fetch them for the batch's Reddit posts in one request per 100. */
+async function attachRedditEngagement(articles: RawArticle[]): Promise<void> {
+	const ids = new Map<RawArticle, string>();
+	for (const a of articles) {
+		const id = a.engagement ? null : redditPostId(a.url);
+		if (id) ids.set(a, id);
+	}
+	if (!ids.size) return;
+	const found = await fetchRedditEngagement([...ids.values()]);
+	for (const [a, id] of ids) {
+		const e = found.get(id);
+		if (e) a.engagement = e;
+	}
+}
+
 async function storeArticle(
 	prepared: PreparedArticle,
 	embedding: number[] | null,
@@ -219,8 +255,8 @@ async function storeArticle(
 	// reported by several portals is a signal (assignArticleToStory groups them),
 	// and dropping by similarity used to lose articles whose angle differed.
 	const result = await query<{ id: string }>(
-		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url, is_ai, video_url, media, author, tags, comments_url, language, word_count, outlet)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17::jsonb, $18, $19, $20, $21)
+		`INSERT INTO news_articles (guid, title, content, url, source, category, company, published_at, embedding, image_url, theme_category, canonical_url, is_ai, video_url, media, author, tags, comments_url, language, word_count, outlet, engagement_score, engagement_comments)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17::jsonb, $18, $19, $20, $21, $22, $23)
      ON CONFLICT (guid) DO NOTHING
      RETURNING id`,
 		[
@@ -245,6 +281,8 @@ async function storeArticle(
 			article.language ?? null,
 			article.wordCount ?? null,
 			article.outlet ?? null,
+			article.engagement?.score ?? null,
+			article.engagement?.comments ?? null,
 		],
 	);
 
@@ -544,6 +582,10 @@ export async function runIngestion(): Promise<IngestionResult> {
 			fetched += result.value.length;
 			candidates.push(...result.value);
 		}
+
+		await attachRedditEngagement(candidates).catch((err: Error) =>
+			console.warn("[ingestion] reddit engagement failed:", err.message),
+		);
 
 		// Prepare (exact-dedup) first, then embed the whole feed
 		// batch in a few requests: see embedInBatches for why per-article calls
