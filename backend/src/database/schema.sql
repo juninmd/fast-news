@@ -342,3 +342,9 @@ ALTER TABLE source_feeds ADD COLUMN IF NOT EXISTS last_modified TEXT DEFAULT NUL
 -- Rollback: ALTER TABLE news_articles DROP COLUMN outlet;
 ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS outlet TEXT DEFAULT NULL;
 CREATE INDEX IF NOT EXISTS idx_articles_outlet_missing ON news_articles(created_at DESC) WHERE outlet IS NULL;
+
+-- Community engagement (Hacker News points, Reddit votes and comment counts),
+-- refreshed each time ingestion sees the item again. Feeds edition ranking.
+-- Rollback: ALTER TABLE news_articles DROP COLUMN engagement_score, DROP COLUMN engagement_comments;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS engagement_score INT DEFAULT NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS engagement_comments INT DEFAULT NULL;

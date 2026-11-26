@@ -22,27 +22,46 @@ function normalizeTitle(title: string): string {
 		.trim();
 }
 
-/** Drops empty, junk, excluded-category and duplicate-title or duplicate-link headlines. */
+/** How much a copy carries: a longer snippet and an image make the better one to keep. */
+function richness(h: Headline): number {
+	return h.snippet.length + (h.imageUrl ? 200 : 0);
+}
+
+/**
+ * Drops empty, junk, excluded-category and duplicate-title or duplicate-link
+ * headlines. Copies of one link merge into the richest copy, which keeps the
+ * highest engagement seen across them.
+ */
 export function cleanHeadlines(
 	rows: Headline[],
 	excludedCategories: string[],
 ): Headline[] {
 	const excluded = new Set(excludedCategories.map((c) => c.toLowerCase()));
 	const seen = new Set<string>();
-	const seenUrls = new Set<string>();
-	return rows.filter((h) => {
+	const byUrl = new Map<string, number>();
+	const kept: Headline[] = [];
+	for (const h of rows) {
 		const key = normalizeTitle(h.title);
 		if (!key || JUNK.test(h.title) || excluded.has(h.category.toLowerCase()))
-			return false;
+			continue;
 		const url = canonicalUrl(h.url);
+		const at = url ? byUrl.get(url) : undefined;
+		if (at !== undefined) {
+			const prev = kept[at] as Headline;
+			const best = richness(h) > richness(prev) ? h : prev;
+			const engagement = Math.max(prev.engagement ?? 0, h.engagement ?? 0);
+			kept[at] = engagement > 0 ? { ...best, engagement } : best;
+			continue;
+		}
 		// The same title on another site is the same story from another outlet:
 		// kept so the edition can list both, not dropped with its link.
 		const titleOnSite = `${key}|${url.split("/")[0]}`;
-		if (seen.has(titleOnSite) || (url && seenUrls.has(url))) return false;
+		if (seen.has(titleOnSite)) continue;
 		seen.add(titleOnSite);
-		if (url) seenUrls.add(url);
-		return true;
-	});
+		if (url) byUrl.set(url, kept.length);
+		kept.push(h);
+	}
+	return kept;
 }
 
 /**
@@ -75,8 +94,9 @@ export function clusterHeadlines(
 }
 
 /**
- * Picks at most `max` headlines, round-robin across sources (newest first
- * within each source), so one prolific feed cannot crowd out the rest.
+ * Picks at most `max` headlines, round-robin across sources, so one prolific
+ * feed cannot crowd out the rest. Within a source the most-discussed come
+ * first (HN points, Reddit votes), then the newest.
  */
 export function pickForPrompt(
 	rows: Headline[],
@@ -85,7 +105,9 @@ export function pickForPrompt(
 ): Headline[] {
 	const bySource = new Map<string, Headline[]>();
 	for (const h of [...rows].sort(
-		(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+		(a, b) =>
+			(b.engagement ?? 0) - (a.engagement ?? 0) ||
+			b.createdAt.getTime() - a.createdAt.getTime(),
 	)) {
 		const list = bySource.get(h.source) ?? [];
 		if (list.length < perSource) list.push(h);

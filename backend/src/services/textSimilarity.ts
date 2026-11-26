@@ -132,8 +132,17 @@ export function canonicalUrl(raw: string): string {
 			if (TRACKING_PARAM.test(key)) u.searchParams.delete(key);
 		}
 		u.searchParams.sort();
-		const host = u.hostname.replace(/^www\./, "").toLowerCase();
-		const path = u.pathname.replace(/\/+$/, "") || "/";
+		// Mobile and AMP mirrors are the same article: m.site.com/x/amp == site.com/x.
+		u.searchParams.delete("amp");
+		for (const key of ["outputType", "output"]) {
+			if (u.searchParams.get(key)?.toLowerCase() === "amp")
+				u.searchParams.delete(key);
+		}
+		const rawHost = u.hostname.toLowerCase();
+		const bare = rawHost.replace(/^(www|m|mobile|amp)\./, "");
+		const host = bare.includes(".") ? bare : rawHost;
+		const path =
+			u.pathname.replace(/\/amp(\.html)?\/?$/i, "").replace(/\/+$/, "") || "/";
 		const qs = u.searchParams.toString();
 		return `${host}${path}${qs ? `?${qs}` : ""}`;
 	} catch {

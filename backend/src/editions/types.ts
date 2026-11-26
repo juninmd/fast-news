@@ -21,6 +21,8 @@ export interface Headline {
 	snippet: string;
 	createdAt: Date;
 	imageUrl: string | null;
+	/** Log-scaled community votes/comments (HN, Reddit); absent elsewhere. */
+	engagement?: number;
 }
 
 export interface Story {

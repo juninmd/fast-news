@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { type ArticleMedia, extractMedia } from "./articleMedia.js";
+import { type Engagement, hnEngagement } from "./engagement.js";
 import type { FeedItemData } from "./feedParser.js";
 import { htmlToText, inlineText, truncateText } from "./htmlText.js";
 import { outletOf } from "./outlet.js";
@@ -32,6 +33,8 @@ export interface RawArticle {
 	videoUrl?: string;
 	media?: ArticleMedia[];
 	promptHint?: string;
+	/** Votes/comments where the source exposes them (Hacker News, Reddit). */
+	engagement?: Engagement;
 }
 
 export interface FeedMeta {
@@ -400,6 +403,11 @@ export function normalizeFeedItem(
 	const wordCount = wordCountOf(item);
 
 	const outlet = outletOf(url, source.company ?? sourceName);
+	const engagement = hnEngagement(
+		String(item["content"] ?? item["summary"] ?? item.contentSnippet ?? ""),
+		url,
+		commentsUrl,
+	);
 
 	return {
 		guid: resolveGuid(item, source.url, title),
@@ -420,6 +428,7 @@ export function normalizeFeedItem(
 		...(imageUrl ? { imageUrl } : {}),
 		...(videoUrl ? { videoUrl } : {}),
 		...(media.length ? { media } : {}),
+		...(engagement ? { engagement } : {}),
 	};
 }
 
