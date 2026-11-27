@@ -21,6 +21,8 @@ export function useTheme() {
 		} else {
 			root.classList.remove("dark");
 		}
+		// Sonido lê `data-theme`; o app continua lendo a classe `.dark`.
+		root.dataset.theme = theme;
 	}, [theme]);
 
 	const toggleTheme = () => {

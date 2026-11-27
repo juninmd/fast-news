@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR" class="dark" data-theme="dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>fast-news · trocas do Sonido</title>
+		<style>
+			html,
+			body {
+				margin: 0;
+				min-height: 100%;
+				background: var(--bg-primary);
+			}
+			/* Regras literais de origin/main:src/styles/pulso.css, presas ao lado "Antes" do comparativo. */
+			.legacy-cell .pulso-badge {
+				position: absolute;
+				top: 3px;
+				right: 10px;
+				min-width: 16px;
+				height: 16px;
+				padding: 0 4px;
+				border-radius: 8px;
+				background: var(--accent-primary);
+				color: #fff;
+				font-family: "JetBrains Mono Variable", monospace;
+				font-size: 9.5px;
+				line-height: 16px;
+				text-align: center;
+			}
+			.legacy-cell .pulso-kbd {
+				margin-left: auto;
+				padding: 1px 6px;
+				border: 1px solid var(--border-subtle);
+				border-radius: 6px;
+				background: var(--bg-primary);
+				font-family: "JetBrains Mono Variable", monospace;
+				font-size: 11px;
+			}
+			.legacy-cell .pulso-cats {
+				position: relative;
+				display: flex;
+				gap: 2px;
+				overflow-x: auto;
+				margin-bottom: 0;
+				border-bottom: 1px solid var(--border-subtle);
+				scrollbar-width: none;
+			}
+			.legacy-cell .pulso-cats button {
+				padding: 9px 12px;
+				font-size: 13px;
+				white-space: nowrap;
+				color: var(--text-secondary);
+				transition: color 0.2s;
+			}
+			.legacy-cell .pulso-cats button[aria-selected="true"] {
+				font-weight: 700;
+				color: var(--text-primary);
+			}
+			.legacy-cell .pulso-cats-ink {
+				position: absolute;
+				bottom: 0;
+				height: 2px;
+				border-radius: 2px;
+				background: var(--accent-primary);
+				transition:
+					left 0.45s var(--ease-spring),
+					width 0.45s var(--ease-spring);
+			}
+			.legacy-cell .pulso-toast {
+				position: static;
+				padding: 10px 16px;
+				border-radius: 12px;
+				background: var(--text-primary);
+				color: var(--bg-primary);
+				font-size: 13px;
+				font-weight: 700;
+				white-space: nowrap;
+				transform: none;
+			}
+			/* Só para caber na coluna: no app o toast é fixo no canto. */
+			.preview-toast .sn-toasts {
+				position: static;
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="./preview.tsx"></script>
+	</body>
+</html>

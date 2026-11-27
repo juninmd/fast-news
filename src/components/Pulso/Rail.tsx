@@ -1,3 +1,4 @@
+import { Badge } from "@juninmd/sonido";
 import {
 	Activity,
 	Bookmark,
@@ -110,9 +111,15 @@ export function Rail({ active, onChange, counts }: RailProps) {
 				{ICONS[v]}
 				{VIEW_LABELS[v]}
 				{n > 0 && (
-					<span key={n} className="pulso-badge tabular-nums" aria-hidden>
+					<Badge
+						key={n}
+						tone="accent"
+						appearance="solid"
+						className="pulso-rail-count"
+						aria-hidden
+					>
 						{n > 99 ? "99+" : n}
-					</span>
+					</Badge>
 				)}
 			</button>
 		);

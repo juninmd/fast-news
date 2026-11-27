@@ -1,4 +1,13 @@
-import { Moon, Search, SlidersHorizontal, Sun } from "lucide-react";
+import { Badge, Kbd, useToast as useSonidoToast } from "@juninmd/sonido";
+import {
+	Activity,
+	Bookmark,
+	History,
+	Moon,
+	Search,
+	SlidersHorizontal,
+	Sun,
+} from "lucide-react";
 import {
 	type CSSProperties,
 	useCallback,
@@ -10,6 +19,7 @@ import {
 import {
 	ArticleModal,
 	CategoryTabs,
+	EmptyState,
 	NewsCard,
 	SkeletonCard,
 	StatusPanel,
@@ -99,7 +109,6 @@ function App() {
 	const [paletteOpen, setPaletteOpen] = useState(false);
 	const [paletteQuery, setPaletteQuery] = useState("");
 	const [recentSearches, setRecentSearches] = useState<string[]>([]);
-	const [toast, setToast] = useState<string | null>(null);
 	const [cursor, setCursor] = useState(-1);
 
 	const { stories, loading: storiesLoading } = useStories(activeCategory);
@@ -110,6 +119,7 @@ function App() {
 	const { markRead, history: readHistory } = useReadingHistory();
 	const { bookmarks, isBookmarked } = useBookmarks();
 	const { report: trends } = useTrends(24);
+	const pushToast = useSonidoToast();
 
 	const {
 		articles: originalArticles,
@@ -147,13 +157,10 @@ function App() {
 		window.scrollTo({ top: 0 });
 	}, []);
 
-	const notify = useCallback((message: string) => setToast(message), []);
-
-	useEffect(() => {
-		if (!toast) return;
-		const t = setTimeout(() => setToast(null), 2600);
-		return () => clearTimeout(t);
-	}, [toast]);
+	const notify = useCallback(
+		(message: string) => pushToast({ title: message, duration: 2600 }),
+		[pushToast],
+	);
 
 	// Open article from Telegram deep link (?id=<uuid>)
 	useEffect(() => {
@@ -203,7 +210,6 @@ function App() {
 			} catch {
 				// the reader shows whatever data is available
 			}
-			setToast(null);
 			openArticle(id, title);
 		},
 		[openArticle, notify],
@@ -413,7 +419,7 @@ function App() {
 						<span className="pulso-cmdk-label truncate">
 							Buscar por significado, ou um comando…
 						</span>
-						<kbd className="pulso-kbd">⌘K</kbd>
+						<Kbd className="pulso-cmdk-kbd">⌘K</Kbd>
 					</button>
 					<button
 						type="button"
@@ -424,7 +430,13 @@ function App() {
 					>
 						<SlidersHorizontal className="h-4 w-4" />
 						{filterCount > 0 && (
-							<span className="pulso-badge">{filterCount}</span>
+							<Badge
+								tone="accent"
+								appearance="solid"
+								className="pulso-count-badge"
+							>
+								{filterCount}
+							</Badge>
 						)}
 					</button>
 					<button
@@ -594,6 +606,7 @@ function App() {
 					{activeView === "bookmarks" &&
 						(bookmarks.length === 0 ? (
 							<EmptyState
+								icon={<Bookmark />}
 								title="Nada salvo ainda"
 								text="Toque no marcador de um card, ou aperte S no feed."
 							/>
@@ -616,6 +629,7 @@ function App() {
 					{activeView === "history" &&
 						(readHistory.length === 0 ? (
 							<EmptyState
+								icon={<History />}
 								title="Nenhuma matéria lida ainda"
 								text="As matérias que você abrir aparecem aqui."
 							/>
@@ -681,6 +695,7 @@ function App() {
 							</div>
 							{!storiesLoading && stories.length === 0 && (
 								<EmptyState
+									icon={<Activity />}
 									title="Nenhuma história detectada ainda"
 									text="Aguarde a próxima ingestão."
 								/>
@@ -795,29 +810,12 @@ function App() {
 				}}
 			/>
 
-			{toast && (
-				<div className="pulso-toast" role="status">
-					{toast}
-				</div>
-			)}
-
 			{storyDetail && !detailLoading && (
 				<StoryDetailModal
 					detail={storyDetail}
 					onClose={() => setSelectedStoryId(null)}
 				/>
 			)}
-		</div>
-	);
-}
-
-function EmptyState({ title, text }: { title: string; text: string }) {
-	return (
-		<div className="py-20 text-center text-text-secondary">
-			<p className="font-display text-xl font-bold text-text-primary">
-				{title}
-			</p>
-			<p className="mt-1">{text}</p>
 		</div>
 	);
 }

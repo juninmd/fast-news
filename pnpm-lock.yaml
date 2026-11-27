@@ -51,6 +51,9 @@ importers:
       '@juninmd/digest-kit':
         specifier: ^0.6.0
         version: 0.6.0
+      '@juninmd/sonido':
+        specifier: ^2.2.1
+        version: 2.2.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@vitejs/plugin-react':
         specifier: ^6.0.3
         version: 6.3.0(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
@@ -932,6 +935,13 @@ packages:
   '@juninmd/digest-kit@0.6.0':
     resolution: {integrity: sha512-7Kdb8vNIngqw5s7ukdVWuBagSJmZOUsIWKxD3HUdg/Rrqk5Ua9P7uFBn1BiNMafU1t84qxF80psBelcG7UiVQA==}
     engines: {bun: '>=1.1.0', node: '>=20'}
+
+  '@juninmd/sonido@2.2.1':
+    resolution: {integrity: sha512-e/KIJDPL2MNiRSaor3Ks6TeFNphfROD37Q/QYsZehfKUOfkj/zlxnOw2vOGMchti1NwnQ1fYYXGvted6ncT8yA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
 
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
@@ -4147,6 +4157,11 @@ snapshots:
       turndown: 7.2.5
     transitivePeerDependencies:
       - canvas
+
+  '@juninmd/sonido@2.2.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
 
   '@mixmark-io/domino@2.2.0': {}
 
