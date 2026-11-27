@@ -1,5 +1,6 @@
 export { ArticleModal } from "./ArticleModal";
 export { CategoryTabs } from "./CategoryTabs";
+export { EmptyState } from "./EmptyState";
 export { NewsCard } from "./NewsCard";
 export { Sidebar } from "./Sidebar";
 export { SkeletonCard } from "./SkeletonCard";

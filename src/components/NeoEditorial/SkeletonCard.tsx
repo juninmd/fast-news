@@ -1,13 +1,16 @@
-export function SkeletonCard() {
+import { Skeleton } from "@juninmd/sonido";
+
+interface SkeletonCardProps {
+	label?: string;
+}
+
+/** Placeholder do feed: linhas, mídia e anúncio em região viva vêm do Sonido. */
+export function SkeletonCard({
+	label = "Carregando matérias",
+}: SkeletonCardProps) {
 	return (
-		<div className="flex items-start gap-5 border-b border-border-subtle py-5 last:border-b-0">
-			<div className="min-w-0 flex-1 space-y-3">
-				<div className="h-3 w-1/3 skeleton" />
-				<div className="h-6 w-full skeleton" />
-				<div className="h-6 w-2/3 skeleton" />
-				<div className="h-4 w-1/2 skeleton" />
-			</div>
-			<div className="hidden h-20 w-32 shrink-0 skeleton sm:block" />
+		<div className="pulso-skeleton-card">
+			<Skeleton label={label} rows={4} media />
 		</div>
 	);
 }

@@ -90,20 +90,16 @@
 	background: var(--bg-tertiary);
 	animation: pulso-pop 0.35s var(--ease-spring);
 }
-.pulso-badge {
+/* Bridge: o Badge do Sonido cuida da pílula; aqui só o encaixe no trilho. */
+.pulso-rail-count {
 	position: absolute;
 	top: 3px;
 	right: 10px;
 	min-width: 16px;
 	height: 16px;
 	padding: 0 4px;
-	border-radius: 8px;
-	background: var(--accent-primary);
-	color: #fff;
-	font-family: "JetBrains Mono Variable", monospace;
 	font-size: 9.5px;
-	line-height: 16px;
-	text-align: center;
+	line-height: 1;
 }
 .pulso-rail-spacer {
 	flex: 1;
@@ -192,14 +188,9 @@
 	border-color: var(--accent-primary);
 	box-shadow: 0 0 0 4px var(--accent-glow);
 }
-.pulso-kbd {
+/* Bridge: o Kbd do Sonido cuida da tecla; aqui só o empurrão para a direita. */
+.pulso-cmdk-kbd {
 	margin-left: auto;
-	padding: 1px 6px;
-	border: 1px solid var(--border-subtle);
-	border-radius: 6px;
-	background: var(--bg-primary);
-	font-family: "JetBrains Mono Variable", monospace;
-	font-size: 11px;
 }
 .pulso-icon-btn {
 	position: relative;
@@ -217,16 +208,22 @@
 .pulso-icon-btn:hover {
 	transform: rotate(-8deg) scale(1.06);
 }
-.pulso-icon-btn .pulso-badge {
+.pulso-icon-btn .pulso-count-badge {
+	position: absolute;
 	top: -5px;
 	right: -5px;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 4px;
+	font-size: 9.5px;
+	line-height: 1;
 }
 @media (max-width: 640px) {
 	.pulso-cmdk {
 		width: auto;
 	}
 	.pulso-cmdk .pulso-cmdk-label,
-	.pulso-cmdk .pulso-kbd {
+	.pulso-cmdk .pulso-cmdk-kbd {
 		display: none;
 	}
 }
@@ -462,35 +459,18 @@
 }
 
 /* ---------- Feed / bento ---------- */
-.pulso-cats {
-	position: relative;
-	display: flex;
-	gap: 2px;
-	overflow-x: auto;
+/* Bridge: o Tabs do Sonido cuida da barra e do teclado; aqui só o respiro do feed. */
+.pulso-cats-sonido {
 	margin-bottom: 14px;
+}
+
+/* Bridge: a linha do feed que o Skeleton do Sonido preenche. */
+.pulso-skeleton-card {
+	padding: 20px 0;
 	border-bottom: 1px solid var(--border-subtle);
-	scrollbar-width: none;
 }
-.pulso-cats button {
-	padding: 9px 12px;
-	font-size: 13px;
-	white-space: nowrap;
-	color: var(--text-secondary);
-	transition: color 0.2s;
-}
-.pulso-cats button[aria-selected="true"] {
-	font-weight: 700;
-	color: var(--text-primary);
-}
-.pulso-cats-ink {
-	position: absolute;
-	bottom: 0;
-	height: 2px;
-	border-radius: 2px;
-	background: var(--accent-primary);
-	transition:
-		left 0.45s var(--ease-spring),
-		width 0.45s var(--ease-spring);
+.pulso-skeleton-card:last-child {
+	border-bottom: 0;
 }
 
 .pulso-bento {
@@ -701,28 +681,6 @@
 	color: var(--text-secondary);
 }
 
-/* ---------- Toast ---------- */
-.pulso-toast {
-	position: fixed;
-	left: 50%;
-	bottom: calc(24px + var(--sab));
-	z-index: 70;
-	padding: 10px 16px;
-	border-radius: 12px;
-	background: var(--text-primary);
-	color: var(--bg-primary);
-	font-size: 13px;
-	font-weight: 700;
-	white-space: nowrap;
-	transform: translateX(-50%);
-	animation: pulso-toast-in 0.45s var(--ease-spring);
-}
-@media (max-width: 1023px) {
-	.pulso-toast {
-		bottom: calc(100px + var(--sab));
-	}
-}
-
 /* ---------- Reader (ArticleModal) ---------- */
 .pulso-reader {
 	animation: pulso-reader-in 0.55s var(--ease-out);
@@ -808,12 +766,7 @@
 		transform: translateY(-14px) scale(0.97);
 	}
 }
-@keyframes pulso-toast-in {
-	from {
-		opacity: 0;
-		transform: translate(-50%, 30px);
-	}
-}
+
 @keyframes pulso-reader-in {
 	from {
 		opacity: 0;
@@ -832,8 +785,7 @@
 	.pulso-reader,
 	.pulso-palette,
 	.pulso-palette-box,
-	.pulso-drawer,
-	.pulso-toast {
+	.pulso-drawer {
 		animation-duration: 0.01ms !important;
 		animation-iteration-count: 1 !important;
 		transition-duration: 0.01ms !important;

@@ -1,3 +1,4 @@
+import { StatTile } from "@juninmd/sonido";
 import React, { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "../../services/adminFetch.js";
 
@@ -119,24 +120,13 @@ export function StatusPanel() {
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
 				{health &&
 					Object.entries(health.dependencies).map(([name, status]) => (
-						<div
+						<StatTile
 							key={name}
-							className="p-4 rounded-xl bg-bg-secondary border border-border-subtle flex flex-col"
-						>
-							<span className="text-xs text-text-secondary uppercase tracking-wider">
-								{name}
-							</span>
-							<span
-								className={`text-lg font-bold mt-1 ${
-									status.status === "up" ? "text-green-400" : "text-red-400"
-								}`}
-							>
-								{status.status === "up" ? "🟢 Ativo" : "🔴 Fora do Ar"}
-							</span>
-							<span className="text-xs text-text-secondary mt-2">
-								Latência: {status.latencyMs ?? 0}ms
-							</span>
-						</div>
+							label={name}
+							value={status.status === "up" ? "🟢 Ativo" : "🔴 Fora do Ar"}
+							hint={`Latência: ${status.latencyMs ?? 0}ms`}
+							tone={status.status === "up" ? "success" : "danger"}
+						/>
 					))}
 			</div>
 

@@ -191,7 +191,7 @@
 	z-index: 1;
 }
 /* Count badges pop whenever the number changes (keyed by count). */
-.pulso-rail-btn .pulso-badge {
+.pulso-rail-btn .pulso-rail-count {
 	animation: aurora-badge 0.5s var(--ease-spring);
 }
 @keyframes aurora-badge {
