@@ -31,18 +31,7 @@ As únicas pontes são de encaixe, todas comentadas no CSS:
 - `.pulso-cmdk-kbd`: empurra a tecla `⌘K` para a direita na barra de busca.
 - `.pulso-rail-count` / `.pulso-count-badge`: posição absoluta dos contadores sobre o ícone.
 
-## Como as imagens foram geradas
+## Comparações
 
-`preview.html` + `preview.tsx` montam a mesma página com os dois lados. O lado **Antes** importa cópias literais dos
-componentes em `legacy/` (tiradas de `origin/main`; só o caminho do import mudou — os primitivos que eram inline no
-`AppNeo`, `Rail` e `StatusPanel` estão em `legacy/InlineBits.tsx` como trechos literais). O lado **Depois** importa os
-arquivos do app já apoiados no Sonido.
+As capturas (`antes-depois-dark.png`, `antes-depois-light.png`) foram geradas antes do merge, em Chromium 1180×900 (`deviceScaleFactor: 2`, `fullPage`), com dados fictícios. O harness que montava os dois lados (`preview*` e as cópias em `legacy/`) foi removido depois da revisão; as imagens ficam como registro da troca.
 
-```bash
-pnpm dev --port 5301 --strictPort
-# http://localhost:5301/docs/sonido-migration/preview.html
-# http://localhost:5301/docs/sonido-migration/preview.html?theme=light
-```
-
-As capturas (`antes-depois-dark.png`, `antes-depois-light.png`) foram feitas em Chromium 1180×900, `fullPage`, com
-dados fictícios, e recompressas para PNG de 256 cores (cada uma abaixo de 400 KB).
